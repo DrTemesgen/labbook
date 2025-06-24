@@ -29,12 +29,21 @@ class Record:
                 params.extend(['%' + args['num_rec'] + '%'] * 4)  # Adding num_rec value for all 3 LIKE conditions
 
             if 'stat_work' in args and args['stat_work']:
-                raw = str(args['stat_work'])
-                values = [int(val.strip()) for val in raw.split(',') if val.strip().isdigit()]
+                raw = args['stat_work']
+
+                # If it's a string like "(254,255)", strip parentheses
+                if isinstance(raw, str):
+                    raw = raw.strip().replace('(', '').replace(')', '')
+                    values = [int(val.strip()) for val in raw.split(',') if val.strip().isdigit()]
+                elif isinstance(raw, (list, tuple)):
+                    values = [int(v) for v in raw if isinstance(v, int) or (isinstance(v, str) and v.isdigit())]
+                else:
+                    values = []
+
                 if values:
                     placeholders = ','.join(['%s'] * len(values))
                     filter_cond += f' and rec.statut IN ({placeholders}) '
-                    params.extend(values)  # Convert list to string for SQL
+                    params.extend(values)
 
             if 'type_rec' in args and args['type_rec']:
                 if args['type_rec'] == 'C':
@@ -122,6 +131,10 @@ class Record:
                'left join sigl_param_num_dos_data as param_num_rec on param_num_rec.id_data=1 ' + table_cond +
                'where ' + filter_cond +
                'group by rec.id_data order by rec.id_data desc ' + limit)
+
+        # Log the main SQL query and its parameters
+        Record.log.info("Main SQL query: %s", req)
+        Record.log.info("With parameters: %s", params)
 
         cursor.execute(req, params)
 
