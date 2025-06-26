@@ -616,10 +616,15 @@ class LiteDataRecovery(Resource):
                 new_pat_id = patient_id_map.get(old_pat_id)
 
                 if not new_pat_id:
-                    log_id = rec.get("rec_num_lite") or rec.get("rec_num_int")
-                    self.log.warning(Logs.fileline() + f' : LiteDataRecovery Skipping record {log_id} → unknown patient id {old_pat_id}')
-                    record_skipped += 1
-                    continue
+                    # If the patient has not been sent, it may already exist
+                    existing = Patient.getPatient(old_pat_id)
+                    if existing:
+                        new_pat_id = old_pat_id
+                    else:
+                        log_id = rec.get("rec_num_lite") or rec.get("rec_num_int")
+                        self.log.warning(Logs.fileline() + f' : LiteDataRecovery Skipping record {log_id} → unknown patient id {old_pat_id}')
+                        record_skipped += 1
+                        continue
 
                 # Step 1 - Retrieve and increment records numbers
                 date_now = datetime.now()

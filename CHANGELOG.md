@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.5.14] - 2025-06-26
+### Changed
+- For LAB-27 and LAB-29, SPM-2 is matched against id_data or code in the sigl_01_data sample table
+
+### Fixed
+- integration of Lite records made with a non-Lite patient
+- non-conforming section disabled even if you have rights
+
 ## [3.5.13] - 2025-06-23
 ### Added
 - query mode for Connect

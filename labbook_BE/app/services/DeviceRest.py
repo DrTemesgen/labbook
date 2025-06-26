@@ -12,6 +12,7 @@ from app.models.General import compose_ret
 from app.models.Constants import *
 from app.models.Analyzer import *
 from app.models.Record import *
+from app.models.Product import Product
 from app.models.User import *
 from app.models.DB import *
 from app.models.Logs import Logs
@@ -225,8 +226,18 @@ class AnalyzerLab27(Resource):
             patient_id = hl7_msg.PID.pid_3.value if hasattr(hl7_msg, 'PID') else "UNKNOWN"
             self.log.info(Logs.fileline() + ' : DEBUG patient_id  = ' + str(patient_id))
 
-            specimen_id = hl7_msg.SPM.spm_2.value.split('&')[0] if hasattr(hl7_msg, 'SPM') and hasattr(hl7_msg.SPM, 'spm_2') else "UNKNOWN"
-            self.log.info(Logs.fileline() + ' : DEBUG specimen_id  = ' + str(specimen_id))
+            # Extract specimen identifier from SPM-2
+            raw_specimen_id = hl7_msg.SPM.spm_2.value.split('&')[0] if hasattr(hl7_msg, 'SPM') and hasattr(hl7_msg.SPM, 'spm_2') else "UNKNOWN"
+            self.log.info(Logs.fileline() + f' : DEBUG raw_specimen_id = {raw_specimen_id}')
+
+            # Resolve the specimen ID to an internal id_data if possible
+            resolved_id = Product.resolveProductId(raw_specimen_id)
+            if resolved_id:
+                specimen_id = resolved_id
+                self.log.info(Logs.fileline() + f' : INFO specimen_id resolved to id_data = {specimen_id}')
+            else:
+                specimen_id = raw_specimen_id  # fallback to original value
+                self.log.warning(Logs.fileline() + f' : WARNING specimen_id not found as id_data or code: {raw_specimen_id}')
 
             test_id = hl7_msg.OBR.obr_4.value if hasattr(hl7_msg, 'OBR') else "UNKNOWN"
             self.log.info(Logs.fileline() + ' : DEBUG test_id  = ' + str(test_id))
@@ -331,8 +342,18 @@ class AnalyzerLab29(Resource):
             patient_id = hl7_msg.PID.pid_3.value if hasattr(hl7_msg, 'PID') else "UNKNOWN"
             self.log.info(Logs.fileline() + ' : DEBUG patient_id  = ' + str(patient_id))
 
-            specimen_id = hl7_msg.SPM.spm_2.value.split('&')[0] if hasattr(hl7_msg, 'SPM') and hasattr(hl7_msg.SPM, 'spm_2') else "UNKNOWN"
-            self.log.info(Logs.fileline() + ' : DEBUG specimen_id  = ' + str(specimen_id))
+            # Extract specimen identifier from SPM-2
+            raw_specimen_id = hl7_msg.SPM.spm_2.value.split('&')[0] if hasattr(hl7_msg, 'SPM') and hasattr(hl7_msg.SPM, 'spm_2') else "UNKNOWN"
+            self.log.info(Logs.fileline() + f' : DEBUG raw_specimen_id = {raw_specimen_id}')
+
+            # Resolve the specimen ID to an internal id_data if possible
+            resolved_id = Product.resolveProductId(raw_specimen_id)
+            if resolved_id:
+                specimen_id = resolved_id
+                self.log.info(Logs.fileline() + f' : INFO specimen_id resolved to id_data = {specimen_id}')
+            else:
+                specimen_id = raw_specimen_id  # fallback to original value
+                self.log.warning(Logs.fileline() + f' : WARNING specimen_id not found as id_data or code: {raw_specimen_id}')
 
             test_id = hl7_msg.OBR.obr_4.value if hasattr(hl7_msg, 'OBR') else "UNKNOWN"
             self.log.info(Logs.fileline() + ' : DEBUG test_id  = ' + str(test_id))

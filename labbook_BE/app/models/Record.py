@@ -132,10 +132,6 @@ class Record:
                'where ' + filter_cond +
                'group by rec.id_data order by rec.id_data desc ' + limit)
 
-        # Log the main SQL query and its parameters
-        Record.log.info("Main SQL query: %s", req)
-        Record.log.info("With parameters: %s", params)
-
         cursor.execute(req, params)
 
         l_rec = cursor.fetchall()

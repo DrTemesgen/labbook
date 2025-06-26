@@ -102,6 +102,11 @@
 | storage\_box                                   | ALIQUOT       | describe storage box                     |
 | storage\_aliquot                               | ALIQUOT       | describe storage aliquot                 |
 | sample\_destock                                | ALIQUOT       | describe destocked aliquot               |
+| connect\_setting                               | SETTINGS      | settings for Connect                     |
+| analyzer\_setting                              | SETTINGS      | describe analyzers settings              |
+| analyzer\_result                               | ANALYZER      | result from analyzer                     |
+| printer\_setting                               | SETTINGS      | defines a printer linked to a script     |
+| lite\_users                                    | SETTINGS      | associates a user with a Lite config     |
+| lite\_setting                                  | SETTINGS      | describe a setting for Lite              |
 
-
-101 tables used
+107 tables used

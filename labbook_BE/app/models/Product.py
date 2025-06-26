@@ -231,3 +231,28 @@ class Product:
         except mysql.connector.Error as e:
             Product.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
             return False
+
+    @staticmethod
+    def resolveProductId(specimen_id):
+        """
+        Try to resolve specimen_id as a numeric primary key (id_data).
+        If not found, fallback to search by code (string).
+        Returns the corresponding id_data or None if not found.
+        """
+        cursor = DB.cursor()
+
+        # First attempt: check if specimen_id is a numeric id_data
+        if str(specimen_id).isdigit():
+            cursor.execute('SELECT id_data FROM sigl_01_data WHERE id_data = %s', (int(specimen_id),))
+            row = cursor.fetchone()
+            if row:
+                return row['id_data']
+
+        # Second attempt: check if specimen_id matches the 'code' field
+        cursor.execute('SELECT id_data FROM sigl_01_data WHERE code = %s', (specimen_id,))
+        row = cursor.fetchone()
+        if row:
+            return row['id_data']
+
+        # Not found
+        return 0
