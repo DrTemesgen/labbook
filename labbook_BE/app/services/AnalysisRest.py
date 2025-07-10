@@ -90,6 +90,12 @@ class AnalysisList(Resource):
 
         if not args:
             args = {}
+        else:
+            if 'status' in args and args['status']:
+                if args['status'] == 'A':
+                    args['status'] = 4
+                elif args['status'] == 'I':
+                    args['status'] = 5
 
         l_analyzes = Analysis.getAnalyzesList(args)
 

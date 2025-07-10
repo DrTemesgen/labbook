@@ -483,13 +483,13 @@ class User:
         else:
             limit = 'LIMIT 500'
             # filter conditions
-            if args['login']:
+            if 'login' in args and args['login']:
                 filter_cond += ' and u.username LIKE "%' + args['login'] + '%" '
 
-            if args['firstname']:
+            if 'firstname' in args and args['firstname']:
                 filter_cond += ' and u.firstname LIKE "%' + args['firstname'] + '%" '
 
-            if args['lastname']:
+            if 'lastname' in args and args['lastname']:
                 filter_cond += ' and u.lastname LIKE "%' + args['lastname'] + '%" '
 
             if 'status' in args and args['status']:

@@ -302,6 +302,88 @@ class UserList(Resource):
         return compose_ret(l_users, Constants.cst_content_type_json)
 
 
+class UserListFromExt(Resource):
+    log = logging.getLogger('log_services')
+
+    def post(self):
+        auth = request.authorization
+
+        if not auth:
+            self.log.error(Logs.fileline() + ' : UserListFromExt ERROR auth missing')
+            err = {"error": "Authentication required"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        login = auth.username
+        pwd   = auth.password
+
+        user = User.getUserByLogin(login)
+
+        if not user:
+            self.log.error(Logs.fileline() + ' : UserListFromExt login not found')
+            err = {"error": str(login) + " not found"}
+            return compose_ret(err, Constants.cst_content_type_json, 404)
+
+        salt_start = user['password'].find(":")
+        salt = user['password'][salt_start + 1:]
+
+        pwd_db = User.getPasswordDB(pwd, salt)
+
+        ret = User.checkUserAccess(login, pwd_db)
+
+        l_patients = []
+
+        if ret is True:
+            self.log.info(Logs.fileline() + ' : UserListFromExt role=' + str(user['role_type']) + ' | login=' + str(login))
+            if user['role_type'] == Constants.cst_user_type_api:
+                self.log.info(Logs.fileline() + ' : UserListFromExt API access authorized')
+                args = request.get_json()
+
+                if not args:
+                    args = {}
+
+                l_users = User.getUserList(args)
+
+                if not l_users:
+                    self.log.error(Logs.fileline() + ' : TRACE UserListFromExt not found')
+
+                Various.useLangDB()
+
+                for user in l_users:
+                    # Replace None by empty string
+                    for key, value in list(user.items()):
+                        if user[key] is None:
+                            user[key] = ''
+                        elif key == 'section' and user[key]:
+                            user[key] = _(user[key].strip())
+                        elif key == 'role' and user[key]:
+                            user[key] = _(user[key].strip())
+
+                    if user['birth']:
+                        user['birth'] = datetime.strftime(user['birth'], '%Y-%m-%d')
+
+                    if user['arrived']:
+                        user['arrived'] = datetime.strftime(user['arrived'], '%Y-%m-%d')
+
+                    if user['last_eval']:
+                        user['last_eval'] = datetime.strftime(user['last_eval'], '%Y-%m-%d')
+            else:
+                self.log.info(Logs.fileline() + ' : UserListFromExt role type not authorized')
+                err = {"error": str(login) + " not authorized"}
+                return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        elif ret is False:
+            self.log.info(Logs.fileline() + ' : UserListFromExt not authorized ' + str(login))
+            err = {"error": str(login) + " not authorized"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+        else:
+            self.log.error(Logs.fileline() + ' : UserListFromExt ERROR checkUserAccess')
+            err = {"error": "checkUserAccess is in error"}
+            return compose_ret(err, Constants.cst_content_type_json, 500)
+
+        self.log.info(Logs.fileline() + ' : TRACE UserListFromExt')
+        return compose_ret(l_users, Constants.cst_content_type_json)
+
+
 class UserLiteList(Resource):
     log = logging.getLogger('log_services')
 

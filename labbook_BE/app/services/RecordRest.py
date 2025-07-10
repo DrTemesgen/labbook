@@ -50,6 +50,102 @@ class RecordList(Resource):
         return compose_ret(l_records, Constants.cst_content_type_json)
 
 
+class RecordListFromExt(Resource):
+    log = logging.getLogger('log_services')
+
+    def post(self, id_pres):
+        auth = request.authorization
+
+        if not auth:
+            self.log.error(Logs.fileline() + ' : RecordListFromExt ERROR auth missing')
+            err = {"error": "Authentication required"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        login = auth.username
+        pwd   = auth.password
+
+        user = User.getUserByLogin(login)
+
+        if not user:
+            self.log.error(Logs.fileline() + ' : RecordListFromExt login not found')
+            err = {"error": str(login) + " not found"}
+            return compose_ret(err, Constants.cst_content_type_json, 404)
+
+        salt_start = user['password'].find(":")
+        salt = user['password'][salt_start + 1:]
+
+        pwd_db = User.getPasswordDB(pwd, salt)
+
+        ret = User.checkUserAccess(login, pwd_db)
+
+        l_patients = []
+
+        if ret is True:
+            self.log.info(Logs.fileline() + ' : RecordListFromExt role=' + str(user['role_type']) + ' | login=' + str(login))
+            if user['role_type'] == Constants.cst_user_type_api:
+                self.log.info(Logs.fileline() + ' : RecordListFromExt API access authorized')
+                args = request.get_json()
+
+                if not args:
+                    args = {}
+
+                if 'stat_rec' in args and args['stat_rec']:
+                    if args['stat_rec'] == 'N':
+                        args['stat_rec'] = 181
+                    elif args['stat_rec'] == 'A':
+                        args['stat_rec'] = 182
+                    elif args['stat_rec'] == 'IA':
+                        args['stat_rec'] = 253
+                    elif args['stat_rec'] == 'T':
+                        args['stat_rec'] = 254
+                    elif args['stat_rec'] == 'IT':
+                        args['stat_rec'] = 255
+                    elif args['stat_rec'] == 'B':
+                        args['stat_rec'] = 256
+                    else:
+                        args['stat_rec'] = 0
+                else:
+                    args['stat_rec'] = 0
+
+                if 'emer' in args and args['emer']:
+                    if args['emer'] == 'Y':
+                        args['emer'] = 4
+                    else:
+                        args['emer'] = 0
+
+                l_records = Record.getRecordList(args, id_pres)
+
+                if not l_records:
+                    self.log.error(Logs.fileline() + ' : TRACE RecordListFromExt not found')
+
+                for record in l_records:
+                    # Replace None by empty string
+                    for key, value in list(record.items()):
+                        if record[key] is None:
+                            record[key] = ''
+
+                    if record['type_rec'] and record['type_rec'] == 183:
+                        record['type_rec'] = 'E'
+                    else:
+                        record['type_rec'] = 'I'
+            else:
+                self.log.info(Logs.fileline() + ' : RecordListFromExt role type not authorized')
+                err = {"error": str(login) + " not authorized"}
+                return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        elif ret is False:
+            self.log.info(Logs.fileline() + ' : RecordListFromExt not authorized ' + str(login))
+            err = {"error": str(login) + " not authorized"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+        else:
+            self.log.error(Logs.fileline() + ' : RecordListFromExt ERROR checkUserAccess')
+            err = {"error": "checkUserAccess is in error"}
+            return compose_ret(err, Constants.cst_content_type_json, 500)
+
+        self.log.info(Logs.fileline() + ' : TRACE RecordListFromExt')
+        return compose_ret(l_records, Constants.cst_content_type_json)
+
+
 class RecordDet(Resource):
     log = logging.getLogger('log_services')
 

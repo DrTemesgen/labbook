@@ -18,7 +18,8 @@ parser.add_argument("id_samp", type=int, help="Test specimen ID")
 args = parser.parse_args()
 id_samp = args.id_samp
 
-app.config['SECRET_KEY'] = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
+app.config.from_pyfile('/home/apps/labbook_BE/local_settings.py')
+
 
 def send_to_analyzer():
     """
@@ -30,9 +31,10 @@ def send_to_analyzer():
 
     with open(log_file_path, "a") as log_file:
         process = subprocess.Popen(cmd_split, stdout=log_file, stderr=subprocess.STDOUT)
-        process.wait()  # Attendre la fin du script
+        process.wait()  # Wait for the script to finish
 
     return process.returncode == 0
+
 
 with app.app_context():
     with app.test_request_context():  # Simulates an HTTP Flask request to enable session access
@@ -46,9 +48,9 @@ with app.app_context():
             send_status = send_to_analyzer()
 
             if send_status:
-                 print("Message successfully sent to analyzer")
+                print("Message successfully sent to analyzer")
             else:
-                 print("Error sending message. Check logs.")
+                print("Error sending message. Check logs.")
 
         else:
             print("Error generating message OML^O33.")

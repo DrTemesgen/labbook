@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.5.15] - 2025-07-10
+### Changed
+- upgrade 3 external webservices in secure mode using authentication
+- generate secret key for session at the first launch of project
+
+### Fixed
+- add timeout=5 on every request.get or post (except one)
+- problem with rights: Add a user
+- update SQL demo dump compatible with mysql higher than 8.0.16
+- content type of hl7 message for Connect
+
 ## [3.5.14] - 2025-06-26
 ### Changed
 - For LAB-27 and LAB-29, SPM-2 is matched against id_data or code in the sigl_01_data sample table

@@ -19,6 +19,7 @@ from logging.handlers import WatchedFileHandler
 
 from flask import Flask
 from flask_restful import Api
+from flask_cors import CORS
 
 from app.models.Logs import Logs
 from app.models.Various import *
@@ -75,6 +76,7 @@ log = logging.getLogger('log_services')
 
 app = Flask(__name__)
 app.config.from_object('default_settings')
+CORS(app)
 
 config_envvar = 'LOCAL_SETTINGS'
 
@@ -231,7 +233,6 @@ api.add_resource(ExportCSV,             '/services/export/csv')
 api.add_resource(ExportDHIS2,           '/services/export/dhis2')
 api.add_resource(ExportDHIS2Api,        '/services/export/dhis2/api')
 api.add_resource(ExportWhonet,          '/services/export/whonet')
-api.add_resource(RecordDetFromExt,      '/services/external/record/det/<int:id_rec>')
 api.add_resource(FileDocList,           '/services/file/document/list/<string:type_ref>/<int:ref>')
 api.add_resource(FileDoc,               '/services/file/document/<string:type_ref>/<int:ref>')
 api.add_resource(FileNbManual,          '/services/file/count/manual')
@@ -263,6 +264,7 @@ api.add_resource(PatientCode,           '/services/patient/generate/code')
 api.add_resource(PatientCodeLab,        '/services/patient/search/code/lab/<string:pat_code_lab>')
 api.add_resource(PatientCombine,        '/services/patient/combine/<int:id_pat1>/<int:id_pat2>')
 api.add_resource(PatientList,           '/services/patient/list')
+api.add_resource(PatientListFromExt,    '/services/external/patient/list')
 api.add_resource(PatientListExport,     '/services/patient/list/export')
 api.add_resource(PatientDet,            '/services/patient/det/<int:id_pat>')
 api.add_resource(PatientFormItem,       '/services/patient/form/item/<int:id_pat>')
@@ -292,8 +294,10 @@ api.add_resource(QualityLastMeeting,    '/services/quality/last/meeting')
 api.add_resource(QualityNbNonCompl,     '/services/quality/count/noncompliance/<string:period>')
 api.add_resource(RecordComm,            '/services/record/comm/<int:id_rec>')
 api.add_resource(RecordDet,             '/services/record/det/<int:id_rec>')
+api.add_resource(RecordDetFromExt,      '/services/external/record/det/<int:id_rec>')
 api.add_resource(RecordLast,            '/services/record/last')
 api.add_resource(RecordList,            '/services/record/list/<int:id_pres>')
+api.add_resource(RecordListFromExt,     '/services/external/record/list/<int:id_pres>')
 api.add_resource(RecordListAna,         '/services/record/list/analysis/<int:id_rec>')
 api.add_resource(RecordNext,            '/services/record/next/<int:id_rec>')
 api.add_resource(RecordNbEmer,          '/services/record/count/emergency')
@@ -397,6 +401,7 @@ api.add_resource(UserExport,            '/services/user/export')
 api.add_resource(UserIdentList,         '/services/user/ident/list')
 api.add_resource(UserImport,            '/services/user/import/<string:filename>/<int:id_user>')
 api.add_resource(UserList,              '/services/user/list')
+api.add_resource(UserListFromExt,       '/services/external/user/list')
 api.add_resource(UserLiteList,          '/services/user/lite/list')
 api.add_resource(UserStaffDet,          '/services/user/staff/det/<int:id_user>')
 api.add_resource(UserRightsList,        '/services/user/rights/list/<int:id_user>', '/services/user/rights/list')

@@ -11,6 +11,6 @@ from datetime import timedelta
 # ######################################
 
 DEBUG                      = True
-SECRET_KEY                 = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'  # TODO initiate from gunicorn.sh
+SECRET_KEY                 = 'replace-me-with-random-secret-key'
 PERMANENT_SESSION_LIFETIME = timedelta(days=1)
 BABEL_DEFAULT_LOCALE       = 'fr_FR'

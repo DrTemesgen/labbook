@@ -40,6 +40,75 @@ class PatientList(Resource):
         return compose_ret(l_patients, Constants.cst_content_type_json)
 
 
+class PatientListFromExt(Resource):
+    log = logging.getLogger('log_services')
+
+    def post(self):
+        auth = request.authorization
+
+        if not auth:
+            self.log.error(Logs.fileline() + ' : PatientListFromExt ERROR auth missing')
+            err = {"error": "Authentication required"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        login = auth.username
+        pwd   = auth.password
+
+        user = User.getUserByLogin(login)
+
+        if not user:
+            self.log.error(Logs.fileline() + ' : PatientListFromExt login not found')
+            err = {"error": str(login) + " not found"}
+            return compose_ret(err, Constants.cst_content_type_json, 404)
+
+        salt_start = user['password'].find(":")
+        salt = user['password'][salt_start + 1:]
+
+        pwd_db = User.getPasswordDB(pwd, salt)
+
+        ret = User.checkUserAccess(login, pwd_db)
+
+        l_patients = []
+
+        if ret is True:
+            self.log.info(Logs.fileline() + ' : PatientListFromExt role=' + str(user['role_type']) + ' | login=' + str(login))
+            if user['role_type'] == Constants.cst_user_type_api:
+                self.log.info(Logs.fileline() + ' : PatientListFromExt API access authorized')
+                args = request.get_json()
+
+                if not args:
+                    args = {}
+
+                l_patients = Patient.getPatientList(args)
+
+                # self.log.info(Logs.fileline() + ' : TRACE l_patients=' + str(l_patients))
+
+                if not l_patients:
+                    self.log.error(Logs.fileline() + ' : TRACE PatientListFromExt not found')
+
+                for patient in l_patients:
+                    # Replace None by empty string
+                    for key, value in list(patient.items()):
+                        if patient[key] is None:
+                            patient[key] = ''
+            else:
+                self.log.info(Logs.fileline() + ' : PatientListFromExt role type not authorized')
+                err = {"error": str(login) + " not authorized"}
+                return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        elif ret is False:
+            self.log.info(Logs.fileline() + ' : PatientListFromExt not authorized ' + str(login))
+            err = {"error": str(login) + " not authorized"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+        else:
+            self.log.error(Logs.fileline() + ' : PatientListFromExt ERROR checkUserAccess')
+            err = {"error": "checkUserAccess is in error"}
+            return compose_ret(err, Constants.cst_content_type_json, 500)
+
+        self.log.info(Logs.fileline() + ' : TRACE PatientListFromExt')
+        return compose_ret(l_patients, Constants.cst_content_type_json)
+
+
 class PatientListExport(Resource):
     log = logging.getLogger('log_services')
 

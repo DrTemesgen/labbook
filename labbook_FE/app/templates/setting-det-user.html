@@ -27,7 +27,7 @@
                             <option value="A" selected>{{ _("Administrateur") }}</option>
                         </select>
                         {% else %}
-                        <select id="role" name="role" class="form-select" onchange="role_choice(this);" {{ 'disabled' if session['user_role'] != 'A' }}>
+                        <select id="role" name="role" class="form-select" onchange="role_choice(this);" {{ 'disabled' if not has_permission("SETTING_41") }}>
                             {% from 'macros.html' import select_user_role %}
                             {{ select_user_role(ihm['user_role'], args['role_type'], args['role_pro']) }}
                         </select>

@@ -83,7 +83,7 @@ def analyzer(test=False, verbose=False):
                     OML_O33_bytes = OML_O33_formatted.encode("utf-8", errors="replace")
 
                     # send OML33 to Connect
-                    req = requests.post(url_lab28, data=OML_O33_bytes, headers={"Content-Type": "application/hl7-v2"})
+                    req = requests.post(url_lab28, data=OML_O33_bytes, headers={"Content-Type": "text/plain"})
 
                     Logs.log_script('req.status_code : ' + str(req.status_code))
 

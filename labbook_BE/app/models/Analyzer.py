@@ -209,6 +209,7 @@ class Analyzer:
 
         id_rec = samp['id_rec']
         type_samp = Various.getDicoById(samp['prod_type'])
+        code_samp = samp['code']
 
         if type_samp:
             Various.useLangDB()
@@ -302,10 +303,10 @@ class Analyzer:
                 pid_segment = msg.oml_o33_patient.add_segment('PID')
                 pid_segment.pid_1  = "1"                  # ID of this transaction
                 pid_segment.pid_2  = pat['pat_code']      # Patient ID
-                pid_segment.pid_3  = pat['pat_code_lab']  # Laboratory code for patient
+                pid_segment.pid_3  = pat['pat_code_lab'] or ''  # Laboratory code for patient
                 pid_segment.pid_4  = str(pat['id_data'])  # Alternative ID, serial from database
                 pid_segment.pid_5  = f"{pat['pat_name']}^{pat['pat_firstname']}^L"  # Family name^Given name^Type."L"egal name
-                pid_segment.pid_6  = pat['pat_maiden']    # Maiden name
+                pid_segment.pid_6  = pat['pat_maiden'] or ''  # Maiden name
                 pid_segment.pid_7  = pat_birth            # Datetime of birth.
                 pid_segment.pid_8  = pat_sex              # Sex : "F"emale, "M"ale, "O"ther, "U"nknown, "A"mbigous, "N"ot app
                 pid_segment.pid_11 = "Street^Other^City^Zip"  # Address TODO
@@ -324,7 +325,7 @@ class Analyzer:
                 # Specimen segment
                 spm_segment = specimen_group.add_segment('SPM')
                 spm_segment.spm_1 = "1"
-                spm_segment.spm_2 = str(id_samp)
+                spm_segment.spm_2 = str(code_samp) if code_samp not in (None, '', 'None') else str(id_samp)
                 spm_segment.spm_4 = f"{id_samp}^{type_samp}^LBK"
                 spm_segment.spm_11 = "P"
 
@@ -334,7 +335,6 @@ class Analyzer:
                 except Exception as e:
                     Analyzer.log.error(Logs.fileline() + ' ERROR e : ' + str(e))
 
-                # Add group
                 order_group = specimen_group.add_group("OML_O33_ORDER")
 
                 # Order segment
@@ -348,10 +348,8 @@ class Analyzer:
                 except Exception as e:
                     Analyzer.log.error(Logs.fileline() + ' ERROR e : ' + str(e))
 
-                timing_group = order_group.add_group("OML_O33_TIMING")
-
                 # Timing quantity segment
-                tq1_segment = timing_group.add_segment('TQ1')
+                tq1_segment = order_group.add_segment('TQ1')
                 tq1_segment.tq1_1 = "1"
                 tq1_segment.tq1_9 = "R"  # priority : "R"outine, "S"tat with highest priority.
                 # TODO emergency ?

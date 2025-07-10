@@ -79,12 +79,28 @@ mkdir -p ${LOGS_DIR}
 export LOCAL_SETTINGS=${HOME_APP}/local_settings.py
 
 # if local_settings file doesnt exist we create one
+# AlC 10/07/2025 comment replace by generate secret key
 # from local_settings.py.sample in app directory
-test -f $LOCAL_SETTINGS || {
-    echo "$LOCAL_SETTINGS not found, local_settings.py file create"
+# test -f $LOCAL_SETTINGS || {
+#    echo "$LOCAL_SETTINGS not found, local_settings.py file create"
+#
+#    cp ${APP_DIR}/local_settings.py.sample $LOCAL_SETTINGS || exit 1
+# }
 
-    cp ${APP_DIR}/local_settings.py.sample $LOCAL_SETTINGS || exit 1
-}
+LOCAL_SETTINGS_SAMPLE=${APP_DIR}/local_settings.py.sample
+
+if [ ! -f "$LOCAL_SETTINGS" ]; then
+    echo "$LOCAL_SETTINGS not found, creating with random SECRET_KEY"
+
+    # Generate a random secret key
+    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))")
+
+    # Copy the sample file
+    cp "$LOCAL_SETTINGS_SAMPLE" "$LOCAL_SETTINGS" || exit 1
+
+    # Inject the secret key into local_settings.py
+    sed -i "s/^SECRET_KEY.*/SECRET_KEY = '$SECRET_KEY'/" "$LOCAL_SETTINGS"
+fi
 
 cd ${APP_DIR} || exit 1
 
