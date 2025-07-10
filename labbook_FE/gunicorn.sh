@@ -65,7 +65,9 @@ APP_DIR=${HOME_APP}/${APP_NAME}
 VENV_DIR=${APP_DIR}/venv
 LOGS_DIR=/home/apps/logs
 GUNICORN_DIR=${HOME_APP}/gunicorn
-GUNICORN_TIMEOUT=60
+GUNICORN_TIMEOUT=120
+
+SHARED_SECRET=/home/apps/shared/secret_key.py
 
 # shellcheck disable=SC1091
 source ${VENV_DIR}/bin/activate
@@ -73,6 +75,16 @@ source ${VENV_DIR}/bin/activate
 # create Gunicorn directory if necessary
 mkdir -p ${GUNICORN_DIR}
 mkdir -p ${LOGS_DIR}
+mkdir -p "$(dirname "$SHARED_SECRET")"
+
+# Generate shared SECRET_KEY if missing
+if [ ! -f "$SHARED_SECRET" ]; then
+    echo "Generating shared SECRET_KEY..."
+    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))")
+    echo "SECRET_KEY = '$SECRET_KEY'" > "$SHARED_SECRET"
+else
+    echo "Shared SECRET_KEY file already exists."
+fi
 
 # Operating environment
 export LOCAL_SETTINGS=${HOME_APP}/local_settings.py
@@ -88,14 +100,14 @@ export LOCAL_SETTINGS=${HOME_APP}/local_settings.py
 
 LOCAL_SETTINGS_SAMPLE=${APP_DIR}/local_settings.py.sample
 
+# Create local_settings.py if missing, inject shared SECRET_KEY
 if [ ! -f "$LOCAL_SETTINGS" ]; then
-    echo "$LOCAL_SETTINGS not found, creating with random SECRET_KEY"
-
-    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))")
+    echo "Creating $LOCAL_SETTINGS from sample and injecting shared SECRET_KEY"
 
     cp "$LOCAL_SETTINGS_SAMPLE" "$LOCAL_SETTINGS" || exit 1
 
-    sed -i "s/^SECRET_KEY.*/SECRET_KEY = '$SECRET_KEY'/" "$LOCAL_SETTINGS"
+    # Replace the SECRET_KEY line with the shared one
+    sed -i "/^SECRET_KEY/c\\$(cat $SHARED_SECRET)" "$LOCAL_SETTINGS"
 fi
 
 cd ${APP_DIR} || exit 1

@@ -68,12 +68,23 @@ LOGS_PERM=/storage/log
 GUNICORN_DIR=${HOME_APP}/gunicorn
 GUNICORN_TIMEOUT=0  # Because restore and backup scripts that run synchronously
 
+SHARED_SECRET=/home/apps/shared/secret_key.py
+
 # shellcheck disable=SC1091
 source ${VENV_DIR}/bin/activate
 
 # create Gunicorn directory if necessary
 mkdir -p ${GUNICORN_DIR}
 mkdir -p ${LOGS_DIR}
+mkdir -p "$(dirname "$SHARED_SECRET")"
+
+# Generate shared SECRET_KEY if missing (can be omitted if FE starts first)
+if [ ! -f "$SHARED_SECRET" ]; then
+    echo "Shared SECRET_KEY file not found. Waiting for FE to generate it..."
+    while [ ! -f "$SHARED_SECRET" ]; do
+        sleep 1
+    done
+fi
 
 # Operating environment
 export LOCAL_SETTINGS=${HOME_APP}/local_settings.py
@@ -89,17 +100,13 @@ export LOCAL_SETTINGS=${HOME_APP}/local_settings.py
 
 LOCAL_SETTINGS_SAMPLE=${APP_DIR}/local_settings.py.sample
 
+# Create local_settings.py if missing, inject shared SECRET_KEY
 if [ ! -f "$LOCAL_SETTINGS" ]; then
-    echo "$LOCAL_SETTINGS not found, creating with random SECRET_KEY"
+    echo "Creating $LOCAL_SETTINGS from sample and injecting shared SECRET_KEY"
 
-    # Generate a random secret key
-    SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_urlsafe(50))")
-
-    # Copy the sample file
     cp "$LOCAL_SETTINGS_SAMPLE" "$LOCAL_SETTINGS" || exit 1
 
-    # Inject the secret key into local_settings.py
-    sed -i "s/^SECRET_KEY.*/SECRET_KEY = '$SECRET_KEY'/" "$LOCAL_SETTINGS"
+    sed -i "/^SECRET_KEY/c\\$(cat $SHARED_SECRET)" "$LOCAL_SETTINGS"
 fi
 
 cd ${APP_DIR} || exit 1

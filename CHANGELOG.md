@@ -11,7 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [3.5.15] - 2025-07-10
 ### Changed
 - upgrade 3 external webservices in secure mode using authentication
-- generate secret key for session at the first launch of project
+- generate shared secret key for session at the first launch of project
 
 ### Fixed
 - add timeout=5 on every request.get or post (except one)
