@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.5.16] - 2025-07-21
+### Changed
+- processing for Lab27 transactions
+
 ## [3.5.15] - 2025-07-10
 ### Changed
 - upgrade 3 external webservices in secure mode using authentication

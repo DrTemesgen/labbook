@@ -533,6 +533,120 @@ class Analyzer:
             return False
 
     @staticmethod
+    def generate_rsp_k11_response(original_message):
+        """
+        Generates a RSP^K11 HL7 response to a QBP^Q11 query as per IHE LAB-27.
+
+        :param original_message: HL7 QBP^Q11 message
+        :return: HL7 ER7 string or None
+        """
+        if not original_message:
+            Analyzer.log.error(Logs.fileline() + " : ERROR - original_message is None")
+            return None
+
+        try:
+            now = datetime.now().strftime("%Y%m%d%H%M%S")
+            msg_control_id = original_message.msh.msh_10.value or f"RSP{now}"
+            query_tag = original_message.qpd.qpd_2.value or "GENEXPERT"
+            specimen_id = original_message.qpd.qpd_3[0].value if original_message.qpd.qpd_3 else ""
+
+            # Initialize RSP_K11
+            rsp = Message("RSP_K11", version="2.5.1")
+
+            # === MSH segment ===
+            rsp.msh.msh_3 = "LabBook"
+            rsp.msh.msh_4 = "LIS"
+            rsp.msh.msh_5 = original_message.msh.msh_3.value or "GeneXpert"
+            rsp.msh.msh_6 = original_message.msh.msh_4.value or "Analyzer"
+            rsp.msh.msh_7 = now
+            rsp.msh.msh_9 = "RSP^K11^RSP_K11"
+            rsp.msh.msh_10 = msg_control_id
+            rsp.msh.msh_11 = "P"
+            rsp.msh.msh_12 = "2.5.1"
+            rsp.msh.msh_18 = "UNICODE UTF-8"
+            rsp.msh.msh_21 = "LAB-27^IHE"
+
+            # === MSA segment ===
+            rsp.msa.msa_1 = "AA"
+            rsp.msa.msa_2 = msg_control_id
+            rsp.msa.msa_3 = ""
+
+            # === QAK segment ===
+            rsp.qak.qak_1 = query_tag
+            rsp.qak.qak_2 = "OK"
+
+            # === QPD segment ===
+            qpd = rsp.add_segment("QPD")
+            qpd.qpd_1 = original_message.qpd.qpd_1.value or "LAB-27^IHE"
+            qpd.qpd_2 = original_message.qpd.qpd_2.value or "GENEXPERT"
+            if original_message.qpd.qpd_3 and len(original_message.qpd.qpd_3) > 0:
+                qpd.qpd_3[0] = original_message.qpd.qpd_3[0].value
+
+            # === Fetch matching orders ===
+            raw_orders = []
+            
+            date_now = datetime.now().strftime("%Y%m%d%H%M%S")
+
+            if specimen_id.upper() == "ALL":
+                # Retrieve all samples for batch transmission
+                raw_orders = Product.getOrdersForLab27()
+            else:
+                resolved_id = Product.resolveProductId(specimen_id)
+                if resolved_id:
+                    specimen_id = resolved_id
+                    Analyzer.log.info(Logs.fileline() + f' : INFO specimen_id resolved to id_data = {specimen_id}')
+                    single_order = Product.getOrderDetForLab27(specimen_id)
+                    raw_orders = [single_order] if single_order else []
+                else:
+                    Analyzer.log.warning(Logs.fileline() + f' : WARNING specimen_id not found as id_data or code: {specimen_id}')
+                    raw_orders = []
+
+            for order in raw_orders:
+                try:
+                    patient_id = order['pat_code']
+                    last_name = order['pat_name']
+                    first_name = order['pat_firstname']
+                    dob = order['pat_birth'].strftime("%Y%m%d") if order['pat_birth'] else ""
+                    sex = 'M' if order['pat_sex'] == 1 else 'F' if order['pat_sex'] == 2 else 'U'
+                    specimen = order['code']
+                    test_code = order['ana_loinc'] if order['ana_loinc'] else order['ana_code']
+                    test_name = order['ana_name']
+                    status = "NW"
+
+                    pid = rsp.add_segment("PID")
+                    pid.pid_3 = patient_id
+                    pid.pid_5 = f"{last_name}^{first_name}"
+                    pid.pid_7 = dob
+                    pid.pid_8 = sex
+
+                    pv1 = rsp.add_segment("PV1")
+                    pv1.pv1_2 = "O"  # Outpatient by default
+
+                    spm = rsp.add_segment("SPM")
+                    spm.spm_1 = "1"
+                    spm.spm_2 = specimen
+
+                    orc = rsp.add_segment("ORC")
+                    orc.orc_1 = status
+                    orc.orc_2 = specimen
+
+                    obr = rsp.add_segment("OBR")
+                    obr.obr_1 = "1"
+                    obr.obr_2 = specimen
+                    obr.obr_4 = f"{test_code}^{test_name}"
+
+                except Exception as e:
+                    Analyzer.log.error(Logs.fileline() + f" : ERROR processing sample: {str(e)}")
+
+            hl7_str = rsp.to_er7()
+            Analyzer.log.info(Logs.fileline() + " : DEBUG Generated RSP^K11:\n" + hl7_str.replace("\r", "\n"))
+            return hl7_str
+
+        except Exception as e:
+            Analyzer.log.error(Logs.fileline() + f" : ERROR Failed to generate RSP^K11: {str(e)}")
+            return None
+    
+    @staticmethod
     def generate_ack_response(original_message, ack_code, error_message=""):
         """
         Generates a correctly formatted HL7 ACK response message according to HL7 2.5.1 specifications.
@@ -578,7 +692,7 @@ class Analyzer:
         msa_segment = ack.add_segment("MSA")
         msa_segment.msa_1 = ack_code
         msa_segment.msa_2 = message_control_id
-        msa_segment.msa_3 = error_message if error_message else "Message processed successfully"
+        msa_segment.msa_3 = str(error_message) if error_message else ""
 
         # If there is an error, include the ERR segment as per HL7 2.5.1 recommendations
         if ack_code in ["AE", "AR"]:

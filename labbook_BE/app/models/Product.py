@@ -28,6 +28,65 @@ class Product:
         return cursor.fetchone()
 
     @staticmethod
+    def getOrderDetForLab27(id_prod):
+        cursor = DB.cursor()
+
+        req = ("""
+               SELECT samp.id_data as id_samp, samp.code as code_samp, samp.samp_date, d1.label as type_samp,
+               rec.num_dos_an as num_record, ana.code as ana_code, ana.nom as ana_name, ana.ana_loinc,
+               pat.code as pat_code, pat.nom as pat_name, pat.prenom as pat_firstname, pat.nom_jf as pat_maiden,
+               pat.ddn as pat_birth, pat.sexe as pat_sex, pat.adresse as pat_address, pat.ville as pat_city,
+               pat.cp as pat_zip, pat.tel as pat_phone1, pat.pat_email
+               from sigl_01_data samp
+               left join sigl_dico_data d1 on d1.id_data = samp.type_prel
+               left join sigl_02_data rec on rec.id_data = samp.id_dos
+               left join  sigl_03_data pat on pat.id_data = rec.id_patient
+               left join sigl_05_data ana on ana.id_data = samp.samp_id_ana
+               where samp.code = %s;              
+               """)
+
+        cursor.execute(req, (id_prod,))
+
+        return cursor.fetchone()
+
+    @staticmethod
+    def getOrdersForLab27():
+        """
+        Retrieve all valid sample orders eligible for LAB-27 response (RSP^K11).
+
+        Includes:
+        - samples with non-empty code
+        - active associated analysis
+        - records with statut 182 or 253
+        """
+        try:
+            cursor = DB.cursor()
+
+            req = (
+                "select "
+                "samp.id_data as id_data, samp.code as code, samp.samp_date, "
+                "d1.label as type_samp, rec.id_data as id_rec, "
+                "ana.code as ana_code, ana.nom as ana_name, ana.ana_loinc, "
+                "pat.code as pat_code, pat.nom as pat_name, pat.prenom as pat_firstname, "
+                "pat.ddn as pat_birth, pat.sexe as pat_sex "
+                "from sigl_01_data samp "
+                "left join sigl_dico_data d1 on d1.id_data = samp.type_prel "
+                "left join sigl_02_data rec on rec.id_data = samp.id_dos "
+                "left join sigl_03_data pat on pat.id_data = rec.id_patient "
+                "left join sigl_05_data ana on ana.id_data = samp.samp_id_ana "
+                "where samp.code is not null and samp.code != '' "
+                "and samp.samp_id_ana > 0 and ana.actif = 4 and rec.statut in (182, 253) "
+                "order by samp.samp_date desc"
+            )
+
+            cursor.execute(req)
+            return cursor.fetchall()
+
+        except Exception as e:
+            Product.log.error(Logs.fileline() + f" : error in getOrdersForLab27: {str(e)}")
+            return []
+
+    @staticmethod
     def getProductList(args):
         cursor = DB.cursor()
 
