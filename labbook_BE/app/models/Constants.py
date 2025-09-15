@@ -67,3 +67,10 @@ class Constants:
     cst_stat_accepted  = 'AA'
     cst_stat_error     = 'AE'
     cst_stat_rejected  = 'AR'
+
+    cst_email_test = "test-labbook@yopmail.com"
+
+    cst_base_whatsapp  = "https://graph.facebook.com/v23.0"
+    cst_msg_whatsapp   = cst_base_whatsapp + "/{pnid}/messages"
+    cst_media_whatsapp = cst_base_whatsapp + "/{pnid}/media"
+    cst_model_test_whatsapp = "hello_world"

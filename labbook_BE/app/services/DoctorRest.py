@@ -89,6 +89,9 @@ class DoctorDet(Resource):
             self.log.error(Logs.fileline() + ' : DoctorDet ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
+        if 'doc_agreement' not in args:
+            args['doc_agreement'] = 'N'
+
         # Update doctor
         if id_doctor > 0:
             ret = Doctor.updateDoctor(id_data=id_doctor,
@@ -107,7 +110,8 @@ class DoctorDet(Resource):
                                       adresse=args['address'],
                                       mobile=args['mobile'],
                                       fax=args['fax'],
-                                      zipcity=args['zipcity'])
+                                      zipcity=args['zipcity'],
+                                      doc_agreement=args['doc_agreement'])
 
             if ret is False:
                 self.log.error(Logs.alert() + ' : DoctorDet ERROR update')
@@ -130,7 +134,8 @@ class DoctorDet(Resource):
                                       adresse=args['address'],
                                       mobile=args['mobile'],
                                       fax=args['fax'],
-                                      zipcity=args['zipcity'])
+                                      zipcity=args['zipcity'],
+                                      doc_agreement=args['doc_agreement'])
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : DoctorDet ERROR  insert')
@@ -165,7 +170,7 @@ class DoctorExport(Resource):
 
         l_data = [['id_data', 'id_owner', 'code', 'lastname', 'firstname', 'zipcity', 'city',
                    'facility', 'spe', 'spe_id', 'phone', 'mobile', 'fax', 'email', 'title',
-                   'initial', 'service', 'address', ]]
+                   'initial', 'service', 'address', 'agreement']]
         dict_data = Doctor.getDoctorList(args)
 
         Various.useLangDB()
@@ -196,6 +201,7 @@ class DoctorExport(Resource):
                 data.append(d['initial'])
                 data.append(d['service'])
                 data.append(d['address'])
+                data.append(d['doc_agreement'])
 
                 l_data.append(data)
 

@@ -297,7 +297,8 @@ class PatientDet(Resource):
                           'pat_nationality': 0,
                           'pat_resident': 'Y',
                           'pat_blood_group': 0,
-                          'pat_blood_rhesus': 0}
+                          'pat_blood_rhesus': 0,
+                          'pat_agreement': 'N'}
 
         # Update patient
         if id_pat != 0:
@@ -342,7 +343,8 @@ class PatientDet(Resource):
                                         nationality=args['pat_nationality'],
                                         resident=args['pat_resident'],
                                         blood_group=args['pat_blood_group'],
-                                        blood_rhesus=args['pat_blood_rhesus'])
+                                        blood_rhesus=args['pat_blood_rhesus'],
+                                        pat_agreement=args['pat_agreement'])
 
             if ret is False:
                 self.log.error(Logs.alert() + ' : PatientDet ERROR update')
@@ -414,7 +416,8 @@ class PatientDet(Resource):
                                         nationality=args['pat_nationality'],
                                         resident=args['pat_resident'],
                                         blood_group=args['pat_blood_group'],
-                                        blood_rhesus=args['pat_blood_rhesus'])
+                                        blood_rhesus=args['pat_blood_rhesus'],
+                                        pat_agreement=args['pat_agreement'])
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : PatientDet ERROR insert')

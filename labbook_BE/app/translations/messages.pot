@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-04-24 14:38+0200\n"
+"POT-Creation-Date: 2025-09-11 16:45+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,277 +17,277 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
-#: models/File.py:515
+#: models/File.py:529
 msgid "DUPLICATA"
 msgstr ""
 
-#: models/Pdf.py:63
+#: models/Pdf.py:64
 msgid "ETAT DE LA FACTURATION DU"
 msgstr ""
 
-#: models/Pdf.py:63
+#: models/Pdf.py:64
 msgid "AU"
 msgstr ""
 
-#: models/Pdf.py:68 models/Pdf.py:211
+#: models/Pdf.py:69 models/Pdf.py:212
 msgid "N° dossier"
 msgstr ""
 
-#: models/Pdf.py:69
+#: models/Pdf.py:70
 msgid "N° quittance"
 msgstr ""
 
-#: models/Pdf.py:70
+#: models/Pdf.py:71
 msgid "N° facture"
 msgstr ""
 
-#: models/Pdf.py:71
+#: models/Pdf.py:72
 msgid "Prix"
 msgstr ""
 
-#: models/Pdf.py:72
+#: models/Pdf.py:73
 msgid "A payer"
 msgstr ""
 
-#: models/Pdf.py:100 models/Pdf.py:2787
+#: models/Pdf.py:101 models/Pdf.py:2824
 msgid "Total"
 msgstr ""
 
-#: models/Pdf.py:114
+#: models/Pdf.py:115
 msgid "Etat de la facturation, édité le"
 msgstr ""
 
-#: models/Pdf.py:116
+#: models/Pdf.py:117
 msgid "Page"
 msgstr ""
 
-#: models/Pdf.py:210
+#: models/Pdf.py:211
 msgid "Date"
 msgstr ""
 
-#: models/Pdf.py:212
+#: models/Pdf.py:213
 msgid "Famille"
 msgstr ""
 
-#: models/Pdf.py:213 translations/messages_pybabel.py:305
+#: models/Pdf.py:214 translations/messages_pybabel.py:305
 msgid "Analyse"
 msgstr ""
 
-#: models/Pdf.py:214
+#: models/Pdf.py:215
 msgid "Validation"
 msgstr ""
 
-#: models/Pdf.py:567 models/Pdf.py:1080 models/Pdf.py:2189 models/Pdf.py:2768
+#: models/Pdf.py:566 models/Pdf.py:1079 models/Pdf.py:2226 models/Pdf.py:2805
 msgid "Tél"
 msgstr ""
 
-#: models/Pdf.py:572 models/Pdf.py:1081 models/Pdf.py:2190 models/Pdf.py:2769
+#: models/Pdf.py:571 models/Pdf.py:1080 models/Pdf.py:2227 models/Pdf.py:2806
 msgid "Fax"
 msgstr ""
 
-#: models/Pdf.py:577 models/Pdf.py:1082 models/Pdf.py:2191 models/Pdf.py:2770
+#: models/Pdf.py:576 models/Pdf.py:1081 models/Pdf.py:2228 models/Pdf.py:2807
 msgid "Email"
 msgstr ""
 
-#: models/Pdf.py:800 models/Pdf.py:1317 models/Pdf.py:2384 models/Pdf.py:2994
+#: models/Pdf.py:799 models/Pdf.py:1319 models/Pdf.py:2421 models/Pdf.py:3031
 #: translations/messages_pybabel.py:597
 msgid "Inconnu"
 msgstr ""
 
-#: models/Pdf.py:847 models/Pdf.py:859 models/Pdf.py:992 models/Pdf.py:1364
-#: models/Pdf.py:1376 models/Pdf.py:2431 models/Pdf.py:2443 models/Pdf.py:3041
-#: models/Pdf.py:3053
+#: models/Pdf.py:846 models/Pdf.py:858 models/Pdf.py:991 models/Pdf.py:1366
+#: models/Pdf.py:1378 models/Pdf.py:2468 models/Pdf.py:2480 models/Pdf.py:3078
+#: models/Pdf.py:3090
 msgid "ans"
 msgstr ""
 
-#: models/Pdf.py:850 models/Pdf.py:871 models/Pdf.py:1367 models/Pdf.py:1388
-#: models/Pdf.py:2434 models/Pdf.py:2455 models/Pdf.py:3044 models/Pdf.py:3065
+#: models/Pdf.py:849 models/Pdf.py:870 models/Pdf.py:1369 models/Pdf.py:1390
+#: models/Pdf.py:2471 models/Pdf.py:2492 models/Pdf.py:3081 models/Pdf.py:3102
 msgid "jours"
 msgstr ""
 
-#: models/Pdf.py:854 models/Pdf.py:863 models/Pdf.py:1371 models/Pdf.py:1380
-#: models/Pdf.py:2438 models/Pdf.py:2447 models/Pdf.py:3048 models/Pdf.py:3057
+#: models/Pdf.py:853 models/Pdf.py:862 models/Pdf.py:1373 models/Pdf.py:1382
+#: models/Pdf.py:2475 models/Pdf.py:2484 models/Pdf.py:3085 models/Pdf.py:3094
 msgid "mois"
 msgstr ""
 
-#: models/Pdf.py:867 models/Pdf.py:1384 models/Pdf.py:2451 models/Pdf.py:3061
+#: models/Pdf.py:866 models/Pdf.py:1386 models/Pdf.py:2488 models/Pdf.py:3098
 msgid "semaines"
 msgstr ""
 
-#: models/Pdf.py:875 models/Pdf.py:995 models/Pdf.py:1392 models/Pdf.py:2459
-#: models/Pdf.py:3069 translations/messages_pybabel.py:598
+#: models/Pdf.py:874 models/Pdf.py:994 models/Pdf.py:1394 models/Pdf.py:2496
+#: models/Pdf.py:3106 translations/messages_pybabel.py:598
 msgid "Masculin"
 msgstr ""
 
-#: models/Pdf.py:877 models/Pdf.py:1394 models/Pdf.py:2461 models/Pdf.py:3071
+#: models/Pdf.py:876 models/Pdf.py:1396 models/Pdf.py:2498 models/Pdf.py:3108
 msgid "Feminin"
 msgstr ""
 
-#: models/Pdf.py:1083 models/Pdf.py:2192 models/Pdf.py:2771
+#: models/Pdf.py:1082 models/Pdf.py:2229 models/Pdf.py:2808
 msgid "Dossier"
 msgstr ""
 
-#: models/Pdf.py:1084 models/Pdf.py:2193 models/Pdf.py:2772
+#: models/Pdf.py:1083 models/Pdf.py:2230 models/Pdf.py:2809
 msgid "Code"
 msgstr ""
 
-#: models/Pdf.py:1085 models/Pdf.py:2194 models/Pdf.py:2773
+#: models/Pdf.py:1084 models/Pdf.py:2231 models/Pdf.py:2810
 msgid "Né(e) le"
 msgstr ""
 
-#: models/Pdf.py:1086 models/Pdf.py:2195 models/Pdf.py:2774
+#: models/Pdf.py:1085 models/Pdf.py:2232 models/Pdf.py:2811
 msgid "Admis le"
 msgstr ""
 
-#: models/Pdf.py:1087 models/Pdf.py:2196 models/Pdf.py:2775
+#: models/Pdf.py:1086 models/Pdf.py:2233 models/Pdf.py:2812
 msgid "en"
 msgstr ""
 
-#: models/Pdf.py:1088 models/Pdf.py:2197 models/Pdf.py:2776
+#: models/Pdf.py:1087 models/Pdf.py:2234 models/Pdf.py:2813
 msgid "Lit"
 msgstr ""
 
-#: models/Pdf.py:1089 models/Pdf.py:2198 models/Pdf.py:2777
+#: models/Pdf.py:1088 models/Pdf.py:2235 models/Pdf.py:2814
 msgid "par"
 msgstr ""
 
-#: models/Pdf.py:1090 models/Pdf.py:2199 models/Pdf.py:2778
+#: models/Pdf.py:1089 models/Pdf.py:2236 models/Pdf.py:2815
 msgid "Examen prescrit le"
 msgstr ""
 
-#: models/Pdf.py:1091 models/Pdf.py:2200 models/Pdf.py:2779
+#: models/Pdf.py:1090 models/Pdf.py:2237 models/Pdf.py:2816
 msgid "Enregistré le"
 msgstr ""
 
-#: models/Pdf.py:1092 models/Pdf.py:2201 models/Pdf.py:2780
+#: models/Pdf.py:1091 models/Pdf.py:2238 models/Pdf.py:2817
 msgid "édité le"
 msgstr ""
 
-#: models/Pdf.py:1093 models/Pdf.py:2202 models/Pdf.py:2781
+#: models/Pdf.py:1092 models/Pdf.py:2239 models/Pdf.py:2818
 msgid "ANALYSE"
 msgstr ""
 
-#: models/Pdf.py:1094 models/Pdf.py:2203 models/Pdf.py:2782
+#: models/Pdf.py:1093 models/Pdf.py:2240 models/Pdf.py:2819
 msgid "RESULTAT"
 msgstr ""
 
-#: models/Pdf.py:1095 models/Pdf.py:2204 models/Pdf.py:2783
+#: models/Pdf.py:1094 models/Pdf.py:2241 models/Pdf.py:2820
 msgid "Références"
 msgstr ""
 
-#: models/Pdf.py:1096 models/Pdf.py:2205 models/Pdf.py:2784
+#: models/Pdf.py:1095 models/Pdf.py:2242 models/Pdf.py:2821
 msgid "Antériorités"
 msgstr ""
 
-#: models/Pdf.py:1097 models/Pdf.py:2206 models/Pdf.py:2785
+#: models/Pdf.py:1096 models/Pdf.py:2243 models/Pdf.py:2822
 msgid "Commentaire"
 msgstr ""
 
-#: models/Pdf.py:1098 models/Pdf.py:2207 models/Pdf.py:2786
+#: models/Pdf.py:1097 models/Pdf.py:2244 models/Pdf.py:2823
 msgid "validé par"
 msgstr ""
 
-#: models/Pdf.py:1131 translations/messages_pybabel.py:292
+#: models/Pdf.py:1130 translations/messages_pybabel.py:292
 msgid "Compte rendu"
 msgstr ""
 
-#: models/Pdf.py:1146
+#: models/Pdf.py:1148
 msgid "COMPLET"
 msgstr ""
 
-#: models/Pdf.py:1155 models/Pdf.py:1661
+#: models/Pdf.py:1157 models/Pdf.py:1663
 msgid "PARTIEL"
 msgstr ""
 
-#: models/Pdf.py:1161
+#: models/Pdf.py:1163
 msgid "Annule et remplace le précédent"
 msgstr ""
 
-#: models/Pdf.py:1199 models/Pdf.py:2272 models/Pdf.py:2846
+#: models/Pdf.py:1201 models/Pdf.py:2309 models/Pdf.py:2883
 #: translations/messages_pybabel.py:593
 msgid "Microbiologie"
 msgstr ""
 
-#: models/Pdf.py:1258 models/Pdf.py:2325
+#: models/Pdf.py:1260 models/Pdf.py:2362
 msgid "Renseignements cliniques"
 msgstr ""
 
-#: models/Pdf.py:1596 models/Pdf.py:2578 models/Pdf.py:2592 models/Pdf.py:3152
-#: models/Pdf.py:3168
+#: models/Pdf.py:1598 models/Pdf.py:2615 models/Pdf.py:2629 models/Pdf.py:3189
+#: models/Pdf.py:3205
 msgid "Sous-traitée"
 msgstr ""
 
-#: models/Pdf.py:1681 models/Pdf.py:1691 models/Pdf.py:1701 models/Pdf.py:1711
+#: models/Pdf.py:1683 models/Pdf.py:1693 models/Pdf.py:1703 models/Pdf.py:1713
 msgid "Annulée"
 msgstr ""
 
-#: models/Pdf.py:1865 translations/messages_pybabel.py:1478
+#: models/Pdf.py:1867 translations/messages_pybabel.py:1478
 #: translations/messages_pybabel.py:1479 translations/messages_pybabel.py:1480
 #: translations/messages_pybabel.py:1481
 msgid "Albumine"
 msgstr ""
 
-#: models/Pdf.py:1866 translations/messages_pybabel.py:91
+#: models/Pdf.py:1868 translations/messages_pybabel.py:91
 msgid "Absent"
 msgstr ""
 
-#: models/Pdf.py:1870 translations/messages_pybabel.py:92
+#: models/Pdf.py:1872 translations/messages_pybabel.py:92
 msgid "Présent"
 msgstr ""
 
-#: models/Pdf.py:1879 models/Pdf.py:2589 translations/messages_pybabel.py:314
+#: models/Pdf.py:1881 models/Pdf.py:2626 translations/messages_pybabel.py:314
 msgid "Biochimie urinaire"
 msgstr ""
 
-#: models/Pdf.py:1880 models/Pdf.py:2590 translations/messages_pybabel.py:1349
+#: models/Pdf.py:1882 models/Pdf.py:2627 translations/messages_pybabel.py:1349
 msgid "Bandelettes urinaires"
 msgstr ""
 
-#: models/Pdf.py:1987 models/Pdf.py:2667 translations/messages_pybabel.py:690
+#: models/Pdf.py:1989 models/Pdf.py:2704 translations/messages_pybabel.py:690
 msgid "Sang"
 msgstr ""
 
-#: models/Pdf.py:1989 models/Pdf.py:2669 translations/messages_pybabel.py:545
+#: models/Pdf.py:1991 models/Pdf.py:2706 translations/messages_pybabel.py:545
 msgid "Fait"
 msgstr ""
 
-#: models/Pdf.py:1994 models/Pdf.py:2674 translations/messages_pybabel.py:483
+#: models/Pdf.py:1996 models/Pdf.py:2711 translations/messages_pybabel.py:483
 msgid "Interne au labo"
 msgstr ""
 
-#: models/Pdf.py:2240
+#: models/Pdf.py:2277
 msgid "Bon de transfert"
 msgstr ""
 
-#: models/Pdf.py:2788
+#: models/Pdf.py:2825
 msgid "Total à payer"
 msgstr ""
 
-#: models/Pdf.py:2789
+#: models/Pdf.py:2826
 msgid "Analyses demandées"
 msgstr ""
 
-#: models/Pdf.py:2790
+#: models/Pdf.py:2827
 msgid "Remise sur la facturation"
 msgstr ""
 
-#: models/Pdf.py:2791
+#: models/Pdf.py:2828
 msgid "Pourcentage de la remise"
 msgstr ""
 
-#: models/Pdf.py:2792
+#: models/Pdf.py:2829
 msgid "Pourcentage assurance maladie / mutuelle"
 msgstr ""
 
-#: models/Pdf.py:2825 translations/messages_pybabel.py:293
+#: models/Pdf.py:2862 translations/messages_pybabel.py:293
 msgid "Facture"
 msgstr ""
 
-#: models/Pdf.py:2858 translations/messages_pybabel.py:577
+#: models/Pdf.py:2895 translations/messages_pybabel.py:577
 msgid "Personnel hospitalier"
 msgstr ""
 
-#: models/Pdf.py:3165 translations/messages_pybabel.py:1078
+#: models/Pdf.py:3202 translations/messages_pybabel.py:1078
 msgid "Détermination du groupe sanguin ABO et Rhésus standard (D)"
 msgstr ""
 

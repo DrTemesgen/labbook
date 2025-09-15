@@ -584,7 +584,7 @@ class Analyzer:
 
             # === Fetch matching orders ===
             raw_orders = []
-            
+
             date_now = datetime.now().strftime("%Y%m%d%H%M%S")
 
             if specimen_id.upper() == "ALL":
@@ -645,7 +645,7 @@ class Analyzer:
         except Exception as e:
             Analyzer.log.error(Logs.fileline() + f" : ERROR Failed to generate RSP^K11: {str(e)}")
             return None
-    
+
     @staticmethod
     def generate_ack_response(original_message, ack_code, error_message=""):
         """

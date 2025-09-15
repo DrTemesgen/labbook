@@ -1,0 +1,340 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+<title>{{ _("Paramétrage des méthodes d'envoi") }}</title>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+            <h2 class="page-title page-title-color"><span>{{ _("Paramétrage des méthodes d'envoi") }}</span></h2>
+
+            {# ===== METHODS TABLE ===== #}
+            <h4 class="mt-1"><span>{{ _("Méthodes") }}</span></h4>
+
+            <table id="methodTable" class="display table table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>{{ _("Action") }}</th>
+                        <th hidden>{{ _("ID") }}</th>
+                        <th>{{ _("Type") }}</th>
+                        <th>{{ _("Nom") }}</th>
+                        <th>{{ _("Défaut") }}</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <div class="clearfix mt-2 mb-1">
+                <div class="float-end">
+                    <div class="btn-group dropdown">
+                        <button type="button" class="btn btn-lbk btn-{{ session['user_role']|safe }} dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="btn_add_method">
+                            {{ _("Ajouter") }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end btn-{{ session['user_role']|safe }}" aria-labelledby="btn_add_method">
+                            <li><a class="dropdown-item dropdown-color-link" href="#" onclick="add_method('S');return false;">{{ _("Ajouter SMTP") }}</a></li>
+                            <li><a class="dropdown-item dropdown-color-link" href="#" onclick="add_method('M');return false;">{{ _("Ajouter Mailjet") }}</a></li>
+                            <li><a class="dropdown-item dropdown-color-link" href="#" onclick="add_method('W');return false;">{{ _("Ajouter WhatsApp") }}</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            {# ===== MODELS TABLE ===== #}
+            <h4><span>{{ _("Modèles") }}</span></h4>
+
+            <table id="modelTable" class="display table table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>{{ _("Action") }}</th>
+                        <th hidden>{{ _("ID") }}</th>
+                        <th>{{ _("Type") }}</th>
+                        <th>{{ _("Nom") }}</th>
+                        <th>{{ _("Défaut") }}</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <div class="clearfix mt-2 mb-1">
+                <div class="float-start ms-0">
+                    <input type="button" onclick="return_home();" id="btn_return" value="{{ _("Retour") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                </div>
+                <div class="float-end">
+                    <div class="btn-group dropdown">
+                        <button type="button" class="btn btn-lbk btn-{{ session['user_role']|safe }} dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="btn_add_model">
+                            {{ _("Ajouter") }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end btn-{{ session['user_role']|safe }}" aria-labelledby="btn_add_model">
+                            <li><a class="dropdown-item dropdown-color-link" href="#" onclick="add_model('S');return false;">{{ _("Ajouter SMTP") }}</a></li>
+                            <li><a class="dropdown-item dropdown-color-link" href="#" onclick="add_model('M');return false;">{{ _("Ajouter Mailjet") }}</a></li>
+                            <li><a class="dropdown-item dropdown-color-link" href="#" onclick="add_model('W');return false;">{{ _("Ajouter WhatsApp") }}</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+    const TYPE_LABELS = {
+        'S': "{{ _('SMTP') }}",
+        'M': "{{ _('Mailjet') }}",
+        'W': "{{ _('WhatsApp') }}"
+    };
+
+let methodTable ;
+let modelTable ;
+
+/* ===== METHODS ===== */
+
+function loadMethodTable()
+{
+    if ($.fn.DataTable.isDataTable('#methodTable')) 
+    {
+        $('#methodTable').DataTable().clear().destroy();
+    }
+
+    methodTable = $('#methodTable').DataTable({
+        ajax: { url: "{{ session['server_ext'] }}/services/setting/sending/method/list", type: 'GET', dataSrc: '' },
+        pageLength: 25,
+        order: [[2, 'asc'], [3, 'asc']], // Type, then Name
+        "language": {
+            "lengthMenu": "{{ _("Afficher _MENU_ entrées") }}",
+            "zeroRecords": "{{ _("Aucun enregistrement trouvé") }}",
+            "info": "{{ _("Affichage de _START_ à _END_ sur _TOTAL_ entrées") }}",
+            "infoEmpty": "{{ _("Aucune entrée disponible") }}",
+            "infoFiltered": "{{ _("(filtré de _MAX_ entrées au total)") }}",
+            "search": "{{ _("Rechercher") }}:",
+            "paginate": {
+                "first": "{{ _("Premier") }}",
+                "last": "{{ _("Dernier") }}",
+                "next": "{{ _("Suivant") }}",
+                "previous": "{{ _("Précédent") }}"
+            }
+        },
+        columns: [
+            {
+                data: null,
+                orderable: false,
+                searchable: false,
+                render: function (_data, _type, row) {
+                    const editUrl = "{{ session['server_ext'] }}/det-sending-method/" + row.sdi_type + "/" + row.sdi_ser;
+                    return `
+                        <nav>
+                        <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                        <a class="dropdown-toggle menu-act" data-bs-toggle="dropdown" aria-expanded="false"></a>
+                        <div class="dropdown-menu menu-act-drop nav-style">
+                        <a class="dropdown-item menu-act-item" href="${editUrl}">{{ _("Éditer") }}</a>
+                        <a class="dropdown-item menu-act-item" href="#" onclick="test_method('${row.sdi_type}', ${row.sdi_ser}); return false;">{{ _("Tester") }}</a>
+                        <a class="dropdown-item menu-act-item text-danger" href="#" onclick="delete_method('${row.sdi_type}', ${row.sdi_ser}); return false;">{{ _("Supprimer") }}</a>
+                        </div>
+                        </li>
+                        </ul>
+                        </nav>
+                        `;
+                }
+            },
+            { data: 'sdi_ser', visible: false },
+            { data: 'sdi_type', render: renderType },
+            { data: 'sdi_name' },
+            {
+                data: 'sdi_default',
+                orderable: false,
+                searchable: false,
+                className: 'text-center',
+                defaultContent: '',
+                render: function (val) {
+                    return (val === 'Y')
+                        ? '<i class="bi bi-check text-success" aria-label="{{ _("Par défaut") }}" title="{{ _("Par défaut") }}"></i>'
+                        : '';
+                }
+            }
+        ]
+    }); 
+}
+
+function renderType(code) 
+{
+    return TYPE_LABELS[code] || code;
+}
+
+function test_method(type, id) 
+{
+    const isWhatsApp = (type === 'W');
+    const label = isWhatsApp
+        ? "{{ _('Numéro destinataire (format E.164)') }}"
+        : "{{ _('Email destinataire') }}";
+    const placeholder = isWhatsApp ? "+33600110022" : "test-labbook@yopmail.com";
+
+    const to = prompt(label, placeholder);
+    if (!to) return;
+
+    const url = "{{ session['server_ext'] }}/services/setting/sending/method/test/" + type + "/" + id;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-Token': "{{ session.get('csrf_token','') }}"
+        },
+        body: JSON.stringify({ to })
+    })
+        .then(r => r.json().catch(() => ({})).then(data => ({ ok: r.ok, status: r.status, data })))
+        .then(({ ok, data }) => {
+            if (ok) {
+                alert(data?.message || "{{ _('Test réussi.') }}");
+            } else {
+                alert(data?.error || "{{ _('Échec du test.') }}");
+            }
+        })
+        .catch(() => alert("{{ _('Erreur réseau lors du test.') }}"))
+}
+
+function delete_method(type, id) 
+{
+    if (!confirm("{{ _('Confirmer la suppression ?') }}")) return;
+
+    const url = "{{ session['server_ext'] }}/services/setting/sending/method/det/" + type + "/" + id;
+
+    fetch(url, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRF-Token': "{{ session.get('csrf_token','') }}"
+        }
+    })
+        .then(r => {
+            if (r.ok) {
+                if (typeof methodTable !== 'undefined') {
+                    methodTable.ajax.reload(null, false);
+                } else {
+                    loadMethodTable();
+                }
+            } else {
+                return r.text().then(t => { throw new Error(t || 'Delete failed'); });
+            }
+        })
+        .catch(() => alert("{{ _('Échec de la suppression.') }}"));
+
+}
+
+function add_method(type)
+{
+    window.location.href = "{{ session['server_ext'] }}/det-sending-method/" + type + "/0" ;
+}
+
+/* ===== MODELS ===== */
+
+function loadModelTable() {
+    if ($.fn.DataTable.isDataTable('#modelTable')) {
+        $('#modelTable').DataTable().clear().destroy();
+    }
+
+    modelTable = $('#modelTable').DataTable({
+        ajax: { url: "{{ session['server_ext'] }}/services/setting/sending/model/list", type: 'GET', dataSrc: '' },
+        pageLength: 25,
+        order: [[2, 'asc'], [3, 'asc']], // Type, puis Nom
+        "language": {
+            "lengthMenu": "{{ _("Afficher _MENU_ entrées") }}",
+            "zeroRecords": "{{ _("Aucun enregistrement trouvé") }}",
+            "info": "{{ _("Affichage de _START_ à _END_ sur _TOTAL_ entrées") }}",
+            "infoEmpty": "{{ _("Aucune entrée disponible") }}",
+            "infoFiltered": "{{ _("(filtré de _MAX_ entrées au total)") }}",
+            "search": "{{ _("Rechercher") }}:",
+            "paginate": {
+                "first": "{{ _("Premier") }}",
+                "last": "{{ _("Dernier") }}",
+                "next": "{{ _("Suivant") }}",
+                "previous": "{{ _("Précédent") }}"
+            }
+        },
+        columns: [
+            {
+                data: null, orderable:false, searchable:false,
+                render: function (_d,_t,row) {
+                    const editUrl = "{{ session['server_ext'] }}/det-sending-model/" + row.mdl_type + "/" + row.mdl_ser;
+                    return `
+                        <nav><ul class="navbar-nav"><li class="nav-item dropdown">
+                        <a class="dropdown-toggle menu-act" data-bs-toggle="dropdown" aria-expanded="false"></a>
+                        <div class="dropdown-menu menu-act-drop nav-style">
+                        <a class="dropdown-item menu-act-item" href="${editUrl}">{{ _("Éditer") }}</a>
+                        <a class="dropdown-item menu-act-item" href="#" onclick="test_model('${row.mdl_type}', ${row.mdl_ser}); return false;">{{ _("Tester") }}</a>
+                        <a class="dropdown-item menu-act-item text-danger" href="#" onclick="delete_model('${row.mdl_type}', ${row.mdl_ser}); return false;">{{ _("Supprimer") }}</a>
+                        </div>
+                        </li></ul></nav>`;
+                }
+            },
+            { data: 'mdl_ser', visible:false },
+            { data: 'mdl_type', render: renderType },
+            { data: 'mdl_displayname' },
+            {
+                data: 'mdl_default', orderable:false, searchable:false, className:'text-center',
+                render: val => val === 'Y' ? '<i class="bi bi-check text-success" aria-label="{{ _("Par défaut") }}" title="{{ _("Par défaut") }}"></i>' : ''
+            }
+        ]
+    });
+}
+
+function add_model(type) 
+{
+    window.location.href = "{{ session['server_ext'] }}/det-sending-model/" + type + "/0";
+}
+
+function test_model(type, id) {
+    const isWhatsApp = (type === 'W');
+    const label = isWhatsApp
+        ? "{{ _('Numéro destinataire (format E.164)') }}"
+        : "{{ _('Email destinataire') }}";
+    const placeholder = isWhatsApp ? "+33600110022" : "test-labbook@yopmail.com";
+
+    const to = prompt(label, placeholder);
+    if (!to) return;
+
+    const url = "{{ session['server_ext'] }}/services/setting/sending/model/test/" + type + "/" + id;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-Token': "{{ session.get('csrf_token','') }}"
+        },
+        body: JSON.stringify({ to })
+    })
+        .then(r => r.json().catch(() => ({})).then(data => ({ ok: r.ok, status: r.status, data })))
+        .then(({ ok, data }) => alert(ok ? (data?.message || "{{ _('Test réussi.') }}")
+            : (data?.error   || "{{ _('Échec du test.') }}")))
+        .catch(() => alert("{{ _('Erreur réseau lors du test.') }}"))
+}
+
+function delete_model(type, id) {
+    if (!confirm("{{ _('Confirmer la suppression ?') }}")) return;
+
+    const url = "{{ session['server_ext'] }}/services/setting/sending/model/det/" + type + "/" + id;
+    fetch(url, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-Token': "{{ session.get('csrf_token','') }}" }
+    })
+        .then(r => {
+            if (r.ok) { modelTable?.ajax.reload(null, false); }
+            else { return r.text().then(t => { throw new Error(t || 'Delete failed'); }); }
+        })
+        .catch(() => alert("{{ _('Échec de la suppression.') }}"));
+}
+
+function return_home()
+{
+    window.location.href = "{{ session['server_ext'] }}/homepage";
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadMethodTable();
+    loadModelTable();
+});
+</script>
+{% endblock %}

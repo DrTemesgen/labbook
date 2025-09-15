@@ -32,6 +32,11 @@
                             <a class="dropdown-item" href="{{ session['server_ext'] }}/global-report">{{ _("Rapport global") }}</a>
                         </li>
                         {% endif %}
+                        {% if has_permission("RECORD_177") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/list-sending">{{ _("Liste des envois") }}</a>
+                        </li>
+                        {% endif %}
                         {% if has_permission("RECORD_11") %}
                         <li><hr class="dropdown-divider"></li>
                         <li>
@@ -201,6 +206,11 @@
                                 <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-report">{{ _("Configuration des comptes rendus") }}</a>
                             </li>
                             {% endif %}
+                            {% if has_permission("SETTING_178") %}
+                            <li>
+                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-sending-method">{{ _("Configuration des méthodes d'envoi") }}</a>
+                            </li>
+                            {% endif %}
                             {% if has_permission("SETTING_65") %}
                             <li>
                                 <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-rec-num">{{ _("Configuration des numéros de dossier") }}</a>
@@ -366,6 +376,9 @@
                     {% if has_permission("RECORD_10") %}
                     <a class="dropdown-item" href="{{ session['server_ext'] }}/global-report">{{ _("Rapport global") }}</a>
                     {% endif %}
+                    {% if has_permission("RECORD_177") %}
+                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-sending">{{ _("Liste des envois") }}</a>
+                    {% endif %}
                     {% if has_permission("RECORD_11") %}
                     <div class="dropdown-divider nav-cust-divider"></div>
                     <a class="dropdown-item" href="{{ session['server_ext'] }}/new-req-ext">{{ _("Nouvelle demande externe") }}</a>
@@ -486,6 +499,9 @@
                     {% endif %}
                     {% if has_permission("SETTING_64") %}
                     <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-report">{{ _("Configuration des comptes rendus") }}</a>
+                    {% endif %}
+                    {% if has_permission("SETTING_178") %}
+                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-sending-method">{{ _("Configuration des méthodes d'envoi") }}</a>
                     {% endif %}
                     {% if has_permission("SETTING_65") %}
                     <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-rec-num">{{ _("Configuration des numéros de dossier") }}</a>

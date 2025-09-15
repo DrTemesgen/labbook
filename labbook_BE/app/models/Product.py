@@ -42,7 +42,7 @@ class Product:
                left join sigl_02_data rec on rec.id_data = samp.id_dos
                left join  sigl_03_data pat on pat.id_data = rec.id_patient
                left join sigl_05_data ana on ana.id_data = samp.samp_id_ana
-               where samp.code = %s;              
+               where samp.code = %s;
                """)
 
         cursor.execute(req, (id_prod,))

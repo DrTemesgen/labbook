@@ -29,6 +29,21 @@
                         <input type="radio" name="comment" value="1051" {% if args['commentaire'] == 1051 %} checked="checked" {% endif %}>&nbsp;{{ _("Non") }}</input>
                     </label>
                 </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label class="form-label col-lg-3 text-end mt-2 me-1"></label>
+                    <div class="col-9">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="report_pwd" name="report_pwd" {% if args['report_pwd'] =='Y' %}checked{% endif %}>
+                            <label class="form-check-label" for="report_pwd">
+                                {{ _("Compte rendu avec mot de passe") }}
+                            </label>
+                        </div>
+                        <small class="form-text text-muted">
+                            {{ _("Le mot de passe sera le code interne de la fiche patient") }}
+                        </small>
+                    </div>
+                </div>
             </form>
 
             <div class="clearfix mt-2 mb-5">
@@ -52,10 +67,12 @@ function save()
 var id_owner = {{ session['user_id']|safe}} ;
 var header   = $("input:radio[name=header]:checked").val()  ;
 var comment  = $("input:radio[name=comment]:checked").val() ;
+var report_pwd = $("#report_pwd").is(":checked") ? "Y" : "N" ;
 
 var param = '{ "id_owner":' + id_owner + ', ' +
               '"header":' + header + ', ' +
-              '"comment":' + comment + '}' ;
+              '"comment":' + comment + ', ' +
+              '"report_pwd":"' + report_pwd + '"}' ;
 
     $.ajax( {
        type: "POST",

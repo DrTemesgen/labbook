@@ -330,8 +330,6 @@ class UserListFromExt(Resource):
 
         ret = User.checkUserAccess(login, pwd_db)
 
-        l_patients = []
-
         if ret is True:
             self.log.info(Logs.fileline() + ' : UserListFromExt role=' + str(user['role_type']) + ' | login=' + str(login))
             if user['role_type'] == Constants.cst_user_type_api:

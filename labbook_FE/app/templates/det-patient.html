@@ -24,11 +24,24 @@
 
                 <div class="clearfix row mt-2 mb-4">
                     <div class="col-md-12">
-                        <div class="float-start ms-0">
-                            <input type="button" onclick="return_back();" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Retour") }}">
-                        </div>
-                        <div class="float-end me-2">
-                            <input type="button" onclick="save_pat( {{ args['id_pat'] }} );" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Enregistrer") }}"> 
+                        <div class="d-flex justify-content-center align-items-center gap-4">
+                            <div>
+                                <input type="button" onclick="return_back();" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Retour") }}">
+                            </div>
+
+                            <div class="text-center flex-grow-1">
+                                <div class="form-check d-inline-block">
+                                    <input class="form-check-input" type="checkbox"
+                                           id="accord_result" name="pat_agreement" value="Y">
+                                    <label class="form-check-label" for="pat_agreement">
+                                        {{ _("Accord pour l'envoi des résultats par email ou WhatsApp") }}
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <input type="button" onclick="save_pat( {{ args['id_pat'] }} );" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Enregistrer") }}"> 
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -81,6 +94,8 @@ var code_lab = $('#pat_code_lab').val() ;
 function save_form( id_pat )
 {
 {{ args['json_save'] | safe }} ;
+
+param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
 
     // popup wait
     $("#dial-wait").off('shown.bs.modal') ;

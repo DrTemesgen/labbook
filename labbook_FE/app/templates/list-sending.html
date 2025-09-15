@@ -1,0 +1,252 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+<title>{{ _("Liste des envois") }}</title>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+            <h2 class="page-title page-title-color"><span>{{ _("Liste des envois") }}</span></h2>
+
+            {% if has_permission("RECORD_177") %}
+            <table id="sendingTable" class="display table table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>{{ _("Action") }}</th>
+                        <th hidden>{{ _("ID") }}</th>
+                        <th style="text-align:center;">{{ _("Date") }}</th>
+                        <th>{{ _("Utilisateur") }}</th>
+                        <th style="text-align:center;">{{ _("Type") }}</th>
+                        <th style="text-align:center;">{{ _("Statut") }}</th>
+                        <th>{{ _("Destinataire") }}</th>
+                        <th>{{ _("Dossier") }}</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <div class="clearfix mt-2 mb-5">
+                <div class="float-start ms-0">
+                    <input type="button" onclick="return_home();" id="btn_return" value="{{ _("Retour") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                </div>
+            </div>
+
+            {% else %}
+            {% include 'no-rights.html' %} 
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div id="toastArea" class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+  <div id="mainToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="mainToastBody"></div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="{{ _('Fermer') }}"></button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+    const STATUS_LABELS = 
+    {
+        Q: "{{ _('En attente')|e }}",
+        S: "{{ _('Envoyé')|e }}",
+        F: "{{ _('Échec')|e }}"
+    };
+
+const TYPE_LABELS = 
+    {
+        S: "{{ _('SMTP')|e }}",
+        M: "{{ _('Mailjet')|e }}",
+        W: "{{ _('WhatsApp')|e }}"
+    };
+
+function mapUser(row) 
+{
+    // build "lastname firstname" if any exists, else username
+    const ln = (row && row.user_lastname || '').trim();
+    const fn = (row && row.user_firstname || '').trim();
+    const un = (row && row.user_username || '').trim();
+    const full = [ln, fn].filter(Boolean).join(' ').trim();
+    return escapeHtml(full || un || '');
+}
+
+function mapStatus(code, row) 
+{
+    if (!code) return '';
+    const c = String(code).toUpperCase();
+    const lbl = STATUS_LABELS[c] || code;
+
+    if (c === 'F')
+    {
+        const err = escapeHtml(row && row.sde_error ? row.sde_error : "{{ _('Erreur non précisée')|e }}");
+        return `<span class="text-danger fw-semibold" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-title="${err}">${lbl}</span>`;
+    }
+    return lbl;
+}
+
+function mapType(code) 
+{
+    if (!code) return '';
+    const c = String(code).toUpperCase();
+    return TYPE_LABELS[c] || code;
+}
+
+function escapeHtml(str) 
+{
+    return String(str || '')
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function loadItemsTable() {
+    if ($.fn.DataTable.isDataTable('#sendingTable')) {
+        $('#sendingTable').DataTable().destroy();
+    }
+
+    $('#sendingTable').DataTable({
+        "autoWidth": true,
+        "pageLength": 25,
+        "order": [[1, "desc"]], // tri sur ID (col 1, cachée), inchangé
+        "language": {
+            "lengthMenu": "{{ _('Afficher _MENU_ entrées') }}",
+            "zeroRecords": "{{ _('Aucun enregistrement trouvé') }}",
+            "info": "{{ _('Affichage de _START_ à _END_ sur _TOTAL_ entrées') }}",
+            "infoEmpty": "{{ _('Aucune entrée disponible') }}",
+            "infoFiltered": "{{ _('(filtré de _MAX_ entrées au total)') }}",
+            "search": "{{ _('Rechercher') }}:",
+            "paginate": {
+                "first": "{{ _('Premier') }}",
+                "last": "{{ _('Dernier') }}",
+                "next": "{{ _('Suivant') }}",
+                "previous": "{{ _('Précédent') }}"
+            },
+            "processing": "{{ _('Chargement...') }}"
+        },
+        "ajax": {
+            "url": "{{ session['server_ext'] }}/services/setting/sending/list",
+            "type": "POST",
+            "contentType": "application/json; charset=utf-8",
+            "data": function () { return JSON.stringify({}); },
+            "dataSrc": ""
+        },
+        "columns": [
+            { 
+                "data": null,
+                "orderable": false,
+                "render": function (data, type, row) {
+                    {% if not has_permission("RECORD_177") %}
+                    return '';
+                    {% else %}
+                    return `
+                      <nav class="nav-item dropdown">
+                        <a class="dropdown-toggle menu-act" data-bs-toggle="dropdown" aria-expanded="false"></a>
+                        <div class="dropdown-menu nav-style menu-act-drop">
+                          <a class="dropdown-item menu-act-item" href="#"
+                             onclick="resend_sending(${row.sde_ser}); return false;">
+                            {{ _('Ré-envoyer') }}
+                          </a>
+                        </div>
+                      </nav>`;
+                    {% endif %}
+                }
+            },
+            { "data": "sde_ser", "visible": false },
+            { "data": "sde_date" },
+            { "data": null, "render": function(_d,_t,row){ return mapUser(row); } },
+            { "data": "sde_type",  "render": function(d){ return mapType(d); } },
+            { "data": "sde_state", "render": function(d, _t, row){ return mapStatus(d, row); } },
+            { "data": "sde_recipient" },
+            { "data": "sde_rec_num" }
+        ],
+        "drawCallback": function () 
+        {
+            // Rebuild tooltips for any new/changed cells
+            initTooltips();
+        }
+    });
+}
+
+function initTooltips() {
+    const triggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    triggerList.forEach(el => { new bootstrap.Tooltip(el); });
+}
+
+function resend_sending(sde_ser, el)
+{
+    if (!sde_ser) return;
+
+    if ($('#modalWait').length) $('#modalWait').modal('show');
+
+    const payload = { id_user: {{ session['user_id']|tojson }} };
+
+    $.ajax({
+        type: 'POST',
+        url: '{{ session["server_ext"] }}/services/setting/sending/resend/' + sde_ser,
+        data: JSON.stringify(payload),
+        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+        timeout: 30000,
+        success: function(resp){
+            $('#sendingTable').DataTable().ajax.reload(null, false);
+            const msg = (resp && resp.message) ? String(resp.message) : "{{ _('Ré-envoi déclenché.')|e }}";
+            showToast(msg, 'success');
+        },
+        error: function(xhr){
+            var msg = {{ _('Erreur serveur')|tojson }};
+            try {
+                if (xhr.responseJSON && xhr.responseJSON.message) msg = xhr.responseJSON.message;
+                else if (xhr.responseText) msg = xhr.responseText;
+            } catch(e){}
+            alert({{ _('Échec du réenvoi :')|tojson }} + ' ' + msg);
+        },
+        complete: function(){
+            if ($('#modalWait').length) $('#modalWait').modal('hide');
+        }
+    });
+}
+
+function showToast(message, variant)
+{
+    // variant: 'success' | 'danger' | 'warning' | 'info'
+    const toastEl = document.getElementById('mainToast');
+    const bodyEl  = document.getElementById('mainToastBody');
+    if (!toastEl || !bodyEl) return;
+
+    // reset bg-* then apply variant
+    toastEl.classList.remove('bg-success','bg-danger','bg-warning','bg-info');
+    switch ((variant || 'success')) {
+        case 'danger':  toastEl.classList.add('bg-danger');  break;
+        case 'warning': toastEl.classList.add('bg-warning'); break;
+        case 'info':    toastEl.classList.add('bg-info');    break;
+        default:        toastEl.classList.add('bg-success'); break;
+    }
+
+    bodyEl.textContent = message || '';
+    const toast = bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 3000 });
+    toast.show();
+}
+
+function return_home()
+{
+    window.location.href = "{{ session['server_ext'] }}/homepage" ;
+}
+
+{% if has_permission("RECORD_177") %}
+$(document).ready(function() 
+    {
+        loadItemsTable() ;
+    } ) ;
+{% endif %}
+</script>
+{% endblock %}

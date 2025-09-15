@@ -111,7 +111,7 @@ class Result:
                'rec.date_prescription as date_prescr, rec.statut as stat, req.urgent as urgent, rec_modified, '
                'req.id_owner as id_owner, rec.id_patient as id_pat, req.req_outsourced as outsourced, '
                'var_pos.position as position, var_pos.num_var as num_var, var_pos.obligatoire as oblig, rec.rec_num_int, '
-               'ifnull(samp.id_data, 0) as id_samp, samp.type_prel as samp_type '
+               'ifnull(samp.id_data, 0) as id_samp, samp.type_prel as samp_type, rec.med_prescripteur as id_med '
                'from sigl_04_data as req '
                'inner join sigl_02_data as rec on rec.id_data = req.id_dos '
                'left join sigl_01_data as samp on samp.id_dos = req.id_dos and samp_id_ana = req.ref_analyse '

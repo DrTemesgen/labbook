@@ -135,7 +135,7 @@ class Patient:
                'nom as pat_name, prenom as pat_firstname, ddn as pat_birth, sexe as pat_sex, adresse as pat_address, '
                'cp as pat_zipcode, ville as pat_city, tel as pat_phone1, pat_phone2, profession as pat_profession, '
                'nom_jf as pat_maiden, quartier as pat_district, bp as pat_pbox, ddn_approx as pat_birth_approx, '
-               'age as pat_age, unite as pat_age_unit, '
+               'age as pat_age, unite as pat_age_unit, pat_email, pat_agreement, '
                'pat_midname, pat_nation as pat_nationality, pat_resident, pat_blood_group, pat_blood_rhesus '
                'from sigl_03_data '
                'where id_data=%s')
@@ -236,7 +236,7 @@ class Patient:
         req = ('select id_data, id_owner, anonyme, code, code_patient, nom, prenom, ddn, sexe, '
                'adresse, cp, ville, tel, pat_phone2, profession, '
                'nom_jf, quartier, bp, ddn_approx, age, unite, '
-               'pat_midname, pat_nation, pat_resident, pat_blood_group, pat_blood_rhesus '
+               'pat_midname, pat_nation, pat_resident, pat_blood_group, pat_blood_rhesus, pat_agreement '
                'from sigl_03_data '
                'where ' + cond)
 
@@ -277,7 +277,7 @@ class Patient:
         req = ('select id_data, id_owner, anonyme, code, code_patient, nom, prenom, ddn, sexe, '
                'adresse, cp, ville, tel, pat_phone2, profession, '
                'nom_jf, quartier, bp, ddn_approx, age, unite, '
-               'pat_midname, pat_nation, pat_resident, pat_blood_group, pat_blood_rhesus '
+               'pat_midname, pat_nation, pat_resident, pat_blood_group, pat_blood_rhesus, pat_agreement '
                'from sigl_03_data '
                'where nom=%s and prenom=%s and sexe=%s ' + cond)
 
@@ -303,7 +303,7 @@ class Patient:
                            'profession=%(profession)s, nom_jf=%(nom_jf)s, quartier=%(quartier)s, bp=%(bp)s, '
                            'ddn_approx=%(ddn_approx)s, age=%(age)s, unite=%(unite)s, pat_midname=%(midname)s, '
                            'pat_nation=%(nationality)s, pat_resident=%(resident)s, pat_blood_group=%(blood_group)s, '
-                           'pat_blood_rhesus=%(blood_rhesus)s, pat_lite=%(pat_lite)s '
+                           'pat_blood_rhesus=%(blood_rhesus)s, pat_lite=%(pat_lite)s, pat_agreement=%(pat_agreement)s '
                            'where id_data=%(id)s', params)
 
             Patient.log.info(Logs.fileline())
@@ -327,13 +327,14 @@ class Patient:
             cursor.execute('insert into sigl_03_data '
                            '(id_owner, anonyme, code, code_patient, nom, prenom, ddn, sexe, adresse, cp, ville, '
                            'pat_email, tel, pat_phone2, profession, nom_jf, quartier, bp, ddn_approx, age, '
-                           'unite, pat_midname, pat_nation, pat_resident, pat_blood_group, pat_blood_rhesus, pat_lite) '
+                           'unite, pat_midname, pat_nation, pat_resident, pat_blood_group, pat_blood_rhesus, pat_lite, '
+                           'pat_agreement) '
                            'values '
                            '(%(id_owner)s, %(anonyme)s, %(code)s, %(code_patient)s, %(nom)s, %(prenom)s, %(ddn)s, '
                            '%(sexe)s, %(adresse)s, %(cp)s, %(ville)s, %(pat_email)s, %(tel)s, %(phone2)s, '
                            '%(profession)s, %(nom_jf)s, %(quartier)s, %(bp)s, %(ddn_approx)s, %(age)s, '
-                           '%(unite)s, '
-                           '%(midname)s, %(nationality)s, %(resident)s, %(blood_group)s, %(blood_rhesus)s, %(pat_lite)s)', params)
+                           '%(unite)s, %(midname)s, %(nationality)s, %(resident)s, %(blood_group)s, %(blood_rhesus)s, '
+                           '%(pat_lite)s), %(pat_agreement)s', params)
 
             Patient.log.info(Logs.fileline())
 
@@ -431,7 +432,8 @@ class Patient:
                'pat.ddn_approx as birth_approx, pat.age, d_age_unit.label as age_unit, d_sex.label as sex, '
                'pat.pat_midname as middle_name, pat.nom_jf as maiden_name, nat.nat_name as nation, '
                'nat.nat_code as nat_code, pat.pat_resident as resident, pat.cp as zipcode, pat.ville as city, '
-               'pat.profession, d_blood.label as blood_group, d_rhesus.label as blood_rhesus, pat.pat_lite '
+               'pat.profession, d_blood.label as blood_group, d_rhesus.label as blood_rhesus, pat.pat_lite, '
+               'pat.pat_agreement '
                'from sigl_03_data as pat '
                'left join sigl_dico_data as d_sex on d_sex.id_data=pat.sexe '
                'left join sigl_dico_data as d_blood on d_blood.id_data=pat.pat_blood_group '

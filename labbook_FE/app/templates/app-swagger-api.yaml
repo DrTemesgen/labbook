@@ -25,7 +25,7 @@ tags:
 - name: user
   description: web services about users
 paths:
-  /analysis/code/check/{code}:
+  /external/analysis/code/check/{code}:
     get:
       tags:
       - analysis
@@ -38,6 +38,8 @@ paths:
         description: unique analysis code
         required: true
         type: string
+      security:
+      - BasicAuth: []
       responses:
         200:
           description: successful operation
@@ -45,7 +47,7 @@ paths:
             application/json:
               schema:
                 type: integer
-  /analysis/det/{id_ana}:
+  /external/analysis/det/{id_ana}:
     get:
       tags:
       - analysis
@@ -58,6 +60,8 @@ paths:
         description: Serial of an analysis
         required: true
         type: integer
+      security:
+      - BasicAuth: []
       responses:
         200:
           description: successful operation
@@ -69,7 +73,7 @@ paths:
                   $ref: '#/components/schemas/Analysis'
         404:
           description: Not found
-  /analysis/list:
+  /external/analysis/list:
     post:
       tags:
       - analysis
@@ -97,6 +101,8 @@ paths:
                   type: integer
                 type_prod:
                   type: integer
+      security:
+      - BasicAuth: []
       responses:
         200:
           description: successful operation

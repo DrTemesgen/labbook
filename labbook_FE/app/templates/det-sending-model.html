@@ -1,0 +1,201 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+<title>{{ _("Détails modèle d'envoi") }}</title>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+            <h2 class="page-title page-title-color"><span>{{ _("Détails modèle d'envoi") }}</span></h2>
+
+            <form id="frm_model" autocomplete="off">
+                {# Hidden context #}
+                <input type="hidden" id="mdl_ser"  value="{{ args['item'].get('mdl_ser', 0) }}">
+                <input type="hidden" id="mdl_type" value="{{ args['type_item'] }}">
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="mdl_displayname" class="form-label col-3 text-end mt-2 me-1">{{ _("Nom") }} *</label>
+                    <div class="col">
+                        <input id="mdl_displayname" type="text" maxlength="100" required
+                                                                class="form-control form-lbk"
+                                                                value="{{ args['item'].get('mdl_displayname','') }}">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label class="form-label col-3 text-end me-1">{{ _("Type") }}</label>
+                    <div class="col d-flex align-items-center">
+                        {% if args['type_item'] == 'S' %}
+                        <span class="badge bg-secondary">{{ _("SMTP") }}</span>
+                        {% elif args['type_item'] == 'M' %}
+                        <span class="badge bg-secondary">{{ _("Mailjet") }}</span>
+                        {% elif args['type_item'] == 'W' %}
+                        <span class="badge bg-secondary">{{ _("WhatsApp") }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label class="form-label col-3 text-end me-1">{{ _("Options") }}</label>
+                    <div class="col d-flex gap-4 align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="mdl_default"
+                                                                            {% if args['item'].get('mdl_default','N') == 'Y' %}checked{% endif %}>
+                            <label class="form-check-label" for="mdl_default">{{ _("Par défaut pour ce type") }}</label>
+                        </div>
+                    </div>
+                </div>
+
+
+                {# WhatsApp #}
+                {% if args['type_item'] == 'W' %}
+                <hr class="my-3"><h5 class="mb-3">{{ _("Contenu du modèle WhatsApp") }}</h5>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="mdl_name" class="form-label col-3 text-end mt-2 me-1">{{ _("Nom du modèle WhatsApp") }} *</label>
+                    <div class="col">
+                        <input id="mdl_name" type="text" maxlength="100" required
+                                                         class="form-control form-lbk"
+                                                         placeholder="ex: hello_world"
+                                                         value="{{ args['item'].get('mdl_name','') }}">
+                        <div class="form-text">
+                            {{ _("Nom du template tel que défini dans Meta/WhatsApp Business.") }}
+                        </div>
+                    </div>
+                </div>
+                {# Attachment option (no upload) #}
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label class="form-label col-3 text-end me-1">{{ _("Pièce jointe") }}</label>
+                    <div class="col">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="mdl_has_attachment"
+                                   {% if args['item'].get('mdl_has_attachment','N') == 'Y' %}checked{% endif %}>
+                            <label class="form-check-label" for="mdl_has_attachment">
+                                {{ _("Inclure une pièce jointe") }}
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                {% endif %}
+
+                {# SMTP / Mailjet #}
+                {% if args['type_item'] in ['S','M'] %}
+                <hr class="my-3"><h5 class="mb-3">
+                    {% if args['type_item'] == 'S' %}{{ _("Contenu du modèle SMTP") }}
+                    {% else %}{{ _("Contenu du modèle Mailjet") }}{% endif %}
+                </h5>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="mdl_text" class="form-label col-3 text-end mt-2 me-1">{{ _("Texte") }} *</label>
+                    <div class="col">
+                        <textarea id="mdl_text" rows="10" class="form-control form-lbk" required>{{ args['item'].get('mdl_text','') }}</textarea>
+                        <div class="form-text">
+                            {{ _("Corps du message. HTML autorisé pour Mailjet; texte brut conseillé pour SMTP.") }}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </form>
+
+            <div class="my-2 clearfix">
+                <div class="float-start ms-0">
+                    <input type="button" id="btn_cancel" onclick="cancel();" value="{{ _('Annuler') }}" class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                </div>
+                <div class="float-end">
+                    <input type="button" id="btn_save" onclick="save_item();" value="{{ _('Enregistrer') }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+const SERVER = "{{ session['server_ext'] }}" ;
+const TYPE   = "{{ args['type_item'] }}" ;
+const IDITEM = "{{ args['id_item'] }}" ;
+const ID_USER = {{ session['user_id']|default(0)|int }} ;
+
+function yn(checked) {
+    return checked ? 'Y' : 'N';
+}
+
+function save_item()
+{
+    // Build payload (no helpers, no button disabling)
+    const mdl_displayname = document.getElementById('mdl_displayname').value.trim();
+    const mdl_default     = document.getElementById('mdl_default').checked ? 'Y' : 'N';
+
+    if (!mdl_displayname) 
+    {
+        alert("{{ _('Le nom est obligatoire.') }}");
+        return;
+    }
+
+    const payload = {
+        mdl_type: TYPE,
+        mdl_displayname: mdl_displayname,
+        mdl_default: mdl_default,
+        mdl_user: ID_USER
+    };
+
+    if (IDITEM > 0) payload.mdl_ser = IDITEM;
+
+    // Type-specific fields
+    if (TYPE === 'W') 
+    {
+        const mdl_name = document.getElementById('mdl_name').value.trim();
+        if (!mdl_name) 
+        {
+            alert("{{ _('Nom du modèle WhatsApp obligatoire.') }}");
+            return;
+        }
+        payload.mdl_name = mdl_name;
+        // Attachment flag only (no upload, no path)
+        const attFlagEl = document.getElementById('mdl_has_attachment');
+        payload.mdl_has_attachment = attFlagEl && attFlagEl.checked ? 'Y' : 'N';
+    }
+    else 
+    {
+        const mdl_text = document.getElementById('mdl_text').value.trim();
+        if (!mdl_text) 
+        {
+            alert("{{ _('Le texte du modèle est obligatoire.') }}");
+            return;
+        }
+        payload.mdl_text = mdl_text;
+    }
+
+    const url = `${SERVER}/services/setting/sending/model/det/${TYPE}/${IDITEM || 0}`;
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-Token': "{{ session.get('csrf_token','') }}"
+        },
+        body: JSON.stringify(payload)
+    })
+        .then(r => r.json().catch(() => ({})).then(data => ({ ok: r.ok, data })))
+        .then(({ ok, data }) => {
+            if (ok) {
+                window.location.href = `${SERVER}/setting-sending-method`;
+            } else {
+                alert(data?.error || "{{ _("Une erreur est survenue lors de l'enregistrement") }}");
+            }
+        })
+        .catch(() => alert("{{ _("Une erreur est survenue lors de l'enregistrement") }}")) ;
+}
+
+function cancel()
+{
+    window.location.href = "{{ session['server_ext'] }}/setting-sending-method";
+}
+</script>
+{% endblock %}

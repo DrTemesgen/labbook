@@ -3,6 +3,7 @@ import os
 import logging
 import barcode
 import pdfkit
+import pikepdf
 import qrcode
 
 from barcode.writer import ImageWriter
@@ -292,8 +293,6 @@ class Pdf:
         if l_file_rec:
             try:
                 # merge list of file in one PDF
-                import pikepdf
-
                 pdf = pikepdf.Pdf.new()
 
                 for file_rec in l_file_rec:
@@ -601,7 +600,7 @@ class Pdf:
 
         cursor = DB.cursor()
 
-        req = ('select id_owner, sys_creation_date, sys_last_mod_date, sys_last_mod_user, entete, commentaire '
+        req = ('select id_owner, sys_creation_date, sys_last_mod_date, sys_last_mod_user, entete, commentaire, report_pwd '
                'from sigl_param_cr_data '
                'limit 1')
 
@@ -1141,6 +1140,9 @@ class Pdf:
 
         if pdfpref and pdfpref['entete'] == 1069:
             data['report']['full_head'] = 'Y'
+
+        if pdfpref and pdfpref['report_pwd']:
+            data['report']['report_pwd'] = pdfpref['report_pwd']
 
         # Partial or Full
         data['report']['status'] = _("COMPLET")
@@ -2020,6 +2022,18 @@ class Pdf:
         """
 
         tmp_odt = os.path.join(Constants.cst_path_tmp, filename)
+        report_pwd = 'N'
+        password = ''
+
+        # get password protection or not and if yes get password with pat_code
+        if data and 'report' in data and data['report'].get('report_pwd') == 'Y':
+            report_pwd = 'Y'
+
+            if 'pat' not in data or 'code' not in data['pat'] or not data['pat']['code']:
+                Pdf.log.error(Logs.fileline() + ' : buildReport requires data["pat"]["code"] when report_pwd == Y')
+                return False
+
+            password = data['pat']['code']
 
         if id_rec > 0:
             out_pdf = os.path.join(Constants.cst_report, filename)
@@ -2065,6 +2079,29 @@ class Pdf:
         except Exception as err:
             Pdf.log.error(Logs.fileline() + ' : buildReport convert odt to PDF failed, err=%s , template=%s, filename=%s', err, str(template), str(filename))
             return False
+
+        # protect pdf with password
+        if report_pwd == 'Y':
+            try:
+                protected_pdf = out_pdf + '.protected'
+
+                Pdf.log.error(Logs.fileline() + f" : buildReport applying password protection to {out_pdf}")
+
+                with pikepdf.open(out_pdf) as pdf:
+                    pdf.save(
+                        protected_pdf,
+                        encryption=pikepdf.Encryption(
+                            owner=password,
+                            user=password,
+                            allow=pikepdf.Permissions(modify=False)
+                        )
+                    )
+
+                os.replace(protected_pdf, out_pdf)
+
+            except Exception as err:
+                Pdf.log.error(Logs.fileline() + f" : buildReport PDF password protection failed: {err}")
+                return False
 
         return True
 

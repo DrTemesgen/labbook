@@ -1,0 +1,257 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+<title>{{ _("Détails méthode d'envoi") }}</title>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+            <h2 class="page-title page-title-color"><span>{{ _("Détails méthode d'envoi") }}</span></h2>
+            <form autocomplete="off">
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="sdi_host" class="form-label col-3 text-end mt-2 me-1">{{ _("Nom") }} *</label>
+                    <div>
+                        <input id="sdi_name" type="text" value="{{ args['item']['sdi_name'] }}" maxlength="100" class="form-control form-lbk" required>
+                    </div>
+                </div>
+
+                <!-- Default -->
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label class="form-label col-3 text-end me-1">{{ _("Options") }}</label>
+                    <div class="col d-flex gap-4 align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sdi_default"                                                               {% if args['item'].get('sdi_default','N') == 'Y' %}checked{% endif %}>
+                            <label class="form-check-label" for="sdi_default">{{ _("Par défaut") }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                {# ===================== SMTP ===================== #}
+                {% if args['type_item'] == 'S' %}
+                <hr class="my-3"><h5 class="mb-3">{{ _("Paramètres SMTP") }}</h5>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sds_host" class="form-label col-3 text-end mt-2 me-1">{{ _("Serveur") }} *</label>
+                    <div>
+                        <input id="sds_host" type="text" class="form-control form-lbk" required value="{{ args['item'].get('sds_host','') }}">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sds_port" class="form-label col-3 text-end mt-2 me-1">{{ _("Port") }} *</label>
+                    <div>
+                        <input id="sds_port" type="number" min="1" max="65535" class="form-control form-lbk" required value="{{ args['item'].get('sds_port','') }}">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sds_username" class="form-label col-3 text-end mt-2 me-1">{{ _("Identifiant") }}</label>
+                    <div>
+                        <input id="sds_username" type="text" class="form-control form-lbk" value="{{ args['item'].get('sds_username','') }}">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sds_password" class="form-label col-3 text-end mt-2 me-1">{{ _("Mot de passe") }}</label>
+                    <div>
+                        <!-- Leave empty to keep current password -->
+                        <input id="sds_password" type="password" class="form-control form-lbk" autocomplete="new-password" placeholder="{{ _('Vide pour ne pas modifier') }}">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label class="form-label col-3 text-end me-1">{{ _("TLS/SSL") }}</label>
+                    <div class="col d-flex gap-4 align-items-center">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sds_ssl" {% if args['item'].get('sds_ssl','N') == 'Y' %}checked{% endif %}>
+                            <label class="form-check-label" for="sds_ssl">{{ _("SSL (465)") }}</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="sds_starttls" {% if args['item'].get('sds_starttls','N') == 'Y' %}checked{% endif %}>
+                            <label class="form-check-label" for="sds_starttls">{{ _("STARTTLS (587)") }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sds_from_email" class="form-label col-3 text-end mt-2 me-1">{{ _("Email d'envoi") }} *</label>
+                    <div>
+                        <input id="sds_from_email" type="email" class="form-control form-lbk" required value="{{ args['item'].get('sds_from_email','') }}">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sds_from_name" class="form-label col-3 text-end mt-2 me-1">{{ _("Nom d'envoi") }}</label>
+                    <div>
+                        <input id="sds_from_name" type="text" class="form-control form-lbk" value="{{ args['item'].get('sds_from_name','') }}">
+                    </div>
+                </div>
+                {% endif %}
+
+                {# ===================== MAILJET ===================== #}
+                {% if args['type_item'] == 'M' %}
+                <hr class="my-3"><h5 class="mb-3">{{ _("Paramètres Mailjet") }}</h5>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sdm_api_key" class="form-label col-3 text-end mt-2 me-1">{{ _("Clef API") }} *</label>
+                    <div >
+                        <input id="sdm_api_key" type="password" class="form-control form-lbk" autocomplete="new-password" placeholder="{{ _('Vide pour ne pas modifier') }}" value="{{ args['item'].get('sdm_api_key','') }}">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sdm_api_secret" class="form-label col-3 text-end mt-2 me-1">{{ _("Secret API") }} *</label>
+                    <div >
+                        <input id="sdm_api_secret" type="password" class="form-control form-lbk" autocomplete="new-password" placeholder="{{ _('Vide pour ne pas modifier') }}" value="{{ args['item'].get('sdm_api_secret','') }}">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sdm_from_email" class="form-label col-3 text-end mt-2 me-1">{{ _("Email d'envoi") }} *</label>
+                    <div >
+                        <input id="sdm_from_email" type="email" class="form-control form-lbk" required value="{{ args['item'].get('sdm_from_email','') }}">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sdm_from_name" class="form-label col-3 text-end mt-2 me-1">{{ _("Nom d'envoi") }}</label>
+                    <div >
+                        <input id="sdm_from_name" type="text" class="form-control form-lbk" value="{{ args['item'].get('sdm_from_name','') }}">
+                    </div>
+                </div>
+                {% endif %}
+
+                {# ===================== WHATSAPP ===================== #}
+                {% if args['type_item'] == 'W' %}
+                <hr class="my-3"><h5 class="mb-3">{{ _("Paramètres WhatsApp") }}</h5>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sdw_phone_number" class="form-label col-3 text-end mt-2 me-1">{{ _("Numéro expéditeur") }} *</label>
+                    <div >
+                        <input id="sdw_phone_number" type="text" class="form-control form-lbk" required value="{{ args['item'].get('sdw_phone_number','') }}">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sdw_phone_number_id" class="form-label col-3 text-end mt-2 me-1">{{ _("Identifiant du numéro") }} *</label>
+                    <div >
+                        <input id="sdw_phone_number_id" type="text" class="form-control form-lbk" value="{{ args['item'].get('sdw_phone_number_id','') }}">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="sdw_api_token" class="form-label col-3 text-end mt-2 me-1">{{ _("Jeton d'API") }} *</label>
+                    <div >
+                        <input id="sdw_api_token" type="password" class="form-control form-lbk" autocomplete="new-password"
+                                                                                                placeholder="{{ _('Vide pour ne pas modifier') }}" value="{{ args['item'].get('sdw_api_token','') }}">
+                    </div>
+                </div>
+                {% endif %}
+            </form>
+
+            <div class="my-2 clearfix">
+                <div class="float-start ms-0">
+                    <input type="button" onclick="cancel();" id="btn_cancel" value="{{ _("Annuler") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                </div>
+                <div class="float-end">
+                    <input type="button" onclick="save_item();" id="btn_save" value="{{ _("Enregistrer") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+const SERVER = "{{ session['server_ext'] }}" ;
+const TYPE   = "{{ args['type_item'] }}" ;   // 'S' | 'M' | 'W'
+const IDITEM = "{{ args['id_item'] }}" ;
+const ID_USER = {{ session['user_id']|default(0)|int }} ;
+
+function yn(checked) {
+    return checked ? 'Y' : 'N';
+}
+
+function save_item()
+{
+const payload = {
+    sdi_name:    document.getElementById('sdi_name').value.trim(),
+    sdi_default: yn(document.getElementById('sdi_default').checked),
+    sdi_user: ID_USER,
+    sdi_type: TYPE
+};
+
+    if (IDITEM > 0) payload.sdi_ser = IDITEM ;
+
+    if (!payload.sdi_name) {
+        alert("{{ _('Le nom est obligatoire.') }}");
+        return;
+    }
+
+    if (TYPE === 'S') {
+        payload.sds_host       = document.getElementById('sds_host').value.trim();
+        payload.sds_port       = parseInt(document.getElementById('sds_port').value || '0', 10);
+        payload.sds_username   = document.getElementById('sds_username').value.trim();
+        payload.sds_password   = document.getElementById('sds_password').value; // empty => keep current
+        payload.sds_ssl        = yn(document.getElementById('sds_ssl').checked);
+        payload.sds_starttls   = yn(document.getElementById('sds_starttls').checked);
+        payload.sds_from_email = document.getElementById('sds_from_email').value.trim();
+        payload.sds_from_name  = document.getElementById('sds_from_name').value.trim();
+
+        if (!payload.sds_host || !payload.sds_port || !payload.sds_from_email) {
+            alert("{{ _('Champs SMTP requis manquants.') }}");
+            return;
+        }
+    } else if (TYPE === 'M') {
+        payload.sdm_api_key    = document.getElementById('sdm_api_key').value;     // empty => keep current
+        payload.sdm_api_secret = document.getElementById('sdm_api_secret').value;  // empty => keep current
+        payload.sdm_from_email = document.getElementById('sdm_from_email').value.trim();
+        payload.sdm_from_name  = document.getElementById('sdm_from_name').value.trim();
+
+        if (!payload.sdm_from_email) {
+            alert("{{ _('Email d’envoi requis.') }}");
+            return;
+        }
+    } else if (TYPE === 'W') {
+        payload.sdw_provider        = 'meta'; // only Meta for now
+        payload.sdw_phone_number    = document.getElementById('sdw_phone_number').value.trim();
+        payload.sdw_phone_number_id = document.getElementById('sdw_phone_number_id').value.trim();
+        payload.sdw_api_token       = document.getElementById('sdw_api_token').value; // empty => keep current
+
+        if (!payload.sdw_phone_number || !payload.sdw_phone_number_id) {
+            alert("{{ _('Numéro et identifiant du numéro requis.') }}") ;
+            return;
+        }
+    }
+
+const url = `${SERVER}/services/setting/sending/method/det/${TYPE}/${IDITEM || 0}` ;
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': "{{ session.get('csrf_token','') }}"
+        },
+        body: JSON.stringify(payload)
+    })
+        .then(r => r.json().catch(() => ({})).then(data => ({ ok: r.ok, status: r.status, data })))
+        .then(({ ok, data }) => {
+            if (ok) {
+                window.location.href = `${SERVER}/setting-sending-method` ;
+            } else {
+                alert("{{ _("Une erreur est survenue lors de l'enregistrement") }}") ;
+            }
+        })
+        .catch(() => alert("{{ _("Une erreur est survenue lors de l'enregistrement") }}")) ;
+}
+
+function cancel()
+{
+    window.location.href = "{{ session['server_ext'] }}/setting-sending-method";
+}
+</script>
+{% endblock %}

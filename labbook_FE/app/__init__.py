@@ -2184,6 +2184,94 @@ def setting_report():
     return render_template('setting-report.html', args=json_data, rand=random.randint(0, 999))  # nosec B311
 
 
+# Page : setting sending method
+@app.route('/setting-sending-method')
+def setting_sending_method():
+    log.info(Logs.fileline() + ' : TRACE setting sending method')
+
+    if not test_session():
+        log.info(Logs.fileline() + ' : TRACE Labbook setting sending method => disconnect')
+        session.clear()
+        return index()
+
+    session['current_page'] = 'setting-sending-method'
+    session.modified = True
+
+    json_data = {}
+
+    return render_template('setting-sending-method.html', args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+
+# Page : details sending method
+@app.route('/det-sending-method/<string:type>/<int:id_item>')
+def det_sending_method(type='', id_item=0):
+    log.info(Logs.fileline() + ' : TRACE details sending method ' + str(type) + '/' + str(id_item))
+
+    if not test_session():
+        log.info(Logs.fileline() + ' : TRACE Labbook details sending method => disconnect')
+        session.clear()
+        return index()
+
+    session['current_page'] = 'det-sending-method/' + str(type) + '/' + str(id_item)
+    session.modified = True
+
+    json_data = {}
+
+    if id_item > 0:
+        # Load sending method details
+        try:
+            url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/sending/method/det/' + str(type) + '/' + str(id_item)
+            req = requests.get(url, timeout=10)
+
+            if req.status_code == 200:
+                json_data['item'] = req.json()
+
+        except requests.exceptions.RequestException as err:
+            log.error(Logs.fileline() + ' : requests sending method det failed, err=%s , url=%s', err, url)
+    else:
+        json_data['item'] = {}
+
+    json_data['id_item'] = id_item
+    json_data['type_item'] = type
+
+    return render_template('det-sending-method.html', args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+
+# Page : details sending model
+@app.route('/det-sending-model/<string:type>/<int:id_item>')
+def det_sending_model(type='', id_item=0):
+    log.info(Logs.fileline() + ' : TRACE details sending model ' + str(type) + '/' + str(id_item))
+
+    if not test_session():
+        log.info(Logs.fileline() + ' : TRACE Labbook details sending model => disconnect')
+        session.clear()
+        return index()
+
+    session['current_page'] = 'det-sending-model/' + str(type) + '/' + str(id_item)
+    session.modified = True
+
+    json_data = {}
+
+    if id_item > 0:
+        # Load sending model details
+        try:
+            url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/sending/model/det/' + str(type) + '/' + str(id_item)
+            req = requests.get(url, timeout=10)
+
+            if req.status_code == 200:
+                json_data['item'] = req.json()
+
+        except requests.exceptions.RequestException as err:
+            log.error(Logs.fileline() + ' : requests sending model det failed, err=%s , url=%s', err, url)
+    else:
+        json_data['item'] = {}
+
+    json_data['id_item'] = id_item
+    json_data['type_item'] = type
+
+    return render_template('det-sending-model.html', args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+
 # Page : setting record number
 @app.route('/setting-rec-num')
 def setting_rec_num():
@@ -3719,6 +3807,10 @@ def administrative_record(type_req='E', id_rec=0):
     json_data['data_files']    = []
     json_data['record']        = []
 
+    # If there is no prescriber in the record
+    json_data['doctor'] = {}
+    json_data['doctor']['id_data'] = 0
+
     dt_start_req = datetime.now()
     # Load save record
     try:
@@ -3842,6 +3934,28 @@ def administrative_record(type_req='E', id_rec=0):
 
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests list template INV failed, err=%s , url=%s', err, url)
+
+    # Load list of sending method
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/sending/method/list'
+        req = requests.get(url, timeout=10)
+
+        if req.status_code == 200:
+            json_ihm['send_method_list'] = req.json()
+
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests sending method list failed, err=%s , url=%s', err, url)
+
+    # Load list of sending model
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/sending/model/list'
+        req = requests.get(url, timeout=10)
+
+        if req.status_code == 200:
+            json_ihm['send_model_list'] = req.json()
+
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests sending method list failed, err=%s , url=%s', err, url)
 
     dt_stop_req = datetime.now()
     dt_time_req = dt_stop_req - dt_start_req
@@ -4076,6 +4190,10 @@ def biological_validation(mode='', id_rec=0):
 
     id_pat = 0
 
+    # If there is no prescriber in the record
+    json_data['doctor'] = {}
+    json_data['doctor']['id_data'] = 0
+
     # Single or Group mode of validation
     if mode and mode == 'G':
         json_ihm['mode'] = mode
@@ -4243,6 +4361,20 @@ def biological_validation(mode='', id_rec=0):
             if res and res['id_pat']:
                 id_pat = res['id_pat']
 
+            # Load data doctor
+            if res and res['id_med']:
+                id_med = res['id_med']
+
+                try:
+                    url = session['server_int'] + '/' + session['redirect_name'] + '/services/doctor/det/' + str(id_med)
+                    req = requests.get(url, timeout=10)
+
+                    if req.status_code == 200:
+                        json_data['doctor'] = req.json()
+
+                except requests.exceptions.RequestException as err:
+                    log.error(Logs.fileline() + ' : requests doctor det failed, err=%s , url=%s', err, url)
+
         # If no ResultRecord found we're looking for record information
         else:
             try:
@@ -4295,6 +4427,28 @@ def biological_validation(mode='', id_rec=0):
 
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests cancel reason failed, err=%s , url=%s', err, url)
+
+    # Load list of sending method
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/sending/method/list'
+        req = requests.get(url, timeout=10)
+
+        if req.status_code == 200:
+            json_ihm['send_method_list'] = req.json()
+
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests sending method list failed, err=%s , url=%s', err, url)
+
+    # Load list of sending model
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/sending/model/list'
+        req = requests.get(url, timeout=10)
+
+        if req.status_code == 200:
+            json_ihm['send_model_list'] = req.json()
+
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests sending method list failed, err=%s , url=%s', err, url)
 
     dt_stop_req = datetime.now()
     dt_time_req = dt_stop_req - dt_start_req
@@ -6531,7 +6685,7 @@ def list_storage_room():
 # Page : add storage room
 @app.route('/det-storage-room/<int:id_item>')
 def det_storage_room(id_item=0):
-    log.info(Logs.fileline() + ' : TRACE setting det-storage-room' + str(id_item))
+    log.info(Logs.fileline() + ' : TRACE setting det-storage-room ' + str(id_item))
 
     if not test_session():
         log.info(Logs.fileline() + ' : TRACE Labbook setting det-storage-room => disconnect')
@@ -6583,7 +6737,7 @@ def list_storage_chamber():
 # Page : add storage chamber
 @app.route('/det-storage-chamber/<int:id_item>')
 def det_storage_chamber(id_item=0):
-    log.info(Logs.fileline() + ' : TRACE setting det-storage-chamber' + str(id_item))
+    log.info(Logs.fileline() + ' : TRACE setting det-storage-chamber ' + str(id_item))
 
     if not test_session():
         log.info(Logs.fileline() + ' : TRACE Labbook setting det-storage-chamber => disconnect')
@@ -6825,6 +6979,25 @@ def det_aliquot(id_item=0):
     json_data['id_item'] = id_item
 
     return render_template('det-aliquot.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+
+# Page : list-sending
+@app.route('/list-sending')
+def list_sending():
+    log.info(Logs.fileline() + ' : TRACE setting list-sending')
+
+    if not test_session():
+        log.info(Logs.fileline() + ' : TRACE Labbook list-sending => disconnect')
+        session.clear()
+        return index()
+
+    session['current_page'] = 'list-sending'
+    session.modified = True
+
+    json_ihm  = {}
+    json_data = {}
+
+    return render_template('list-sending.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
 
 
 # Page : list nonconformities

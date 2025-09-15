@@ -455,13 +455,14 @@ class SettingReport(Resource):
     def post(self):
         args = request.get_json()
 
-        if 'id_owner' not in args or 'header' not in args or 'comment' not in args:
+        if 'id_owner' not in args or 'header' not in args or 'comment' not in args or 'report_pwd' not in args:
             self.log.error(Logs.fileline() + ' : SettingReport ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Setting.updateReportSetting(id_owner=args['id_owner'],
                                           header=args['header'],
-                                          comment=args['comment'])
+                                          comment=args['comment'],
+                                          report_pwd=args['report_pwd'])
 
         if ret is False:
             self.log.error(Logs.alert() + ' : SettingReport ERROR update')
@@ -1309,3 +1310,340 @@ class SettingDHIS2Det(Resource):
 
         self.log.info(Logs.fileline() + ' : TRACE SettingDHIS2Det delete id_item=' + str(id_item))
         return compose_ret('', Constants.cst_content_type_json)
+
+
+class SettingSendMethodList(Resource):
+    log = logging.getLogger('log_services')
+
+    def get(self):
+        l_items = Setting.getSendingMethodList()
+
+        if not l_items:
+            self.log.info(Logs.fileline() + ' : TRACE SendingMethodList not found')
+
+        for item in l_items:
+            # Replace None by empty string
+            for key, value in list(item.items()):
+                if item[key] is None:
+                    item[key] = ''
+
+            if item['sdi_date']:
+                item['sdi_date'] = datetime.strftime(item['sdi_date'], '%Y-%m-%d')
+
+        self.log.info(Logs.fileline() + ' : TRACE SettingSendMethodList')
+        return compose_ret(l_items, Constants.cst_content_type_json)
+
+
+class SettingSendMethodDet(Resource):
+    log = logging.getLogger('log_services')
+
+    def get(self, type, id_item):
+        item = Setting.getSendingMethodDet(type, id_item)
+
+        if not item:
+            self.log.error(Logs.fileline() + ' : ERROR SettingSendMethodDet not found')
+            return compose_ret('', Constants.cst_content_type_json, 404)
+
+        # Replace None by empty string
+        for key, value in list(item.items()):
+            if item[key] is None:
+                item[key] = ''
+            elif isinstance(value, (bytes, bytearray)):
+                item[key] = value.decode('utf-8', errors='ignore')
+            elif hasattr(value, 'strftime'):
+                item[key] = value.strftime('%Y-%m-%d')
+
+        self.log.info(Logs.fileline() + ' : TRACE SettingSendMethodDet')
+        return compose_ret(item, Constants.cst_content_type_json)
+
+    def post(self, type, id_item):
+        args = request.get_json()
+
+        if 'sdi_type' not in args or 'sdi_name' not in args or 'sdi_default' not in args:
+            self.log.error(Logs.fileline() + ' : SettingSendMethodDet ERROR args missing')
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        # Update item
+        if id_item > 0:
+            ret = Setting.updateSendingMethodDet(**args)
+
+            if ret is False:
+                self.log.error(Logs.alert() + ' : SettingSendMethodDet ERROR update')
+                return compose_ret('', Constants.cst_content_type_json, 500)
+
+        # Insert new item
+        else:
+            ret = Setting.insertSendingMethodDet(**args)
+
+            if ret <= 0:
+                self.log.error(Logs.alert() + ' : SettingSendMethodDet ERROR insert')
+                return compose_ret('', Constants.cst_content_type_json, 500)
+
+            id_item = ret
+
+        self.log.info(Logs.fileline() + ' : TRACE SettingSendMethodDet')
+        return compose_ret(id_item, Constants.cst_content_type_json)
+
+    def delete(self, type, id_item):
+        ret = Setting.deleteSendingMethodDet(type, id_item)
+
+        if not ret:
+            self.log.error(Logs.fileline() + ' : TRACE SettingSendMethodDet delete ERROR')
+            return compose_ret('', Constants.cst_content_type_json, 500)
+
+        self.log.info(Logs.fileline() + ' : TRACE SettingSendMethodDet delete id_item=' + str(id_item))
+        return compose_ret('', Constants.cst_content_type_json)
+
+
+class SettingSendMethodTest(Resource):
+    log = logging.getLogger('log_services')
+
+    def post(self, type, id_item):
+        payload = request.get_json(silent=True) or {}
+        to = payload.get('to')
+
+        if type == 'S':
+            ok, msg = Setting.testSmtpMethod(id_item, to)
+        elif type == 'M':
+            ok, msg = Setting.testMailjetMethod(id_item, to)
+        elif type == 'W':
+            ok, msg = Setting.testWhatsappMethod(id_item, to)
+        else:
+            return compose_ret({'error': 'Test not available for this type'},
+                               Constants.cst_content_type_json, 400)
+
+        if ok:
+            self.log.info(Logs.fileline() + f' : {type} test OK for id={id_item}')
+            return compose_ret({'message': msg}, Constants.cst_content_type_json)
+        else:
+            self.log.error(Logs.fileline() + f' : {type} test FAIL for id={id_item} -> {msg}')
+            return compose_ret({'error': msg}, Constants.cst_content_type_json, 400)
+
+
+class SettingSendModelList(Resource):
+    log = logging.getLogger('log_services')
+
+    def get(self):
+        l_items = Setting.getSendingModelList()
+
+        if not l_items:
+            self.log.info(Logs.fileline() + ' : TRACE SendingModelList not found')
+
+        for item in l_items:
+            # Replace None by empty string
+            for key, value in list(item.items()):
+                if item[key] is None:
+                    item[key] = ''
+
+            if item['mdl_date']:
+                item['mdl_date'] = datetime.strftime(item['mdl_date'], '%Y-%m-%d')
+
+        self.log.info(Logs.fileline() + ' : TRACE SettingSendModelList')
+        return compose_ret(l_items, Constants.cst_content_type_json)
+
+
+class SettingSendModelDet(Resource):
+    log = logging.getLogger('log_services')
+
+    def get(self, type, id_item):
+        item = Setting.getSendingModelDet(type, id_item)
+
+        if not item:
+            self.log.error(Logs.fileline() + ' : ERROR SettingSendModelDet not found')
+            return compose_ret('', Constants.cst_content_type_json, 404)
+
+        # Replace None by empty string
+        for key, value in list(item.items()):
+            if item[key] is None:
+                item[key] = ''
+            elif hasattr(value, 'strftime'):
+                item[key] = value.strftime('%Y-%m-%d')
+
+        self.log.info(Logs.fileline() + ' : TRACE SettingSendModelDet')
+        return compose_ret(item, Constants.cst_content_type_json)
+
+    def post(self, type, id_item):
+        args = request.get_json()
+
+        if 'mdl_type' not in args or 'mdl_displayname' not in args or 'mdl_default' not in args:
+            self.log.error(Logs.fileline() + ' : SettingSendModelDet ERROR args missing')
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        # Update item
+        if id_item > 0:
+            ret = Setting.updateSendingModelDet(**args)
+
+            if ret is False:
+                self.log.error(Logs.alert() + ' : SettingSendModelDet ERROR update')
+                return compose_ret('', Constants.cst_content_type_json, 500)
+
+        # Insert new item
+        else:
+            ret = Setting.insertSendingModelDet(**args)
+
+            if ret <= 0:
+                self.log.error(Logs.alert() + ' : SettingSendModelDet ERROR insert')
+                return compose_ret('', Constants.cst_content_type_json, 500)
+
+            id_item = ret
+
+        self.log.info(Logs.fileline() + ' : TRACE SettingSendModelDet')
+        return compose_ret(id_item, Constants.cst_content_type_json)
+
+    def delete(self, type, id_item):
+        ret = Setting.deleteSendingModelDet(type, id_item)
+
+        if not ret:
+            self.log.error(Logs.fileline() + ' : TRACE SettingSendModelDet delete ERROR')
+            return compose_ret('', Constants.cst_content_type_json, 500)
+
+        self.log.info(Logs.fileline() + ' : TRACE SettingSendModelDet delete id_item=' + str(id_item))
+        return compose_ret('', Constants.cst_content_type_json)
+
+
+class SettingSendModelTest(Resource):
+    log = logging.getLogger('log_services')
+
+    def post(self, type, mdl_ser):
+        try:
+            payload = request.get_json(force=True) or {}
+            to   = (payload.get('to') or '').strip()
+            lang = (payload.get('lang') or 'fr').strip()
+            override_method_id = payload.get('method_id')  # optional
+
+            if not to:
+                return compose_ret({'error': 'missing recipient'}, Constants.cst_content_type_json, 400)
+
+            # Load model
+            model = Setting.getSendingModelDet(type, mdl_ser)
+            if not model:
+                return compose_ret({'error': 'model not found'}, Constants.cst_content_type_json, 404)
+
+            # Pick method (override -> default -> last by date)
+            method_id = Setting.pickMethodIdForTest(type, override_method_id)
+            if not method_id:
+                return compose_ret({'error': 'no sending method configured for this type'}, Constants.cst_content_type_json, 412)
+
+            # Dispatch by type
+            ok = False
+            type_up = (type or '').upper()[:1]
+            subject = f"[TEST] {model.get('mdl_displayname') or 'Model'}"
+
+            if type_up == 'S':
+                # SMTP: plain text body
+                body_text = model.get('mdl_text') or ''
+                ok = Setting.send_test_smtp(method_id, to, subject, body_text)
+
+            elif type_up == 'M':
+                # Mailjet: HTML allowed
+                html_body = model.get('mdl_text') or ''
+                ok = Setting.send_test_mailjet(method_id, to, subject, html_body)
+
+            elif type_up == 'W':
+                # WhatsApp: template name
+                template_name = model.get('mdl_name') or ''
+                ok = Setting.send_test_whatsapp(method_id, to, template_name, lang)
+
+            else:
+                return compose_ret({'error': 'invalid type'}, Constants.cst_content_type_json, 400)
+
+            if ok:
+                return compose_ret({'message': 'test sent'}, Constants.cst_content_type_json, 200)
+            else:
+                return compose_ret({'error': 'send failed'}, Constants.cst_content_type_json, 502)
+
+        except Exception as e:
+            self.log.error(Logs.fileline() + f' : ERROR model test, err={e}')
+            return compose_ret({'error': 'internal error'}, Constants.cst_content_type_json, 500)
+
+
+class SettingSendReport(Resource):
+    log = logging.getLogger('log_services')
+
+    def post(self):
+
+        data = request.get_json(silent=True) or {}
+        method_id   = data.get("method_id") or 0
+        method_type = data.get("method_type") or ''
+        template_id = data.get("template_id") or 0
+        recipient   = (data.get("recipient") or '').strip()
+        filename    = (data.get("file") or '').strip()
+        rec_num     = data.get("rec_num")
+        pat_code    = data.get("pat_code") or ''
+        id_user     = data.get("id_user") or 0
+
+        try:
+            ok, msg = Setting.sendReport(method_id=method_id,
+                                         method_type=method_type,
+                                         template_id=template_id,
+                                         recipient=recipient,
+                                         filename=filename,
+                                         rec_num=rec_num,
+                                         pat_code=pat_code,
+                                         id_user=id_user)
+        except Exception as e:
+            self.log.error(Logs.fileline() + ' : ERROR SettingSendReport exception err=' + str(e))
+            return compose_ret({'error': "Erreur lors de l’envoi."}, Constants.cst_content_type_json, 500)
+
+        if not ok:
+            self.log.error(Logs.fileline() + ' : SettingSendReport FAIL -> ' + str(msg))
+            return compose_ret({'error': msg or "Échec de l’envoi."},
+                               Constants.cst_content_type_json, 502)
+
+        self.log.info(Logs.fileline() +
+                      f' : SettingSendReport OK method={method_id} tpl={template_id} rec={rec_num} user={id_user}')
+
+        return compose_ret({'message': "Envoi déclenché."}, Constants.cst_content_type_json, 200)
+
+
+class SettingSendList(Resource):
+    log = logging.getLogger('log_services')
+
+    def post(self):
+        """
+        Return a list of sending_event rows for the DataTable.
+        """
+        args  = request.get_json(silent=True) or {}
+        limit = args.get('limit') or 1000
+
+        rows = Setting.getSendingList(limit=limit)
+
+        for r in rows:
+            try:
+                if r.get('sde_date') and hasattr(r['sde_date'], 'strftime'):
+                    r['sde_date'] = r['sde_date'].strftime('%Y-%m-%d %H:%M:%S')
+            except Exception:
+                pass
+
+            for k, v in list(r.items()):
+                if r[k] is None:
+                    r[k] = ''
+
+        self.log.info(Logs.fileline() + ' : SettingSendingList count=' + str(len(rows)))
+        return compose_ret(rows, Constants.cst_content_type_json, 200)
+
+
+class SettingSendResend(Resource):
+    log = logging.getLogger('log_services')
+
+    def post(self, sde_ser):
+        data = request.get_json(silent=True) or {}
+
+        try:
+            id_user = int(data.get("id_user") or 0)
+        except Exception:
+            id_user = 0
+
+        try:
+            ok, msg = Setting.resend(sde_ser=sde_ser, id_user=id_user)
+        except Exception as e:
+            self.log.error(Logs.fileline() + ' : ERROR SettingSendResend exception err=' + str(e))
+            return compose_ret({'error': "Erreur lors du réenvoi."}, Constants.cst_content_type_json, 500)
+
+        if not ok:
+            self.log.error(Logs.fileline() + ' : SettingSendResend FAIL -> ' + str(msg))
+            return compose_ret({'error': msg or "Échec du réenvoi."},
+                               Constants.cst_content_type_json, 502)
+
+        self.log.info(Logs.fileline() + f' : SettingSendResend OK sde_ser={sde_ser} user={id_user}')
+        return compose_ret({'message': "Réenvoi déclenché."}, Constants.cst_content_type_json, 200)

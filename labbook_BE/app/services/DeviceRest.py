@@ -229,7 +229,7 @@ class AnalyzerLab27(Resource):
             self.log.error(Logs.fileline() + f' : ERROR - HL7 parsing exception: {str(e)}')
             msg_ack = Analyzer.generate_ack_response(None, "AE", "HL7 parsing failed")
             Analyzer.updateLab27_ACK(id_task=id_msg, stat="AE", msg=msg_ack)
-            return compose_ret(msg_ack, Constants.cst_content_type_hl7, 400)    
+            return compose_ret(msg_ack, Constants.cst_content_type_hl7, 400)
 
 
 class AnalyzerLab29(Resource):

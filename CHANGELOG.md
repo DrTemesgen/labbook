@@ -4,9 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
-- Use code_var instead of id_data for sigl_07_data (variable of analysis)
+- Use `code_var` instead of `id_data` for `sigl_07_data` (variable of analysis)
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
+
+## [3.5.17] - 2025-09-15
+### Added
+- setting for PDF report of LabBook with or without password
+- management of SMTP, Mailjet, and WhatsApp sending methods and models
+- checkbox for patient consent to send results by email or WhatsApp
+- section (if patient agreement...) for send report with password in administrative-record and biological-validation pages
+- page with list of sending
+- possiblity to use pat_fname ans pat_lname in template for SMTP, Mailjet and WhatsApp
+
+### Fixed
+- error in list-result and enter-result if last analyze is with choice result and user dont have permission for aliquot storage
+- export analysis repository wrong comment for `var_comment` column 
+- few wrong keys of translations for rigths labels
 
 ## [3.5.16] - 2025-07-21
 ### Changed
@@ -25,7 +39,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [3.5.14] - 2025-06-26
 ### Changed
-- For LAB-27 and LAB-29, SPM-2 is matched against id_data or code in the sigl_01_data sample table
+- For LAB-27 and LAB-29, SPM-2 is matched against `id_data` or code in the `sigl_01_data` sample table
 
 ### Fixed
 - integration of Lite records made with a non-Lite patient
@@ -51,8 +65,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - web service for recovery report and data from Lite 
 
 ### Changed
-- list of records, filter by record number include rec_num_lite, number start with LT-
-- List of records, hovering over the folder number displays the rec_num_lite and rec_num_int numbers if they exist.
+- list of records, filter by record number include `rec_num_lite`, number start with LT-
+- List of records, hovering over the folder number displays the `rec_num_lite` and `rec_num_int` numbers if they exist.
 
 ### Fixed
 - edit a role
@@ -68,10 +82,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [3.5.9] - 2025-04-28
 ### Added
-- pat_email new basic element added for dynamic form patient
+- `pat_email` new basic element added for dynamic form patient
 - 2 rights for access to setting of printer and Lite
-- column pat_lite in table sigl_03_data to know which patient are from Lite settings
-- column rec_lite in table sigl_02_data to know which record are from Lite settings
+- column `pat_lite` in table `sigl_03_data` to know which patient are from Lite settings
+- column `rec_lite` in table `sigl_02_data` to know which record are from Lite settings
 - setting for PDF report of Lite with or without password
 
 ### Changed
@@ -96,7 +110,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 - list of samples page
-- v3 export users columns role_type and role_pro
+- v3 export users columns `role_type` and `role_pro`
 
 ### Fixed
 - delete an old manual
@@ -158,7 +172,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - list of transactions with analyzers
 
 ### Changed
-- v5 of export and import of analysis repository with ana_loinc
+- v5 of export and import of analysis repository with `ana_loinc`
 
 ### Fixed
 - save details of staff
@@ -227,7 +241,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - start and end dates for pages : det-hist-analysis, global-report, hist-analyzes, hist-stock-product, user-conn-export, report-activity
 - calculation for TAT report when validation technical is in the same minute of record save
 - stock moved
-- default unit_age for patient form
+- default `unit_age` for patient form
 
 ## [3.4.7] - 2024-06-24
 ### Changed
@@ -252,12 +266,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - displayed interval with seconds for TAT
 
 ### Fixed
-- rec_date format with new record from API
+- `rec_date` format with new record from API
 - formula with pattern {id_var, id_var2, ...} for DHIS2
 
 ## [3.4.5] - 2024-05-15
 ### Added
-- upload customizable form patient by TOML file, see customizable_form.md
+- upload customizable form patient by TOML file, see `customizable_form.md`
 - Numerical result converted can be add to PDF report with res.valueConv and res.unitConv (empty if no conversion formula)
 
 ### Changed

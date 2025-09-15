@@ -86,6 +86,11 @@
                         {% if args['patient'] and args['patient']['pat_phone2'] %}
                         <span class="font-info">{{ args['patient']['pat_phone2'] }}</span>
                         {% endif %}
+
+                        {% if args['patient'] and (args['patient']['pat_phone1'] or args['patient']['pat_phone2']) and args['patient']['pat_email'] %} / {% endif %}
+                        {% if args['patient'] and args['patient']['pat_email'] %}
+                        <span class="font-info">{{ args['patient']['pat_email'] }}</span>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -135,6 +140,18 @@
                         {% else %}
                         <span class="font-info">{{ _("Non") }}</span>
                         {% endif %}
+
+                        <div class="mt-1">
+                            <span class="me-1">{{ _("Contact") }}</span>
+                            {% if args['doctor'] and args['doctor'].get('tel') %}
+                            <span class="font-info">{{ args['doctor'].get('tel') }}</span>
+                            {% endif %}
+
+                            {% if args['doctor'] and args['doctor'].get('tel') and args['doctor'].get('email') %} / {% endif %}
+                            {% if args['doctor'] and args['doctor'].get('email') %}
+                            <span class="font-info">{{ args['doctor'].get('email') }}</span>
+                            {% endif %}
+                    </div>
                     </div>
                 </div>
             </form>
@@ -360,6 +377,28 @@ var num_rec   = 0 ;
 var with_outsourced = 0 ;
 {% if type_req == 'E' %}var data_samples  = {{ args['data_samples']|safe }}  ;{% endif %}
 
+// constant for sending report
+const patAgreement = {{ args['patient']['pat_agreement']|default('N')|tojson }};
+const patEmail     = {{ args['patient']['pat_email']|default('')|tojson }};
+const patPhone1    = {{ args['patient']['pat_phone1']|default('')|tojson }};
+const patPhone2    = {{ args['patient']['pat_phone2']|default('')|tojson }};
+const docAgreement = {{ args['doctor']['doc_agreement']|default('N')|tojson }};
+const docEmail     = {{ args['doctor']['email']|default('')|tojson }};
+const docPhone     = {{ args['doctor']['tel']|default('')|tojson }};
+
+const SEND_METHODS = {{ ihm['send_method_list']|default([])|tojson|safe }};
+const SEND_MODELS  = {{ ihm['send_model_list']|default([])|tojson|safe }};
+
+// function for sending report
+function hasEmail(){ return (patEmail && patEmail.trim() !== ''); }
+function hasPhone(){ return ((patPhone1 && patPhone1.trim()!=='') || (patPhone2 && patPhone2.trim()!=='')); }
+function getPhone(){ return (patPhone1 && patPhone1.trim()!=='') ? patPhone1.trim() : (patPhone2||'').trim(); }
+function hasDocEmail(){ return (docEmail && docEmail.trim() !== ''); }
+function hasDocPhone(){ return (docPhone && docPhone.trim() !== ''); }
+
+// Track current recipient source (PAT | DOC)
+let currentRecipientSource = null;
+
 function load_analysis( data )
 {
 let tr_analysis = '' ;
@@ -541,10 +580,291 @@ let i_max = obj.length - 1 ;
         tmp_tr += '</tr>' ;
 
         tr_report += tmp_tr ;
+
+            {% if has_permission("RECORD_176") %}
+            if (i == i_max && (patAgreement === 'Y' || docAgreement === 'Y')) 
+            {
+            var esc = obj[i].file.replace(/'/g, "\\'");
+            tr_report +=
+                '<tr class="report-send-row">' +
+                    '<td hidden></td>' + 
+                    '<td colspan="3">' +
+                        '<div class="d-flex flex-wrap align-items-center gap-2">' +
+                            '<select id="send_method_last" class="form-select form-select-sm w-auto"></select>' +
+                            '<select id="send_template_last"  class="form-select form-select-sm w-auto"></select>' +
+                            '<input  id="send_recipient_last" class="form-control form-control-sm w-auto" placeholder="{{ _("Destinataire") }}" />' +
+                            '<button type="button" class="btn btn-sm btn-{{ session["user_role"]|safe }}" onclick="send_last_report(\'' + obj[i].file.replace(/'/g, "\\'") + '\')">{{ _("Envoyer") }}</button>' +
+                            {% if args['patient']['pat_agreement'] == 'Y' and args['doctor']['doc_agreement'] == 'Y' %}
+                            '<button type="button" id="btn_toggle_recipient"' + 
+                            '        class="btn btn-sm btn-outline-secondary ms-2"' +
+                            '        data-bs-toggle="tooltip" data-bs-placement="top"' +
+                            '        title="{{ _("Récupérer contact du praticien") }}"' +
+                            '        onclick="toggleRecipient()">' +
+                            '    <i class="bi bi-arrow-left-right"></i>' +
+                            '</button>' +
+                            {% endif %}
+                        '</div>' +
+                        '<div id="send_inline_help_last" class="form-text mt-1"></div>' +
+                    '</td>' +
+                '</tr>';
+            }
+            {% endif %}
         }
     }
 
 $("#tbody_report").append(tr_report) ;
+initSendInline();
+}
+
+function normMethod(m) 
+{
+    return {
+        id: String(m.sdi_ser),
+        code: String(m.sdi_type || '').toUpperCase(),
+        label: m.sdi_name,
+        isDefault: m.sdi_default === 'Y'
+    };
+}
+
+function normModel(t) 
+{
+    return {
+        id: String(t.mdl_ser),
+        code: String(t.mdl_type || '').toUpperCase(),
+        name: t.mdl_displayname
+    };
+}
+
+function modelsForMethod(method) {
+    const code = String(method?.code || '').toUpperCase();
+
+    return (SEND_MODELS || []).map(normModel).filter(x => x.code === code);
+}
+
+// criterion: W needs phone, S/M need email
+function methodCriterionOK(m) {
+    return m.code === 'W' ? hasPhone() : hasEmail();
+}
+
+// possible = criterion OK + at least one model
+function methodPossible(m) {
+    return methodCriterionOK(m) && modelsForMethod(m).length > 0;
+}
+
+function orderMethods(methodsAll) {
+    const possible = methodsAll.filter(methodPossible);
+    const def = methodsAll.find(x => x.isDefault) || null;
+    if (def && possible.some(x => String(x.id) === String(def.id))) {
+        return [def, ...possible.filter(x => String(x.id) !== String(def.id))];
+    }
+    return possible;
+}
+
+function initSendInline() {
+    const $m = $("#send_method_last").empty();
+    const methodsAll = (SEND_METHODS || []).map(normMethod);
+
+    // Keep only methods that meet criterion (email for S/M, phone for W) AND have at least one model
+    const possible = methodsAll.filter(methodPossible);
+    if (!possible.length) {
+        $("#send_inline_help_last").text("Aucune méthode utilisable pour ce patient.");
+        $("#send_method_last, #send_template_last, #send_recipient_last").prop("disabled", true);
+        return;
+    }
+
+    // Put default first if it is usable, else keep the possible order
+    const def = methodsAll.find(x => x.isDefault) || null;
+    const ordered = (def && possible.some(x => x.id === def.id))
+        ? [def].concat(possible.filter(x => x.id !== def.id))
+        : possible.slice();
+
+    // Build options and preselect the first (default if usable)
+    ordered.forEach((m, i) => {
+        const opt = new Option(m.label, m.id, i === 0, i === 0); // preselect first option
+        $(opt).attr('data-code', m.code);
+        $m.append(opt);
+    });
+
+    // Prefill recipient and templates for the selected method
+    const first = ordered[0];
+    prefillRecipientByConsent(first.code);
+    fillTemplatesForMethod(first);
+
+    // Handle changes
+    $m.off('change').on('change', function () {
+        const sel = ordered.find(x => x.id === String(this.value));
+        prefillRecipientByConsent(sel?.code);
+        fillTemplatesForMethod(sel);
+    });
+}
+
+function setRecipientByMethodCode(codeRaw)
+{
+    const code = (codeRaw || '').toUpperCase();
+    const $dest = $("#send_recipient_last");
+    const $help = $("#send_inline_help_last");
+
+    if (code === 'W') {
+        $dest.val(getPhone());
+        $help.text("{{ _('WhatsApp attend un numéro au format international (+33...)') }}");
+    } else {
+        $dest.val(patEmail);
+        $help.text("{{ _('Méthode email : renseigner une adresse valide.') }}");
+    }
+}
+
+// Prefill by consent: patient first, else doctor
+function prefillRecipientByConsent(codeRaw){
+  const code = String(codeRaw || '').toUpperCase();
+
+  if (patAgreement === 'Y') {
+    setRecipientFrom('PAT', code);
+    currentRecipientSource = 'PAT';
+  } else if (docAgreement === 'Y') {
+    setRecipientFrom('DOC', code);
+    currentRecipientSource = 'DOC';
+  } else {
+    $("#send_recipient_last").val('');
+    currentRecipientSource = null;
+  }
+  updateToggleTooltip();
+}
+
+// Set recipient from PAT/DOC according to current method
+function setRecipientFrom(source, code){
+  const $dest = $("#send_recipient_last");
+  const $help = $("#send_inline_help_last");
+
+  if (code === 'W') { // WhatsApp -> phone
+    const val = (source === 'DOC') ? (docPhone || '').trim() : (getPhone() || '').trim();
+    $dest.val(val || '');
+    $help.text("{{ _('WhatsApp attend un numéro au format international (+33...)') }}");
+  } else {            // Email (S/M)
+    const val = (source === 'DOC') ? (docEmail || '').trim() : (patEmail || '').trim();
+    $dest.val(val || '');
+    $help.text("{{ _('Méthode email : renseigner une adresse valide.') }}");
+  }
+}
+
+// Update the toggle button tooltip to show the next action
+function updateToggleTooltip(){
+  const btn = document.getElementById('btn_toggle_recipient');
+  if (!btn) return;
+
+  const nextText = (currentRecipientSource === 'PAT')
+      ? "{{ _('Récupérer les informations du praticien') }}"
+      : "{{ _('Récupérer les informations du patient') }}";
+
+  btn.setAttribute('data-bs-original-title', nextText);
+
+  if (window.bootstrap && bootstrap.Tooltip) {
+    const tip = bootstrap.Tooltip.getInstance(btn) || new bootstrap.Tooltip(btn);
+    if (tip.setContent) tip.setContent({'.tooltip-inner': nextText}); // BS ≥ 5.3
+  }
+}
+
+function toggleRecipient()
+{
+  if (!(patAgreement === 'Y' && docAgreement === 'Y')) return;
+
+  const code = String($("#send_method_last option:selected").data('code') || '').toUpperCase();
+
+  // Flip current source
+  currentRecipientSource = (currentRecipientSource === 'PAT') ? 'DOC' : 'PAT';
+
+  // Apply new source to the recipient field
+  setRecipientFrom(currentRecipientSource, code);
+
+  // Refresh tooltip text
+  updateToggleTooltip();
+}
+
+// Fill template select for a normalized method using preloaded SEND_MODELS
+function fillTemplatesForMethod(method) {
+    const $t = $("#send_template_last").empty();
+    if (!method) { $t.append(new Option("{{ _('Aucun modèle') }}", "")); return; }
+
+    const list = modelsForMethod(method);
+    if (!list || list.length === 0) { $t.append(new Option("{{ _('Aucun modèle') }}", "")); return; }
+
+    list.forEach(t => $t.append(new Option(t.name, t.id)));
+}
+
+function send_last_report(reportFile) {
+    if (patAgreement !== 'Y') {
+        $("#send_inline_help_last").text("Consentement patient absent (pat_agreement != Y).");
+        return;
+    }
+
+    // Read form values
+    const methodId   = $("#send_method_last").val();
+    const templateId = $("#send_template_last").val();
+    const recipient  = ($("#send_recipient_last").val() || "").trim();
+    const methodCode = String($("#send_method_last option:selected").data('code') || '').toUpperCase();
+
+    // Basic field checks
+    if (!methodId)   { $("#send_inline_help_last").text("Sélectionnez une méthode."); return; }
+    if (!templateId) { $("#send_inline_help_last").text("Sélectionnez un modèle.");  return; }
+    if (!recipient)  { $("#send_inline_help_last").text("Renseignez un destinataire."); return; }
+
+    // Validate recipient according to method
+    if (methodCode === 'W') {
+        // Expect E.164-like format for WhatsApp (+country...)
+        const phone = recipient.replace(/\s+/g, '');
+        if (!/^\+\d{6,}$/.test(phone)) {
+            $("#send_inline_help_last").text("Numéro WhatsApp au format international requis (+33...).");
+            return;
+        }
+    } else if (methodCode === 'S' || methodCode === 'M') {
+        // Simple email validation
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient.toLowerCase());
+        if (!emailOk) {
+            $("#send_inline_help_last").text("Adresse e-mail invalide.");
+            return;
+        }
+    } else {
+        // Unknown method code
+        $("#send_inline_help_last").text("Méthode inconnue.");
+        return;
+    }
+
+    // Build request payload
+    const payload = JSON.stringify({
+        method_id:   methodId,
+        method_type: methodCode,
+        template_id: templateId,
+        recipient:   recipient,
+        file:        reportFile,
+        rec_num:     num_rec,
+        pat_code:    {{ args['patient']['pat_code']|tojson }},
+        id_user:     {{ session['user_id']|safe}}
+    });
+
+    // Feedback while sending
+    $("#send_inline_help_last").text("Envoi en cours...");
+
+    $("#dial-wait").off('shown.bs.modal') ;
+    $("#dial-wait").modal("show") ;
+
+    // Send request
+    $.ajax({
+        type: "POST",
+        url: "{{ session['server_ext'] }}/services/setting/sending/report",
+        dataType: "json",
+        contentType: "application/json; charset=utf-8",
+        data: payload,
+        success: function () 
+        {
+            $("#dial-wait").modal("hide") ;
+            $("#send_inline_help_last").text("Envoi déclenché avec succès.");
+        },
+        error: function (xhr) 
+        {
+            $("#dial-wait").modal("hide") ;
+            const msg = xhr?.responseJSON?.error || xhr?.responseText || "Erreur lors de l’envoi.";
+            $("#send_inline_help_last").text(msg);
+        }
+    });
 }
 
 function load_file( data )

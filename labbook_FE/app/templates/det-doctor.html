@@ -2,9 +2,9 @@
 
 {% block head %}
 {{ super() }}
-    <title>{{ _("Prescripteur") }}</title>
-    <link href="{{ url_for('static', filename='vendor/css/select2.min.css') }}" rel="stylesheet" />
-    <script type="text/javascript" src="{{ url_for('static', filename='vendor/js/select2.min.js') }}" nonce="{{ session['nonce'] }}"></script>
+<title>{{ _("Prescripteur") }}</title>
+<link href="{{ url_for('static', filename='vendor/css/select2.min.css') }}" rel="stylesheet" />
+<script type="text/javascript" src="{{ url_for('static', filename='vendor/js/select2.min.js') }}" nonce="{{ session['nonce'] }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -121,8 +121,18 @@
                         <input type="email" name="email" id="email" value="{{ args['email'] }}" class="form-control form-lbk">			
                     </div>
                 </div>
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <div class="col-3"></div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="doc_agreement"
+                            {% if args['doc_agreement'] == 'Y' %}checked{% endif %}>
+                        <label class="form-check-label" for="doc_agreement">
+                            {{ _("Accord pour l'envoi des résultats par email ou WhatsApp") }}
+                        </label>
+                    </div>
+                </div>
             </form>
-            
+
             <div class="clearfix my-2">
                 <div class="float-start ms-0">
                     <input type="button" onclick="cancel();" id="btn_cancel" value="{{ _("Annuler") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }}">
@@ -144,136 +154,138 @@
 
 {% block add_script %}
 <script type="text/javascript" nonce="{{ session['nonce'] }}">
-function save_doctor()
+    function save_doctor()
 {
-var id_owner  = {{ session['user_id']|safe}} ;
-var id_doctor = {{ args['id_doctor']|safe }} ;
-var code      = $("#code").val()      ;
-var title     = $("#title").val()     ;
-var lastname  = $("#lastname").val()  ;
-var firstname = $("#firstname").val() ;
-var initial   = $("#initial").val()   ;
-var facility  = $("#facility").val();
-var service   = $("#service").val()   ;
-var address   = JSON.stringify( $.trim( $("#address").val() ) ) ;
-var city      = $("#city").val()    ;
-var zipcity   = $("#zipcity").val() ;
-var spe       = $("#spe").val()     ;
-var phone     = $("#phone").val()   ;
-var mobile    = $("#mobile").val()  ;
-var fax       = $("#fax").val()     ; 
-var email     = $("#email").val()   ;
+    var id_owner  = {{ session['user_id']|safe}} ;
+    var id_doctor = {{ args['id_doctor']|safe }} ;
+    var code      = $("#code").val()      ;
+    var title     = $("#title").val()     ;
+    var lastname  = $("#lastname").val()  ;
+    var firstname = $("#firstname").val() ;
+    var initial   = $("#initial").val()   ;
+    var facility  = $("#facility").val();
+    var service   = $("#service").val()   ;
+    var address   = JSON.stringify( $.trim( $("#address").val() ) ) ;
+    var city      = $("#city").val()    ;
+    var zipcity   = $("#zipcity").val() ;
+    var spe       = $("#spe").val()     ;
+    var phone     = $("#phone").val()   ;
+    var mobile    = $("#mobile").val()  ;
+    var fax       = $("#fax").val()     ; 
+    var email     = $("#email").val()   ;
+    var doc_agreement = $("#doc_agreement").is(":checked") ? "Y" : "N";
 
-var msg = "" ;
+    var msg = "" ;
 
     if (lastname == "")
-    msg += "{{ _("Veuillez saisir un nom.") }}\n" ;
+        msg += "{{ _("Veuillez saisir un nom.") }}\n" ;
 
     if (msg != "")
     {
-    alert( msg ) ;
-    return false ;
+        alert( msg ) ;
+        return false ;
     }
 
-var param = '{ "id_owner":' + id_owner + ', ' +
-              '"id_doctor":' + id_doctor + ', ' +
-              '"code":"' + code + '", ' +
-              '"title":' + title + ', ' +
-              '"lastname":"' + lastname + '", ' +
-              '"firstname":"' + firstname + '", ' +
-              '"initial":"' + initial + '", ' +
-              '"facility":"' + facility + '", ' +
-              '"service":"' + service + '", ' +
-              '"address":' + address + ', ' +   // No quotes with stringify
-              '"city":"' + city + '", ' +
-              '"zipcity":"' + zipcity + '", ' +
-              '"spe":' + spe + ', ' +
-              '"phone":"' + phone + '", ' +
-              '"mobile":"' + mobile + '", ' +
-              '"fax":"' + fax + '", ' +
-              '"email":"' + email + '"}' ;
+    var param = '{ "id_owner":' + id_owner + ', ' +
+        '"id_doctor":' + id_doctor + ', ' +
+        '"code":"' + code + '", ' +
+        '"title":' + title + ', ' +
+        '"lastname":"' + lastname + '", ' +
+        '"firstname":"' + firstname + '", ' +
+        '"initial":"' + initial + '", ' +
+        '"facility":"' + facility + '", ' +
+        '"service":"' + service + '", ' +
+        '"address":' + address + ', ' +   // No quotes with stringify
+        '"city":"' + city + '", ' +
+        '"zipcity":"' + zipcity + '", ' +
+        '"spe":' + spe + ', ' +
+        '"phone":"' + phone + '", ' +
+        '"mobile":"' + mobile + '", ' +
+        '"fax":"' + fax + '", ' +
+        '"email":"' + email + '", ' +
+        '"doc_agreement":"' + doc_agreement + '"}';
 
     $.ajax( {
-       type: "POST",
-       url: "{{ session['server_ext'] }}/services/doctor/det/" + id_doctor,
-       dataType: 'json',
-       contentType: "application/json; charset=utf-8",
-       data: param,
-       success: function(data)
-           {
-           window.location = "{{ session['server_ext'] }}/list-doctors" ;
-           },
-       error: function(data)
-           {
-           console.log("ERROR POST doctor det") ;
-           alert("{{ _("Une erreur est survenue lors de l'enregistrement") }}") ;
-           }
+        type: "POST",
+        url: "{{ session['server_ext'] }}/services/doctor/det/" + id_doctor,
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        data: param,
+        success: function(data)
+        {
+            window.location = "{{ session['server_ext'] }}/list-doctors" ;
+        },
+        error: function(data)
+        {
+            console.log("ERROR POST doctor det") ;
+            alert("{{ _("Une erreur est survenue lors de l'enregistrement") }}") ;
+        }
     } ) ;
 }
 
 $("#search_zipcity").select2(
-{
-    placeholder: "{{ _("Recherche de code postal ou ville") }}",
-    tags: false,
-    multiple: false,
-    tokenSeparators: [','],
-    minimumInputLength: 2,
-    ajax: {
-        url: "{{ session['server_ext'] }}/services/setting/zipcity/search",
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json; charset=utf-8",
-        term: $("#search_zipcity").text(),
-        data: function (params) {
+    {
+        placeholder: "{{ _("Recherche de code postal ou ville") }}",
+        tags: false,
+        multiple: false,
+        tokenSeparators: [','],
+        minimumInputLength: 2,
+        ajax: {
+            url: "{{ session['server_ext'] }}/services/setting/zipcity/search",
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            term: $("#search_zipcity").text(),
+            data: function (params) {
 
-            return JSON.stringify({
-                term: params.term
-            });
-        },
-        processResults: function (data) {
-            return {
-                results: $.map(data, function (item) {
-                    return {
-                        text: item.field_value,
-                        id: item.id_item
-                    }
-                })
-            };
+                return JSON.stringify({
+                    term: params.term
+                });
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function (item) {
+                        return {
+                            text: item.field_value,
+                            id: item.id_item
+                        }
+                    })
+                };
+            }
         }
-    }
-} ) ;
+    } ) ;
 
 $("#search_zipcity").on("select2:select", function (e) 
-{
-let id_item = $(e.currentTarget).val();
+    {
+        let id_item = $(e.currentTarget).val();
 
-    // GET det zipcity
-    $.ajax( 
-        {
-        type: "GET",
-        url: "{{ session['server_ext'] }}/services/setting/zipcity/det/" + id_item,
-        success: function(data_zipcity)
+        // GET det zipcity
+        $.ajax( 
             {
-            $("#zipcity").val(data_zipcity.zic_zip) ;
-            $("#city").val(data_zipcity.zic_city) ;
-            },
-        error: function(data_zipcity)
-            {
-            console.log("ERROR GET det zipcity");
-            alert("{{ _("Erreur lors de la récupération des données") }}") ;
-            }
-        } ) ;
-} ) ;
+                type: "GET",
+                url: "{{ session['server_ext'] }}/services/setting/zipcity/det/" + id_item,
+                success: function(data_zipcity)
+                {
+                    $("#zipcity").val(data_zipcity.zic_zip) ;
+                    $("#city").val(data_zipcity.zic_city) ;
+                },
+                error: function(data_zipcity)
+                {
+                    console.log("ERROR GET det zipcity");
+                    alert("{{ _("Erreur lors de la récupération des données") }}") ;
+                }
+            } ) ;
+    } ) ;
 
 // fix bug between jquery 3.6.0 and select2
 $(document).on('select2:open', () => 
-{
-document.querySelector('.select2-search__field').focus() ;
-} ) ;
+    {
+        document.querySelector('.select2-search__field').focus() ;
+    } ) ;
 
 function cancel()
 {
-window.history.back() ;
+    window.history.back() ;
 }
 </script>
 {% endblock %}

@@ -120,6 +120,88 @@ class AnalysisList(Resource):
         return compose_ret(l_analyzes, Constants.cst_content_type_json)
 
 
+class AnalysisListFromExt(Resource):
+    log = logging.getLogger('log_services')
+
+    def post(self):
+        auth = request.authorization
+
+        if not auth:
+            self.log.error(Logs.fileline() + ' : AnalysisListFromExt ERROR auth missing')
+            err = {"error": "Authentication required"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        login = auth.username
+        pwd   = auth.password
+
+        user = User.getUserByLogin(login)
+
+        if not user:
+            self.log.error(Logs.fileline() + ' : AnalysisListFromExt login not found')
+            err = {"error": str(login) + " not found"}
+            return compose_ret(err, Constants.cst_content_type_json, 404)
+
+        salt_start = user['password'].find(":")
+        salt = user['password'][salt_start + 1:]
+
+        pwd_db = User.getPasswordDB(pwd, salt)
+
+        ret = User.checkUserAccess(login, pwd_db)
+
+        l_analysis = []
+
+        if ret is True:
+            self.log.info(Logs.fileline() + ' : AnalysisListFromExt role=' + str(user['role_type']) + ' | login=' + str(login))
+            if user['role_type'] == Constants.cst_user_type_api:
+                self.log.info(Logs.fileline() + ' : AnalysisListFromExt API access authorized')
+                args = request.get_json()
+
+                if not args:
+                    args = {}
+                else:
+                    if 'status' in args and args['status']:
+                        if args['status'] == 'A':
+                            args['status'] = 4
+                        elif args['status'] == 'I':
+                            args['status'] = 5
+
+                l_analyzes = Analysis.getAnalyzesList(args)
+
+                if not l_analyzes:
+                    self.log.error(Logs.fileline() + ' : TRACE AnalysisListFromExt not found')
+
+                Various.useLangDB()
+
+                for analysis in l_analyzes:
+                    # Replace None by empty string
+                    for key, value in list(analysis.items()):
+                        if analysis[key] is None:
+                            analysis[key] = ''
+                        elif key == 'name' and analysis[key]:
+                            analysis[key] = _(analysis[key].strip())
+                        elif key == 'type_ana' and analysis[key]:
+                            analysis[key] = _(analysis[key].strip())
+                        elif key == 'product' and analysis[key]:
+                            analysis[key] = _(analysis[key].strip())
+
+            else:
+                self.log.info(Logs.fileline() + ' : AnalysisListFromExt role type not authorized')
+                err = {"error": str(login) + " not authorized"}
+                return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        elif ret is False:
+            self.log.info(Logs.fileline() + ' : AnalysisListFromExt not authorized ' + str(login))
+            err = {"error": str(login) + " not authorized"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+        else:
+            self.log.error(Logs.fileline() + ' : AnalysisListExt ERROR checkUserAccess')
+            err = {"error": "checkUserAccess is in error"}
+            return compose_ret(err, Constants.cst_content_type_json, 500)
+
+        self.log.info(Logs.fileline() + ' : TRACE AnalysisListFromExt')
+        return compose_ret(l_analyzes, Constants.cst_content_type_json)
+
+
 class AnalysisHistoExport(Resource):
     log = logging.getLogger('log_services')
 
@@ -287,6 +369,67 @@ class AnalysisCode(Resource):
         else:
             self.log.info(Logs.fileline() + ' : AnalysisCode code ok :' + str(code))
             return compose_ret(0, Constants.cst_content_type_json, 200)
+
+
+class AnalysisCodeFromExt(Resource):
+    log = logging.getLogger('log_services')
+
+    def get(self, code):
+        auth = request.authorization
+
+        if not auth:
+            self.log.error(Logs.fileline() + ' : AnalysisCodeFromExt ERROR auth missing')
+            err = {"error": "Authentication required"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        login = auth.username
+        pwd   = auth.password
+
+        user = User.getUserByLogin(login)
+
+        if not user:
+            self.log.error(Logs.fileline() + ' : AnalysisCodeFromExt login not found')
+            err = {"error": str(login) + " not found"}
+            return compose_ret(err, Constants.cst_content_type_json, 404)
+
+        salt_start = user['password'].find(":")
+        salt = user['password'][salt_start + 1:]
+
+        pwd_db = User.getPasswordDB(pwd, salt)
+
+        ret = User.checkUserAccess(login, pwd_db)
+
+        l_analysis = []
+
+        if ret is True:
+            self.log.info(Logs.fileline() + ' : AnalysisCodeFromExt role=' + str(user['role_type']) + ' | login=' + str(login))
+            if user['role_type'] == Constants.cst_user_type_api:
+                self.log.info(Logs.fileline() + ' : AnalysisCodeFromExt API access authorized')
+                ret = Analysis.exist(code)
+
+                if ret and ret == -1:
+                    self.log.error(Logs.fileline() + ' : ' + 'AnalysisCodeFromExt ERROR sql')
+                    return compose_ret(-1, Constants.cst_content_type_json, 500)
+
+                if ret:
+                    self.log.error(Logs.fileline() + ' : ' + 'AnalysisCodeFromExt WARNING code already exist')
+                    return compose_ret(1, Constants.cst_content_type_json, 200)
+                else:
+                    self.log.info(Logs.fileline() + ' : AnalysisCodeFromExt code ok :' + str(code))
+                    return compose_ret(0, Constants.cst_content_type_json, 200)
+            else:
+                self.log.info(Logs.fileline() + ' : AnalysisCodeFromExt role type not authorized')
+                err = {"error": str(login) + " not authorized"}
+                return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        elif ret is False:
+            self.log.info(Logs.fileline() + ' : AnalysisCodeFromExt not authorized ' + str(login))
+            err = {"error": str(login) + " not authorized"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+        else:
+            self.log.error(Logs.fileline() + ' : AnalysisCodeFromExt ERROR checkUserAccess')
+            err = {"error": "checkUserAccess is in error"}
+            return compose_ret(err, Constants.cst_content_type_json, 500)
 
 
 class AnalysisDet(Resource):
@@ -586,6 +729,77 @@ class AnalysisDet(Resource):
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisDet delete id_item=' + str(id_ana))
         return compose_ret('', Constants.cst_content_type_json)
+
+
+class AnalysisDetFromExt(Resource):
+    log = logging.getLogger('log_services')
+
+    def get(self, id_ana):
+        auth = request.authorization
+
+        if not auth:
+            self.log.error(Logs.fileline() + ' : AnalysisDetFromExt ERROR auth missing')
+            err = {"error": "Authentication required"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        login = auth.username
+        pwd   = auth.password
+
+        user = User.getUserByLogin(login)
+
+        if not user:
+            self.log.error(Logs.fileline() + ' : AnalysisDetFromExt login not found')
+            err = {"error": str(login) + " not found"}
+            return compose_ret(err, Constants.cst_content_type_json, 404)
+
+        salt_start = user['password'].find(":")
+        salt = user['password'][salt_start + 1:]
+
+        pwd_db = User.getPasswordDB(pwd, salt)
+
+        ret = User.checkUserAccess(login, pwd_db)
+
+        l_analysis = []
+
+        if ret is True:
+            self.log.info(Logs.fileline() + ' : AnalysisDetFromExt role=' + str(user['role_type']) + ' | login=' + str(login))
+            if user['role_type'] == Constants.cst_user_type_api:
+                self.log.info(Logs.fileline() + ' : AnalysisDetFromExt API access authorized')
+                analysis = Analysis.getAnalysis(id_ana)
+
+                if not analysis:
+                    self.log.error(Logs.fileline() + ' : ' + 'AnalysisDetExt ERROR not found')
+                    return compose_ret('', Constants.cst_content_type_json, 404)
+
+                Various.useLangDB()
+
+                # Replace None by empty string
+                for key, value in list(analysis.items()):
+                    if analysis[key] is None:
+                        analysis[key] = ''
+                    elif key == 'nom' and analysis[key]:
+                        analysis[key] = _(analysis[key].strip())
+
+                if analysis['cote_valeur']:
+                    analysis['cote_valeur'] = float(analysis['cote_valeur'])
+                else:
+                    analysis['cote_valeur'] = 0
+            else:
+                self.log.info(Logs.fileline() + ' : AnalysisDetFromExt role type not authorized')
+                err = {"error": str(login) + " not authorized"}
+                return compose_ret(err, Constants.cst_content_type_json, 401)
+
+        elif ret is False:
+            self.log.info(Logs.fileline() + ' : AnalysisDetFromExt not authorized ' + str(login))
+            err = {"error": str(login) + " not authorized"}
+            return compose_ret(err, Constants.cst_content_type_json, 401)
+        else:
+            self.log.error(Logs.fileline() + ' : AnalysisDetFromExt ERROR checkUserAccess')
+            err = {"error": "checkUserAccess is in error"}
+            return compose_ret(err, Constants.cst_content_type_json, 500)
+
+        self.log.info(Logs.fileline() + ' : AnalysisDetExt id_data=' + str(id_ana))
+        return compose_ret(analysis, Constants.cst_content_type_json, 200)
 
 
 class AnalysisVarAll(Resource):
@@ -958,8 +1172,8 @@ class AnalysisExport(Resource):
                 else:
                     data.append('')
 
-                if d['commentaire']:
-                    comment = d['commentaire']
+                if d['var_comm']:
+                    comment = d['var_comm']
                     data.append(_(comment.strip()))
                 else:
                     data.append('')

@@ -87,7 +87,7 @@ class Doctor:
                'doctor.prenom as prenom, doctor.doc_zipcity, doctor.ville as ville, doctor.etablissement as facility, '
                'doctor.specialite as specialite, doctor.tel as tel, doctor.email as email, doctor.titre as titre,'
                'doctor.initiale as initiale, doctor.service as service, doctor.adresse as adresse, '
-               'doctor.mobile as mobile, doctor.fax as fax, dico.label as spe_doctor '
+               'doctor.mobile as mobile, doctor.fax as fax, dico.label as spe_doctor, doctor.doc_agreement '
                'from sigl_08_data as doctor '
                'left join sigl_dico_data as dico on dico.id_data = doctor.specialite '
                'where doctor.id_data=%s')
@@ -107,7 +107,7 @@ class Doctor:
                'doctor.prenom as prenom, doctor.doc_zipcity, doctor.ville as ville, doctor.etablissement as facility, '
                'doctor.specialite as specialite, doctor.tel as tel, doctor.email as email, doctor.titre as titre,'
                'doctor.initiale as initiale, doctor.service as service, doctor.adresse as adresse, '
-               'doctor.mobile as mobile, doctor.fax as fax, dico.label as spe_doctor '
+               'doctor.mobile as mobile, doctor.fax as fax, dico.label as spe_doctor, doctor.doc_agreement '
                'from sigl_08_data as doctor '
                'left join sigl_dico_data as dico on dico.id_data = doctor.specialite '
                'where doctor.code=%s')
@@ -124,7 +124,7 @@ class Doctor:
                'doctor.prenom as prenom, doctor.doc_zipcity, doctor.ville as ville, doctor.etablissement as facility, '
                'doctor.specialite as specialite, doctor.tel as tel, doctor.email as email, doctor.titre as titre,'
                'doctor.initiale as initiale, doctor.service as service, doctor.adresse as adresse, '
-               'doctor.mobile as mobile, doctor.fax as fax, dico.label as spe_doctor '
+               'doctor.mobile as mobile, doctor.fax as fax, dico.label as spe_doctor, doctor.doc_agreement '
                'from sigl_08_data as doctor '
                'left join sigl_dico_data as dico on dico.id_data = doctor.specialite '
                'where doctor.nom=%s and doctor.prenom=%s')
@@ -140,11 +140,11 @@ class Doctor:
 
             cursor.execute('insert into sigl_08_data '
                            '(id_owner, code, nom, prenom, ville, etablissement, specialite, tel, email, '
-                           'titre, initiale, service, adresse, mobile, fax, doc_zipcity) '
+                           'titre, initiale, service, adresse, mobile, fax, doc_zipcity, doc_agreement) '
                            'values '
                            '(%(id_owner)s, %(code)s, %(nom)s, %(prenom)s, %(ville)s, %(facility)s, %(specialite)s, '
                            '%(tel)s, %(email)s, %(titre)s, %(initiale)s, %(service)s, %(adresse)s, %(mobile)s, %(fax)s, '
-                           '%(zipcity)s)', params)
+                           '%(zipcity)s, %(doc_agreement)s)', params)
 
             Doctor.log.info(Logs.fileline())
 
@@ -162,7 +162,7 @@ class Doctor:
                            'set code=%(code)s, nom=%(nom)s, prenom=%(prenom)s, ville=%(ville)s, '
                            'etablissement=%(facility)s, specialite=%(specialite)s, tel=%(tel)s, email=%(email)s, '
                            'titre=%(titre)s, initiale=%(initiale)s, service=%(service)s, adresse=%(adresse)s, '
-                           'mobile=%(mobile)s, fax=%(fax)s, doc_zipcity=%(zipcity)s '
+                           'mobile=%(mobile)s, fax=%(fax)s, doc_zipcity=%(zipcity)s, doc_agreement=%(doc_agreement)s '
                            'where id_data=%(id_data)s', params)
 
             Doctor.log.info(Logs.fileline())

@@ -278,7 +278,7 @@ class PrintByScript(Resource):
     log = logging.getLogger('log_services')
 
     def post(self, script_name):
-        args = request.get_json()
+        # args = request.get_json()
 
         # TODO get args for script
 
@@ -287,5 +287,5 @@ class PrintByScript(Resource):
         self.log.error(Logs.fileline() + ' : PrintByScript cmd=' + cmd)
         ret = os.system(cmd)
 
-        self.log.info(Logs.fileline() + ' : TRACE PrintByScript')
+        self.log.info(Logs.fileline() + ' : TRACE PrintByScript ret =' + str(ret))
         return compose_ret('', Constants.cst_content_type_json)
