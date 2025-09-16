@@ -274,7 +274,7 @@ class PatientDet(Resource):
         default_keys = ['id_user', 'pat_ano', 'pat_code', 'pat_code_lab', 'pat_name', 'pat_firstname', 'pat_birth',
                         'pat_sex', 'pat_address', 'pat_zipcode', 'pat_city', 'pat_phone1', 'pat_phone2', 'pat_profession',
                         'pat_maiden', 'pat_district', 'pat_pbox', 'pat_birth_approx', 'pat_age', 'pat_age_unit',
-                        'pat_midname', 'pat_nationality', 'pat_resident', 'pat_blood_group', 'pat_blood_rhesus']
+                        'pat_midname', 'pat_nationality', 'pat_resident', 'pat_blood_group', 'pat_blood_rhesus', 'pat_email']
 
         default_values = {'pat_ano': 5,
                           'pat_code_lab': '',
@@ -298,7 +298,8 @@ class PatientDet(Resource):
                           'pat_resident': 'Y',
                           'pat_blood_group': 0,
                           'pat_blood_rhesus': 0,
-                          'pat_agreement': 'N'}
+                          'pat_agreement': 'N',
+                          'pat_email': ''}
 
         # Update patient
         if id_pat != 0:
@@ -330,6 +331,7 @@ class PatientDet(Resource):
                                         adresse=args['pat_address'],
                                         cp=args['pat_zipcode'],
                                         ville=args['pat_city'],
+                                        pat_email=args['pat_email'],
                                         tel=args['pat_phone1'],
                                         phone2=args['pat_phone2'],
                                         profession=args['pat_profession'],
@@ -403,6 +405,7 @@ class PatientDet(Resource):
                                         adresse=args['pat_address'],
                                         cp=args['pat_zipcode'],
                                         ville=args['pat_city'],
+                                        pat_email=args['pat_email'],
                                         tel=args['pat_phone1'],
                                         phone2=args['pat_phone2'],
                                         profession=args['pat_profession'],

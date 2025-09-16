@@ -334,7 +334,7 @@ class Patient:
                            '%(sexe)s, %(adresse)s, %(cp)s, %(ville)s, %(pat_email)s, %(tel)s, %(phone2)s, '
                            '%(profession)s, %(nom_jf)s, %(quartier)s, %(bp)s, %(ddn_approx)s, %(age)s, '
                            '%(unite)s, %(midname)s, %(nationality)s, %(resident)s, %(blood_group)s, %(blood_rhesus)s, '
-                           '%(pat_lite)s), %(pat_agreement)s', params)
+                           '%(pat_lite)s, %(pat_agreement)s)', params)
 
             Patient.log.info(Logs.fileline())
 

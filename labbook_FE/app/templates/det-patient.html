@@ -32,7 +32,7 @@
                             <div class="text-center flex-grow-1">
                                 <div class="form-check d-inline-block">
                                     <input class="form-check-input" type="checkbox"
-                                           id="accord_result" name="pat_agreement" value="Y">
+                                           id="pat_agreement" name="pat_agreement" value="Y" {% if args['pat_agreement'] == 'Y' %}checked{% endif %}>
                                     <label class="form-check-label" for="pat_agreement">
                                         {{ _("Accord pour l'envoi des résultats par email ou WhatsApp") }}
                                     </label>

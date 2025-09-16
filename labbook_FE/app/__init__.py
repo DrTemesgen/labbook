@@ -1535,7 +1535,7 @@ def connect_management():
     if cos_url:
         try:
             url = json_data['cos_url'] + '/connect/test'
-            req = requests.get(url, timeout=10)
+            req = requests.get(url, timeout=5)
             json_data['version'] = req.text
 
         except requests.exceptions.RequestException as err:
@@ -1547,7 +1547,7 @@ def connect_management():
     if cos_url:
         try:
             url = json_data['cos_url'] + '/connect/list_analyzers_loaded'
-            req = requests.get(url, timeout=10)
+            req = requests.get(url, timeout=5)
             json_data['analyzers_loaded'] = req.text.replace("\n", ",").rstrip(",")
 
         except requests.exceptions.RequestException as err:
@@ -2859,6 +2859,10 @@ def enter_result(id_rec=0, anchor=''):
 
     id_pat = 0
 
+    # If there is no prescriber in the record
+    json_data['doctor'] = {}
+    json_data['doctor']['id_data'] = 0
+
     json_ihm['anchor'] = ''
 
     if anchor:
@@ -2981,6 +2985,20 @@ def enter_result(id_rec=0, anchor=''):
             # Load data patient
             if res and res['id_pat']:
                 id_pat = res['id_pat']
+
+            # Load data doctor
+            if res and res['id_med']:
+                id_med = res['id_med']
+
+                try:
+                    url = session['server_int'] + '/' + session['redirect_name'] + '/services/doctor/det/' + str(id_med)
+                    req = requests.get(url, timeout=10)
+
+                    if req.status_code == 200:
+                        json_data['doctor'] = req.json()
+
+                except requests.exceptions.RequestException as err:
+                    log.error(Logs.fileline() + ' : requests doctor det failed, err=%s , url=%s', err, url)
 
         # If no ResultRecord found we're looking for record information
         else:
@@ -3984,6 +4002,10 @@ def technical_validation(id_rec=0, anchor=''):
 
     id_pat = 0
 
+    # If there is no prescriber in the record
+    json_data['doctor'] = {}
+    json_data['doctor']['id_data'] = 0
+
     json_ihm['anchor'] = ''
 
     if anchor:
@@ -4104,6 +4126,20 @@ def technical_validation(id_rec=0, anchor=''):
             # Load data patient
             if res and res['id_pat']:
                 id_pat = res['id_pat']
+
+            # Load data doctor
+            if res and res['id_med']:
+                id_med = res['id_med']
+
+                try:
+                    url = session['server_int'] + '/' + session['redirect_name'] + '/services/doctor/det/' + str(id_med)
+                    req = requests.get(url, timeout=10)
+
+                    if req.status_code == 200:
+                        json_data['doctor'] = req.json()
+
+                except requests.exceptions.RequestException as err:
+                    log.error(Logs.fileline() + ' : requests doctor det failed, err=%s , url=%s', err, url)
 
             # Load record
             try:

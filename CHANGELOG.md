@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
-## [3.5.17] - 2025-09-15
+## [3.5.17] - 2025-09-16
 ### Added
 - setting for PDF report of LabBook with or without password
 - management of SMTP, Mailjet, and WhatsApp sending methods and models

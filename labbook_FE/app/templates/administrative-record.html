@@ -143,11 +143,11 @@
 
                         <div class="mt-1">
                             <span class="me-1">{{ _("Contact") }}</span>
-                            {% if args['doctor'] and args['doctor'].get('tel') %}
-                            <span class="font-info">{{ args['doctor'].get('tel') }}</span>
+                            {% if args['doctor'] and args['doctor'].get('mobile') %}
+                            <span class="font-info">{{ args['doctor'].get('mobile') }}</span>
                             {% endif %}
 
-                            {% if args['doctor'] and args['doctor'].get('tel') and args['doctor'].get('email') %} / {% endif %}
+                            {% if args['doctor'] and args['doctor'].get('mobile') and args['doctor'].get('email') %} / {% endif %}
                             {% if args['doctor'] and args['doctor'].get('email') %}
                             <span class="font-info">{{ args['doctor'].get('email') }}</span>
                             {% endif %}
@@ -384,7 +384,7 @@ const patPhone1    = {{ args['patient']['pat_phone1']|default('')|tojson }};
 const patPhone2    = {{ args['patient']['pat_phone2']|default('')|tojson }};
 const docAgreement = {{ args['doctor']['doc_agreement']|default('N')|tojson }};
 const docEmail     = {{ args['doctor']['email']|default('')|tojson }};
-const docPhone     = {{ args['doctor']['tel']|default('')|tojson }};
+const docPhone     = {{ args['doctor']['mobile']|default('')|tojson }};
 
 const SEND_METHODS = {{ ihm['send_method_list']|default([])|tojson|safe }};
 const SEND_MODELS  = {{ ihm['send_model_list']|default([])|tojson|safe }};
