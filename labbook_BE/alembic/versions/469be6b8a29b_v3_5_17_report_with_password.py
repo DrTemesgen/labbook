@@ -173,7 +173,7 @@ def upgrade():
                 sde_state           VARCHAR(1) NOT NULL DEFAULT 'Q',
                 sde_error           TEXT,
                 sde_payload         JSON NULL,
-                INDEX(sde_rec_num), INDEX(sde_state), INDEX(sde_type, sde_method), INDEX(sde_provider_msgid)
+                INDEX(sde_rec_num), INDEX(sde_state), INDEX(sde_type, sde_method)
             )
             CHARACTER SET=utf8
         '''))
