@@ -191,6 +191,11 @@
                         <label class="form-label text-end mt-1 me-3">
                             <input type="radio" id="var_highlight_N" name="var_highlight" value="N" {% if not args['var'] or args['var'][0]['var_highlight'] == 'N' %} checked="checked" {% endif %} onChange="change_data(this);">&nbsp;{{ _("Non") }}</input>
                         </label>
+                        
+                        <label for="var_in_report" class="form-label col-2 text-end mt-1 ms-1 me-1">{{ _("Dans le compte rendu") }}</label>
+                        <div>
+                            <input type="checkbox" id="var_in_report" name="var_in_report" class="mt-2" value="Y" {% if (args['var']|default([])|first|default({})).get('var_in_report', 'Y') != 'N' %}checked{% endif %} onChange="change_data(this);">
+                        </div>
                     </div>
 
                     <div class="col-12 form-group d-lg-flex align-items-start mt-3">
@@ -344,7 +349,7 @@
 
 {% block add_script %}
 <script type="text/javascript" nonce="{{ session['nonce'] }}">
-var struct_var  = {"id_data":0 ,"label":"", "code_var":"", "descr":"", "type_res":"", "min":"", "max":"", "var_show_minmax":"N", "var_highlight":"N", "formula":"", "unit":0, "accu":0, "formula2":"", "unit2":0, "accu2":0, "comment":"", "oblig":5, "var_whonet":5, "var_qrcode":"N", "num_var":0, "pos":0, "id_link":0, "unit_label":"", "id_item":0 } ;
+var struct_var  = {"id_data":0 ,"label":"", "code_var":"", "descr":"", "type_res":"", "min":"", "max":"", "var_show_minmax":"N", "var_highlight":"N", "var_in_report":"Y", "formula":"", "unit":0, "accu":0, "formula2":"", "unit2":0, "accu2":0, "comment":"", "oblig":5, "var_whonet":5, "var_qrcode":"N", "num_var":0, "pos":0, "id_link":0, "unit_label":"", "id_item":0 } ;
 var data_vars   = {% if args['var'] %}{{ args['var']|safe }}{% else %}[]{% endif %} ;
 var ind_var     = 0 ;
 var ind_sel_var = {% if args['var'] %}1{% else %}0{% endif %} ;
@@ -420,6 +425,7 @@ let id_var = $(e.currentTarget).val();
                 tmp_struct_var.max        = replaceUndefined(data_var.max, "") ;
                 tmp_struct_var.var_show_minmax = data_var.var_show_minmax ;
                 tmp_struct_var.var_highlight = data_var.var_highlight ;
+                tmp_struct_var.var_in_report = data_var.var_in_report ;
                 tmp_struct_var.formula    = replaceUndefined(data_var.formula, "") ;
                 tmp_struct_var.unit       = replaceUndefined(data_var.unit, 0) ;
                 tmp_struct_var.accu       = replaceUndefined(data_var.accu, 0) ;
@@ -735,6 +741,11 @@ $("#var_comment").val( det_var.comment ) ;
     else
     $("#var_show_minmax").prop('checked', false);
 
+    if ( det_var.var_in_report == 'Y' )
+    $("#var_in_report").prop('checked', true);
+    else
+    $("#var_in_report").prop('checked', false);
+
     if ( det_var.var_highlight == "Y")
     {
     $("#var_highlight_Y").prop("checked", true)  ;
@@ -800,7 +811,7 @@ let id_elem = elem.id ;
     if ( id_elem != "var_oblig_4" && id_elem != "var_oblig_5" &&
          id_elem != "var_whonet_4" && id_elem != "var_whonet_5" &&
          id_elem != "var_qrcode_Y" && id_elem != "var_qrcode_N" &&
-         id_elem != "var_show_minmax" &&
+         id_elem != "var_show_minmax" && id_elem != "var_in_report" &&
          id_elem != "var_highlight_Y" && id_elem != "var_highlight_N")
     {
         for( i in data_vars )
@@ -908,6 +919,27 @@ let id_elem = elem.id ;
             }
         }
     }
+    else if ( id_elem == "var_in_report" )
+    {
+        for( i in data_vars )
+        {
+            if (data_vars[i].id_item == ind_sel_var )
+            {
+                if ( $("#var_in_report").is(":checked") )
+                {
+                console.log("DEBUG var_in_report = Y");
+                data_vars[i].var_in_report = 'Y' ;
+                }
+                else
+                {
+                console.log("DEBUG var_in_report = N");
+                data_vars[i].var_in_report = 'N' ;
+                }
+
+            break ;
+            }
+        }
+    }
     else if ( id_elem == "var_highlight_Y" || id_elem == "var_highlight_N" )
     {
         for( i in data_vars )
@@ -1005,6 +1037,7 @@ var msg = "" ;
                     var_max      = $.trim( data_vars[i].max ) ;
                     var_show_minmax = $.trim( data_vars[i].var_show_minmax ) ;
                     var_highlight= $.trim( data_vars[i].var_highlight ) ;
+                    var_in_report = $.trim( data_vars[i].var_in_report ) ;
                     var_formula  = $.trim( data_vars[i].formula ) ;
                     var_unit     = data_vars[i].unit     ;
                     var_accu     = data_vars[i].accu     ;
@@ -1036,6 +1069,7 @@ var msg = "" ;
                                       '"var_max":"' + var_max + '", ' +
                                       '"var_show_minmax":"' + var_show_minmax + '", ' +
                                       '"var_highlight":"' + var_highlight + '", ' +
+                                      '"var_in_report":"' + var_in_report + '", ' +
                                       '"var_formula":"' + var_formula + '", ' +
                                       '"var_unit":' + var_unit + ', ' +
                                       '"var_accu":' + var_accu + ', ' +

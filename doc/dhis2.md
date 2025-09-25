@@ -3,7 +3,7 @@
 
 a new spreadsheet can be submitted via the menu Settings => DHIS2 Settings
 
-new version 3 since march 2023 updated in january 2024
+new version 3 since march 2023 updated in september 2025
 
 ## CSV COLUMNS (keep order)
 
@@ -54,6 +54,11 @@ $_IDVARIABLE NOT IN ([NAME_OF_DICTIONARY.CODE1], [NAME_OF_DICTIONARY.CODE2], [NA
 selects the analyses where one of the results does not correspond to the indicated values
 
 {IDVARIABLE1, IDVARIABLE2, IDVARIABLE3, ...} : selects the analyses whose result contains one of the listed variables
+
+$_IDVARIABLE = "STRING_VALUE" : selects the analyses which one of the results exactly matches the literal string value.
+- Example: `$_123 = "ABC"` selects analyses where variable 123 has the result `ABC`.
+- Double quotes **must** be used to enclose the string.
+- Comparisons on variable results are **case-insensitive**.
 
 CAT(SEX_M) : Selects the analyses in the records concerning male patients
 CAT(SEX_F) : Selects the analyses in the records concerning female patients

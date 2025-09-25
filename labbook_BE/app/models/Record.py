@@ -120,15 +120,15 @@ class Record:
 
         # struct : stat, urgent, num_dos, id_data, rec_date_receipt, code, nom, prenom, id_pat
         req = ('select rec.statut as stat, rec.type as type_rec, rec.rec_num_int, '
-               'if(param_num_rec.periode=1070, if(param_num_rec.format=1072,substring(rec.num_dos_mois from 7), '
-               'rec.num_dos_mois), if(param_num_rec.format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) '
-               'as num_dos, if(param_num_rec.periode=1070, rec.num_dos_mois, rec.num_dos_an) as num_dos_long, '
+               'if(rec_setting.rstg_period=1070, if(rec_setting.rstg_format=1072,substring(rec.num_dos_mois from 7), '
+               'rec.num_dos_mois), if(rec_setting.rstg_format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) '
+               'as num_dos, if(rec_setting.rstg_period=1070, rec.num_dos_mois, rec.num_dos_an) as num_dos_long, '
                'rec.id_data as id_data, date_format(rec.rec_date_receipt, %s) as rec_date_receipt, pat.code as code, pat.nom as nom, '
                'pat.prenom as prenom, pat.id_data as id_pat, pat.code_patient as code_lab, rec.rec_num_lite '
                'from sigl_02_data as rec '
                'inner join sigl_03_data as pat on rec.id_patient=pat.id_data '
                'inner join sigl_04_data as req on req.id_dos=rec.id_data '
-               'left join sigl_param_num_dos_data as param_num_rec on param_num_rec.id_data=1 ' + table_cond +
+               'left join record_setting as rec_setting on rec_setting.rstg_ser=1 ' + table_cond +
                'where ' + filter_cond +
                'group by rec.id_data order by rec.id_data desc ' + limit)
 
@@ -190,12 +190,12 @@ class Record:
                'rec.id_colis, rec.rec_parcel_date, rec.rc, rec.colis, rec.prix, rec.rec_date_vld, '
                'rec.remise_pourcent, rec.assu_pourcent, rec.a_payer, rec.num_quittance, rec.num_fact, rec.statut, '
                'rec.num_dos_mois, rec.date_hosp, rec.rec_custody, rec.rec_num_int, rec.rec_modified, rec.rec_hosp_num, '
-               'if(param_num_rec.periode=1070, rec.num_dos_mois, rec.num_dos_an) as num_rec, rec.rec_date_save, '
+               'if(rec_setting.rstg_period=1070, rec.num_dos_mois, rec.num_dos_an) as num_rec, rec.rec_date_save, '
                'd_doc_title.label as prescriber_title, d_remise.label as remise, rec_num_lite, '
                'TRIM(CONCAT((COALESCE(pres.nom, ""))," ",TRIM(COALESCE(pres.prenom, "")))) as prescriber '
                'from sigl_02_data as rec '
                'left join sigl_08_data as pres on pres.id_data = rec.med_prescripteur '
-               'left join sigl_param_num_dos_data as param_num_rec on param_num_rec.id_data=1 '
+               'left join record_setting as rec_setting on rec_setting.rstg_ser=1 '
                'left join sigl_dico_data as d_doc_title on d_doc_title.id_data=pres.titre '
                'left join sigl_dico_data as d_remise on d_remise.id_data=rec.remise '
                'where rec.id_data=%s')

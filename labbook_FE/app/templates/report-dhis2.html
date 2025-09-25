@@ -3,7 +3,6 @@
 {% block head %}
 {{ super() }}
     <title>{{ _("Export DHIS2") }}</title>
-    <link href="{{ url_for('static', filename='vendor/bootstrap/css/bootstrap-datepicker3.min.css') }}" rel="stylesheet" />
 {% endblock %}
 
 {% block content %}
@@ -14,35 +13,59 @@
             <form>
                 <div class="row">
                     <div class="form-group d-md-flex align-items-start col-md-12 mt-3">
-                        <label for="date_beg" class="form-label text-end mt-2 me-1">{{ _("Date de début de période ") }} </label>
-                        <div>					
+                        <label for="date_beg" class="form-label text-end mt-2 me-1">{{ _("Période du") }} </label>
+                        <div>
                             <input id="date_beg" class="form-control form-lbk" type="date" maxlength="10" size="10" value="" name="date_beg" style="color: #888;">
                         </div>
-                        <label for="date_end" class="form-label text-end ms-1 mt-2 me-1">{{ _("au") }} </label>
-                        <div>					
+
+                        <label for="date_end" class="form-label text-end mt-2 ms-2 me-1"> {{ _("au") }} </label>
+                        <div>
                             <input id="date_end" class="form-control form-lbk" type="date" maxlength="10" size="10" value="" name="date_end" style="color: #888;">
                         </div>
+
                         <label class="form-label text-end mx-3 mt-2">{{ _("Type période") }}</label>
-                        <label class="form-label text-end me-3 mt-2">
-                            <input type="radio" name="type_period" value="W" checked="checked" >&nbsp;{{ _("Hebdomadaire") }}</input>
-                        </label>
-                        <label class="form-label text-end me-3 mt-2">
-                            <input type="radio" name="type_period" value="M">&nbsp;{{ _("Mensuelle") }}</input>
-                        </label>
+                        <select id="type_period" name="type_period" class="form-select w-auto">
+                            <option value="" selected="selected"></option>
+                            <option value="W">{{ _("Hebdomadaire") }}</option>
+                            <option value="M">{{ _("Mensuel") }}</option>
+                            <option value="B">{{ _("Bimensuel") }}</option>
+                            <option value="T">{{ _("Trimestriel") }}</option>
+                            <option value="Q">{{ _("Quadrimestriel") }}</option>
+                            <option value="S">{{ _("Semestriel") }}</option>
+                            <option value="A">{{ _("Annuel") }}</option>
+                        </select>
+
+                        <button type="button"
+                                id="btn-preview"
+                                class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2"
+                                onclick="preview_period();">
+                            {{ _("Calculer la période") }}
+                        </button>
                     </div>
+
+                    <div id="period_preview" class="alert alert-info py-1 px-2 mt-2 d-none" role="alert"></div>
                     <div class="form-group col-md-12 mt-1">
-                        <span>{{ _("Pour une feuille de calcul hebdomadaire, lundi et dimanche doivent être respectivement les dates de début et fin de période.") }}</span><br />
-                        <span>{{ _("Pour une feuille de calcul mensuelle, la date de début doit correspondre au 1er du mois et la date de fin au dernier jour du mois sélectionné.") }}</span>
+                        <span>{{ _("Les jours et la période sélectionnés permettront de calculer la date de début, de fin et séquence affichés ci-dessus") }}</span>
                     </div>
                     <div class="form-group d-md-flex align-items-start col-md-12 mt-3">
-                        <label for="calc" class="form-label text-end mt-2 me-1"> {{ _("Feuille de calcul") }} </label>
+                        <label for="spreadsheet" class="form-label text-end mt-2 me-1"> {{ _("Feuille de calcul") }} </label>
                        <select name="spreadsheet" id="spreadsheet" class="form-select w-auto">
                            <option value="" selected="selected"></option>
+                           <option value="LIST_EEQ.csv">{{ _("EEQ") }}</option>
+                           <option value="LIST_EQUIPMENT_FAILURE.csv">{{ _("Pannes d'équipment") }}</option>
                            <option value="LIST_OUTSOURCING.csv">{{ _("Sous-traitance") }}</option>
+                           <option value="LIST_STOCK_STATUS.csv">{{ _("Statut du stock") }}</option>
                            {% for filename in args['data_dhis2'] %}
                            <option value="{{ filename }}">{{ filename }}</option>
                            {% endfor %}
                         </select> 
+
+                        <label for="rec_type" class="form-label text-end ms-3 mt-2 me-1">{{ _("Dossier") }}</label>
+                        <select id="rec_type" name="rec_type" class="form-select w-auto">
+                            <option value="A" selected="selected">{{ _("Tous") }}</option>
+                            <option value="E">{{ _("Externe") }}</option>
+                            <option value="I">{{ _("Interne") }}</option>
+                        </select>
                     </div>
                 </div>
 
@@ -94,28 +117,30 @@ function export_dhis2()
 {
 var id_user  = {{ session['user_id']|safe}} ;
 var date_beg = $("#date_beg").val() ;
-var date_end = $("#date_end").val() ;
-var period   = $("input:radio[name=type_period]:checked").val() ;
+var date_end = $("#date_end").val();
+var period   = $("#type_period").val() ;
 var filename = $("#spreadsheet").val() ;
-var param    = '{"date_beg":"' + date_beg + '", ' +
-                '"date_end":"' + date_end + '", ' +
-                '"period":"' + period + '", ' +
-                '"filename":"' + filename + '", ' +
-                '"id_user":' + id_user + '}' ;
+var rec_type = $("#rec_type").val() || "A" ;
 
-{# date convert to datetime when list of period are constructed #}
+    if ( filename == "" ) { alert("{{ _("Veuillez sélectionner une feuille de calcul.") }}") ; return false ; }
+    if ( period == "" ) { alert("{{ _("Veuillez sélectionner une période.") }}") ; return false ; }
+    if (!date_beg || !date_end) { alert("{{ _('Veuillez saisir des dates') }}"); return false; }
+    if (date_beg > date_end) { alert("{{ _('Veuillez saisir des dates cohérentes') }}"); return false; }
 
-    if ( filename == "" )
-    {
-    alert("{{ _("Veuillez sélectionner une feuille de calcul.") }}") ;
-    return false ;
-    }
+var rng = computeAlignedRange(date_beg, date_end, period);
+    
+    if (!rng){ alert("{{ _('Période invalide : impossible de calculer la période.') }}"); return false; }
 
-    if ( date_beg == '' || date_end == '' || (date_beg > date_end) )
-    {
-    alert("{{ _("Veuillez saisir des dates") }}") ;
-    return false ;
-    }
+var ids = listPeriods(rng.beg, rng.end, period);
+
+    $("#period_preview").removeClass('d-none').text("{{ _('Période calculée') }} : " + rng.beg + " → " + rng.end + (ids.length ? " - {{ _('Séquences') }} : " + ids.join(', ') : ""));
+
+var param = '{"date_beg":"' + rng.beg + '", ' +
+             '"date_end":"' + rng.end + '", ' +
+             '"period":"' + period + '", ' +
+             '"filename":"' + filename + '", ' +
+             '"rec_type":"' + rec_type + '", ' +
+             '"id_user":' + id_user + '}' ;
 
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
@@ -133,7 +158,9 @@ var param    = '{"date_beg":"' + date_beg + '", ' +
 
         let spreadsheet = filename.substr(0, filename.length-4) ;
 
-        download_file( "PY", "dhis2_" + spreadsheet + "_" + date_beg + "-" +date_end +".csv", "GEN", 0 ) ;
+        var recSuffix = (rec_type === 'E') ? '_rec-external' : (rec_type === 'I') ? '_rec-internal' : '_rec-all';
+
+        download_file( "PY", "dhis2_" + spreadsheet + "_" + rng.beg + "-" + rng.end + recSuffix + ".csv", "GEN", 0 ) ;
         },
         error: function(ret)
         {
@@ -155,39 +182,39 @@ $("#send_log").val("") ;
 var id_user  = {{ session['user_id']|safe}} ;
 var date_beg = $("#date_beg").val() ;
 var date_end = $("#date_end").val() ;
-var period   = $("input:radio[name=type_period]:checked").val() ;
+var period   = $("#type_period").val() ;
 var filename = $("#spreadsheet").val() ;
+var rec_type = $("#rec_type").val() || "A" ;
 var dhs_ser  = $("#dhs_list").val() ;
 var dry_run  = "N" ; 
+
+    if (filename === "") { alert("{{ _('Veuillez sélectionner une feuille de calcul.') }}"); return false; }
+    if (period === "") { alert("{{ _('Veuillez sélectionner une période.') }}"); return false; }
+    if (!(dhs_ser > 0)) { alert("{{ _('Veuillez sélectionner une plateforme de destination.') }}"); return false; }
+    if (!date_beg || !date_end) { alert("{{ _('Veuillez saisir des dates') }}"); return false; }
+    if (date_beg > date_end) { alert("{{ _('Veuillez saisir des dates cohérentes') }}"); return false; }
+
+// Align range + show preview
+var rng = computeAlignedRange(date_beg, date_end, period);
+
+    if (!rng){ alert("{{ _('Période invalide : impossible de calculer la période.') }}"); return false; }
+
+var ids = listPeriods(rng.beg, rng.end, period);
+
+    $("#period_preview").removeClass('d-none').text("{{ _('Période calculée') }} : " + rng.beg + " → " + rng.end + (ids.length ? " — {{ _('Séquences') }} : " + ids.join(', ') : ""));
 
     if ( $("#dry_run").is(":checked") )
     dry_run = $("#dry_run").val() ;
 
-var param    = '{"date_beg":"' + date_beg + '", ' +
-                '"date_end":"' + date_end + '", ' +
+var param    = '{"date_beg":"' + rng.beg + '", ' +
+                '"date_end":"' + rng.end + '", ' +
                 '"period":"' + period + '", ' +
                 '"filename":"' + filename + '", ' +
+                '"rec_type":"' + rec_type + '", ' +
                 '"dhs_ser":' + dhs_ser + ', ' +
                 '"id_user":' + id_user + ', ' +
                 '"dry_run":"' + dry_run + '"}' ;
 
-    if ( filename == "" )
-    {
-    alert("{{ _("Veuillez sélectionner une feuille de calcul.") }}") ;
-    return false ;
-    }
-
-    if ( date_beg == '' || date_end == '' || (date_beg > date_end) )
-    {
-    alert("{{ _("Veuillez saisir des dates") }}") ;
-    return false ;
-    }
-
-    if ( !(dhs_ser > 0) )
-    {
-    alert("{{ _("Veuillez sélectionner une plateforme de destination.") }}") ;
-    return false ;
-    }
 
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
@@ -230,15 +257,131 @@ var param    = '{"date_beg":"' + date_beg + '", ' +
     } ) ;
 }
 
+// --- Date helpers (local time) ---
+function toDate(str){ const [y,m,d]=str.split('-').map(x=>parseInt(x,10)); return new Date(y, m-1, d); }
+function fmt(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function firstOfMonth(y,m0){ return new Date(y,m0,1); }
+function lastOfMonth(y,m0){ return new Date(y,m0+1,0); }
+function mondayOfWeek(d){ const dow=(d.getDay()+6)%7; return new Date(d.getFullYear(), d.getMonth(), d.getDate()-dow); }
+function sundayOfWeek(d){ const mon=mondayOfWeek(d); return new Date(mon.getFullYear(), mon.getMonth(), mon.getDate()+6); }
+function addMonths(y,m,delta){ const nm=m+delta; const y2=y+Math.floor((nm-1)/12); const m2=((nm-1)%12)+1; return [y2,m2]; }
+function anchorStartMonth(m, span){ return ((m-1)/span|0)*span + 1; }
+function two(n){ return String(n).padStart(2,'0'); }
+
+// ISO week (year, week)
+function isoYearWeek(d){
+  const utc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = utc.getUTCDay() || 7; // 1..7
+  utc.setUTCDate(utc.getUTCDate() + 4 - day); // Thu of this week
+  const year = utc.getUTCFullYear();
+  const yearStart = new Date(Date.UTC(year,0,1));
+  const week = Math.ceil((((utc - yearStart)/86400000)+1)/7);
+  return {year, week};
+}
+
+// Compute aligned bounds for [beg,end] according to admin period code
+function computeAlignedRange(begStr, endStr, code){
+  if(!begStr || !endStr || !code) return null;
+  let beg = toDate(begStr), end = toDate(endStr);
+  if(beg > end) return null;
+
+  if(code==='W'){
+    const aBeg = mondayOfWeek(beg);
+    const aEnd = sundayOfWeek(end);
+    return {beg: fmt(aBeg), end: fmt(aEnd)};
+  }
+  if(code==='M'){
+    const aBeg = firstOfMonth(beg.getFullYear(), beg.getMonth());
+    const aEnd = lastOfMonth(end.getFullYear(), end.getMonth());
+    return {beg: fmt(aBeg), end: fmt(aEnd)};
+  }
+
+  const spanMap = {B:2, T:3, Q:4, S:6, A:12};
+  const span = spanMap[code];
+  if(!span) return null;
+
+  const startMonth = anchorStartMonth(beg.getMonth()+1, span);
+  const aBeg = firstOfMonth(beg.getFullYear(), startMonth-1);
+
+  const endStartMonth = anchorStartMonth(end.getMonth()+1, span);
+  const endGroupStart = firstOfMonth(end.getFullYear(), endStartMonth-1);
+  const [ey, em] = addMonths(endGroupStart.getFullYear(), endGroupStart.getMonth()+1, span);
+  const aEnd = new Date(ey, em-1, 0);
+
+  return {beg: fmt(aBeg), end: fmt(aEnd)};
+}
+
+// Enumerate period IDs within aligned range
+function listPeriods(begStr, endStr, code){
+  const out = [];
+  const beg = toDate(begStr), end = toDate(endStr);
+
+  if(code==='W'){
+    let cur = mondayOfWeek(beg);
+    while(cur <= end){
+      const {year, week} = isoYearWeek(cur);
+      out.push(`${year}W${two(week)}`);
+      cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate()+7);
+    }
+    return out;
+  }
+
+  if(code==='M'){
+    let cur = firstOfMonth(beg.getFullYear(), beg.getMonth());
+    while(cur <= end){
+      out.push(`${cur.getFullYear()}M${two(cur.getMonth()+1)}`);
+      const [ny,nm] = addMonths(cur.getFullYear(), cur.getMonth()+1, 1);
+      cur = firstOfMonth(ny, nm-1);
+    }
+    return out;
+  }
+
+  const spanMap = {B:2, T:3, Q:4, S:6, A:12};
+  const span = spanMap[code];
+
+  // Start at aligned group start
+  let startMonth = anchorStartMonth(beg.getMonth()+1, span);
+  let cur = firstOfMonth(beg.getFullYear(), startMonth-1);
+  while(cur <= end){
+    let idx;
+    const m = cur.getMonth()+1;
+    if(code==='S') idx = (m<=6)?1:2;
+    else if(code==='A') idx = 1;
+    else if(code==='B') idx = ((m-1)/2|0)+1;
+    else if(code==='T') idx = ((m-1)/3|0)+1;
+    else if(code==='Q') idx = ((m-1)/4|0)+1;
+
+    out.push(`${cur.getFullYear()}${code}${two(idx)}`);
+
+    const [ny,nm] = addMonths(cur.getFullYear(), cur.getMonth()+1, span);
+    cur = firstOfMonth(ny, nm-1);
+  }
+  return out;
+}
+
+function preview_period()
+{
+    const date_beg = $("#date_beg").val();
+    const date_end = $("#date_end").val();
+    const period   = $("#type_period").val();
+
+    if (period === "") { alert("{{ _('Veuillez sélectionner une période.') }}"); return; }
+    if (!date_beg || !date_end) { alert("{{ _('Veuillez saisir des dates') }}"); return; }
+    if (date_beg > date_end) { alert("{{ _('Veuillez saisir des dates cohérentes') }}"); return; }
+
+    const rng = computeAlignedRange(date_beg, date_end, period);
+    if (!rng){ alert("{{ _('Période invalide : impossible de calculer la période.') }}"); return; }
+
+    const ids = listPeriods(rng.beg, rng.end, period);
+    const text = "{{ _('Période calculée') }} : " + rng.beg + " → " + rng.end +
+                 (ids && ids.length ? " - {{ _('Séquences') }} : " + ids.join(', ') : '');
+
+    $("#period_preview").removeClass('d-none').text(text);
+}
+
 function return_home()
 {
 window.location.href = "{{ session['server_ext'] }}/homepage" ;
 }
-
-$( document ).ready( function()
-{
-    //$("#date_beg").val( "{{ now|date_now }}" ) ;
-    //$("#date_end").val( "{{ now|date_now }}" ) ;
-} ) ;
 </script>
 {% endblock %}

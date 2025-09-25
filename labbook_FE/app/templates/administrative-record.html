@@ -2,7 +2,7 @@
 
 {% block head %}
 {{ super() }}
-    <title>{{ _("Dossier administratif") }}</title>
+<title>{{ _("Dossier administratif") }}</title>
 {% endblock %}
 
 {% block content %}
@@ -14,7 +14,7 @@
             </h2>
             {% if has_permission("RECORD_18") %}
             <form autocomplete="off">
-                
+
                 <div class="d-lg-flex align-items-start ms-3">
                     <div>
                         <span>{{ _("Dossier") }} :&nbsp;</span> 
@@ -28,7 +28,7 @@
                     </div>
                     {% endif %}
                 </div>
-                
+
                 <!-- Patient -->
                 <div class="panel-heading row">
                     <h3 class="panel-title">{{ _("Identité") }}</h3>
@@ -53,13 +53,13 @@
                         <span>&nbsp;-&nbsp;</span>
                         <span class="font-info">{% if args['patient'] %}{{ args['patient']['pat_age'] }}{% endif %}&nbsp;</span>
                         <span class="font-info">{% if args['patient'] %}{% if args['patient']['pat_age_unit'] == 1037 %}{{ _("années") }}
-                                                {% elif args['patient']['pat_age_unit'] == 1036 %}{{ _("mois") }}
-                                                {% elif args['patient']['pat_age_unit'] == 1035 %}{{ _("semaines") }}
-                                                {% elif args['patient']['pat_age_unit'] == 1034 %}{{ _("jours") }}{% endif %}{% endif %}</span>
+                            {% elif args['patient']['pat_age_unit'] == 1036 %}{{ _("mois") }}
+                            {% elif args['patient']['pat_age_unit'] == 1035 %}{{ _("semaines") }}
+                            {% elif args['patient']['pat_age_unit'] == 1034 %}{{ _("jours") }}{% endif %}{% endif %}</span>
                         <span>&nbsp;-&nbsp;</span>
                         <span class="font-info">{% if args['patient'] %}{% if args['patient']['pat_sex'] == 1 %}{{ _("Masculin") }}
-                                                {% elif args['patient']['pat_sex'] == 2 %}{{ _("Féminin") }}
-                                                {% elif args['patient']['pat_sex'] == 3 %}{{ _("Inconnu") }}{% endif %}{% endif %}</span>
+                            {% elif args['patient']['pat_sex'] == 2 %}{{ _("Féminin") }}
+                            {% elif args['patient']['pat_sex'] == 3 %}{{ _("Inconnu") }}{% endif %}{% endif %}</span>
                     </div>
                     <div class="col-md-12 mt-1">
                         {% if args['patient'] and args['patient']['pat_address'] %}
@@ -121,11 +121,11 @@
                     <div class="col-lg-12 mt-2">
                         <span>{{ _("Prescripteur") }}</span>
                         <span class="font-info">
-                        {% if args['doctor'] %}
+                            {% if args['doctor'] %}
                             {{ args['doctor']['nom'] }} {{ args['doctor']['prenom'] }}
                             {% if args['doctor']['spe_doctor'] %} - {{ args['doctor']['spe_doctor'] }}{% endif %}
                             {% if args['doctor']['facility'] %} - {{ args['doctor']['facility'] }}{% endif %}
-                        {% endif %}
+                            {% endif %}
                         </span>
                     </div>
 
@@ -151,7 +151,7 @@
                             {% if args['doctor'] and args['doctor'].get('email') %}
                             <span class="font-info">{{ args['doctor'].get('email') }}</span>
                             {% endif %}
-                    </div>
+                        </div>
                     </div>
                 </div>
             </form>
@@ -185,6 +185,7 @@
             <div class="panel-heading row mt-2">
                 <h3 class="panel-title">{{ _("Analyses et actes de prélèvement") }}</h3>
             </div>
+
             <div class="row ms-3 mt-3">
                 <span class="font-info">{{ _("Analyses") }}</span>
             </div>
@@ -225,7 +226,18 @@
                 </table>
             </form>
             {% endif %}
-            
+
+            {% if has_permission("RECORD_14") %}
+            <div class="row ms-3 mt-3">
+                <div class="col-12 text-end">
+                    <a class="btn btn-lbk btn-{{ session['user_role']|safe }} text-white"
+                       href="{{ url_for('enter_result', id_rec=args['record']['id_data']) }}">
+                        {{ _("Saisie de résultats") }}
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+
             <!-- Reports -->
             <div class="panel-heading row mt-2">
                 <h3 class="panel-title">{{ _("Compte rendu") }}</h3>
@@ -324,7 +336,7 @@
                         <div>
                             <input type="button" onclick="return_home();" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _('Quitter') }}">
                         </div>
-                        
+
                         <div class="d-flex align-items-center">
                             {% if has_permission("RECORD_20") %}
                             {% if ihm['tpl_outsourced'] %}
@@ -336,13 +348,13 @@
                             <input type="button" onclick="print_outsourced({{ args['record']['id_data'] }});" class="btn btn-lbk btn-{{ session['user_role']|safe }} me-3" value="{{ _('Bon de transfert') }}" id="btn_outsourced">
                             {% endif %}
                             {% if session['pref_bill'] == '1' and has_permission("RECORD_22") %}
-                                {% if ihm['tpl_invoice'] %}
+                            {% if ihm['tpl_invoice'] %}
                             <select id="tpl_invoice" class="form-select form-lbk me-3 w-auto" {% if ihm['tpl_invoice'] and ihm['tpl_invoice']|length < 2 %}hidden{% endif %}>
                                 {% for tpl in ihm['tpl_invoice'] %}
                                 <option value="{{ tpl["tpl_file"] }}" {% if tpl["tpl_default"] ==  "Y" %}selected{% endif %}>{{ tpl["tpl_name"] }}</option>
                                 {% endfor %}
                             </select>
-                                {% endif %}
+                            {% endif %}
                             <input type="button" onclick="print_invoice({{ args['record']['id_data'] }});" class="btn btn-lbk btn-{{ session['user_role']|safe }} me-3" value="{{ _('Imprimer la facture') }}">
                             {% endif %}
                             {% if has_permission("RECORD_21") %}
@@ -361,7 +373,7 @@
             {% else %}
             {% include 'no-rights.html' %} 
             {% endif %}
-            
+
         </div>
     </div>
 </div><!-- close content -->
@@ -369,7 +381,7 @@
 
 {% block add_script %}
 <script type="text/javascript" nonce="{{ session['nonce'] }}">
-var data_analysis = {{ args['data_analysis']|safe }} ;
+    var data_analysis = {{ args['data_analysis']|safe }} ;
 var data_reports  = {% if args['data_reports'] %}{{ args['data_reports']|safe }}{% else %}[]{% endif %} ;
 var data_files    = {{ args['data_files']|safe }} ;
 var num_rec_y = 0 ;
@@ -401,62 +413,62 @@ let currentRecipientSource = null;
 
 function load_analysis( data )
 {
-let tr_analysis = '' ;
-let obj    = data ;
-let tmp_tr = '<tr>' ;
-let urg    = obj.urgent ;
-let dem    = obj.demande ;
-let rate   = obj.cote_unite + obj.cote_valeur ;
-let trans  = obj.outsourced ;
+    let tr_analysis = '' ;
+    let obj    = data ;
+    let tmp_tr = '<tr>' ;
+    let urg    = obj.urgent ;
+    let dem    = obj.demande ;
+    let rate   = obj.cote_unite + obj.cote_valeur ;
+    let trans  = obj.outsourced ;
 
     if ( urg == 4 )
-    urg = "Oui" ;
+        urg = "Oui" ;
     else
-    urg = "Non" ;
+        urg = "Non" ;
 
     if ( dem == 4 )
-    dem = "Oui" ;
+        dem = "Oui" ;
     else
-    dem = "Non" ;
+        dem = "Non" ;
 
     if ( trans == "Y" )
     {
-    trans = "Oui" ;
-    with_outsourced += 1 ;
+        trans = "Oui" ;
+        with_outsourced += 1 ;
     }
     else
-    trans = "Non" ;
+        trans = "Non" ;
 
-tmp_tr += create_td(obj.id_data, obj.id_data, "", "display:none;") ;
-{# Can be deleted if not yet technically validated #}
-{% if args['record']['statut'] < 251 %}
-ico_del = '<i class="bi bi-x-circle-fill text-danger" title="{{ _("Supprimer") }}" onclick="del_ana(' + obj.id_data + ', '  + obj.ref_analyse + ', ' + obj.type_samp + ', ' + obj.prix + ');"/></i>' ;
+    tmp_tr += create_td(obj.id_data, obj.id_data, "", "display:none;") ;
+    {# Can be deleted if not yet technically validated #}
+    {% if args['record']['statut'] < 251 %}
+    ico_del = '<i class="bi bi-x-circle-fill text-danger" title="{{ _("Supprimer") }}" onclick="del_ana(' + obj.id_data + ', '  + obj.ref_analyse + ', ' + obj.type_samp + ', ' + obj.prix + ');"/></i>' ;
 
-tmp_tr += create_td("", ico_del, "text-center", "") ;
-{% endif %}
-tmp_tr += create_td("", obj.code, "text-center", "") ;
-tmp_tr += create_td("", obj.nom, "", "") ;
-tmp_tr += create_td("", urg, "text-center", "") ;
-tmp_tr += create_td("", dem, "text-center", "") ;
-tmp_tr += create_td("", format_rate(rate, obj.prix), "text-center", "") ;
-tmp_tr += create_td("", obj.prix, "text-center", "") ;
-tmp_tr += create_td("", trans, "text-center", "") ;
+    tmp_tr += create_td("", ico_del, "text-center", "") ;
+    {% endif %}
+    tmp_tr += create_td("", obj.code, "text-center", "") ;
+    tmp_tr += create_td("", obj.nom, "", "") ;
+    tmp_tr += create_td("", urg, "text-center", "") ;
+    tmp_tr += create_td("", dem, "text-center", "") ;
+    tmp_tr += create_td("", format_rate(rate, obj.prix), "text-center", "") ;
+    tmp_tr += create_td("", obj.prix, "text-center", "") ;
+    tmp_tr += create_td("", trans, "text-center", "") ;
 
-tmp_tr += '</tr>' ;
+    tmp_tr += '</tr>' ;
 
-tr_analysis += tmp_tr ;
+    tr_analysis += tmp_tr ;
 
-$("#tbody_analysis").append(tr_analysis) ;
+    $("#tbody_analysis").append(tr_analysis) ;
 }
 
 function del_ana(id_req, id_ana, type_samp, price)
 {
-var id_rec = {{ args['record']['id_data'] }} ;
+    var id_rec = {{ args['record']['id_data'] }} ;
 
-var param = '{ "id_rec":' + id_rec + ', ' +
-              '"id_ana":' + id_ana + ', ' +
-              '"type_samp":' + type_samp + ', ' +
-              '"price": ' + price + '}' ;
+    var param = '{ "id_rec":' + id_rec + ', ' +
+        '"id_ana":' + id_ana + ', ' +
+        '"type_samp":' + type_samp + ', ' +
+        '"price": ' + price + '}' ;
 
     if ( window.confirm("{{ _("Veuillez confirmer la suppression") }}") )
     {
@@ -464,89 +476,89 @@ var param = '{ "id_rec":' + id_rec + ', ' +
         $("#dial-wait").modal("show") ;
 
         $.ajax(
-        {
-            type: "DELETE",
-            url: "{{ session['server_ext'] }}/services/analysis/delete/req/" + id_req,
-            dataType: 'json',
-            contentType: "application/json; charset=utf-8",
-            data: param,
-            success: function(ret)
             {
-            $("#dial-wait").modal("hide") ;
-            location.reload() ;
-            },
-            error: function(ret)
-            {
-            console.log("ERROR DELETE analysis request") ;
-            $("#dial-wait").modal("hide") ;
-            alert("{{ _("Erreur lors de la suppression des données") }}") ;
-            }
-        } ) ;
+                type: "DELETE",
+                url: "{{ session['server_ext'] }}/services/analysis/delete/req/" + id_req,
+                dataType: 'json',
+                contentType: "application/json; charset=utf-8",
+                data: param,
+                success: function(ret)
+                {
+                    $("#dial-wait").modal("hide") ;
+                    location.reload() ;
+                },
+                error: function(ret)
+                {
+                    console.log("ERROR DELETE analysis request") ;
+                    $("#dial-wait").modal("hide") ;
+                    alert("{{ _("Erreur lors de la suppression des données") }}") ;
+                }
+            } ) ;
     }
     else
-    return false ;
+        return false ;
 }
 
 {% if type_req == 'E' %}
 function load_sample( data )
 {
-let tr_sample = '' ;
-let obj = data ;
+    let tr_sample = '' ;
+    let obj = data ;
 
     if ( obj.id_data > 0 )
     {
-    let tmp_tr = '<tr>' ;
-    let dem    = obj.demande ;
-    let rate   = obj.cote_unite + obj.cote_valeur ;
+        let tmp_tr = '<tr>' ;
+        let dem    = obj.demande ;
+        let rate   = obj.cote_unite + obj.cote_valeur ;
 
         if ( dem == 4 )
-        dem = "Oui" ;
+            dem = "Oui" ;
         else
-        dem = "Non" ;
+            dem = "Non" ;
 
-    tmp_tr += create_td(obj.id_data, obj.id_data, "", "display:none;") ;
-    tmp_tr += create_td("", obj.code, "text-center", "") ;
-    tmp_tr += create_td("", obj.nom, "", "") ;
-    tmp_tr += create_td("", dem, "text-center", "") ;
-    tmp_tr += create_td("", format_rate(rate, obj.prix), "text-center", "") ;
-    tmp_tr += create_td("", obj.prix, "text-center", "") ;
+        tmp_tr += create_td(obj.id_data, obj.id_data, "", "display:none;") ;
+        tmp_tr += create_td("", obj.code, "text-center", "") ;
+        tmp_tr += create_td("", obj.nom, "", "") ;
+        tmp_tr += create_td("", dem, "text-center", "") ;
+        tmp_tr += create_td("", format_rate(rate, obj.prix), "text-center", "") ;
+        tmp_tr += create_td("", obj.prix, "text-center", "") ;
 
-    tmp_tr += '</tr>' ;
+        tmp_tr += '</tr>' ;
 
-    tr_sample += tmp_tr ;
+        tr_sample += tmp_tr ;
     }
 
-$("#tbody_sample").append(tr_sample) ;
+    $("#tbody_sample").append(tr_sample) ;
 }
 {% endif %}
 
 function load_report( data )
 {
-let tr_report = '' ;
-let obj = data ;
+    let tr_report = '' ;
+    let obj = data ;
 
-let i_max = obj.length - 1 ;
+    let i_max = obj.length - 1 ;
 
     for( i in obj )
     {
         if ( obj[i].id_data > 0 )
         {
-        let menu_act = '' ;
+            let menu_act = '' ;
 
             {% if args['record']['rec_num_lite'].startswith("LT-") %}
             menu_act = '<a class="menu-act-item" onclick="download_file(\'RLT\', \'' + obj[i].file + '\', \'REC\', \'' + {{ args["record"]["rec_num_lite"]|tojson|safe }} + '\');">{{ _("Télécharger") }} (' + obj[i].nb_download + ')</a>' ;
 
             {% else %}
             if ( obj[i].nb_download == 0 )
-            menu_act = '<a class="menu-act-item" onclick="download_file(\'RP\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Télécharger") }} (' + obj[i].nb_download + ')</a>' ;
+                menu_act = '<a class="menu-act-item" onclick="download_file(\'RP\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Télécharger") }} (' + obj[i].nb_download + ')</a>' ;
             else
             {
-            {% if has_permission("RECORD_23") %}
-            menu_act = '<a class="menu-act-item" onclick="download_file(\'RP\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Télécharger") }} (' + obj[i].nb_download + ')</a>' ;
-            menu_act += ' - <a class="menu-act-item" onclick="download_file(\'RPC\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Duplicata") }} (' + obj[i].nb_download + ')</a>' ;
-            {% else %}
-            menu_act = '<a class="menu-act-item" onclick="download_file(\'RPC\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Duplicata") }} (' + obj[i].nb_download + ')</a>' ;
-            {% endif %}
+                {% if has_permission("RECORD_23") %}
+                menu_act = '<a class="menu-act-item" onclick="download_file(\'RP\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Télécharger") }} (' + obj[i].nb_download + ')</a>' ;
+                menu_act += ' - <a class="menu-act-item" onclick="download_file(\'RPC\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Duplicata") }} (' + obj[i].nb_download + ')</a>' ;
+                {% else %}
+                menu_act = '<a class="menu-act-item" onclick="download_file(\'RPC\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Duplicata") }} (' + obj[i].nb_download + ')</a>' ;
+                {% endif %}
             }
 
             {% endif %}
@@ -559,61 +571,61 @@ let i_max = obj.length - 1 ;
             {
                 menu_act += '<br /><a class="menu-act-item mt-1" onclick="reedit_report({{ args['record']['id_data'] }},\'' + obj[i].file + '\')">{{ _("Ré-éditer") }}</a>' ;
 
-            let disp_tpl = '' ;
+                let disp_tpl = '' ;
 
-            {% if ihm["tpl_result"] and ihm["tpl_result"]|length < 2 %}disp_tpl = 'hidden' ;{% endif %}
+                {% if ihm["tpl_result"] and ihm["tpl_result"]|length < 2 %}disp_tpl = 'hidden' ;{% endif %}
 
-            tpl = '<select id="tpl_result" class="form-select-sm ms-2" ' + disp_tpl + ' >' +
-                  {% for tpl in ihm['tpl_result'] %}
-                  '<option value="{{ tpl["tpl_file"] }}" {% if tpl["tpl_default"] ==  "Y" %}selected{% endif %}>{{ tpl["tpl_name"] }}</option>' +
-                  {% endfor %}
-                  '</select>' ;
+                tpl = '<select id="tpl_result" class="form-select-sm ms-2" ' + disp_tpl + ' >' +
+                    {% for tpl in ihm['tpl_result'] %}
+                '<option value="{{ tpl["tpl_file"] }}" {% if tpl["tpl_default"] ==  "Y" %}selected{% endif %}>{{ tpl["tpl_name"] }}</option>' +
+                    {% endfor %}
+                '</select>' ;
             }
             {% endif %}
 
-        let tmp_tr = '<tr>' ;
+            let tmp_tr = '<tr>' ;
 
-        tmp_tr += '<td hidden>' + obj[i].id_data + '</td>' ;
-        tmp_tr += '<td class="col-5 text-center align-items-stretch">' + menu_act + tpl + '</td>' ;
-        tmp_tr += '<td class="col-2 text-center">' + obj[i].date + '</td>' ;
-        tmp_tr += '<td class="col-5 text-center">' + obj[i].tpl_name + '</td>' ;
-        tmp_tr += '</tr>' ;
+            tmp_tr += '<td hidden>' + obj[i].id_data + '</td>' ;
+            tmp_tr += '<td class="col-5 text-center align-items-stretch">' + menu_act + tpl + '</td>' ;
+            tmp_tr += '<td class="col-2 text-center">' + obj[i].date + '</td>' ;
+            tmp_tr += '<td class="col-5 text-center">' + obj[i].tpl_name + '</td>' ;
+            tmp_tr += '</tr>' ;
 
-        tr_report += tmp_tr ;
+            tr_report += tmp_tr ;
 
             {% if has_permission("RECORD_176") %}
             if (i == i_max && (patAgreement === 'Y' || docAgreement === 'Y')) 
             {
-            var esc = obj[i].file.replace(/'/g, "\\'");
-            tr_report +=
-                '<tr class="report-send-row">' +
+                var esc = obj[i].file.replace(/'/g, "\\'");
+                tr_report +=
+                    '<tr class="report-send-row">' +
                     '<td hidden></td>' + 
                     '<td colspan="3">' +
-                        '<div class="d-flex flex-wrap align-items-center gap-2">' +
-                            '<select id="send_method_last" class="form-select form-select-sm w-auto"></select>' +
-                            '<select id="send_template_last"  class="form-select form-select-sm w-auto"></select>' +
-                            '<input  id="send_recipient_last" class="form-control form-control-sm w-auto" placeholder="{{ _("Destinataire") }}" />' +
-                            '<button type="button" class="btn btn-sm btn-{{ session["user_role"]|safe }}" onclick="send_last_report(\'' + obj[i].file.replace(/'/g, "\\'") + '\')">{{ _("Envoyer") }}</button>' +
-                            {% if args['patient']['pat_agreement'] == 'Y' and args['doctor']['doc_agreement'] == 'Y' %}
-                            '<button type="button" id="btn_toggle_recipient"' + 
-                            '        class="btn btn-sm btn-outline-secondary ms-2"' +
-                            '        data-bs-toggle="tooltip" data-bs-placement="top"' +
-                            '        title="{{ _("Récupérer contact du praticien") }}"' +
-                            '        onclick="toggleRecipient()">' +
-                            '    <i class="bi bi-arrow-left-right"></i>' +
-                            '</button>' +
-                            {% endif %}
-                        '</div>' +
-                        '<div id="send_inline_help_last" class="form-text mt-1"></div>' +
+                    '<div class="d-flex flex-wrap align-items-center gap-2">' +
+                    '<select id="send_method_last" class="form-select form-select-sm w-auto"></select>' +
+                    '<select id="send_template_last"  class="form-select form-select-sm w-auto"></select>' +
+                    '<input  id="send_recipient_last" class="form-control form-control-sm w-auto" placeholder="{{ _("Destinataire") }}" />' +
+                    '<button type="button" class="btn btn-sm btn-{{ session["user_role"]|safe }}" onclick="send_last_report(\'' + obj[i].file.replace(/'/g, "\\'") + '\')">{{ _("Envoyer") }}</button>' +
+                    {% if args['patient']['pat_agreement'] == 'Y' and args['doctor']['doc_agreement'] == 'Y' %}
+                '<button type="button" id="btn_toggle_recipient"' + 
+                    '        class="btn btn-sm btn-outline-secondary ms-2"' +
+                    '        data-bs-toggle="tooltip" data-bs-placement="top"' +
+                    '        title="{{ _("Récupérer contact du praticien") }}"' +
+                    '        onclick="toggleRecipient()">' +
+                    '    <i class="bi bi-arrow-left-right"></i>' +
+                    '</button>' +
+                    {% endif %}
+                '</div>' +
+                    '<div id="send_inline_help_last" class="form-text mt-1"></div>' +
                     '</td>' +
-                '</tr>';
+                    '</tr>';
             }
             {% endif %}
         }
     }
 
-$("#tbody_report").append(tr_report) ;
-initSendInline();
+    $("#tbody_report").append(tr_report) ;
+    initSendInline();
 }
 
 function normMethod(m) 
@@ -715,68 +727,68 @@ function setRecipientByMethodCode(codeRaw)
 
 // Prefill by consent: patient first, else doctor
 function prefillRecipientByConsent(codeRaw){
-  const code = String(codeRaw || '').toUpperCase();
+    const code = String(codeRaw || '').toUpperCase();
 
-  if (patAgreement === 'Y') {
-    setRecipientFrom('PAT', code);
-    currentRecipientSource = 'PAT';
-  } else if (docAgreement === 'Y') {
-    setRecipientFrom('DOC', code);
-    currentRecipientSource = 'DOC';
-  } else {
-    $("#send_recipient_last").val('');
-    currentRecipientSource = null;
-  }
-  updateToggleTooltip();
+    if (patAgreement === 'Y') {
+        setRecipientFrom('PAT', code);
+        currentRecipientSource = 'PAT';
+    } else if (docAgreement === 'Y') {
+        setRecipientFrom('DOC', code);
+        currentRecipientSource = 'DOC';
+    } else {
+        $("#send_recipient_last").val('');
+        currentRecipientSource = null;
+    }
+    updateToggleTooltip();
 }
 
 // Set recipient from PAT/DOC according to current method
 function setRecipientFrom(source, code){
-  const $dest = $("#send_recipient_last");
-  const $help = $("#send_inline_help_last");
+    const $dest = $("#send_recipient_last");
+    const $help = $("#send_inline_help_last");
 
-  if (code === 'W') { // WhatsApp -> phone
-    const val = (source === 'DOC') ? (docPhone || '').trim() : (getPhone() || '').trim();
-    $dest.val(val || '');
-    $help.text("{{ _('WhatsApp attend un numéro au format international (+33...)') }}");
-  } else {            // Email (S/M)
-    const val = (source === 'DOC') ? (docEmail || '').trim() : (patEmail || '').trim();
-    $dest.val(val || '');
-    $help.text("{{ _('Méthode email : renseigner une adresse valide.') }}");
-  }
+    if (code === 'W') { // WhatsApp -> phone
+        const val = (source === 'DOC') ? (docPhone || '').trim() : (getPhone() || '').trim();
+        $dest.val(val || '');
+        $help.text("{{ _('WhatsApp attend un numéro au format international (+33...)') }}");
+    } else {            // Email (S/M)
+        const val = (source === 'DOC') ? (docEmail || '').trim() : (patEmail || '').trim();
+        $dest.val(val || '');
+        $help.text("{{ _('Méthode email : renseigner une adresse valide.') }}");
+    }
 }
 
 // Update the toggle button tooltip to show the next action
 function updateToggleTooltip(){
-  const btn = document.getElementById('btn_toggle_recipient');
-  if (!btn) return;
+    const btn = document.getElementById('btn_toggle_recipient');
+    if (!btn) return;
 
-  const nextText = (currentRecipientSource === 'PAT')
-      ? "{{ _('Récupérer les informations du praticien') }}"
-      : "{{ _('Récupérer les informations du patient') }}";
+    const nextText = (currentRecipientSource === 'PAT')
+        ? "{{ _('Récupérer les informations du praticien') }}"
+        : "{{ _('Récupérer les informations du patient') }}";
 
-  btn.setAttribute('data-bs-original-title', nextText);
+    btn.setAttribute('data-bs-original-title', nextText);
 
-  if (window.bootstrap && bootstrap.Tooltip) {
-    const tip = bootstrap.Tooltip.getInstance(btn) || new bootstrap.Tooltip(btn);
-    if (tip.setContent) tip.setContent({'.tooltip-inner': nextText}); // BS ≥ 5.3
-  }
+    if (window.bootstrap && bootstrap.Tooltip) {
+        const tip = bootstrap.Tooltip.getInstance(btn) || new bootstrap.Tooltip(btn);
+        if (tip.setContent) tip.setContent({'.tooltip-inner': nextText}); // BS ≥ 5.3
+    }
 }
 
 function toggleRecipient()
 {
-  if (!(patAgreement === 'Y' && docAgreement === 'Y')) return;
+    if (!(patAgreement === 'Y' && docAgreement === 'Y')) return;
 
-  const code = String($("#send_method_last option:selected").data('code') || '').toUpperCase();
+    const code = String($("#send_method_last option:selected").data('code') || '').toUpperCase();
 
-  // Flip current source
-  currentRecipientSource = (currentRecipientSource === 'PAT') ? 'DOC' : 'PAT';
+    // Flip current source
+    currentRecipientSource = (currentRecipientSource === 'PAT') ? 'DOC' : 'PAT';
 
-  // Apply new source to the recipient field
-  setRecipientFrom(currentRecipientSource, code);
+    // Apply new source to the recipient field
+    setRecipientFrom(currentRecipientSource, code);
 
-  // Refresh tooltip text
-  updateToggleTooltip();
+    // Refresh tooltip text
+    updateToggleTooltip();
 }
 
 // Fill template select for a normalized method using preloaded SEND_MODELS
@@ -869,81 +881,81 @@ function send_last_report(reportFile) {
 
 function load_file( data )
 {
-let tr_file = '' ;
-let obj = data ;
+    let tr_file = '' ;
+    let obj = data ;
 
     if ( obj.id_data > 0 )
     {
-    let tmp_tr = '<tr>' ;
-    
-    tmp_tr += '<td class="filename"><div>' + obj.name + '</div></td>' ;
-    tmp_tr += '<td class="action"><div><a href="#" onclick="download_file(\'JF\', \'' + obj.name + '\', \'REC\', ' + obj.id_data + ');">{{ _("Télécharger") }}</a>';
-    {% if has_permission("RECORD_25") %}
-    tmp_tr += ' - <a href="#" onclick="delete_file(' + obj.id_data + ');">Supprimer</a>' ;
-    {% endif %}
-    tmp_tr += '</div></td></tr>' ;
+        let tmp_tr = '<tr>' ;
 
-    tr_file += tmp_tr ;
+        tmp_tr += '<td class="filename"><div>' + obj.name + '</div></td>' ;
+        tmp_tr += '<td class="action"><div><a href="#" onclick="download_file(\'JF\', \'' + obj.name + '\', \'REC\', ' + obj.id_data + ');">{{ _("Télécharger") }}</a>';
+        {% if has_permission("RECORD_25") %}
+        tmp_tr += ' - <a href="#" onclick="delete_file(' + obj.id_data + ');">Supprimer</a>' ;
+        {% endif %}
+        tmp_tr += '</div></td></tr>' ;
+
+        tr_file += tmp_tr ;
     }
 
-$("#tbody_file").append(tr_file) ;
+    $("#tbody_file").append(tr_file) ;
 }
 
 function load_data()
 {
-// clear table tbody
-$("#tbody_analysis").empty() ;
-{% if type_req == 'E' %}$("#tbody_sample").empty() ;{% endif %}
-$("#tbody_report").empty() ;
-$("#tbody_file").empty() ;
+    // clear table tbody
+    $("#tbody_analysis").empty() ;
+    {% if type_req == 'E' %}$("#tbody_sample").empty() ;{% endif %}
+    $("#tbody_report").empty() ;
+    $("#tbody_file").empty() ;
 
     for( i in data_analysis )
     {
-    load_analysis( data_analysis[i] ) ;
+        load_analysis( data_analysis[i] ) ;
     }
 
     if (data_analysis.length < 1)
     {
-    let tr_ana = '<tr class=""><td colspan="8"><div>{{ _("Aucune donnée à afficher") }}</div></td></tr>' ;
+        let tr_ana = '<tr class=""><td colspan="8"><div>{{ _("Aucune donnée à afficher") }}</div></td></tr>' ;
 
-    $("#tbody_analysis").append(tr_ana) ;
+        $("#tbody_analysis").append(tr_ana) ;
     }
 
     {% if type_req == 'E' %}
     for( i in data_samples )
     {
-    load_sample( data_samples[i] ) ;
+        load_sample( data_samples[i] ) ;
     }
 
     if (data_samples.length < 1)
     {
-    let tr_sample = '<tr class=""><td colspan="7"><div>{{ _("Aucune donnée à afficher") }}</div></td></tr>' ;
+        let tr_sample = '<tr class=""><td colspan="7"><div>{{ _("Aucune donnée à afficher") }}</div></td></tr>' ;
 
-    $("#tbody_sample").append(tr_sample) ;
+        $("#tbody_sample").append(tr_sample) ;
     }
     {% endif %}
 
     if (data_reports.length < 1)
     {
-    let tr_report = '<tr><td colspan="3"><div>{{ _("Aucune donnée à afficher") }}</div></td></tr>' ;
+        let tr_report = '<tr><td colspan="3"><div>{{ _("Aucune donnée à afficher") }}</div></td></tr>' ;
 
-    $("#tbody_report").append(tr_report) ;
+        $("#tbody_report").append(tr_report) ;
     }
     else
     {
-    load_report( data_reports ) ;
+        load_report( data_reports ) ;
     }
 
     for( i in data_files )
     {
-    load_file( data_files[i] ) ;
+        load_file( data_files[i] ) ;
     }
 
     if (data_files.length < 1)
     {
-    let tr_file = '<tr><td colspan="2"><div>{{ _("Aucun fichier déposé") }}</div></td></tr>' ;
+        let tr_file = '<tr><td colspan="2"><div>{{ _("Aucun fichier déposé") }}</div></td></tr>' ;
 
-    $("#tbody_file").append(tr_file) ;
+        $("#tbody_file").append(tr_file) ;
     }
 
     $("#table_analysis").tablesorter() ;  // sort only data on screen
@@ -952,20 +964,20 @@ $("#tbody_file").empty() ;
 
 function create_td(id, val, cls, style)
 {
-let tmp_td = '<td class="' + cls + '" id="' + id + '" style="' + style + '">' +
-             '<div>' + val + '</div></td>' ;
+    let tmp_td = '<td class="' + cls + '" id="' + id + '" style="' + style + '">' +
+        '<div>' + val + '</div></td>' ;
 
-return tmp_td ;
+    return tmp_td ;
 }
 
 function format_rate(rate, price)
 {
-return rate + '(' + price + ')' ;
+    return rate + '(' + price + ')' ;
 }
 
 function reedit_report( id_rec, filename )
 {
-let template = $("#tpl_result").val() ; 
+    let template = $("#tpl_result").val() ; 
 
     if ( window.confirm("{{ _("Souhaitez-vous ré-éditer le compte rendu ? (la mention Annule et remplace y figurera)") }}") )
     {
@@ -973,89 +985,89 @@ let template = $("#tpl_result").val() ;
         $("#dial-wait").modal("show") ;
 
         $.ajax(
-        {
-            type : 'GET',
-            url : "{{ session['server_ext'] }}/services/pdf/report/" + id_rec + "/" + filename + "/" + template + "/Y/{{ session['user_id'] }}",
-            success : function(response)
             {
-                $("#dial-wait").modal("hide") ;
-            console.log( "success reeedit report") ;
-            location.reload();
-            },
-            error: function(response)
-            {
-                $("#dial-wait").modal("hide") ;
-            console.log("ERROR reeedit report") ;
-            alert("{{ _("Une erreur est survenue lors du traitement") }}") ;
-            }
-        } ) ;
+                type : 'GET',
+                url : "{{ session['server_ext'] }}/services/pdf/report/" + id_rec + "/" + filename + "/" + template + "/Y/{{ session['user_id'] }}",
+                success : function(response)
+                {
+                    $("#dial-wait").modal("hide") ;
+                    console.log( "success reeedit report") ;
+                    location.reload();
+                },
+                error: function(response)
+                {
+                    $("#dial-wait").modal("hide") ;
+                    console.log("ERROR reeedit report") ;
+                    alert("{{ _("Une erreur est survenue lors du traitement") }}") ;
+                }
+            } ) ;
     }
 }
 
 function save_comm()
 {
-var id_rec = {{ args['record']['id_data'] }} ;
-var comm   = JSON.stringify( $.trim( $("#comm").val() ) ) ;
+    var id_rec = {{ args['record']['id_data'] }} ;
+    var comm   = JSON.stringify( $.trim( $("#comm").val() ) ) ;
 
-var param = '{ "comm":' + comm + '}' ; // NO QUOTE DUE TO STRINGIFY PROCESS
+    var param = '{ "comm":' + comm + '}' ; // NO QUOTE DUE TO STRINGIFY PROCESS
 
     // popup wait
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
     $.ajax( 
-    {
-        // CREATE Record
-        type: "POST",
-        url: "{{ session['server_ext'] }}/services/record/comm/" + id_rec,
-        dataType: 'json',
-        contentType: "application/json; charset=utf-8",
-        data: param,
-        success: function(ret_rec)
         {
-            $("#dial-wait").modal("hide") ;
-        },
-        error: function(ret_rec)
-        {
-            $("#dial-wait").modal("hide") ;
+            // CREATE Record
+            type: "POST",
+            url: "{{ session['server_ext'] }}/services/record/comm/" + id_rec,
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            data: param,
+            success: function(ret_rec)
+            {
+                $("#dial-wait").modal("hide") ;
+            },
+            error: function(ret_rec)
+            {
+                $("#dial-wait").modal("hide") ;
 
-        console.log("ERROR record comment") ;
-        alert("{{ _("Une erreur est survenue lors de l'enregistrement") }}") ;
-        }
-    } ) ;
+                console.log("ERROR record comment") ;
+                alert("{{ _("Une erreur est survenue lors de l'enregistrement") }}") ;
+            }
+        } ) ;
 
 }
 
 function upload_file( id_rec )
 {
-let param_form = new FormData() ;
+    let param_form = new FormData() ;
 
-param_form.append('file', $('input[type=file]')[0].files[0]) ;
+    param_form.append('file', $('input[type=file]')[0].files[0]) ;
 
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
     $.ajax(
-    {
-        type : 'POST',
-        url : "{{ session['server_ext'] }}/upload-file/REC/" + id_rec,
-        dataType: 'json',
-        contentType: false,
-        processData: false,
-        data: param_form,
-        success : function(response)
         {
-            $("#dial-wait").modal("hide") ;
-        console.log( "success upload ") ;
-        location.reload() ;
-        },
-        error: function(response)
-        {
-            $("#dial-wait").modal("hide") ;
-        console.log("ERROR upload file") ;
-        alert("{{ _("Une erreur est survenue lors du dépot d'un fichier") }}") ;
-        }
-    } ) ;
+            type : 'POST',
+            url : "{{ session['server_ext'] }}/upload-file/REC/" + id_rec,
+            dataType: 'json',
+            contentType: false,
+            processData: false,
+            data: param_form,
+            success : function(response)
+            {
+                $("#dial-wait").modal("hide") ;
+                console.log( "success upload ") ;
+                location.reload() ;
+            },
+            error: function(response)
+            {
+                $("#dial-wait").modal("hide") ;
+                console.log("ERROR upload file") ;
+                alert("{{ _("Une erreur est survenue lors du dépot d'un fichier") }}") ;
+            }
+        } ) ;
 }
 
 function delete_file( id_file )
@@ -1067,52 +1079,52 @@ function delete_file( id_file )
         $("#dial-wait").modal("show") ;
 
         $.ajax( 
-        {
-            type: "DELETE",
-            url: "{{ session['server_ext'] }}/services/file/document/REC/" + id_file,
-            success: function(ret)
             {
-            $("#dial-wait").modal("hide") ;
-            location.reload() ;
-            },
-            error: function(ret)
-            {
-            console.log("ERROR DELETE document file") ;
-            $("#dial-wait").modal("hide") ;
-            alert("{{ _("Erreur lors de la suppression d'un fichier") }}") ;
-            }
-        } ) ;
+                type: "DELETE",
+                url: "{{ session['server_ext'] }}/services/file/document/REC/" + id_file,
+                success: function(ret)
+                {
+                    $("#dial-wait").modal("hide") ;
+                    location.reload() ;
+                },
+                error: function(ret)
+                {
+                    console.log("ERROR DELETE document file") ;
+                    $("#dial-wait").modal("hide") ;
+                    alert("{{ _("Erreur lors de la suppression d'un fichier") }}") ;
+                }
+            } ) ;
     }
     else
-    return false ;
+        return false ;
 }
 
 function print_outsourced( id_rec )
 {
-let template = $("#tpl_outsourced").val() ;
-let filename = "outsourced_" + num_rec ;
+    let template = $("#tpl_outsourced").val() ;
+    let filename = "outsourced_" + num_rec ;
 
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
     $.ajax( 
-    {
-        type: "GET",
-        url: "{{ session['server_ext'] }}/services/pdf/outsourced/" + id_rec + "/" + template + "/" + filename,
-        success: function(ret)
         {
-            $("#dial-wait").modal("hide") ;
+            type: "GET",
+            url: "{{ session['server_ext'] }}/services/pdf/outsourced/" + id_rec + "/" + template + "/" + filename,
+            success: function(ret)
+            {
+                $("#dial-wait").modal("hide") ;
 
-        download_file( "PY", filename + ".pdf", "GEN", 0 ) ;
-        },
-        error: function(ret)
-        {
-            $("#dial-wait").modal("hide") ;
+                download_file( "PY", filename + ".pdf", "GEN", 0 ) ;
+            },
+            error: function(ret)
+            {
+                $("#dial-wait").modal("hide") ;
 
-        console.log("ERROR GET pdf bill");
-        alert("{{ _("Erreur lors de la génération du PDF") }}") ;
-        }
-    } ) ;
+                console.log("ERROR GET pdf bill");
+                alert("{{ _("Erreur lors de la génération du PDF") }}") ;
+            }
+        } ) ;
 }
 
 function print_invoice( id_rec )
@@ -1120,120 +1132,120 @@ function print_invoice( id_rec )
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
-let template = $("#tpl_invoice").val() ;
-let filename = "invoice_" + num_rec ;
+    let template = $("#tpl_invoice").val() ;
+    let filename = "invoice_" + num_rec ;
 
     $.ajax( 
-    {
-        type: "GET",
-        url: "{{ session['server_ext'] }}/services/pdf/invoice/" + id_rec + "/" + template + "/" + filename,
-        success: function(ret)
         {
-            $("#dial-wait").modal("hide") ;
+            type: "GET",
+            url: "{{ session['server_ext'] }}/services/pdf/invoice/" + id_rec + "/" + template + "/" + filename,
+            success: function(ret)
+            {
+                $("#dial-wait").modal("hide") ;
 
-            if (ret == 0)
-            download_file( "PY", filename + ".pdf", "GEN", 0 ) ;
-            else
-            alert("{{ _("Erreur lors de la génération du PDF") }}") ;
-        },
-        error: function(ret)
-        {
-            $("#dial-wait").modal("hide") ;
+                if (ret == 0)
+                    download_file( "PY", filename + ".pdf", "GEN", 0 ) ;
+                else
+                    alert("{{ _("Erreur lors de la génération du PDF") }}") ;
+            },
+            error: function(ret)
+            {
+                $("#dial-wait").modal("hide") ;
 
-        console.log("ERROR GET pdf invoice");
-        alert("{{ _("Erreur lors de la génération du PDF") }}") ;
-        }
-    } ) ;
+                console.log("ERROR GET pdf invoice");
+                alert("{{ _("Erreur lors de la génération du PDF") }}") ;
+            }
+        } ) ;
 }
 
 function print_sticker()
 {
-let template = $("#tpl_sticker").val() ;
+    let template = $("#tpl_sticker").val() ;
 
-var id_rec = {% if args['record'] and args['record']['id_data'] > 0 %}{{ args['record']['id_data'] }}{% else %}0{% endif %} ;
-var param = '{ "id":' + id_rec + ', "type_id": "REC"}' ;
+    var id_rec = {% if args['record'] and args['record']['id_data'] > 0 %}{{ args['record']['id_data'] }}{% else %}0{% endif %} ;
+    var param = '{ "id":' + id_rec + ', "type_id": "REC"}' ;
 
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
     $.ajax( 
-    {
-        type: "POST",
-        url: "{{ session['server_ext'] }}/services/pdf/sticker/" + template,
-        dataType: 'json',
-        contentType: "application/json; charset=utf-8",
-        data: param,
-        success: function(ret)
         {
-            $("#dial-wait").modal("hide") ;
+            type: "POST",
+            url: "{{ session['server_ext'] }}/services/pdf/sticker/" + template,
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            data: param,
+            success: function(ret)
+            {
+                $("#dial-wait").modal("hide") ;
 
-            if (ret == 0)
-            download_file( "PY", "sticker_REC" + id_rec + ".pdf", "GEN", 0 ) ;
-            else
-            alert("{{ _("Erreur lors de la génération du PDF") }}") ;
-        },
-        error: function(ret)
-        {
-            $("#dial-wait").modal("hide") ;
+                if (ret == 0)
+                    download_file( "PY", "sticker_REC" + id_rec + ".pdf", "GEN", 0 ) ;
+                else
+                    alert("{{ _("Erreur lors de la génération du PDF") }}") ;
+            },
+            error: function(ret)
+            {
+                $("#dial-wait").modal("hide") ;
 
-        console.log("ERROR GET pdf sticker");
-        alert("{{ _("Erreur lors de la génération du PDF") }}") ;
-        }
-    } ) ;
+                console.log("ERROR GET pdf sticker");
+                alert("{{ _("Erreur lors de la génération du PDF") }}") ;
+            }
+        } ) ;
 }
 
 function info_pat_title()
 {
-{% if args['patient'] %}
-let info = "" ;
+    {% if args['patient'] %}
+    let info = "" ;
 
-info = " - {% if args['patient']['pat_code_lab'] %}{{ args['patient']['pat_code_lab'] }} {% endif %}" +
-           "{% if args['patient']['pat_code'] %}{{ args['patient']['pat_code'] }}{% endif %} - " +
-           "{% if args['patient']['pat_firstname'] %}{{ args['patient']['pat_firstname'] }} {% endif %}" +
-           "{% if args['patient']['pat_name'] %}{{ args['patient']['pat_name'] }} {% endif %}" +
-           "{% if args['patient']['pat_maiden'] %}{{ args['patient']['pat_maiden'] }} {% endif %} - " +
-           "{% if args['patient']['pat_birth'] %}{{ _("Né(e) le") }} {{ args['patient']['pat_birth'] }} {% endif %}" +
-           "{% if args['patient']['pat_age'] %} - {{ args['patient']['pat_age'] }} {% endif %}" +
-           "{% if args['patient']['pat_age_unit'] == 1037 %}{{ _("années") }}" +
-           "{% elif args['patient']['pat_age_unit'] == 1036 %}{{ _("mois") }}" +
-           "{% elif args['patient']['pat_age_unit'] == 1035 %}{{ _("semaines") }}" +
-           "{% elif args['patient']['pat_age_unit'] == 1034 %}{{ _("jours") }}{% endif %}" ;
+    info = " - {% if args['patient']['pat_code_lab'] %}{{ args['patient']['pat_code_lab'] }} {% endif %}" +
+        "{% if args['patient']['pat_code'] %}{{ args['patient']['pat_code'] }}{% endif %} - " +
+        "{% if args['patient']['pat_firstname'] %}{{ args['patient']['pat_firstname'] }} {% endif %}" +
+        "{% if args['patient']['pat_name'] %}{{ args['patient']['pat_name'] }} {% endif %}" +
+        "{% if args['patient']['pat_maiden'] %}{{ args['patient']['pat_maiden'] }} {% endif %} - " +
+        "{% if args['patient']['pat_birth'] %}{{ _("Né(e) le") }} {{ args['patient']['pat_birth'] }} {% endif %}" +
+        "{% if args['patient']['pat_age'] %} - {{ args['patient']['pat_age'] }} {% endif %}" +
+        "{% if args['patient']['pat_age_unit'] == 1037 %}{{ _("années") }}" +
+        "{% elif args['patient']['pat_age_unit'] == 1036 %}{{ _("mois") }}" +
+        "{% elif args['patient']['pat_age_unit'] == 1035 %}{{ _("semaines") }}" +
+        "{% elif args['patient']['pat_age_unit'] == 1034 %}{{ _("jours") }}{% endif %}" ;
 
     if (info != "")
-    $("#info_pat_title").text(info) ;
-{% endif %}
+        $("#info_pat_title").text(info) ;
+    {% endif %}
 }
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage";
+    window.location.href = "{{ session['server_ext'] }}/homepage";
 }
 
 {% if has_permission("RECORD_18") %}
 $( document ).ready( function()
-{
-num_rec_y = {{ args['record']['num_dos_an'] }} ;
-
-{% if session['record_period'] == 1070 %} // Month period
-num_rec = {{ args['record']['num_dos_mois'] }} ;
-{% else %} // Annual period
-num_rec = {{ args['record']['num_dos_an'] }} ;
-{% endif %}
-
-let num_rec_fmt = fmt_num_rec( num_rec, {{ session['record_format'] }}, {{ session['record_period'] }} ) ;
-
-    $("#num_rec").text( num_rec_fmt ) ;
-    
-load_data() ;
-info_pat_title() ;
-
-    if (with_outsourced == 0)
     {
-    $("#tpl_outsourced").hide() ;
-    $("#btn_outsourced").hide() ;
-    }
+        num_rec_y = {{ args['record']['num_dos_an'] }} ;
 
-} ) ;
+        {% if session['record_period'] == 1070 %} // Month period
+        num_rec = {{ args['record']['num_dos_mois'] }} ;
+        {% else %} // Annual period
+        num_rec = {{ args['record']['num_dos_an'] }} ;
+        {% endif %}
+
+        let num_rec_fmt = fmt_num_rec( num_rec, {{ session['record_format'] }}, {{ session['record_period'] }} ) ;
+
+        $("#num_rec").text( num_rec_fmt ) ;
+
+        load_data() ;
+        info_pat_title() ;
+
+        if (with_outsourced == 0)
+        {
+            $("#tpl_outsourced").hide() ;
+            $("#btn_outsourced").hide() ;
+        }
+
+    } ) ;
 {% endif %}
 </script>
 {% endblock %}

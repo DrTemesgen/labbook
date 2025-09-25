@@ -3,36 +3,56 @@ The [indicator.ini](storage/resource/indicator/indicator.ini) file must be prese
 
 In administrator access you can override the indicator.ini file, to know you have to keep the same file name
 
-17/04/2023 : version = 1
+# TO DEFINE A CONFIG FILE FOR INDICATOR REPORT
 
-[SETTINGS] section
-version : version number 
-nb_disease : number of disease defined
+The [indicator.ini](storage/resource/indicator/indicator.ini) file must be present and compliant (UTF-8 encoding).
 
-If nb_disease = 4 then [DISEASE_1] to [DISEASE_4] need to be defined
+With administrator access you can override the `indicator.ini` file, but you must keep the same file name.
 
-[DISEASE_xxx] section
-disease : label of disease
-sample_type : list of serial corresponding to the type of sample in the database (cf table below) or 0, useful for display not for formula, even for one serial you have to write it like this : [my_serial]
-nb_res : number of result to display
+**Current version:** 1 (since 17/04/2023)
 
-If nb_res = 4 then res_label_1 to res_label_4, formula_1 to formula_4 and sample_type_1 to sample_type_4  need to be defined
+---
 
-res_label_xxx : label of result to display
-formula_xxx : formula will be read and interpreted by LabBook (cf DHIS2.md filter section, same algorithm)
+## [SETTINGS] section
+- **version** : version number  
+- **nb_disease** : number of diseases defined  
 
-Note : formula with a AND first part use first sample_type and second part use second sample_type, if they use same sample_type you should write sampletype like this : [serial_of_first_sample_type, serial_of_second_sample_type]
+If `nb_disease = 4`, then sections `[DISEASE_1]` to `[DISEASE_4]` must be defined.
 
-Note 2 : with keyword OR sample_type will be share with both part of formula.
+---
 
-If formula_xxx is empty then res_label_xxx will be considered as a separation title and sample_type_xxx will not be necessary
+## [DISEASE_xxx] section
+- **disease** : label of disease  
+- **sample_type** : list of serials corresponding to the type of sample in the database (see *List of Sampling Types* below).  
+  Even for a single serial, you must write it as a list: `[my_serial]`.  
+  This field is only used for display, not for formula evaluation.  
 
-sample_type_xxx : serial corresponding to the type of sample in the database (cf table below) or 0, useful for calculate with the formula_xxx, even for one serial you have to write it like this : [my_serial]
+- **nb_res** : number of results to display  
 
+If `nb_res = 4`, then the following must be defined:  
+`res_label_1` to `res_label_4`, `formula_1` to `formula_4`, and `sample_type_1` to `sample_type_4`.
 
-LIST OF SAMPLING TYPES
+- **res_label_xxx** : label of result to display  
+- **formula_xxx** : calculation formula for the result.  
 
-mysql> select id_data, label from sigl_dico_data where dico_name='type_prel';
+  **Important:** The syntax of formulas is the same as described in the DHIS2 filter documentation.  
+
+  - If the formula starts with `AND`, the first part uses the first `sample_type` and the second part uses the second `sample_type`.  
+    If both parts use the same `sample_type`, you must write it as `[serial_of_first_sample_type, serial_of_second_sample_type]`.  
+  - With keyword `OR`, the `sample_type` will be shared by both parts of the formula.  
+  - If `formula_xxx` is empty, then `res_label_xxx` will be considered as a separator title and `sample_type_xxx` is not required.  
+
+- **sample_type_xxx** : serial corresponding to the type of sample used in the formula.  
+  Even for a single serial, you must write it as `[my_serial]`.
+
+---
+
+## LIST OF SAMPLING TYPES
+
+```sql
+mysql> select id_data, label 
+       from sigl_dico_data 
+       where dico_name='type_prel';
 
 | id_data | label                           |
 |---------|---------------------------------|

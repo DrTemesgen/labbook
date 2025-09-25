@@ -519,6 +519,7 @@ class AnalysisDet(Resource):
                                                      var_max=var['var_max'],
                                                      var_show_minmax=var['var_show_minmax'],
                                                      var_highlight=var['var_highlight'],
+                                                     var_in_report=var['var_in_report'],
                                                      comment=var['var_comment'],
                                                      formula=var['var_formula'],
                                                      unit=var['var_unit'],
@@ -571,6 +572,7 @@ class AnalysisDet(Resource):
                                                      var_max=var['var_max'],
                                                      var_show_minmax=var['var_show_minmax'],
                                                      var_highlight=var['var_highlight'],
+                                                     var_in_report=var['var_in_report'],
                                                      comment=var['var_comment'],
                                                      formula=var['var_formula'],
                                                      unit=var['var_unit'],
@@ -652,6 +654,7 @@ class AnalysisDet(Resource):
                                                      var_max=var['var_max'],
                                                      var_show_minmax=var['var_show_minmax'],
                                                      var_highlight=var['var_highlight'],
+                                                     var_in_report=var['var_in_report'],
                                                      comment=var['var_comment'],
                                                      formula=var['var_formula'],
                                                      unit=var['var_unit'],
@@ -689,6 +692,7 @@ class AnalysisDet(Resource):
                                                      var_max=var['var_max'],
                                                      var_show_minmax=var['var_show_minmax'],
                                                      var_highlight=var['var_highlight'],
+                                                     var_in_report=var['var_in_report'],
                                                      comment=var['var_comment'],
                                                      formula=var['var_formula'],
                                                      unit=var['var_unit'],
@@ -1011,7 +1015,8 @@ class AnalysisExport(Resource):
                    'ana_whonet', 'id_link', 'link_ana_ref', 'link_var_ref', 'link_pos', 'link_num_var', 'link_oblig',
                    'id_var', 'var_label', 'var_descr', 'var_unit', 'var_min', 'var_max', 'var_comment', 'var_res_type',
                    'var_formula', 'var_accu', 'var_code', 'var_whonet', 'var_qrcode', 'var_highlight', 'var_show_minmax',
-                   'var_formula_conv', 'var_unit_conv', 'var_accu_conv', 'ana_ast', 'ana_lite', 'ana_loinc']]
+                   'var_in_report', 'var_formula_conv', 'var_unit_conv', 'var_accu_conv', 'ana_ast', 'ana_lite',
+                   'ana_loinc']]
 
         if 'id_user' not in args:
             self.log.error(Logs.fileline() + ' : AnalysisExport ERROR args missing')
@@ -1025,7 +1030,7 @@ class AnalysisExport(Resource):
             for d in dict_data:
                 data = []
 
-                data.append('v5')
+                data.append('v6')
 
                 # ANALYSIS
                 if d['id_data']:
@@ -1221,6 +1226,11 @@ class AnalysisExport(Resource):
                 else:
                     data.append('N')
 
+                if d['var_in_report']:
+                    data.append(d['var_in_report'])
+                else:
+                    data.append('Y')
+
                 # --- added in v4 ---
                 if d['formule_unite2']:
                     data.append(d['formule_unite2'])
@@ -1345,7 +1355,7 @@ class AnalysisImport(Resource):
         version = l_rows[0][0]
 
         # check version
-        if version not in ('v3', 'v4', 'v5'):
+        if version not in ('v3', 'v4', 'v5', 'v6'):
             self.log.error(Logs.fileline() + ' : TRACE AnalysisImport ERROR wrong version : ' + str(version))
             DB.insertDbStatus(stat='ERR;AnalysisImport ERROR wrong version', type='ANA')
             return compose_ret('', Constants.cst_content_type_json, 409)
@@ -1366,6 +1376,9 @@ class AnalysisImport(Resource):
         if version == 'v5':
             head_list.append('ana_lite')
             head_list.append('ana_loinc')
+
+        if version == 'v6':
+            head_list.append('var_in_report')
 
         i = 0
         for head in head_line:
@@ -1447,7 +1460,7 @@ class AnalysisImport(Resource):
                         var_show_minmax = 'N'
 
                     # re-add formula2, unit2, accu2
-                    if (version == 'v4' or version == 'v5') and len(row) > 39:
+                    if (version == 'v4' or version == 'v5' or version == 'v6') and len(row) > 39:
                         var_formula_conv = row[36]
                         var_unit_conv = row[37]
                         var_accu_conv = row[38]
@@ -1458,12 +1471,17 @@ class AnalysisImport(Resource):
                         var_accu_conv = 0
                         ana_ast = 'N'
 
-                    if version == 'v5' and len(row) > 40:
+                    if (version == 'v4' or version == 'v5' or version == 'v6') and len(row) > 40:
                         ana_lite = row[40]
                         ana_loinc = row[41]
                     else:
                         ana_lite  = 'N'
                         ana_loinc = ''
+
+                    if version == 'v6' and len(row) > 41:
+                        var_in_report = row[42]
+                    else:
+                        var_in_report  = 'Y'
 
                     ret = Analysis.exist(code, test)
 
@@ -1524,6 +1542,7 @@ class AnalysisImport(Resource):
                                                                  var_max=normal_max,
                                                                  var_show_minmax=var_show_minmax,
                                                                  var_highlight=var_highlight,
+                                                                 var_in_report=var_in_report,
                                                                  comment=var_comm,
                                                                  formula=formule,
                                                                  unit=unite,
@@ -1637,7 +1656,7 @@ class AnalysisImport(Resource):
                         var_show_minmax = 'N'
 
                     # re-add formula2, unit2, accu2
-                    if (version == 'v4' or version == 'v5') and len(row) > 39:
+                    if (version == 'v4' or version == 'v5' or version == 'v6') and len(row) > 39:
                         var_formula_conv = row[36]
                         var_unit_conv = row[37]
                         var_accu_conv = row[38]
@@ -1648,12 +1667,17 @@ class AnalysisImport(Resource):
                         var_accu_conv = 0
                         ana_ast = 'N'
 
-                    if version == 'v5' and len(row) > 40:
+                    if (version == 'v5' or version == 'v6') and len(row) > 40:
                         ana_lite = row[40]
                         ana_loinc = row[41]
                     else:
                         ana_lite  = 'N'
                         ana_loinc = ''
+
+                    if version == 'v6' and len(row) > 41:
+                        var_in_report = row[42]
+                    else:
+                        var_in_report = 'Y'
 
                     ret = Analysis.exist(code, test)
 
@@ -1741,6 +1765,7 @@ class AnalysisImport(Resource):
                                                                  var_max=normal_max,
                                                                  var_show_minmax=var_show_minmax,
                                                                  var_highlight=var_highlight,
+                                                                 var_in_report=var_in_report,
                                                                  comment=var_comm,
                                                                  formula=formule,
                                                                  unit=unite,

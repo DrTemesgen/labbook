@@ -76,7 +76,16 @@ log = logging.getLogger('log_services')
 
 app = Flask(__name__)
 app.config.from_object('default_settings')
-CORS(app)
+# Limits CORS to the subdomain beginning with /services/external/
+CORS(
+    app,
+    resources={r"/services/external/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["*"]
+    }},
+    supports_credentials=False  # set True only if you need cookies/Authorization headers
+)
 
 config_envvar = 'LOCAL_SETTINGS'
 
@@ -181,8 +190,8 @@ api.add_resource(AnalysisVarList,       '/services/analysis/variable/list/<int:i
 api.add_resource(AnalysisVarDet,        '/services/analysis/variable/det/<int:id_var>')
 api.add_resource(AnalyzerDet,           '/services/device/analyzer/det/<int:id_analyzer>')
 api.add_resource(AnalyzerFile,          '/services/device/analyzer/file')
-api.add_resource(AnalyzerLab27,         '/services/device/analyzer/lab27/<string:id_analyzer>')
-api.add_resource(AnalyzerLab29,         '/services/device/analyzer/lab29/<string:id_analyzer>')
+api.add_resource(AnalyzerLab27,         '/services/external/device/analyzer/lab27/<string:id_analyzer>')
+api.add_resource(AnalyzerLab29,         '/services/external/device/analyzer/lab29/<string:id_analyzer>')
 api.add_resource(AnalyzerList,          '/services/device/analyzer/list')
 api.add_resource(AnalyzerMsgList,       '/services/device/analyzer/message/list')
 api.add_resource(AnalyzerMsgDet,        '/services/device/analyzer/message/det/<int:id_msg>')

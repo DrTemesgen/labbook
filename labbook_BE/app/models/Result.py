@@ -206,19 +206,29 @@ class Result:
             return False
 
     @staticmethod
-    def getResultValidation(id_res):
+    def getResultValidation(id_res, type_vld=0):
         cursor = DB.cursor()
 
-        req = ('select v.id_data as id_data, v.id_owner as id_owner, v.id_resultat as id_resultat, '
-               'v.date_validation as date_validation, v.utilisateur as utilisateur, v.valeur as valeur, '
-               'v.type_validation as type_validation, v.commentaire as commentaire, '
-               'v.motif_annulation as motif_annulation, dico.label as label_motif '
-               'from sigl_10_data as v '
-               'left join sigl_dico_data as dico on dico.id_data=motif_annulation '
-               'where id_resultat=%s '
-               'order by id_data desc limit 1')
+        req = (
+            'select v.id_data as id_data, v.id_owner as id_owner, v.id_resultat as id_resultat, '
+            'v.date_validation as date_validation, v.utilisateur as utilisateur, v.valeur as valeur, '
+            'v.type_validation as type_validation, v.commentaire as commentaire, '
+            'v.motif_annulation as motif_annulation, dico.label as label_motif '
+            'from sigl_10_data as v '
+            'left join sigl_dico_data as dico on dico.id_data = v.motif_annulation '
+            'where v.id_resultat = %s '
+        )
 
-        cursor.execute(req, (id_res,))
+        params = [id_res]
+    
+        # Optional filter only when positive validation type is provided
+        if type_vld > 0:
+            req += 'and v.type_validation = %s '
+            params.append(type_vld)
+    
+        req += 'order by v.id_data desc limit 1'
+    
+        cursor.execute(req, tuple(params))
 
         return cursor.fetchone()
 
@@ -264,18 +274,20 @@ class Result:
         return cursor.fetchone()
 
     @staticmethod
-    def getListValidators(id_rec):
+    def getListValidators(id_rec, type_vld=252):
         cursor = DB.cursor()
 
-        req = ('select vld.utilisateur as user, vld.commentaire as comment '
-               'from sigl_10_data as vld '
-               'inner join sigl_09_data as res on res.id_data = vld.id_resultat '
-               'inner join sigl_04_data as req on req.id_data = res.id_analyse '
-               'where req.id_dos=%s and vld.type_validation=252 '
-               'group by vld.utilisateur, vld.commentaire order by vld.id_data asc')
-
-        cursor.execute(req, (id_rec,))
-
+        req = (
+            'select vld.utilisateur as user, vld.commentaire as comment '
+            'from sigl_10_data as vld '
+            'inner join sigl_09_data as res on res.id_data = vld.id_resultat '
+            'inner join sigl_04_data as req on req.id_data = res.id_analyse '
+            'where req.id_dos=%s and vld.type_validation=%s '
+            'group by vld.utilisateur, vld.commentaire '
+            'order by vld.id_data asc'
+        )
+ 
+        cursor.execute(req, (id_rec, type_vld))
         return cursor.fetchall()
 
     @staticmethod
@@ -376,7 +388,7 @@ class Result:
                    'res.valeur as value, var.*, rec.num_dos_mois as rec_num_month, rec.num_dos_an as rec_num_year, '
                    'rec.rec_date_receipt, rec.date_prescription as prescr_date, rec.statut as rec_stat, '
                    'req.req_outsourced as ana_outsourced, req.id_owner as id_owner, rec.id_patient as id_pat, '
-                   'link.position as var_pos, link.var_qrcode '
+                   'link.position as var_pos, link.var_qrcode, COUNT(*) OVER (PARTITION BY req.id_data) AS res_count '
                    'from sigl_04_data as req '
                    'inner join sigl_02_data as rec on rec.id_data = req.id_dos '
                    'inner join sigl_05_data as ref on req.ref_analyse = ref.id_data '
@@ -386,7 +398,7 @@ class Result:
                    'inner join sigl_05_07_data as link on var.id_data = link.id_refvariable '
                    'and ref.id_data = link.id_refanalyse '
                    'where req.id_dos=%s and ' + fam_cond + ' and (var.type_resultat=265 or '
-                   '(res.valeur is not NULL and res.valeur != "" and res.valeur != 1013)) '
+                   '(res.valeur is not NULL and res.valeur != "" and res.valeur != 1013)) and var_in_report="Y" '
                    'order by id_req_ana asc,  ana_name asc, var_pos asc')
 
             cursor.execute(req, (id_rec,))

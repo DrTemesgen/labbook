@@ -400,9 +400,9 @@ class Patient:
         cursor = DB.cursor()
 
         req = ('select rec.id_data as id_rec, rec.type as type_rec, rec.date_prescription as date_prescr, ref.nom as analysis, '
-               'if(param_num_rec.periode=1070, if(param_num_rec.format=1072,substring(rec.num_dos_mois from 7), '
+               'if(rec_setting.rstg_period=1070, if(rec_setting.rstg_format=1072,substring(rec.num_dos_mois from 7), '
                'rec.num_dos_mois), '
-               'if(param_num_rec.format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) as rec_num, '
+               'if(rec_setting.rstg_format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) as rec_num, '
                'ref_var.libelle as variable, '
                'IF("dico_" = substring(dict_type.short_label, 1, 5), dict_res.label, res.valeur) as result '
                'from sigl_03_data as pat '
@@ -414,7 +414,7 @@ class Patient:
                'left join sigl_05_07_data as ref_link on ref_link.id_data=res.ref_variable '
                'left join sigl_dico_data as dict_type on dict_type.id_data=ref_var.type_resultat '
                'left join sigl_dico_data as dict_res on dict_res.id_data=res.valeur '
-               'left join sigl_param_num_dos_data as param_num_rec on param_num_rec.id_data = 1 '
+               'left join record_setting as rec_setting on rec_setting.rstg_ser = 1 '
                'where pat.id_data=%s '
                'order by rec.num_dos_an desc, ref.id_data asc limit 7000')
 

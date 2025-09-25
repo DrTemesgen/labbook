@@ -422,7 +422,7 @@ class Analysis:
                'formule_unite2 as formula2, formule as formula, var.accuracy as accu, precision2 as accu2, '
                'link.position as pos, link.num_var as num_var, link.obligatoire as oblig, link.var_whonet, '
                'link.var_qrcode, link.id_data as id_link, d1.label as unit_label, var.id_data as id_item, '
-               'var.code_var, var.var_show_minmax, var.var_highlight '
+               'var.code_var, var.var_show_minmax, var.var_highlight, var.var_in_report '
                'from sigl_07_data' + mode_test + ' as var '
                'inner join sigl_05_07_data' + mode_test + ' as link on link.id_refvariable=var.id_data '
                'left join sigl_dico_data as d1 on d1.id_data=var.unite '
@@ -440,7 +440,7 @@ class Analysis:
         req = ('select id_data, libelle as label, description as descr, unite as unit, normal_min as min, '
                'normal_max as max, commentaire as comment, type_resultat as type_res, unite2 as unit2, '
                'formule_unite2 as formula2, formule as formula, accuracy as accu, precision2 as accu2, code_var, '
-               'var_show_minmax, var_highlight '
+               'var_show_minmax, var_highlight, var_in_report '
                'from sigl_07_data '
                'where id_data=%s')
 
@@ -455,7 +455,7 @@ class Analysis:
         req = ('select id_data, libelle as label, description as descr, unite as unit, normal_min as min, '
                'normal_max as max, commentaire as comment, type_resultat as type_res, unite2 as unit2, '
                'formule_unite2 as formula2, formule as formula, accuracy as accu, precision2 as accu2, code_var, '
-               'var_show_minmax, var_highlight '
+               'var_show_minmax, var_highlight, var_in_report '
                'from sigl_07_data '
                'order by id_data desc limit 1')
 
@@ -475,7 +475,7 @@ class Analysis:
         req = ('select id_data, libelle as label, description as descr, unite as unit, normal_min as min, '
                'normal_max as max, commentaire as comment, type_resultat as type_res, unite2 as unit2, '
                'formule_unite2 as formula2, formule as formula, accuracy as accu, precision2 as accu2, code_var, '
-               'var_show_minmax, var_highlight '
+               'var_show_minmax, var_highlight, var_in_report '
                'from sigl_07_data' + mode_test +
                'where libelle=%s and type_resultat=%s and unite=%s and normal_min=%s and normal_max=%s and code_var=%s '
                'order by id_data asc limit 1')
@@ -511,11 +511,12 @@ class Analysis:
 
             cursor.execute('insert into sigl_07_data' + mode_test +
                            '(id_owner, libelle, description, unite, normal_min, normal_max, commentaire, type_resultat, '
-                           'unite2, formule_unite2, formule, accuracy, precision2, code_var, var_show_minmax, var_highlight) '
+                           'unite2, formule_unite2, formule, accuracy, precision2, code_var, var_show_minmax, '
+                           'var_highlight, var_in_report) '
                            'values '
                            '(%(id_owner)s, %(label)s, %(descr)s, %(unit)s, %(var_min)s, %(var_max)s, '
                            '%(comment)s, %(type_res)s, %(unit2)s, %(formula2)s, %(formula)s, '
-                           '%(accu)s, %(accu2)s, %(code_var)s, %(var_show_minmax)s, %(var_highlight)s)', params)
+                           '%(accu)s, %(accu2)s, %(code_var)s, %(var_show_minmax)s, %(var_highlight)s, %(var_in_report)s)', params)
 
             Analysis.log.info(Logs.fileline())
 
@@ -533,6 +534,7 @@ class Analysis:
                                            var_max=params['var_max'],
                                            var_show_minmax=params['var_show_minmax'],
                                            var_highlight=params['var_highlight'],
+                                           var_in_report=params['var_in_report'],
                                            comment=params['comment'],
                                            formula=params['formula'],
                                            unit=params['unit'],
@@ -565,7 +567,7 @@ class Analysis:
                            'commentaire=%(comment)s, type_resultat=%(type_res)s, unite2=%(unit2)s, '
                            'formule_unite2=%(formula2)s, formule=%(formula)s, accuracy=%(accu)s, '
                            'precision2=%(accu2)s, code_var=%(code_var)s, var_show_minmax=%(var_show_minmax)s, '
-                           'var_highlight=%(var_highlight)s '
+                           'var_highlight=%(var_highlight)s, var_in_report=%(var_in_report)s '
                            'where id_data=%(id_data)s', params)
 
             Analysis.log.info(Logs.fileline())
@@ -817,9 +819,9 @@ class Analysis:
         limit    = 'LIMIT ' + str(args['limit'])
 
         req = ('select ref.id_data, rec.id_data as id_rec, rec.date_prescription as date_prescr, rec.type as type_rec, '
-               'if(param_num_rec.periode=1070, if(param_num_rec.format=1072,substring(rec.num_dos_mois from 7), '
+               'if(rec_setting.rstg_period=1070, if(rec_setting.rstg_format=1072,substring(rec.num_dos_mois from 7), '
                'rec.num_dos_mois), '
-               'if(param_num_rec.format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) as rec_num, '
+               'if(rec_setting.rstg_format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) as rec_num, '
                'ref_var.libelle as variable, '
                'IF("dico_" = substring(dict_type.short_label, 1, 5), dict_res.label, res.valeur) as result '
                'from sigl_02_data as rec '
@@ -830,7 +832,7 @@ class Analysis:
                'left join sigl_05_07_data as ref_link on ref_link.id_data=res.ref_variable '
                'left join sigl_dico_data as dict_type on dict_type.id_data=ref_var.type_resultat '
                'left join sigl_dico_data as dict_res on dict_res.id_data=res.valeur '
-               'left join sigl_param_num_dos_data as param_num_rec on param_num_rec.id_data = 1 '
+               'left join record_setting as rec_setting on rec_setting.rstg_ser = 1 '
                'where (rec.rec_date_receipt between %s and %s) and ref.id_data=%s '
                'order by rec.num_dos_an desc ' + limit)
 
@@ -896,7 +898,8 @@ class Analysis:
                'link.id_refanalyse, link.id_refvariable, link.position, link.num_var, link.obligatoire, link.var_whonet, '
                'link.var_qrcode, var.id_data as id_var, var.libelle, var.description, var.unite, var.normal_min, '
                'var.normal_max, var.commentaire as var_comm, var.type_resultat, var.unite2, var.formule_unite2, '
-               'var.formule, var.accuracy, var.precision2, var.code_var, var.var_show_minmax, var.var_highlight '
+               'var.formule, var.accuracy, var.precision2, var.code_var, var.var_show_minmax, var.var_highlight,'
+               'var.var_in_report '
                'from sigl_05_data as ana '
                'left join sigl_05_07_data as link on link.id_refanalyse=ana.id_data '
                'left join sigl_07_data as var on var.id_data=link.id_refvariable '

@@ -2,33 +2,69 @@
 
 {% block head %}
 {{ super() }}
-    <title>{{ _("Paramétrage des numéros de dossier") }}</title>
+    <title>{{ _("Paramétrage des dossiers") }}</title>
 {% endblock %}
 
 {% block content %}
 <div id="content">
     <div class="inner">
         <div id="main">
-            <h2 class="page-title page-title-color"><span>{{ _("Paramétrage des numéros de dossier") }}</span></h2>
+            <h2 class="page-title page-title-color"><span>{{ _("Paramétrage des dossiers") }}</span></h2>
             <form autocomplete="off">
                 <div class="form-group d-lg-flex align-items-start mt-3">
                     <label class="form-label col-lg-3 text-end mt-2 me-1">{{ _("Période de numérotation") }}</label>
                     <label class="form-label text-end mt-2 me-3">
-                        <input type="radio" name="period" value="1070" {% if args['periode'] == 1070 %} checked="true" {% endif %}>&nbsp;{{ _("Mois") }}</input>
+                        <input type="radio" name="period" value="1070" {% if args['rstg_period'] == 1070 %} checked="true" {% endif %}>&nbsp;{{ _("Mois") }}</input>
                     </label>
                     <label class="form-label text-end mt-2 me-3">
-                        <input type="radio" name="period" value="1071" {% if args['periode'] == 1071 %} checked="true" {% endif %}>&nbsp;{{ _("Année") }}</input>
+                        <input type="radio" name="period" value="1071" {% if args['rstg_period'] == 1071 %} checked="true" {% endif %}>&nbsp;{{ _("Année") }}</input>
                     </label>
                 </div>
                 <div class="form-group d-lg-flex align-items-start mt-3">
                     <label class="form-label col-lg-3 text-end mt-2 me-1">{{ _("Format de numérotation") }}</label>
                     <label class="form-label text-end mt-2 me-3">
-                        <input type="radio" name="format" value="1072" {% if args['format'] == 1072 %} checked="true" {% endif %}>&nbsp;{{ _("Court") }}</input>
+                        <input type="radio" name="format" value="1072" {% if args['rstg_format'] == 1072 %} checked="true" {% endif %}>&nbsp;{{ _("Court") }}</input>
                     </label>
                     <label class="form-label text-end mt-2 me-3">
-                        <input type="radio" name="format" value="1073" {% if args['format'] == 1073 %} checked="true" {% endif %}>&nbsp;{{ _("Long") }}</input>
+                        <input type="radio" name="format" value="1073" {% if args['rstg_format'] == 1073 %} checked="true" {% endif %}>&nbsp;{{ _("Long") }}</input>
                     </label>
                 </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label class="form-label col-lg-3 text-end mt-2 me-1">{{ _("Format du code de prélèvement") }}</label>
+                    <div class="col-lg-5">
+                        <div class="input-group">
+                            <input type="text"
+                                   id="sample_code_mask"
+                                   name="sample_code_mask"
+                                   class="form-control"
+                                   value="{{ (args.get('rstg_samp_mask') or '')|e }}"
+                                   oninput="update_mask_preview();">
+                            <button type="button" class="btn btn-outline-secondary" onclick="insert_token('[N]');">[N]</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insert_token('[A]');">[A]</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insert_token('[X]');">[X]</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insert_repeat_prompt();">{n}</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insert_token('+');">+</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insert_token('-');">-</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insert_token('_');">_</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="insert_token('/');">/</button>
+                        </div>
+                        <small class="text-muted d-block mt-1">
+                            {{ _("Règles : [N]=chiffre, [A]=lettre majuscule, [X]=lettre ou chiffre, {n}=répétition et + (un ou plusieurs). Les autres caractères sont littéraux.") }}
+                            <br>
+                            {{ _("Exemples") }} : <code>SAMP-[N]+</code>&nbsp;|&nbsp;<code>CODE-[N]{6}</code>
+                        </small>
+
+                        <div id="mask_error" class="text-danger mt-1" style="display:none;">
+                            {{ _("Format invalide (syntaxe).") }}
+                        </div>
+                        <div id="mask_regex_info" class="text-muted mt-1" style="display:none;">
+                            {{ _("Regex générée") }} : <code id="mask_regex_code" class="me-3"></code>
+                            {{ _("Exemple possible") }} : <code id="mask_example_code"></code>
+                        </div>
+                    </div>
+                </div>
+                
             </form>
 
             <div class="clearfix mt-2 mb-5">
@@ -52,17 +88,30 @@ function save()
 var id_owner = {{ session['user_id']|safe}} ;
 var period   = $("input:radio[name=period]:checked").val() ;
 var format   = $("input:radio[name=format]:checked").val() ;
+var sample_mask = ($("#sample_code_mask").val() || "").trim();
 
-var param = '{ "id_owner":' + id_owner + ', ' +
-              '"period":' + period + ', ' +
-              '"format":' + format + '}' ;
+var sample_regex = "";
+
+    try {
+        sample_regex = maskToRegex(sample_mask);
+    } catch (e) {
+        alert("{{ _('Veuillez corriger le masque du code de prélèvement') }}");
+        return;
+    }
+
+var param = {"id_owner": Number(id_owner),
+             "period": Number(period),
+             "format": Number(format),
+             "samp_mask": sample_mask,
+             "samp_regex": sample_regex
+            } ;
 
     $.ajax( {
        type: "POST",
        url: "{{ session['server_ext'] }}/services/setting/record/number",
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
-       data: param,
+       data: JSON.stringify(param),
        success: function(data)
            {
            tempAlert("{{ _("Enregistrement réussi") }}", "btn_save") ;
@@ -75,9 +124,155 @@ var param = '{ "id_owner":' + id_owner + ', ' +
     } ) ;
 }
 
+// Convert bracketed tokens ([N]/[A]/[X] + optional {n} or +) to an anchored regex
+function maskToRegex(mask) 
+{
+  const m = (mask || '').trim();
+  if (!m) return '^.*$';
+  let rx = '^';
+  for (let i = 0; i < m.length; i++) {
+    const ch = m[i];
+    if (ch === '[') {
+      const close = m.indexOf(']', i + 1);
+      if (close === -1) throw new Error('Missing ]');
+      const token = m.substring(i + 1, close);
+      if (!/^(N|A|X)$/.test(token)) throw new Error('Unknown token');
+      const base = token === 'N' ? '[0-9]' : (token === 'A' ? '[A-Z]' : '[A-Z0-9]');
+      let j = close + 1;
+      if (j < m.length && m[j] === '{') {
+        const k = m.indexOf('}', j + 1);
+        if (k === -1) throw new Error('Missing }');
+        const n = m.substring(j + 1, k);
+        if (!/^[1-9]\d*$/.test(n)) throw new Error('Invalid {n}');
+        rx += base + '{' + n + '}';
+        i = k;
+      } else if (j < m.length && m[j] === '+') {
+        rx += base + '+';
+        i = j;
+      } else {
+        rx += base;
+        i = close;
+      }
+      continue;
+    }
+    if (ch === '{' || ch === '}' ) throw new Error('Unexpected brace');
+    const specials = '\\^$.*+?()[]{}|';
+    rx += specials.includes(ch) ? '\\' + ch : ch;
+  }
+  rx += '$';
+  new RegExp(rx);
+  return rx;
+}
+
+// Generate a sample string from mask (deterministic enough for UI)
+function generateExampleFromMask(mask) 
+{
+  let out = '';
+  for (let i = 0; i < mask.length; i++) {
+    const ch = mask[i];
+    if (ch === '[') {
+      const close = mask.indexOf(']', i + 1);
+      const token = mask.substring(i + 1, close);
+      let repeat = 1, j = close + 1;
+      if (j < mask.length && mask[j] === '{') {
+        const k = mask.indexOf('}', j + 1);
+        repeat = parseInt(mask.substring(j + 1, k), 10);
+        i = k;
+      } else if (j < mask.length && mask[j] === '+') {
+        repeat = 4; i = j;
+      } else {
+        i = close;
+      }
+      const emit = (tok) => {
+        if (tok === 'N') return Math.floor(Math.random()*10).toString();
+        if (tok === 'A') return String.fromCharCode(65 + Math.floor(Math.random()*26));
+        return (Math.random()<0.5)
+          ? Math.floor(Math.random()*10).toString()
+          : String.fromCharCode(65 + Math.floor(Math.random()*26));
+      };
+      for (let r = 0; r < repeat; r++) out += emit(token);
+      continue;
+    }
+    out += ch;
+  }
+  return out;
+}
+
+function insert_token(t) 
+{
+  const el = document.getElementById('sample_code_mask');
+  if (!el) return;
+  const s = el.selectionStart ?? el.value.length;
+  const e = el.selectionEnd ?? el.value.length;
+  el.value = el.value.substring(0, s) + t + el.value.substring(e);
+  const newPos = s + t.length;
+  el.setSelectionRange(newPos, newPos);
+  el.focus();
+  update_mask_preview();
+}
+
+function insert_repeat_prompt() 
+{
+  const raw = prompt('n =', '6');
+  if (raw === null) return;
+  const n = parseInt(raw, 10);
+  if (!Number.isInteger(n) || n < 1 || n > 50) { alert('Valeur invalide'); return; }
+  attach_repeat(n);
+}
+
+function attach_repeat(n) 
+{
+  const el = document.getElementById('sample_code_mask');
+  if (!el) return;
+  const v = el.value;
+  const close = v.lastIndexOf(']');
+  if (close === -1) { insert_token(`{${n}}`); return; }
+  const open = v.lastIndexOf('[', close - 1);
+  if (open === -1 || close - open !== 2) { insert_token(`{${n}}`); return; }
+  let after = close + 1;
+  if (after < v.length && v[after] === '{') {
+    const end = v.indexOf('}', after + 1);
+    if (end !== -1) {
+      el.value = v.substring(0, after) + `{${n}}` + v.substring(end + 1);
+      const newPos = after + (`{${n}}`).length;
+      el.setSelectionRange(newPos, newPos);
+      update_mask_preview();
+      return;
+    }
+  }
+  el.value = v.substring(0, close + 1) + `{${n}}` + v.substring(close + 1);
+  const newPos = close + 1 + (`{${n}}`).length;
+  el.setSelectionRange(newPos, newPos);
+  update_mask_preview();
+}
+
+function update_mask_preview() 
+{
+  const el = document.getElementById('sample_code_mask');
+  const err = document.getElementById('mask_error');
+  const info = document.getElementById('mask_regex_info');
+  const code = document.getElementById('mask_regex_code');
+  const example = document.getElementById('mask_example_code');
+  err.style.display = 'none';
+  info.style.display = 'none';
+  if (!el) return;
+  const mask = (el.value || '').trim();
+  if (!mask) return;
+  try {
+    const rx = maskToRegex(mask);
+    code.textContent = rx;
+    example.textContent = generateExampleFromMask(mask);
+    info.style.display = 'block';
+  } catch(e) {
+    err.style.display = 'block';
+  }
+}
+
 function return_home()
 {
 window.location.href = "{{ session['server_ext'] }}/homepage";
 }
+
+document.addEventListener('DOMContentLoaded', update_mask_preview);
 </script>
 {% endblock %}

@@ -400,11 +400,11 @@ class SettingRecNum(Resource):
             if setting[key] is None:
                 setting[key] = ''
 
-        if setting['sys_creation_date']:
-            setting['sys_creation_date'] = datetime.strftime(setting['sys_creation_date'], '%Y-%m-%d %H:%M:%S')
+        if setting['rstg_date']:
+            setting['rstg_date'] = datetime.strftime(setting['rstg_date'], '%Y-%m-%d %H:%M:%S')
 
-        if setting['sys_last_mod_date']:
-            setting['sys_last_mod_date'] = datetime.strftime(setting['sys_last_mod_date'], '%Y-%m-%d %H:%M:%S')
+        if setting['rstg_date_upd']:
+            setting['rstg_date_upd'] = datetime.strftime(setting['rstg_date_upd'], '%Y-%m-%d %H:%M:%S')
 
         self.log.info(Logs.fileline() + ' : TRACE SettingRecNum')
         return compose_ret(setting, Constants.cst_content_type_json)
@@ -412,13 +412,15 @@ class SettingRecNum(Resource):
     def post(self):
         args = request.get_json()
 
-        if 'id_owner' not in args or 'period' not in args or 'format' not in args:
+        if 'id_owner' not in args or 'period' not in args or 'format' not in args or 'samp_mask' not in args or 'samp_regex' not in args:
             self.log.error(Logs.fileline() + ' : SettingRecNum ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Setting.updateRecNumSetting(id_owner=args['id_owner'],
                                           period=args['period'],
-                                          format=args['format'])
+                                          format=args['format'],
+                                          samp_mask=args['samp_mask'],
+                                          samp_regex=args['samp_regex'])
 
         if ret is False:
             self.log.error(Logs.alert() + ' : SettingRecNum ERROR update')

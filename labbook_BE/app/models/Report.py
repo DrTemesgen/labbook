@@ -120,6 +120,7 @@ class Report:
 
         return cursor.fetchone()
 
+    """ OLD FUNCTION 23/09/2025
     @staticmethod
     def getResultEpidemio(**params):
         cursor = DB.cursor()
@@ -127,13 +128,22 @@ class Report:
         req = ('select count(distinct rec.id_data) as value '
                'from sigl_02_data as rec ' + params['inner_req'] + ' '
                'where (rec.rec_date_receipt between %(date_beg)s and %(date_end)s) ' + params['end_req'])
+        
+        # rec_type filter option
+        sql_params = dict(params)
+        rec_type = params.get('rec_type')
+        rec_type_code = 183 if rec_type == 'E' else (184 if rec_type == 'I' else None)
+
+        if rec_type_code is not None:
+            req += ' and rec.type = %(rec_type_code)s'
+            sql_params['rec_type_code'] = rec_type_code
 
         Report.log.info('----------------------------------')
         Report.log.info('getResultEpidemio req=' + str(req))
 
         cursor.execute(req, params)
 
-        return cursor.fetchone()
+        return cursor.fetchone()"""
 
     @staticmethod
     def getResultIndicator(**params):
@@ -335,9 +345,9 @@ class Report:
             cond += ' and rec.service_interne like "' + str(service_int) + '%" '
 
         req = ('select rec.id_data as id_rec, rec.type as type_rec, rec.rec_date_receipt as rec_date, ref.nom as analysis, dict_fam.label as family, '
-               'if(param_num_rec.periode=1070, if(param_num_rec.format=1072,substring(rec.num_dos_mois from 7), '
+               'if(rec_setting.rstg_period=1070, if(rec_setting.rstg_format=1072,substring(rec.num_dos_mois from 7), '
                'rec.num_dos_mois), '
-               'if(param_num_rec.format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) as rec_num, '
+               'if(rec_setting.rstg_format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) as rec_num, '
                'group_concat(distinct dict.label order by dict.position asc separator ", ") as vld_type '
                'from `sigl_10_data` as vld '
                'inner join sigl_dico_data as dict on dict.id_data=vld.type_validation '
@@ -345,7 +355,7 @@ class Report:
                'inner join sigl_04_data as req on req.id_data=res.id_analyse '
                'inner join sigl_05_data as ref on ref.id_data=req.ref_analyse '
                'inner join sigl_02_data as rec on rec.id_data=req.id_dos '
-               'left join sigl_param_num_dos_data as param_num_rec on param_num_rec.id_data=1 '
+               'left join record_setting as rec_setting on rec_setting.rstg_ser=1 '
                'left join sigl_dico_data as dict_fam on dict_fam.id_data=ref.famille '
                'where (rec.rec_date_receipt between %s and %s) ' + cond +
                'group by req.id_data order by rec.id_data asc limit 7000')
@@ -366,6 +376,7 @@ class Report:
 
         return cursor.fetchone()
 
+    """ OLD FUNCTION 23/09/2025
     @staticmethod
     def ParseFormula(formula, id_prod):
         # used by export DHIS2 and Epidemio
@@ -561,6 +572,13 @@ class Report:
                     req['end'] = req['end'] + ' )'
 
                     Report.log.info('DEBUG pattern ) req end = ' + str(req['end']))
+                # double-quoted string literal: "text"
+                elif len(word) >= 2 and word[0] == '"' and word[-1] == '"':
+                    # strip outer double quotes and emit as SQL single-quoted literal
+                    literal = word[1:-1]
+                    # keep it safe if there is any single quote inside the value
+                    req['end'] = req['end'] + " '" + literal.replace("'", "''") + "' "
+                    Report.log.info('DEBUG pattern "string" req end = ' + str(req['end']))
                 else:
                     if word == 'OR':
                         idx = idx + 1
@@ -611,7 +629,7 @@ class Report:
 
             Report.log.info('DEBUG END req end = ' + str(req['end']))
 
-        return req
+        return req"""
 
     @staticmethod
     def ParseFormulaV2(formula, l_id_prod):
@@ -811,6 +829,13 @@ class Report:
                     req['end'] = req['end'] + ' )'
 
                     Report.log.info('DEBUG 08 req end = ' + str(req['end']))
+                # double-quoted string literal: "text"
+                elif len(word) >= 2 and word[0] == '"' and word[-1] == '"':
+                    # strip outer double quotes and emit as SQL single-quoted literal
+                    literal = word[1:-1]
+                    # keep it safe if there is any single quote inside the value
+                    req['end'] = req['end'] + " '" + literal.replace("'", "''") + "' "
+                    Report.log.info('DEBUG 09 pattern "string" req end = ' + str(req['end']))
                 else:
                     if word == 'OR':
                         idx = idx + 1
@@ -914,9 +939,9 @@ class Report:
             cond += ' and (pat.code like "' + str(code_pat) + '%" or pat.code_patient like "' + str(code_pat) + '%") '
 
         req = ('select rec.rec_date_save, rec.rec_date_vld, rec.rec_num_int, rec.id_data as rec_id, rec.type as rec_type, '
-               'if(param_num_rec.periode=1070, if(param_num_rec.format=1072,substring(rec.num_dos_mois from 7), '
-               'rec.num_dos_mois), if(param_num_rec.format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) '
-               'as rec_num, if(param_num_rec.periode=1070, rec.num_dos_mois, rec.num_dos_an) as rec_num_long, '
+               'if(rec_setting.rstg_period=1070, if(rec_setting.rstg_format=1072,substring(rec.num_dos_mois from 7), '
+               'rec.num_dos_mois), if(rec_setting.rstg_format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) '
+               'as rec_num, if(rec_setting.rstg_period=1070, rec.num_dos_mois, rec.num_dos_an) as rec_num_long, '
                'rec.rec_date_receipt as rec_date, pat.nom as pat_name, pat.prenom as pat_firstname, pat.code as pat_code, '
                'pat.code_patient as pat_code_lab, ana.nom as ana_name, ana.code as ana_code, ana.ana_loinc, '
                'req.id_data as id_req '
@@ -925,10 +950,450 @@ class Report:
                'inner join sigl_03_data as pat on pat.id_data = rec.id_patient '
                'inner join sigl_05_data as ana on ana.id_data = req.ref_analyse '
                'left join sigl_dico_data as fam on fam.id_data = ana.famille '
-               'left join sigl_param_num_dos_data as param_num_rec on param_num_rec.id_data=1 '
+               'left join record_setting as rec_setting on rec_setting.rstg_ser=1 '
                'where (rec.rec_date_receipt between %s and %s) and ana.cote_unite != "PB" and rec.statut=256 ' + cond +
                'order by rec.id_data desc')
 
         cursor.execute(req, (date_beg, date_end,))
 
         return cursor.fetchall()
+
+    @staticmethod
+    def ParseFormula(formula: str, sample_type_id: int) -> dict:
+        """
+        Build EXISTS subqueries from DHIS2 filter syntax.
+        Returns: {"exists_subqueries": [ "<SELECT 1 ... WHERE ...>", ... ]}
+        One subquery per top-level OR group.
+        """
+        # --- helpers ---------------------------------------------------------
+        def normalize_spaces(text: str) -> str:
+            return ' '.join(text.split())
+
+        def split_top_level_or(expr: str) -> list:
+            """Split on OR at top level (outside parentheses)."""
+            parts, depth, current = [], 0, []
+            tokens = expr.replace('(', ' ( ').replace(')', ' ) ').split()
+            i = 0
+            while i < len(tokens):
+                tok = tokens[i]
+                if tok == '(':
+                    depth += 1
+                elif tok == ')':
+                    depth -= 1
+                if depth == 0 and tok.upper() == 'OR':
+                    parts.append(' '.join(current).strip())
+                    current = []
+                else:
+                    current.append(tok)
+                i += 1
+            if current:
+                parts.append(' '.join(current).strip())
+            return parts
+
+        def parse_dictionary_token(dict_token: str) -> str:
+            """
+            [dictName.code] -> numeric value via existing Report.ParseDictVar
+            """
+            value = Report.ParseDictVar(dict_token)  # existing function
+            return str(value) if value is not None else ''
+
+        def sql_quote_string_literal(value: str) -> str:
+            """Return SQL-safe single-quoted literal."""
+            return "'" + value.replace("'", "''") + "'"
+
+        def new_alias_set(index: int) -> dict:
+            """Return aliases for one measurement constraint."""
+            return {
+                "req": f"req{index}",
+                "ref": f"ref{index}",
+                "res": f"res{index}",
+                "vld": f"vld{index}",
+            }
+
+        def collect_parenthesized(tokens: list, open_paren_index: int) -> tuple:
+            """Return inner text and index of the closing ')' starting at tokens[open_paren_index] which must be '('."""
+            depth = 0
+            j = open_paren_index + 1
+            inner = []
+            while j < len(tokens):
+                t = tokens[j]
+                if t == '(':
+                    depth += 1
+                    inner.append(t)
+                elif t == ')':
+                    if depth == 0:
+                        return ' '.join(inner).strip(), j
+                    depth -= 1
+                    inner.append(t)
+                else:
+                    inner.append(t)
+                j += 1
+            Report.log.error("Unbalanced parentheses after function-like token")
+            return '', open_paren_index
+
+        def build_required_joins(aliases: dict, include_req_join: bool) -> str:
+            """
+            Build INNER JOIN chain for one measurement.
+            If include_req_join is False, the req alias must appear in FROM.
+            """
+            parts = []
+            if include_req_join:
+                parts.append(
+                    f" inner join sigl_04_data as {aliases['req']} on {aliases['req']}.id_dos = rec.id_data"
+                )
+            parts.append(
+                f" inner join sigl_05_data as {aliases['ref']} on {aliases['ref']}.id_data = {aliases['req']}.ref_analyse"
+            )
+            parts.append(
+                f" inner join sigl_09_data as {aliases['res']} on {aliases['res']}.id_analyse = {aliases['req']}.id_data"
+            )
+            parts.append(
+                f" inner join sigl_10_data as {aliases['vld']} on {aliases['vld']}.id_resultat = {aliases['res']}.id_data"
+            )
+            return ''.join(parts)
+
+        def start_measurement_conditions(aliases: dict, variable_id: int) -> list:
+            """Base predicates for one $_<id> measurement."""
+            conditions = []
+            if int(sample_type_id) == 0:
+                conditions.append(f"{aliases['vld']}.type_validation=252")
+            else:
+                conditions.append(f"{aliases['ref']}.type_prel={int(sample_type_id)}")
+                conditions.append(f"{aliases['vld']}.type_validation=252")
+            if variable_id:
+                conditions.append(f"{aliases['res']}.ref_variable={int(variable_id)}")
+            return conditions
+
+        def apply_on_clause(aliases: dict, token: str, where_atoms: list):
+            """
+            Inject ref.code IN (...) into the last measurement atom.
+            If no atom exists, append as standalone predicate.
+            """
+            raw_list = token[3:-1].strip()  # remove ON( ... )
+            predicate = f"{aliases['ref']}.code IN ({raw_list})"
+            # try to inject inside the last (...) atom
+            for idx in range(len(where_atoms) - 1, -1, -1):
+                atom = where_atoms[idx]
+                if atom.startswith('(') and atom.endswith(')'):
+                    where_atoms[idx] = atom[:-1] + f" and {predicate})"
+                    return
+            # fallback
+            where_atoms.append(predicate)
+
+        def ensure_patient_join(state: dict):
+            """Add patient join once for the group."""
+            if not state["patient_join_added"]:
+                state["joins"].append(
+                    f" inner join sigl_03_data as {state['patient_alias']} on {state['patient_alias']}.id_data=rec.id_patient"
+                )
+                state["patient_join_added"] = True
+
+        def apply_cat_clause(state: dict, token: str):
+            """
+            CAT(...) -> patient-level filters
+            CAT(SEX_M), CAT(SEX_F), CAT(AGE_n), CAT(AGE[a-b])
+            """
+            content = token[4:-1]  # inside CAT(...)
+            parts = [p.strip() for p in content.split(',') if p.strip()]
+
+            for item in parts:
+                if item == 'SEX_M':
+                    ensure_patient_join(state)
+                    state["patient_conditions"].append(f"{state['patient_alias']}.sexe=1")
+                elif item == 'SEX_F':
+                    ensure_patient_join(state)
+                    state["patient_conditions"].append(f"{state['patient_alias']}.sexe=2")
+                elif item.startswith('AGE_'):
+                    # AGE_N mapping from settings (1-based index)
+                    num_cat = int(item[4:]) - 1
+                    intervals = Setting.getAgeInterval()
+                    if 0 <= num_cat < len(intervals):
+                        age_min = intervals[num_cat]['ais_lower_bound'] or 0
+                        age_max = intervals[num_cat]['ais_upper_bound'] or 150
+                        ensure_patient_join(state)
+                        state["patient_conditions"].append(
+                            f"{state['patient_alias']}.age >={int(age_min)} and {state['patient_alias']}.age <={int(age_max)}"
+                        )
+                    else:
+                        Report.log.error(f"ERROR wrong AGE category: {item}")
+                elif item.startswith('AGE[') and item.endswith(']'):
+                    brk1 = item.find('[')
+                    brk2 = item.find('-')
+                    brk3 = item.find(']')
+                    age_min = int(item[brk1 + 1:brk2])
+                    age_max = int(item[brk2 + 1:brk3])
+                    ensure_patient_join(state)
+                    state["patient_conditions"].append(
+                        f"{state['patient_alias']}.age >={age_min} and {state['patient_alias']}.age <={age_max}"
+                    )
+                else:
+                    Report.log.error(f"ERROR CAT unknown item: {item}")
+
+        # --- main ------------------------------------------------------------
+        if not formula or formula.strip().upper() == 'N/A':
+            return {"exists_subqueries": []}
+
+        formula = normalize_spaces(formula)
+        or_groups = split_top_level_or(formula)
+
+        exists_subqueries = []
+
+        for group_index, group_expr in enumerate(or_groups):
+            alias_counter = 0
+            current_aliases = None
+            group_state = {
+                "joins": [],
+                "where_atoms": [],
+                "patient_conditions": [],
+                "patient_alias": f"pat{group_index}",
+                "patient_join_added": False,
+                "first_req_alias": None,  # will host the FROM alias
+            }
+
+            tokens = group_expr.replace('(', ' ( ').replace(')', ' ) ').split()
+            i = 0
+            while i < len(tokens):
+                token = tokens[i]
+
+                if token in ('(', ')'):
+                    group_state["where_atoms"].append(token)
+                    i += 1
+                    continue
+
+                upper_token = token.upper()
+                if upper_token in ('AND', 'OR'):
+                    group_state["where_atoms"].append(upper_token)
+                    i += 1
+                    continue
+
+                if token.startswith('$_'):
+                    variable_id = int(token[2:])
+                    current_aliases = new_alias_set(alias_counter)
+                    alias_counter += 1
+
+                    # first measurement -> req goes in FROM, no join for req here
+                    if group_state["first_req_alias"] is None:
+                        group_state["first_req_alias"] = current_aliases['req']
+                        group_state["joins"].append(
+                            build_required_joins(current_aliases, include_req_join=False)
+                        )
+                    else:
+                        group_state["joins"].append(
+                            build_required_joins(current_aliases, include_req_join=True)
+                        )
+
+                    base_conditions = start_measurement_conditions(current_aliases, variable_id)
+
+                    if i + 1 >= len(tokens):
+                        Report.log.error("Unexpected end of tokens after variable id")
+                        break
+
+                    operator_token = tokens[i + 1].upper()
+
+                    if operator_token in ('=', '!=', '<', '<=', '>', '>='):
+                        if i + 2 >= len(tokens):
+                            Report.log.error("Missing value after operator")
+                            break
+                        raw_value = tokens[i + 2]
+
+                        if raw_value.startswith('[') and raw_value.endswith(']'):
+                            value_for_sql = parse_dictionary_token(raw_value)
+                            value_predicate = f"{current_aliases['res']}.valeur {operator_token} {value_for_sql}"
+                        elif len(raw_value) >= 2 and raw_value[0] == '"' and raw_value[-1] == '"':
+                            literal = raw_value[1:-1]
+                            value_predicate = (
+                                f"LOWER({current_aliases['res']}.valeur) {operator_token} LOWER({sql_quote_string_literal(literal)})"
+                            )
+                        else:
+                            value_predicate = f"{current_aliases['res']}.valeur {operator_token} {raw_value}"
+
+                        atom = '(' + ' and '.join(base_conditions + [value_predicate]) + ')'
+                        group_state["where_atoms"].append(atom)
+                        i += 3
+                        continue
+
+                    elif operator_token == 'IN' or (operator_token == 'NOT' and i + 2 < len(tokens) and tokens[i + 2].upper() == 'IN'):
+                        not_prefix = (operator_token == 'NOT')
+                        paren_index = i + 2 if not_prefix else i + 1
+                        if paren_index + 1 >= len(tokens):
+                            Report.log.error("Missing list after IN/NOT IN")
+                            break
+                        raw_list = tokens[paren_index + 1].strip()
+                        if not (raw_list.startswith('(') and raw_list.endswith(')')):
+                            Report.log.error("IN(...) list malformed")
+                            break
+                        items = [s.strip() for s in raw_list[1:-1].split(',') if s.strip()]
+                        mapped = []
+                        for it in items:
+                            if it.startswith('[') and it.endswith(']'):
+                                mapped.append(parse_dictionary_token(it))
+                            elif len(it) >= 2 and it[0] == '"' and it[-1] == '"':
+                                mapped.append(sql_quote_string_literal(it[1:-1]))
+                            else:
+                                mapped.append(it)
+                        in_pred = f"{current_aliases['res']}.valeur IN ({', '.join(mapped)})"
+                        if not_prefix:
+                            in_pred = f"NOT ({in_pred})"
+                        atom = '(' + ' and '.join(base_conditions + [in_pred]) + ')'
+                        group_state["where_atoms"].append(atom)
+                        i += 3 if not_prefix else 2
+                        i += 1  # consume (...) token
+                        continue
+
+                    elif tokens[i + 1].startswith('[') and tokens[i + 1].endswith(']'):
+                        dict_value = parse_dictionary_token(tokens[i + 1])
+                        atom = '(' + ' and '.join(base_conditions + [f"{current_aliases['res']}.valeur = {dict_value}"]) + ')'
+                        group_state["where_atoms"].append(atom)
+                        i += 2
+                        continue
+
+                    else:
+                        Report.log.error(f"Unsupported operator after variable: {tokens[i+1]}")
+                        break
+
+                elif token.startswith('{') and token.endswith('}'):
+                    var_ids = [t.strip() for t in token[1:-1].split(',') if t.strip()]
+                    current_aliases = new_alias_set(alias_counter)
+                    alias_counter += 1
+
+                    if group_state["first_req_alias"] is None:
+                        group_state["first_req_alias"] = current_aliases['req']
+                        group_state["joins"].append(
+                            build_required_joins(current_aliases, include_req_join=False)
+                        )
+                    else:
+                        group_state["joins"].append(
+                            build_required_joins(current_aliases, include_req_join=True)
+                        )
+
+                    base = start_measurement_conditions(current_aliases, variable_id=0)
+                    or_parts = [f"{current_aliases['res']}.ref_variable={int(v)}" for v in var_ids]
+                    atom = '(' + ' and '.join(base + ['(' + ' or '.join(or_parts) + ')']) + ')'
+                    group_state["where_atoms"].append(atom)
+                    i += 1
+                    continue
+
+                elif upper_token == 'ON':
+                    # Expect '(' then a list of codes until the matching ')'
+                    if i + 1 < len(tokens) and tokens[i + 1] == '(':
+                        inner_text, close_idx = collect_parenthesized(tokens, i + 1)
+                
+                        # Ensure we have a current measurement alias to attach ON(...) to
+                        if current_aliases is None:
+                            current_aliases = new_alias_set(alias_counter)
+                            alias_counter += 1
+                            if group_state["first_req_alias"] is None:
+                                group_state["first_req_alias"] = current_aliases['req']
+                                group_state["joins"].append(
+                                    build_required_joins(current_aliases, include_req_join=False)
+                                )
+                            else:
+                                group_state["joins"].append(
+                                    build_required_joins(current_aliases, include_req_join=True)
+                                )
+                            base_conditions = start_measurement_conditions(current_aliases, variable_id=0)
+                            group_state["where_atoms"].append('(' + ' and '.join(base_conditions + ['1=1']) + ')')
+                
+                        # Rebuild the function call text and inject into the last measurement atom
+                        apply_on_clause(current_aliases, f"ON({inner_text})", group_state["where_atoms"])
+                        i = close_idx + 1
+                        continue
+                    else:
+                        Report.log.error("ON without parenthesis")
+                        i += 1
+                        continue
+
+                elif upper_token == 'CAT':
+                    if i + 1 < len(tokens) and tokens[i + 1] == '(':
+                        inner_text, close_idx = collect_parenthesized(tokens, i + 1)
+                        apply_cat_clause(group_state, f"CAT({inner_text})")
+                        i = close_idx + 1
+                        continue
+                    else:
+                        Report.log.error("CAT without parenthesis")
+                        i += 1
+                        continue
+
+                elif len(token) >= 2 and token[0] == '"' and token[-1] == '"':
+                    group_state["where_atoms"].append(sql_quote_string_literal(token[1:-1]))
+                    i += 1
+                    continue
+
+                else:
+                    group_state["where_atoms"].append(token)
+                    i += 1
+
+            # build the EXISTS subquery for this OR group
+            join_sql = ''.join(group_state["joins"])
+            where_parts = []
+            if group_state["where_atoms"]:
+                where_parts.append(' '.join(group_state["where_atoms"]))
+            if group_state["patient_conditions"]:
+                where_parts.append(' and '.join(group_state["patient_conditions"]))
+            final_where = ' and '.join([p for p in where_parts if p]) or '1=1'
+
+            base_req = group_state["first_req_alias"] or "req0"
+
+            # ensure correlation with outer rec
+            correlation = f"{base_req}.id_dos = rec.id_data"
+            where_clause = f"{correlation} AND {final_where}" if final_where else correlation
+            
+            subquery = (
+                f"SELECT 1 FROM sigl_04_data as {base_req}"
+                f"{join_sql}"
+                f" WHERE {where_clause} LIMIT 1"
+            )
+            
+            exists_subqueries.append(subquery)
+
+        return {"exists_subqueries": exists_subqueries}    
+    
+    def getResultEpidemio(req_part, date_beg, date_end, rec_type=None):
+        """
+        Execute COUNT(DISTINCT rec.id_data) with EXISTS subqueries built by ParseFormula.
+        Always return {"value": <int>}.
+        """
+        cursor = DB.cursor()
+    
+        sql = (
+            "SELECT COUNT(DISTINCT rec.id_data) AS value "
+            "FROM sigl_02_data AS rec "
+            "WHERE (rec.rec_date_receipt BETWEEN %(date_beg)s AND %(date_end)s)"
+        )
+        sql_params = {"date_beg": date_beg, "date_end": date_end}
+    
+        rec_type_code = 183 if rec_type == 'E' else (184 if rec_type == 'I' else None)
+        if rec_type_code is not None:
+            sql += " AND rec.type = %(rec_type_code)s"
+            sql_params["rec_type_code"] = rec_type_code
+    
+        exists_parts = []
+        if req_part and "exists_subqueries" in req_part:
+            exists_parts = req_part["exists_subqueries"]
+    
+        if exists_parts:
+            exists_sql = " OR ".join([f"EXISTS ({subq})" for subq in exists_parts])
+            sql += f" AND ({exists_sql})"
+    
+        Report.log.info('getResultEpidemio (EXISTS) sql=' + sql)
+        cursor.execute(sql, sql_params)
+        row = cursor.fetchone()
+    
+        # normalize to dict with 'value'
+        if row is None:
+            return {"value": 0}
+        if isinstance(row, dict):
+            return {"value": row.get("value", 0)}
+        if isinstance(row, (list, tuple)) and len(row) > 0:
+            return {"value": row[0]}
+        try:
+            return {"value": int(row)}
+        except Exception:
+            Report.log.error(f"Unexpected row type from cursor.fetchone(): {type(row)} -> {row}")
+            return {"value": 0}
+    
+        
+        
+        
+    
+        

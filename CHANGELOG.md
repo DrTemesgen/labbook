@@ -8,6 +8,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.0] - 2025-09-24
+### Added
+- new setting to indicate whether a variable should be displayed in the report
+- add nex periods for DHIS2 export
+- filter by type of record for DHIS2 export
+- export DHIS : EEQ , List of equipment failures, List of stock statuses
+- support for string literal filters in DHIS2 formulas using `$_IDVARIABLE = "STRING_VALUE"`
+- support for string literal filters also available in indicator report formulas
+- new indexes to speed up DHIS2 exports and epidemiology counts
+- possible to access to enter-result from administrative-record page if user as rights "Result entry"
+- validator technician identity, same principle as for biologists, instead of valdiate use tech_validate in template.
+
+### Changed
+- restricted CORS to /services/external/
+- new calculation of range of date fo DHIS2 export
+- DHIS2 formula parser rewritten for robustness and performance (backward-compatible)
+
 ## [3.5.17] - 2025-09-16
 ### Added
 - setting for PDF report of LabBook with or without password

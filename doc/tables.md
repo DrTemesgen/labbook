@@ -1,112 +1,117 @@
-| Name    	                                 | Category      | Use                                      |
-|------------------------------------------------|---------------|------------------------------------------|
-| sigl\_01\_data	                         | REQ SAMPLE	 | request for a sample                     |
-| sigl\_01\_deleted	                         | REQ SAMPLE    | deleted request for a sample             |
-| sigl\_02\_data	                         | RECORD	 | record                                   |
-| sigl\_02\_deleted	                         | RECORD	 | record  deleted                          |
-| sigl\_03\_data	                         | PATIENT	 | patient                                  |
-| sigl\_04\_data	                         | REQ ANALYSIS	 | request for analysis                     |
-| sigl\_04\_deleted	                         | REQ ANALYSIS	 | deleted request for analysis             |
-| sigl\_05\_07\_data	                         | LINK ANA-VAR	 | link between analysis and variable       |
-| sigl\_05\_07\_data\_test	                 | LINK ANA-VAR	 | link between analysis and variable test  |
-| sigl\_05\_data	                         | REF ANALYSIS	 | analysis details                         |
-| sigl\_05\_data\_test                           | REF ANALYSIS	 | analysis details for testing             |
-| sigl\_06\_data	                         | DEFAULT VAL	 | values in the preferences menu           |
-| sigl\_07\_data	                         | REF VARIABLE	 | definition variable analysis             |
-| sigl\_07\_data\_test                           | REF VARIABLE	 | definition variable analysis for testing |
-| sigl\_08\_data	                         | DOCTOR	 | doctor                                   |
-| sigl\_09\_data	                         | RESULT	 | analysis result                          |
-| sigl\_09\_deleted	                         | RESULT	 | analysis result deleted                  |
-| sigl\_10\_data	                         | VALIDATION	 | validation result analysis               |
-| sigl\_10\_deleted	                         | VALIDATION	 | validation result deleted                |
-| sigl\_11\_data	                         | FILE	         | report file                              |
-| sigl\_11\_deleted	                         | FILE	         | report file deleted                      |
-| sigl\_14\_data	                         | DHIS2	 | surveillance epidemio and dhis2          |
-| sigl\_15\_data	                         | DHIS2	 | epidemiological surveillance details     |
-| sigl\_dico\_data	                         | DICTIONNARY	 | dictionnary                              |
-| ctrl\_ext\_res\_report\_file                   | FILE          | attached file                            |
-| record\_file           	                 | FILE	         | attached file                            |
-| record\_file\_deleted           	         | FILE	         | deleted attachment                       |
-| record\_validation           	                 | RECORD        | save comment of biological validation    |
-| eqp\_calibration\_file                  	 | FILE	         | attached file                            |
-| eqp\_maintenance\_file                         | FILE	         | attached file                            |
-| sigl\_equipement\_data	                 | EQUIPMENT	 | equipment details                        |
-| eqp\_invoice\_file                  	         | FILE	         | attached file                            |
-| eqp\_preventive\_maintenance\_file             | FILE    	 | attached file                            |
-| eqp\_failure\_file              	         | FILE    	 | attached file                            |
-| eqp\_photo\_file                 	         | FILE    	 | attached file                            |
-| sigl\_evtlog\_data	                         | LOG	         | log evenement                            |
-| sigl\_file\_data	                         | FILE	         | files details (path, hash...)            |
-| sigl\_fournisseurs\_data	                 | SUPPLIER	 | supplier                                 |
-| lab\_chart\_file                        	 | FILE	         | attached file                            |
-| sigl\_manuels\_data	                         | MANUAL	 | manual                                   |
-| manual\_file                   	         | FILE	         | attached file                            |
-| sigl\_non\_conformite\_data	                 | CONFORMITY	 | no conformity                            |
-| sigl\_param\_cr\_data	                         | SETTINGS	 | report parameter                         |
-| sigl\_param\_num\_dos\_data	                 | SETTINGS	 | record number parameter                  |
-| sigl\_pj\_role	                         | USER    	 | user role                                |
-| sigl\_pj\_sequence	                         | -	         | last number (record, bill)               |
-| sigl\_procedures\_data	                 | PROCEDURE	 | procedure                                |
-| procedure\_file                             	 | FILE	         | attached file                            |
-| sigl\_reunion\_data	                         | MEETING	 | meeting                                  |
-| meeting\_file          	                 | FILE	         | attached file                            |
-| sigl\_storage\_data	                         | FILE	         | file storage path                        |
-| user\_cv\_file          	                 | FILE	         | attached file                            |
-| sigl\_user\_data	                         | USER	         | users                                    |
-| user\_diploma\_file     	                 | FILE	         | attached file                            |
-| user\_evaluation\_file          	         | FILE	         | attached file                            |
-| user\_training\_file            	         | FILE	         | attached file                            |
-| age\_interval\_setting	                 | SETTINGS	 | age ranges parameter                     |
-| alembic\_version	                         | -       	 | version number migration DB by Alembic   |
-| backup\_setting	                         | SETTINGS	 | backup parameter                         |
-| database\_status	                         | LOG	         | status of the last referential import    |
-| init\_version                                  | LOG           | use to start process after alembic once  |
-| product\_details	                         | STOCK	 | product sheet                            |
-| product\_supply	                         | STOCK	 | product supply                           |
-| product\_use	                                 | STOCK	 | product used                             |
-| product\_local                                 | SETTINGS      | list of localization of stock product    |
-| translations  	                         | LANGUAGE	 | translations for search fields           |
-| template\_setting	                         | SETTINGS	 | setting for template to build document   |
-| nationality   	                         | DICTIONNARY	 | list of nationality                      |
-| zip\_city      	                         | DICTIONNARY	 | list of zip code and city                |
-| control\_quality      	                 | QUALITY	 | list of control internal and external    |
-| control\_internal   	                         | QUALITY	 | list of internal control value           |
-| control\_external     	                 | QUALITY	 | list of external control value           |
-| requesting\_services                           | SETTINGS      | list of requesting services              |
-| functionnal\_unit                              | SETTINGS      | list of functionnal units                |
-| functionnal\_unit\_link                        | SETTINGS      | list of links for functionnal units      |
-| stock\_setting                                 | SETTINGS      | settings for stock                       |
-| ~~list\_comment~~                              | COMMENT       | **will be removed 3.5 version**          |
-| form\_setting                                  | SETTINGS      | structure for enable or disabled fields  |
-| trace\_download                                | QUALITY       | tracks file downloads (only procedure)   |
-| manual\_setting                                | SETTINGS      | settings for manual                      |
-| eqp\_document                                  | EQUIPMENT     | link equipment with documents            |
-| eqp\_preventive\_maintenance                   | EQUIPMENT     | link equipment with preventive mainten.  |
-| eqp\_maintenance\_contract                     | EQUIPMENT     | link equipment with maintenance contract |
-| eqp\_failure                                   | EQUIPMENT     | link equipment with failure and repair   |
-| eqp\_metrology                                 | EQUIPMENT     | link equipment with metrology and calib. |
-| patient\_form\_item                            | PATIENT	 | patient data for dynamical fields        |
-| analyzer\_msg                                  | ANALYZER	 | hl7 message to and from analyzer         |
-| analyzer\_setting                              | SETTINGS	 | settings for analyzer connection         |
-| lab\_chart\_file                               | FILE  	 | chart file of laboratory                 |
-| profile\_rights                                | USER  	 | list of rights                           |
-| profile\_permissions                           | USER  	 | permission for a right                   |
-| profile\_role                                  | USER  	 | define a role                            |
-| user\_permissions                              | USER  	 | custom permission for a user             |
-| internal\_messaging                            | MESSAGE  	 | internal message between users           |
-| internal\_messaging\_file                      | FILE  	 | file associated of an internal message   |
-| user\_signature\_file                          | FILE          | file associated of an user               |
-| storage\_room                                  | ALIQUOT       | describe storage room                    |
-| storage\_chamber                               | ALIQUOT       | describe storage chamber                 |
-| storage\_compartment                           | ALIQUOT       | describe storage compartment             |
-| storage\_box                                   | ALIQUOT       | describe storage box                     |
-| storage\_aliquot                               | ALIQUOT       | describe storage aliquot                 |
-| sample\_destock                                | ALIQUOT       | describe destocked aliquot               |
-| connect\_setting                               | SETTINGS      | settings for Connect                     |
-| analyzer\_setting                              | SETTINGS      | describe analyzers settings              |
-| analyzer\_result                               | ANALYZER      | result from analyzer                     |
-| printer\_setting                               | SETTINGS      | defines a printer linked to a script     |
-| lite\_users                                    | SETTINGS      | associates a user with a Lite config     |
-| lite\_setting                                  | SETTINGS      | describe a setting for Lite              |
+| Name                             | Category     | Use                                        |
+|----------------------------------|--------------|--------------------------------------------|
+| sigl_01_data                     | REQ SAMPLE   | request for a sample                       |
+| sigl_01_deleted                  | REQ SAMPLE   | deleted request for a sample               |
+| sigl_02_data                     | RECORD       | record                                     |
+| sigl_02_deleted                  | RECORD       | deleted record                             |
+| sigl_03_data                     | PATIENT      | patient                                    |
+| sigl_04_data                     | REQ ANALYSIS | request for analysis                       |
+| sigl_04_deleted                  | REQ ANALYSIS | deleted request for analysis               |
+| sigl_05_07_data                  | LINK ANA-VAR | link analysis with variable                |
+| sigl_05_07_data_test             | LINK ANA-VAR | link analysis with variable (test)         |
+| sigl_05_data                     | REF ANALYSIS | analysis details                           |
+| sigl_05_data_test                | REF ANALYSIS | analysis details (test)                    |
+| sigl_06_data                     | DEFAULT VAL  | default values in preferences              |
+| sigl_07_data                     | REF VARIABLE | variable definition                        |
+| sigl_07_data_test                | REF VARIABLE | variable definition (test)                 |
+| sigl_08_data                     | DOCTOR       | doctor                                     |
+| sigl_09_data                     | RESULT       | analysis result                            |
+| sigl_09_deleted                  | RESULT       | deleted analysis result                    |
+| sigl_10_data                     | VALIDATION   | validation of result                       |
+| sigl_10_deleted                  | VALIDATION   | deleted validation                         |
+| sigl_11_data                     | FILE         | report file                                |
+| sigl_11_deleted                  | FILE         | deleted report file                        |
+| sigl_14_data                     | DHIS2        | surveillance epidemio and dhis2            |
+| sigl_15_data                     | DHIS2        | epidemiological surveillance details       |
+| sigl_dico_data                   | DICTIONARY   | dictionary                                 |
+| sigl_equipement_data             | EQUIPMENT    | equipment details                          |
+| sigl_evtlog_data                 | LOG          | event log                                  |
+| sigl_file_data                   | FILE         | file metadata (path, hash...)              |
+| sigl_fournisseurs_data           | SUPPLIER     | supplier                                   |
+| sigl_manuels_data                | MANUAL       | manual                                     |
+| sigl_non_conformite_data         | CONFORMITY   | non conformity                             |
+| sigl_param_cr_data               | SETTINGS     | report parameters                          |
+| sigl_pj_role                     | USER         | user role                                  |
+| sigl_pj_sequence                 | -            | last sequence numbers                      |
+| sigl_procedures_data             | PROCEDURE    | procedure                                  |
+| sigl_reunion_data                | MEETING      | meeting                                    |
+| sigl_storage_data                | FILE         | file storage paths                         |
+| sigl_user_data                   | USER         | users                                      |
+| age_interval_setting             | SETTINGS     | age ranges parameter                       |
+| alembic_version                  | -            | alembic migration version                  |
+| analyzer_msg                     | ANALYZER     | hl7 message exchange with analyzer         |
+| analyzer_result                  | ANALYZER     | result from analyzer                       |
+| analyzer_setting                 | SETTINGS     | analyzer connection settings               |
+| backup_setting                   | SETTINGS     | backup parameters                          |
+| connect_setting                  | SETTINGS     | settings for Connect                       |
+| control_external                 | QUALITY      | external quality control values            |
+| control_internal                 | QUALITY      | internal quality control values            |
+| control_quality                  | QUALITY      | list of controls (internal/external)       |
+| ctrl_ext_res_report_file         | FILE         | attached report file                       |
+| database_status                  | LOG          | status of last referential import          |
+| dhis2_setting                    | SETTINGS     | dhis2 settings                             |
+| eqp_calibration_file             | FILE         | calibration file                           |
+| eqp_document                     | EQUIPMENT    | link equipment with documents              |
+| eqp_failure                      | EQUIPMENT    | equipment failure and repair               |
+| eqp_failure_file                 | FILE         | failure file                               |
+| eqp_invoice_file                 | FILE         | invoice file                               |
+| eqp_maintenance_contract         | EQUIPMENT    | equipment maintenance contract             |
+| eqp_maintenance_file             | FILE         | maintenance file                           |
+| eqp_metrology                    | EQUIPMENT    | metrology and calibration                  |
+| eqp_photo_file                   | FILE         | equipment photo                            |
+| eqp_preventive_maintenance       | EQUIPMENT    | preventive maintenance                     |
+| eqp_preventive_maintenance_file  | FILE         | preventive maintenance file                |
+| form_setting                     | SETTINGS     | structure of form fields                   |
+| functionnal_unit                 | SETTINGS     | functional unit                            |
+| functionnal_unit_link            | SETTINGS     | link functional units                      |
+| init_version                     | LOG          | init marker after alembic                  |
+| internal_messaging               | MESSAGE      | internal messaging                         |
+| internal_messaging_file          | FILE         | file linked to internal message            |
+| lab_chart_file                   | FILE         | chart file                                 |
+| lite_setting                     | SETTINGS     | Lite configuration settings                |
+| lite_users                       | SETTINGS     | associate user with Lite config            |
+| manual_file                      | FILE         | manual file                                |
+| manual_setting                   | SETTINGS     | manual settings                            |
+| meeting_file                     | FILE         | meeting file                               |
+| nationality                      | DICTIONARY   | list of nationalities                      |
+| patient_form_item                | PATIENT      | dynamic patient data fields                |
+| printer_setting                  | SETTINGS     | printer linked to script                   |
+| procedure_file                   | FILE         | procedure file                             |
+| product_details                  | STOCK        | product sheet                              |
+| product_local                    | SETTINGS     | localization of stock product              |
+| product_supply                   | STOCK        | product supply                             |
+| product_use                      | STOCK        | product usage                              |
+| profile_permissions              | USER         | permissions linked to rights               |
+| profile_rights                   | USER         | list of rights                             |
+| profile_role                     | USER         | user role definition                       |
+| record_file                      | FILE         | attached file                              |
+| record_file_deleted              | FILE         | deleted attached file                      |
+| record_setting                   | SETTINGS     | record number parameters                   |
+| record_validation                | RECORD       | comment on biological validation           |
+| requesting_services              | SETTINGS     | list of requesting services                |
+| sample_destock                   | ALIQUOT      | destocked aliquot                          |
+| sending_event                    | SENDING      | sending event log                          |
+| sending_method                   | SENDING      | sending method (generic)                   |
+| sending_method_mailjet           | SENDING      | mailjet sending method                     |
+| sending_method_smtp              | SENDING      | smtp sending method                        |
+| sending_method_whatsapp          | SENDING      | whatsapp sending method                    |
+| sending_model                    | SENDING      | sending model definition                   |
+| stock_setting                    | SETTINGS     | stock settings                             |
+| storage_aliquot                  | ALIQUOT      | aliquot                                    |
+| storage_box                      | ALIQUOT      | storage box                                |
+| storage_chamber                  | ALIQUOT      | storage chamber                            |
+| storage_compartment              | ALIQUOT      | storage compartment                        |
+| storage_room                     | ALIQUOT      | storage room                               |
+| template_setting                 | SETTINGS     | document template settings                 |
+| trace_download                   | QUALITY      | trace of downloaded files                  |
+| translations                     | LANGUAGE     | translations for search fields             |
+| user_cv_file                     | FILE         | user CV file                               |
+| user_diploma_file                | FILE         | user diploma file                          |
+| user_evaluation_file             | FILE         | user evaluation file                       |
+| user_permissions                 | USER         | custom user permissions                    |
+| user_signature_file              | FILE         | user signature file                        |
+| user_training_file               | FILE         | user training file                         |
+| zip_city                         | DICTIONARY   | list of zip codes and cities               |
 
-107 tables used
+112 tables used
+

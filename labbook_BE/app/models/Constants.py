@@ -60,6 +60,10 @@ class Constants:
     cst_filedata_outsourced = 'data_template_outsourced'
     cst_filedata_invoice    = 'data_template_invoice'
 
+    # Type or validation
+    cst_tech_vld = 251
+    cst_bio_vld = 252
+
     # HL7 Constants
     cst_stat_init      = 'IN'
     cst_stat_pending   = 'PD'

@@ -394,6 +394,10 @@ var opt_yorn      = {{ ihm['yorn']|safe }} ;
 var new_opt_yorn  = [{'value': 'Y', 'label': '{{ _("Oui") }}'}, {'value': 'N', 'label': '{{ _("Non") }}'}] ;
 var opt_ana       = [] ;
 
+const SAMP_MASK  = {{ (session['samp_mask'] or '')|tojson }};
+const SAMP_REGEX = {{ (session['samp_regex'] or '')|tojson }};
+const SAMP_HTML_PATTERN = (SAMP_REGEX || '').replace(/^\^|\$$/g, '');
+
 {% if entry == 'Y' %}
 function change_pat( id_pat ) 
 {
@@ -873,6 +877,11 @@ let tr_product = '' ;
     }
 
 $("#tbody_product").append(tr_product) ;
+
+// Hook tooltip + regex validation on the product code input
+const el = document.getElementById('prod_code_' + (data.id_data ?? 0));
+initTooltip(el);
+enhanceProdCode(el);
 }
 
 {% if entry == 'Y' %}
@@ -967,6 +976,14 @@ let tmp_input = '<input class="form-control form-lbk" id="' + id + '" type="' + 
     tmp_input += 'style="font-size:14px;min-width:50px;"' ;
     else
     tmp_input += 'style="font-size:14px;min-width:50px;"' ;
+
+    if (id.indexOf('prod_code_') === 0) 
+    {
+    tmp_input += ' maxlength="50"';
+        if (SAMP_HTML_PATTERN) tmp_input += ' pattern="' + SAMP_HTML_PATTERN.replace(/"/g, '&quot;') + '"';
+        // Title/tooltip set later by init to include example; keep a base title here
+        if (SAMP_MASK) tmp_input += ' title="{{ _('Format attendu') }}: ' + SAMP_MASK.replace(/"/g, '&quot;') + '"';
+    }
 
 tmp_input += '>' ;
 
@@ -1589,6 +1606,43 @@ let param_res = '{ "id_owner":' + id_user + ', "user_role":"' + user_role + '"}'
 }
 {% endif %}
 
+// Enhance a product-code input: set pattern, max length, live validity
+function enhanceProdCode(el)
+{
+  // Do nothing if no element or no regex configured
+  if (!el) return;
+
+  // Apply browser-level constraints
+  el.setAttribute('maxlength', '50');
+  if (SAMP_HTML_PATTERN) el.setAttribute('pattern', SAMP_HTML_PATTERN);
+
+  // Live validation with the server regex (JS RegExp)
+  const rx = SAMP_REGEX ? new RegExp(SAMP_REGEX) : null;
+
+  // Validate on input/blur
+  const validate = () => {
+    const v = (el.value || '').trim();
+    const ok = !v || !rx || rx.test(v);
+    el.classList.toggle('is-invalid', !ok);
+    el.classList.toggle('is-valid', ok && !!v);
+    el.setCustomValidity(ok ? '' : 'invalid'); // HTML5 constraint validity
+  };
+  el.addEventListener('input', validate);
+  el.addEventListener('blur', validate);
+  validate(); // initial pass
+}
+
+function initTooltip(el) 
+{
+  // Safe-guard if Bootstrap is not present
+  if (!window.bootstrap || !bootstrap.Tooltip || !el) return;
+  const title = SAMP_MASK ? ("{{ _('Format attendu') }}: " + SAMP_MASK) : "{{ _('Format non défini') }}";
+  el.setAttribute('title', title);
+  el.setAttribute('data-bs-toggle', 'tooltip');
+  el.setAttribute('data-bs-placement', 'top');
+  bootstrap.Tooltip.getOrCreateInstance(el, { trigger: 'focus hover' });
+}
+
 function new_doctor()
 {
 window.open("{{ session['server_ext'] }}/det-doctor/0", "_blank") ;
@@ -1615,6 +1669,13 @@ $( document ).ready( function()
         $("#rec_num").text( num_dos ) ;
     {% endif %}
     load_data(1) ;
+
+    // Initialize tooltip + regex validation for any existing product code inputs
+    document.querySelectorAll('input[id^="prod_code_"]').forEach(function(el) 
+    {
+    initTooltip(el);
+    enhanceProdCode(el);
+    });
 } ) ;
 </script>
 {% endblock %}

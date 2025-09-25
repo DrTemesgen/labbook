@@ -360,8 +360,10 @@ def get_software_settings():
         if req.status_code == 200:
             json = req.json()
 
-            session['record_period'] = json['periode']
-            session['record_format'] = json['format']
+            session['record_period'] = json['rstg_period']
+            session['record_format'] = json['rstg_format']
+            session['samp_mask'] = json['rstg_samp_mask']
+            session['samp_regex'] = json['rstg_samp_regex']
             session.modified = True
 
     except requests.exceptions.RequestException as err:

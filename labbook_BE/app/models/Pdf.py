@@ -1095,6 +1095,7 @@ class Pdf:
         data['label']['previous']   = str(_("Antériorités"))
         data['label']['comm']       = str(_("Commentaire"))
         data['label']['validate']   = str(_("validé par"))
+        data['label']['technician'] = str(_("technicien"))
 
         # === Laboratory details ===
         data['lab'] = {}
@@ -1443,13 +1444,14 @@ class Pdf:
         # === ANALYZES details ===
         data['l_data'] = []
         analysis       = {"fam_name": "", "ana_name": "", "ana_comm": "", "l_res": [], "validate": "",
-                          "ana_outsourced": "", "ana_ast": "N"}
+                "ana_outsourced": "", "ana_ast": "N", "ana_with_one_result": "N", "tech_validate": ""}
         result         = {"label": "", "value": "", "unit": "", "references": "", "prev_date": "", "prev_val": "",
                           "prev_unit": "", "comm": "", "var_comm": "", "bold_value": "N", "highlight": "N",
-                          "formatting": "N", "valueConv": "", "unitConv": ""}
+                          "highlight": "Y", "formatting": "N", "valueConv": "", "unitConv": ""}
 
         """
-        [{'analysis': {'fam_name': FAMILY, 'ana_name': NAME, 'ana_comm': COMMENT, "ana_outsourced": Y/N, 'ana_ast': Y/N
+        [{'analysis': {'fam_name': FAMILY, 'ana_name': NAME, 'ana_comm': COMMENT, "ana_outsourced": Y/N, 'ana_ast': Y/N,
+                       'ana_with_one_result': Y/N
                        'l_res': [{'label': VAR_NAME,
                                   'value': RESULT_VALUE,
                                   'unit': UNIT_RESULT_VALUE,
@@ -1459,6 +1461,7 @@ class Pdf:
                                   'prev_unit': PREVIOUS_UNIT,
                                   'bold_value': BOLD_VALUE,
                                   'highlight': highlight,
+                                  'in_report': in_report,
                                   'formatting': formatting,
                                   'valueConv': RESULT_VALUE_CONVERTED,
                                   'unitConv': UNIT_RESULT_VALUE_CONVERTED,}] }
@@ -1472,6 +1475,7 @@ class Pdf:
         id_req_ana_p    = 0  # previous id request analysis
         id_res_p        = 0  # previous id result
         id_user_valid_p = 0  # previous id user who makes validation
+        id_user_tech_valid_p = 0  # previous id user who makes technical validation
 
         if id_rec > 0:
             # GET all results for a record
@@ -1489,7 +1493,7 @@ class Pdf:
                     # if variable is biologically validated or variable is labeled type
                     test_res_valid = Result.getResultValidation(res['id_res'])
 
-                    if test_res_valid['type_validation'] == 252 or res['type_resultat'] == 265:
+                    if test_res_valid['type_validation'] == Constants.cst_bio_vld or res['type_resultat'] == 265:
                         # Pdf.log.error(Logs.fileline() + ' : DEBUG-TRACE res to displayed, res[id_res] = ' + str(res['id_res']))
 
                         # NEW ANALYSIS
@@ -1500,6 +1504,7 @@ class Pdf:
                             if id_req_ana_p > 0:
                                 # comment and who make validation
                                 res_valid_p = Result.getResultValidation(id_res_p)
+                                res_tech_valid_p = Result.getResultValidation(id_res_p, Constants.cst_tech_vld)
 
                                 # If valid user change we display who valid previous analisys
                                 if id_user_valid_p > 0 and res_valid_p['utilisateur'] != id_user_valid_p:
@@ -1545,6 +1550,27 @@ class Pdf:
                                         Pdf.log.error(Logs.fileline() + ' : DEBUG-TRACE no ret_sign')
                                         data['signature'] = ""
 
+                                # If technical valid user change we display who valid previous analisys
+                                if id_user_tech_valid_p > 0 and res_tech_valid_p['utilisateur'] != id_user_tech_valid_p:
+                                    id_user_tech_valid_p = res_tech_valid_p['utilisateur']
+
+                                    ret_user_tech = User.getUserDetails(res_valid_p['utilisateur'])
+
+                                    user_tech = ''
+
+                                    if ret_user_tech['title_label']:
+                                        Various.useLangDB()
+                                        trans = ret_user_tech['title_label']
+                                        user_tech += str(_(trans)) + ' '
+                                        Various.useLangPDF()
+
+                                    if ret_user_tech['lastname'] and ret_user_tech['firstname']:
+                                        user_tech += ret_user_tech['lastname'] + ' ' + ret_user_tech['firstname']
+                                    else:
+                                        user_tech += ret_user_tech['username']
+
+                                    tmp_ana['tech_validate'] = str(user_tech)
+
                                 # Add previous analysis to list of data
                                 data['l_data'].append(tmp_ana)
                                 # Pdf.log.error(Logs.fileline() + ' : DEBUG-TRACE tmp_ana = ' + str(tmp_ana))
@@ -1553,7 +1579,9 @@ class Pdf:
 
                             # init new analysis
                             tmp_ana = {"fam_name": "", "ana_name": "", "ana_comm": "", "l_res": [], "validate": "",
-                                       "ana_outsourced": "", "ana_ast": "N"}
+                                    "ana_outsourced": "", "ana_ast": "N", "ana_with_one_result": "N", "tech_validate": ""}
+
+                            tmp_ana['ana_with_one_result'] = "Y" if res.get('res_count', 0) == 1 else "N"
 
                             id_req_ana_p = res['id_req_ana']
                             id_res_p     = res['id_res']
@@ -1603,7 +1631,7 @@ class Pdf:
                         # init new result
                         tmp_res = {"label": "", "value": "", "unit": "", "value_ast": "", "references": "",
                                    "prev_date": "", "prev_val": "", "prev_unit": "", "comm": "", "bold_value": "N",
-                                   "highlight": "N", "formatting": "N", "valueConv": "", "unitConv": ""}
+                                   "highlight": "N", "in_report": "Y", "formatting": "N", "valueConv": "", "unitConv": ""}
 
                         # Start to get previous result if exist
                         prev_date = ''
@@ -1728,6 +1756,9 @@ class Pdf:
                         if res['var_highlight']:
                             tmp_res['highlight'] = res['var_highlight']
 
+                        if res['var_in_report']:
+                            tmp_res['in_report'] = res['var_in_report']
+
                         tmp_res['prev_date'] = prev_date
                         tmp_res['prev_val']  = prev_res
                         tmp_res['prev_unit'] = prev_unit
@@ -1799,6 +1830,8 @@ class Pdf:
 
                 id_user_p = 0
                 user      = ''
+                id_user_tech_p = 0
+                user_tech = ''
                 res_comm  = []
 
                 for validator in l_validators:
@@ -1846,6 +1879,34 @@ class Pdf:
                     if comment:
                         res_comm = comment.split("\n")"""
 
+                # who make technical validation
+                l_tech_validators = Result.getListValidators(id_rec, Constants.cst_tech_vld)
+                id_user_tech_p = 0
+                user_tech = ''
+
+                for tech_validator in l_tech_validators:
+
+                    id_user_tech = tech_validator['user']
+
+                    if id_user_tech != id_user_tech_p:
+                        ret_user_tech = User.getUserDetails(id_user_tech)
+
+                        if user_tech:
+                            user_tech = user_tech + ', '
+
+                        if ret_user_tech['title_label']:
+                            Various.useLangDB()
+                            trans = ret_user_tech['title_label']
+                            user_tech += str(_(trans)) + ' '
+                            Various.useLangPDF()
+
+                        if ret_user_tech['lastname'] and ret_user_tech['firstname']:
+                            user_tech += ret_user_tech['lastname'] + ' ' + ret_user_tech['firstname']
+                        else:
+                            user_tech += ret_user_tech['username']
+
+                        id_user_tech_p = id_user_tech
+
                 rev = Record.getRecordValidation(id_rec)
 
                 res_comm = ''
@@ -1856,6 +1917,7 @@ class Pdf:
                 tmp_ana['l_res'][-1]["comm"] = res_comm
 
                 tmp_ana['validate'] = str(user)
+                tmp_ana['tech_validate'] = str(user_tech)
 
                 # Add last analysis to list of data
                 data['l_data'].append(tmp_ana)
@@ -1885,6 +1947,7 @@ class Pdf:
             analysis['ana_ast']  = "N"
             analysis['l_res'].append(result)
             analysis['validate'] = 'BIO Bernard'
+            analysis['tech_validate'] = 'TECH Tierry'
 
             data['l_data'].append(analysis)
 

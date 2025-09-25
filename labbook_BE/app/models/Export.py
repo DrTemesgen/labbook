@@ -213,7 +213,7 @@ class Export:
         return l_res
 
     @staticmethod
-    def getStatDHIS2(date_beg, date_end, key):
+    def getStatDHIS2(date_beg, date_end, key, rec_type='A'):
         res = ''
 
         cursor = DB.cursor()
@@ -223,9 +223,16 @@ class Export:
             req = ('select count(*) as value '
                    'from sigl_02_data '
                    'where (rec_date_receipt between %s and %s) and statut > 181')
-
-            cursor.execute(req, (date_beg, date_end))
-
+            params = [date_beg, date_end]
+        
+            # Optional rec_type filter
+            type_map = {'E': 183, 'I': 184}
+            tval = type_map.get(rec_type)
+            if tval is not None:
+                req += ' and type = %s'
+                params.append(tval)
+        
+            cursor.execute(req, tuple(params))
             res = cursor.fetchone()
 
         # Number of analyses saved on a period (without sample request)
@@ -235,9 +242,16 @@ class Export:
                    'inner join sigl_02_data as rec on rec.id_data=req.id_dos '
                    'inner join sigl_05_data as ref on ref.id_data = req.ref_analyse and ref.cote_unite != "PB" '
                    'where (rec.rec_date_receipt between %s and %s) and rec.statut > 181 and ref.actif=4')
-
-            cursor.execute(req, (date_beg, date_end))
-
+            params = [date_beg, date_end]
+        
+            # Optional rec_type filter
+            type_map = {'E': 183, 'I': 184}
+            tval = type_map.get(rec_type)
+            if tval is not None:
+                req += ' and rec.type = %s'
+                params.append(tval)
+        
+            cursor.execute(req, tuple(params))
             res = cursor.fetchone()
 
         # Number of sample outsourced on a period
@@ -246,11 +260,18 @@ class Export:
                    'from sigl_04_data as req '
                    'inner join sigl_02_data as rec on rec.id_data=req.id_dos '
                    'inner join sigl_05_data as ref on ref.id_data = req.ref_analyse and ref.cote_unite != "PB" '
-                   'where (rec.rec_date_receipt between %s and %s) and rec.statut > 181 and ref.actif=4 and '
-                   'req.req_outsourced = "Y"')
-
-            cursor.execute(req, (date_beg, date_end))
-
+                   'where (rec.rec_date_receipt between %s and %s) and rec.statut > 181 and ref.actif=4 '
+                   'and req.req_outsourced = "Y"')
+            params = [date_beg, date_end]
+        
+            # Optional rec_type filter
+            type_map = {'E': 183, 'I': 184}
+            tval = type_map.get(rec_type)
+            if tval is not None:
+                req += ' and rec.type = %s'
+                params.append(tval)
+        
+            cursor.execute(req, tuple(params))
             res = cursor.fetchone()
 
         # Number of staff
@@ -516,17 +537,166 @@ class Export:
         return res
 
     @staticmethod
-    def getListOutsourcing(date_beg, date_end):
+    def getListOutsourcing(date_beg, date_end, rec_type='A'):
         cursor = DB.cursor()
 
-        req = ('select pat.code, pat.code_patient, rec.num_dos_an, rec.rec_date_receipt as date_rec, ref.code as ana_code, '
-               'ref.nom as ana_name '
-               'from sigl_02_data as rec '
-               'inner join sigl_03_data as pat on pat.id_data=rec.id_patient '
-               'inner join sigl_04_data as req on req.id_dos=rec.id_data '
-               'inner join sigl_05_data as ref on ref.id_data=req.ref_analyse '
-               'where (rec.rec_date_receipt between %s and %s) and rec.statut > 181 and req.req_outsourced="Y"')
+        sql = (
+            'select pat.code, pat.code_patient, rec.num_dos_an, rec.rec_date_receipt as date_rec, '
+            'ref.code as ana_code, ref.nom as ana_name '
+            'from sigl_02_data as rec '
+            'inner join sigl_03_data as pat on pat.id_data=rec.id_patient '
+            'inner join sigl_04_data as req on req.id_dos=rec.id_data '
+            'inner join sigl_05_data as ref on ref.id_data=req.ref_analyse '
+            'where (rec.rec_date_receipt between %s and %s) '
+            'and rec.statut > 181 and req.req_outsourced="Y"'
+        )
+        params = [date_beg, date_end]
 
-        cursor.execute(req, (date_beg, date_end))
+        # Optional filter by record type
+        if rec_type and rec_type.upper() != 'A':
+            type_map = {'E': 183, 'I': 184}
+            tval = type_map.get(rec_type)
+            if tval is not None:
+                sql += ' and rec.type = %s'
+                params.append(tval)
 
+        cursor.execute(sql, tuple(params))
         return cursor.fetchall()
+
+    @staticmethod
+    def getListEEQ(date_beg, date_end):
+        cursor = DB.cursor()
+
+        sql = (
+            'select '
+            '  ctq.ctq_name, '
+            '  ctq.ctq_date, '
+            '  cte.cte_organizer, '
+            '  cte.cte_date, '
+            '  cte.cte_conform, '
+            '  cte.cte_comment '
+            'from control_quality as ctq '
+            'inner join control_external as cte on cte.cte_ctq = ctq.ctq_ser '
+            'where ctq.ctq_type_ctrl = "EXT" '
+            '  and (cte.cte_date between %s and %s) '
+            'order by cte.cte_date, ctq.ctq_name'
+        )
+        params = [date_beg, date_end]
+
+        cursor.execute(sql, tuple(params))
+        return cursor.fetchall()
+
+    @staticmethod
+    def getListEqpFailure(date_beg, date_end):
+        cursor = DB.cursor()
+
+        sql = (
+            'select '
+            '  eqp.nom as eqp_name, '
+            '  eqp.nom_fabriquant as eqp_manufacturer, '
+            '  coalesce(fsup_evt.fournisseur_nom, fsup_eqp.fournisseur_nom) as supplier_name, '
+            '  eqp.no_inventaire as eqp_invent_num, '
+            '  eqf.eqf_date, '
+            '  eqf.eqf_comm '
+            'from eqp_failure as eqf '
+            'inner join sigl_equipement_data as eqp on eqp.id_data = eqf.eqf_eqp '
+            'left join sigl_fournisseurs_data as fsup_eqp on fsup_eqp.id_data = eqp.fournisseur_id '
+            'left join sigl_fournisseurs_data as fsup_evt on fsup_evt.id_data = eqf.eqf_supplier '
+            'where (eqf.eqf_date between %s and %s) '
+            'order by eqf.eqf_date, eqp.nom'
+        )
+        params = [date_beg, date_end]
+
+        cursor.execute(sql, tuple(params))
+        return cursor.fetchall()
+
+    @staticmethod
+    def getListStockStatus(date_beg, date_end):
+        cursor = DB.cursor()
+    
+        # Load setting (warning in days)
+        cursor.execute('select sos_expir_warning from stock_setting order by sos_ser desc limit 1')
+        st = cursor.fetchone() or {}
+        warn_days = int(st.get('sos_expir_warning', 14))
+    
+        # per product: total supplied, total used, earliest non-empty expiry date
+        sql = (
+            'select '
+            '  p.prd_ser, '
+            '  p.prd_name, '
+            '  p.prd_expir_oblig, '
+            '  p.prd_safe_limit, '
+            '  s.nb_sup, '
+            '  coalesce(u.nb_use, 0) as nb_use, '
+            '  me.min_expir_date '
+            'from ( '
+            '   select ps.prs_prd as prd_ser, sum(ps.prs_nb_pack * pd.prd_nb_by_pack) as nb_sup '
+            '   from product_supply ps '
+            '   join product_details pd on pd.prd_ser = ps.prs_prd '
+            '   where ps.prs_cancel = "N" '
+            '   group by ps.prs_prd '
+            ') s '
+            'join product_details p on p.prd_ser = s.prd_ser '
+            'left join ( '
+            '   select ps.prs_prd as prd_ser, sum(u.pru_nb_pack * pd2.prd_nb_by_pack) as nb_use '
+            '   from product_use u '
+            '   join product_supply ps on ps.prs_ser = u.pru_prs '
+            '   join product_details pd2 on pd2.prd_ser = ps.prs_prd '
+            '   where ps.prs_cancel = "N" and u.pru_cancel = "N" '
+            '   group by ps.prs_prd '
+            ') u on u.prd_ser = p.prd_ser '
+            'left join ( '
+            '   select prs_prd as prd_ser, min(prs_expir_date) as min_expir_date '
+            '   from product_supply '
+            '   where prs_cancel = "N" and prs_empty = "N" and prs_expir_date is not null '
+            '   group by prs_prd '
+            ') me on me.prd_ser = p.prd_ser '
+            'order by p.prd_name'
+        )
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+    
+        # Build one row per product with combined statuses
+        from datetime import datetime
+        now = datetime.now()
+    
+        out = []
+        for r in rows or []:
+            prd_name   = r['prd_name']
+            expir_obl  = (r['prd_expir_oblig'] or 'Y') == 'Y'
+            safe_limit = int(r['prd_safe_limit'] or 0)
+            nb_sup     = int(r['nb_sup'] or 0)
+            nb_use     = int(r['nb_use'] or 0)
+            qty_stock  = nb_sup - nb_use
+            next_exp   = r['min_expir_date']
+    
+            # Quantity status
+            if qty_stock <= 0:
+                qty_status = 'Out of stock'
+            elif qty_stock <= safe_limit:
+                qty_status = f'Warning {qty_stock}'
+            else:
+                qty_status = ''
+    
+            # Expiration status
+            if expir_obl and next_exp:
+                days_to_exp = (next_exp - now).days
+                date_label = next_exp.strftime("%Y-%m-%d")
+                if days_to_exp <= 0:
+                    exp_status = f'expired {date_label}'
+                elif days_to_exp <= warn_days:
+                    exp_status = f'warning {date_label}'
+                else:
+                    exp_status = ''
+            else:
+                exp_status = ''
+    
+            # Only include products that are in at least one of the 4 states
+            if exp_status or qty_status:
+                out.append({
+                    'prd_name': prd_name,
+                    'exp_status': exp_status,
+                    'qty_status': qty_status,
+                })
+    
+        return out

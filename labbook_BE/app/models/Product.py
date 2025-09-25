@@ -108,9 +108,9 @@ class Product:
 
         req = '''
               SELECT DISTINCT
-              IF(param_num_rec.periode=1070,
-              IF(param_num_rec.format=1072, SUBSTRING(rec.num_dos_mois FROM 7), rec.num_dos_mois),
-              IF(param_num_rec.format=1072, SUBSTRING(rec.num_dos_an FROM 7), rec.num_dos_an)) AS rec_num,
+              IF(rec_setting.rstg_period=1070,
+              IF(rec_setting.rstg_format=1072, SUBSTRING(rec.num_dos_mois FROM 7), rec.num_dos_mois),
+              IF(rec_setting.rstg_format=1072, SUBSTRING(rec.num_dos_an FROM 7), rec.num_dos_an)) AS rec_num,
               DATE_FORMAT(rec.rec_date_receipt, %s) AS rec_date,
               pat.nom AS lastname, pat.nom_jf AS maidenname, pat.prenom AS firstname,
               ana.nom AS analysis_name, prod.type_prel AS type_prel, prod.statut AS statut, prod.id_data AS id_prod,
@@ -118,7 +118,7 @@ class Product:
               FROM sigl_01_data AS prod
               inner join sigl_02_data AS rec ON prod.id_dos = rec.id_data
               inner join sigl_03_data AS pat ON rec.id_patient = pat.id_data
-              inner join sigl_param_num_dos_data AS param_num_rec ON param_num_rec.id_data = 1
+              inner join record_setting AS rec_setting ON rec_setting.rstg_ser = 1
               LEFT JOIN sigl_05_data AS ana ON prod.samp_id_ana = ana.id_data
               inner join sigl_04_data AS req ON prod.samp_id_ana = req.ref_analyse
               inner join sigl_05_data AS ref ON req.ref_analyse = ref.id_data
@@ -136,70 +136,6 @@ class Product:
         cursor.execute(req, (Constants.cst_isodate,))
 
         return cursor.fetchall()
-
-    """ OLD 30/03/2025
-    @staticmethod
-    def getProductList(args):
-        cursor = DB.cursor()
-
-        table_cond  = ''
-        filter_cond = 'prod.type_prel is not NULL '
-
-        if not args:
-            limit = 'LIMIT 1000'
-
-            # show only products from non-validated records by default
-            filter_cond += ' and rec.statut != 256 '
-        else:
-            limit = 'LIMIT 15000'
-
-            if 'link_fam' in args and args['link_fam']:
-                # avoid redundance of table if filter type_ana exist
-                table_cond += (' inner join sigl_04_data as req on req.id_dos=rec.id_data '
-                               'inner join sigl_05_data as ref on req.ref_analyse = ref.id_data ')
-
-                cond_link_fam = ''
-                # prepare list for sql
-                for id_fam in args['link_fam']:
-                    if not cond_link_fam:
-                        cond_link_fam = '('
-
-                    cond_link_fam = cond_link_fam + str(id_fam) + ','
-
-                if cond_link_fam:
-                    cond_link_fam = cond_link_fam[:-1] + ')'
-                    filter_cond += ' and ref.famille in ' + cond_link_fam + ' '
-
-        # take lastest product of blood, stool, urine and other for each record
-        req = ('select if(param_num_rec.periode=1070, if(param_num_rec.format=1072,substring(rec.num_dos_mois from 7), rec.num_dos_mois), '
-               'if(param_num_rec.format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) as rec_num, '
-               'date_format(rec.rec_date_receipt, %s) as rec_date, '
-               'pat.nom as lastname, pat.nom_jf as maidenname, pat.prenom as firstname, '
-               'MAX(CASE when (prod.type_prel in (78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 127, 138, 142) and prod.statut in (8, 9, 10)) '
-               'then prod.id_data END) as id_prod_blood, '
-               'MAX(CASE when (prod.type_prel = 141 and prod.statut IN (8, 9, 10)) then prod.id_data END) as id_prod_stool, '
-               'MAX(CASE when (prod.type_prel in (153, 154, 155, 156, 157, 158, 159, 160, 161) and prod.statut in (9,10)) '
-               'then prod.id_data END) as id_prod_urine, '
-               'MAX(CASE when (prod.type_prel not in (78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 127, 138, 142, 141, 153, 154, 155, 156, 157, 158, 159, 160, 161) '
-               'and prod.statut in (9,10)) then prod.id_data END) as id_prod_other, '
-               'MAX(CASE when (prod.type_prel in (78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 127, 138, 142)) then prod.statut END) as stat_blood, '
-               'MAX(CASE when (prod.type_prel = 141) then prod.statut END) as stat_stool, '
-               'MAX(CASE when (prod.type_prel in (153, 154, 155, 156, 157, 158, 159, 160, 161)) then prod.statut END) as stat_urine, '
-               'MAX(CASE when (prod.type_prel not in (78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 127, 138, 142, 141, 153, 154, 155, 156, 157, 158, 159, 160, 161)) '
-               'then prod.statut END) as stat_other, '
-               'prod.id_dos as id_rec '
-               'from sigl_01_data as prod '
-               'inner join sigl_02_data as rec on prod.id_dos=rec.id_data '
-               'inner join sigl_03_data as pat on rec.id_patient=pat.id_data '
-               'left join sigl_param_num_dos_data as param_num_rec on param_num_rec.id_data=1 ' + table_cond +
-               'where ' + filter_cond +
-               'group by prod.id_dos order by rec.num_dos_an desc ' + limit)
-
-        # Product.log.info(Logs.fileline() + ' : DEBUG-TRACE req = ' + str(req))
-
-        cursor.execute(req, (Constants.cst_isodate,))
-
-        return cursor.fetchall()"""
 
     @staticmethod
     def getProductReq(id_rec):

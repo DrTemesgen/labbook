@@ -3,34 +3,48 @@ The [epidemio.ini](storage/resource/epidemio/epidemio.ini) file must be present 
 
 In administrator access you can override the epidemio.ini file, to know you have to keep the same file name
 
-17/04/2023 : version = 1
+**Current version:** 1 (since 17/04/2023)
 
-Note : differences with indicator.ini are only how defined sample_type and sample_type_xxx
+**Note:** The only difference with `indicator.ini` is how `sample_type` and `sample_type_xxx` are defined.
 
-[SETTINGS] section
-version : version number
-nb_disease : number of disease defined
+---
 
-If nb_disease = 4 then [DISEASE_1] to [DISEASE_4] need to be defined
+## [SETTINGS] section
+- **version** : version number  
+- **nb_disease** : number of diseases defined  
 
-[DISEASE_xxx] section
-disease : label of disease
-sample_type : serial corresponding to the type of sample in the database (cf table below) or 0, useful for display not for formula
-nb_res : number of result to display
+If `nb_disease = 4`, then sections `[DISEASE_1]` to `[DISEASE_4]` must be defined.
 
-If nb_res = 4 then res_label_1 to res_label_4, formula_1 to formula_4 and sample_type_1 to sample_type_4  need to be defined
+---
 
-res_label_xxx : label of result to display
-formula_xxx : formula will be read and interpreted by LabBook (cf DHIS2.md filter section, same algorithm)
+## [DISEASE_xxx] section
+- **disease** : label of disease  
+- **sample_type** : serial corresponding to the type of sample in the database (see *List of Sampling Types* below) or `0`.  
+  This field is used for display but not for formula evaluation.  
 
-If formula_xxx is empty then res_label_xxx will be considered as a separation title and sample_type_xxx will not be necessary
+- **nb_res** : number of results to display  
 
-sample_type_xxx : serial corresponding to the type of sample in the database (cf table below) or 0, useful for calculate with the formula_xxx
+If `nb_res = 4`, then the following must be defined:  
+`res_label_1` to `res_label_4`, `formula_1` to `formula_4`, and `sample_type_1` to `sample_type_4`.
 
+- **res_label_xxx** : label of result to display  
+- **formula_xxx** : calculation formula for the result.  
 
-LIST OF SAMPLING TYPES
+  **Important:** The syntax of formulas is the same as described in the DHIS2 filter documentation.  
 
-mysql> select id_data, label from sigl_dico_data where dico_name='type_prel';
+  - If `formula_xxx` is empty, then `res_label_xxx` will be considered as a separator title and `sample_type_xxx` is not required.  
+
+- **sample_type_xxx** : serial corresponding to the type of sample in the database (see *List of Sampling Types* below) or `0`.  
+  Useful for calculation with the corresponding `formula_xxx`.
+
+---
+
+## LIST OF SAMPLING TYPES
+
+```sql
+mysql> select id_data, label 
+       from sigl_dico_data 
+       where dico_name='type_prel'
 
 | id_data | label                           |
 |---------|---------------------------------|

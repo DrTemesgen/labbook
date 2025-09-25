@@ -56,9 +56,10 @@ class Setting:
     def getRecNumSetting():
         cursor = DB.cursor()
 
-        req = ('select id_data, id_owner, sys_creation_date, sys_last_mod_date, sys_last_mod_user, periode, format '
-                'from sigl_param_num_dos_data '
-                'order by id_data desc limit 1')
+        req = ('select rstg_ser, rstg_user, rstg_date, rstg_date_upd, rstg_user_upd, rstg_period, rstg_format, '
+               'rstg_samp_mask, rstg_samp_regex '
+               'from record_setting '
+               'order by rstg_ser desc limit 1')
 
         cursor.execute(req)
 
@@ -69,10 +70,10 @@ class Setting:
         try:
             cursor = DB.cursor()
 
-            cursor.execute('update sigl_param_num_dos_data '
-                           'set sys_last_mod_user=%(id_owner)s, sys_last_mod_date=NOW(), '
-                           'periode=%(period)s, format=%(format)s '
-                           'where id_data=1', params)
+            cursor.execute('update record_setting '
+                           'set rstg_user_upd=%(id_owner)s, rstg_date_upd=NOW(), rstg_period=%(period)s, '
+                           'rstg_format=%(format)s, rstg_samp_mask=%(samp_mask)s, rstg_samp_regex=%(samp_regex)s '
+                           'where rstg_ser=1', params)
 
             Setting.log.info(Logs.fileline())
 

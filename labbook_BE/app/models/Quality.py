@@ -1492,7 +1492,7 @@ class Quality:
                'IFNULL(pat.code, "") AS pat_code, IFNULL(pat.code_patient, "") AS pat_code_lab, '
                'IFNULL(pat.nom, "") AS pat_name, IFNULL(pat.prenom, "") AS pat_firstname, '
                'IFNULL(samp.type_prel, sal_type) AS type, IFNULL(samp.id_dos, 0) AS id_rec, '
-               'IF(param_num_rec.periode=1070, rec.num_dos_mois, rec.num_dos_an) AS rec_num_long, rec.type AS rec_type, '
+               'IF(rec_setting.rstg_period=1070, rec.num_dos_mois, rec.num_dos_an) AS rec_num_long, rec.type AS rec_type, '
                'rec.rec_num_int, rec.date_prescription AS rec_date_prescr, IFNULL(samp_id_ana, 0) AS id_ana, '
                'ana.code AS ana_code, ana.ana_loinc, ana.nom AS ana_name, '
 
@@ -1511,7 +1511,7 @@ class Quality:
                'LEFT JOIN sigl_01_data samp ON sal_sample = samp.id_data '
                'LEFT JOIN sigl_02_data rec ON samp.id_dos = rec.id_data '
                'LEFT JOIN sigl_05_data ana ON samp.samp_id_ana = ana.id_data '
-               'LEFT JOIN sigl_param_num_dos_data AS param_num_rec ON param_num_rec.id_data=1 '
+               'LEFT JOIN record_setting AS rec_setting ON rec_setting.rstg_ser=1 '
 
                'LEFT JOIN sample_destock ON sad_aliquot = sal_ser AND %s = "N" '
 

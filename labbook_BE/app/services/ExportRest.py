@@ -47,90 +47,86 @@ class ExportDHIS2(Resource):
         args = request.get_json()
 
         if 'date_beg' not in args or 'date_end' not in args or 'filename' not in args or 'id_user' not in args or \
-           'period' not in args:
+           'period' not in args or 'rec_type' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         period   = args['period']
         filename = args['filename'][:-4]
+        rec_type = args['rec_type']
 
         l_period = []
 
+        try:
+            date_beg = datetime.strptime(args['date_beg'], '%Y-%m-%d')
+            date_end = datetime.strptime(args['date_end'], '%Y-%m-%d')
+        except Exception as e:
+            self.log.error(Logs.fileline() + f' : TRACE ExportDHIS2 ERROR bad dates: {e}')
+            return compose_ret('', Constants.cst_content_type_json, 409)
+
         # build list of period
         if period == 'W':
-            firstday = datetime.strptime(args['date_beg'], '%Y-%m-%d')
-            lastday  = datetime.strptime(args['date_end'], '%Y-%m-%d')
-
-            # firstday has to be a monday and lastday a sunday
-            firstday = firstday + timedelta(days=-firstday.weekday())
-            lastday  = lastday + timedelta(days=6 - lastday.weekday())
-
-            next_monday = firstday + timedelta(days=7)  # firstday + timedelta(days=-firstday.weekday(), weeks=1)
-            next_sunday = next_monday - timedelta(days=1)  # next_monday - timedelta(days=1)
-
-            while next_monday < lastday:
-                period_interv = []
-
-                tmp_period = datetime.strftime(firstday, "%YW") + str(firstday.isocalendar().week)
-
-                period_interv.append(tmp_period)
-                period_interv.append(firstday)
-                period_interv.append(next_sunday)
-
-                l_period.append(period_interv)
-
-                firstday = next_monday
-                next_monday = firstday + timedelta(days=7)
-                next_sunday = next_monday - timedelta(days=1)
-
-            period_interv = []
-
-            tmp_period = datetime.strftime(firstday, "%YW") + str(firstday.isocalendar().week)
-
-            period_interv.append(tmp_period)
-            period_interv.append(firstday)
-            period_interv.append(lastday)
-
-            l_period.append(period_interv)
+            # Weekly: iterate Monday..Sunday blocks
+            cur = date_beg
+            while cur <= date_end:
+                iso_year, iso_week, _ = cur.isocalendar()
+                tmp_period = f"{iso_year}W{iso_week:02d}"
+                cur_end = cur + timedelta(days=6)
+                if cur_end > date_end:
+                    cur_end = date_end
+                l_period.append([tmp_period, cur, cur_end])
+                cur = cur + timedelta(days=7)
 
         elif period == 'M':
-            firstday = datetime.strptime(args['date_beg'], '%Y-%m-%d')
-            firstday = firstday.replace(day=1)
-            lastday  = datetime.strptime(args['date_end'], '%Y-%m-%d')
+            # Monthly: 1st..last day of each month
+            import calendar
+            y, m = date_beg.year, date_beg.month
+            while (y, m) <= (date_end.year, date_end.month):
+                last_dom = calendar.monthrange(y, m)[1]
+                cur_start = datetime(y, m, 1)
+                cur_end   = datetime(y, m, last_dom)
+                tmp_period = f"{y}M{m:02d}"
+                l_period.append([tmp_period, cur_start, cur_end])
+                if m == 12:
+                    y, m = y + 1, 1
+                else:
+                    m = m + 1
 
-            firstday_of_nextmonth = firstday + timedelta(days=31)
-            firstday_of_nextmonth = firstday_of_nextmonth.replace(day=1)
-            lastday_of_month  = firstday_of_nextmonth - timedelta(days=1)
+        elif period in ('B', 'T', 'Q', 'S', 'A'):
+            # Multi-month groups anchored to January; front already aligned to group start
+            import calendar
+            span_map = {'B': 2, 'T': 3, 'Q': 4, 'S': 6, 'A': 12}
+            span = span_map[period]
 
-            while firstday_of_nextmonth < lastday:
-                period_interv = []
+            y, m = date_beg.year, date_beg.month  # group start month
+            while (y, m) <= (date_end.year, date_end.month):
+                # Compute date_end month of the group (inclusive)
+                end_month_index = (m - 1) + (span - 1)
+                y_end = y + (end_month_index // 12)
+                m_end = (end_month_index % 12) + 1
+                last_dom = calendar.monthrange(y_end, m_end)[1]
+                cur_start = datetime(y, m, 1)
+                cur_end   = datetime(y_end, m_end, last_dom)
 
-                tmp_period = datetime.strftime(firstday, "%Y%m")
+                # Index within the year for the label
+                if period == 'S':
+                    idx = 1 if m <= 6 else 2
+                elif period == 'A':
+                    idx = 1
+                elif period == 'B':
+                    idx = ((m - 1) // 2) + 1
+                elif period == 'T':
+                    idx = ((m - 1) // 3) + 1
+                else:  # 'Q'
+                    idx = ((m - 1) // 4) + 1
 
-                period_interv.append(tmp_period)
-                period_interv.append(firstday)
-                period_interv.append(lastday_of_month)
+                tmp_period = f"{y}{period}{idx:02d}"
+                l_period.append([tmp_period, cur_start, cur_end])
 
-                l_period.append(period_interv)
-
-                firstday = firstday_of_nextmonth
-                firstday_of_nextmonth = firstday + timedelta(days=31)
-                firstday_of_nextmonth = firstday_of_nextmonth.replace(day=1)
-                lastday_of_month  = firstday_of_nextmonth - timedelta(days=1)
-
-            period_interv = []
-
-            tmp_period = datetime.strftime(firstday, "%Y%m")
-
-            firstday_of_nextmonth = firstday + timedelta(days=31)
-            firstday_of_nextmonth = firstday_of_nextmonth.replace(day=1)
-            lastday_of_month  = firstday_of_nextmonth - timedelta(days=1)
-
-            period_interv.append(tmp_period)
-            period_interv.append(firstday)
-            period_interv.append(lastday_of_month)
-
-            l_period.append(period_interv)
+                # Advance to next group start by 'span' months
+                next_index = (m - 1) + span
+                y, m = y + (next_index // 12), (next_index % 12) + 1
+        
         else:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR wrong period : ' + str(period))
             return compose_ret('', Constants.cst_content_type_json, 409)
@@ -145,31 +141,91 @@ class ExportDHIS2(Resource):
             l_data = [["period", "code patient", "record number", "record date", "analysis outsourced"]]
 
             for period in l_period:
-                l_rows = Export.getListOutsourcing(period[1], period[2])
+                l_rows = Export.getListOutsourcing(period[1], period[2], rec_type)
 
-                for row in l_rows:
-                    if row:
+                for row in (l_rows or []):
+                    data = []
 
-                        data = []
+                    code = str(row['code'])
 
-                        code = str(row['code'])
+                    if row['code_patient']:
+                        code += ' / ' + str(row['code_patient'])
 
-                        if row['code_patient']:
-                            code += ' / ' + str(row['code_patient'])
+                    num_rec = str(row['num_dos_an'])
 
-                        num_rec = str(row['num_dos_an'])
+                    date_rec = str(row['date_rec'])
 
-                        date_rec = str(row['date_rec'])
+                    ana_outsourced = str(row['ana_code']) + ' ' + str(row['ana_name'])
 
-                        ana_outsourced = str(row['ana_code']) + ' ' + str(row['ana_name'])
+                    data.append(period[0])
+                    data.append(code)
+                    data.append(num_rec)
+                    data.append(date_rec)
+                    data.append(ana_outsourced)
 
-                        data.append(period[0])
-                        data.append(code)
-                        data.append(num_rec)
-                        data.append(date_rec)
-                        data.append(ana_outsourced)
+                    l_data.append(data)
 
-                        l_data.append(data)
+        elif filename == "LIST_EEQ":
+            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api LIST_EEQ')
+
+            # Data headers
+            l_data = [["period", "control name", "control date",  "supplier", "result date", "result", "comment"]]
+
+            for period in l_period:
+                l_rows = Export.getListEEQ(period[1], period[2])
+
+                for row in (l_rows or []):
+                    result_map = {'Y': 'Conforme', 'N': 'Non conforme', 'U': 'Autres'}
+                    result = result_map.get(row.get('cte_conform'), '')
+
+                    data = []
+
+                    data.append(period[0])
+                    data.append(row.get('ctq_name'))
+                    data.append(row.get('ctq_date'))
+                    data.append(row.get('cte_date'))
+                    data.append(row.get('cte_organizer'))
+                    data.append(result)
+                    data.append(row.get('cte_comment'))
+
+                    l_data.append(data)
+
+        elif filename == "LIST_EQUIPMENT_FAILURE":
+            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api LIST_EQUIPMENT_FAILURE')
+
+            l_data = [["period", "Equipment name", "Manufacturer name", "Supplier name", "Inventory number", "Date of failure", "Comment"]]
+
+            for period in l_period:
+                l_rows = Export.getListEqpFailure(period[1], period[2])
+
+                for row in (l_rows or []):
+                    data = []
+
+                    data.append(period[0])
+                    data.append(row.get('eqp_name'))
+                    data.append(row.get('eqp_manufacturer'))
+                    data.append(row.get('supplier_name'))
+                    data.append(row.get('eqp_invent_num'))
+                    data.append(row.get('eqf_date'))
+                    data.append(row.get('eqf_comm'))
+
+                    l_data.append(data)
+
+        elif filename == "LIST_STOCK_STATUS":
+            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api LIST_STOCK')
+
+            l_data = [["period", "product name", "Expiration status", "Quantity status"]]
+
+            for period in l_period:
+                l_rows = Export.getListStockStatus(period[1], period[2])
+
+                for row in (l_rows or []):
+                    l_data.append([
+                        period[0],
+                        str(row.get('prd_name') or ''),
+                        str(row.get('exp_status') or ''),
+                        str(row.get('qty_status') or '')
+                    ])
         else:
             # Data headers
             l_data = [["dataelement", "period", "orgunit", "categoryoptioncombo", "attributeoptioncombo", "value",
@@ -194,27 +250,15 @@ class ExportDHIS2(Resource):
 
             idx_version = l_cols.index("version")
 
-            if idx_version:
+            if "version" in l_cols:
+                idx_version = l_cols.index("version")
                 version = l_rows[1][idx_version]
-
-                if version != 'v1' and version != 'v2' and version != 'v3':
+                if version not in ("v1", "v2", "v3"):
                     self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR spreadsheet wrong version :' + str(version))
                     return compose_ret('', Constants.cst_content_type_json, 409)
             else:
                 self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR spreadsheet not found version')
                 return compose_ret('', Constants.cst_content_type_json, 409)
-
-            # 09/03/2023 period comes by ihm no longer by spreadsheet
-            """
-            idx_period = l_cols.index("period")
-
-            if not idx_period:
-                self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR spreadsheet not found period')
-                return compose_ret('', Constants.cst_content_type_json, 409)
-
-            # Determine the period
-            period = l_rows[1][idx_period]
-            """
 
             # Determine orgunit
             orgunit = ''
@@ -256,6 +300,10 @@ class ExportDHIS2(Resource):
                 for period in l_period:
                     for row in l_rows:
 
+                        # in case of an empty line
+                        if not row or all(str(c).strip() == '' for c in row):
+                            continue
+
                         if row:
                             data = []
 
@@ -282,7 +330,8 @@ class ExportDHIS2(Resource):
 
                             # --- check if formula or others statistic object  ---
                             # formula case
-                            if filter_row.startswith("$") or filter_row.startswith("{") or filter_row.startswith("( "):
+                            # if filter_row.startswith("$") or filter_row.startswith("{") or filter_row.startswith("( "):
+                            if filter_row.startswith("$") or filter_row.startswith("{") or filter_row.lstrip().startswith("("):                            
                                 # Parse formula for result request
                                 formula   = filter_row
 
@@ -301,19 +350,37 @@ class ExportDHIS2(Resource):
 
                                 self.log.error(Logs.fileline() + ' : DEBUG ExportDHIS2 req_part=%s', req_part)
 
+                                """ OLD CALL 23/09/2025
                                 result = Report.getResultEpidemio(inner_req=req_part['inner'],
                                                                   end_req=req_part['end'],
                                                                   date_beg=period_beg_db,
-                                                                  date_end=period_end_db)
+                                                                  date_end=period_end_db,
+                                                                  rec_type=rec_type)"""
 
+                                result = Report.getResultEpidemio(req_part=req_part,
+                                                                  date_beg=period_beg_db,
+                                                                  date_end=period_end_db,
+                                                                  rec_type=rec_type)
+
+                                # result normalization
+                                value_to_write = ''
+                                if isinstance(result, dict):
+                                    value_to_write = result.get('value', '')
+                                elif isinstance(result, (list, tuple)) and len(result) > 0:
+                                    value_to_write = result[0]
+                                elif result is not None:
+                                    value_to_write = result
+                                data.append(str(value_to_write) if value_to_write != '' else '')
+
+                                """ OLD 23/09/2025
                                 if result:
                                     data.append(str(result['value']))
                                 else:
-                                    data.append('')
+                                    data.append('')"""
 
                             # statistic case
                             else:
-                                result = Export.getStatDHIS2(period_beg_db, period_end_db, filter_row)
+                                result = Export.getStatDHIS2(period_beg_db, period_end_db, filter_row, rec_type)
 
                                 if result:
                                     data.append(str(result['value']))
@@ -338,9 +405,12 @@ class ExportDHIS2(Resource):
         try:
             import csv
 
-            filename = 'dhis2_' + filename + '_' + args['date_beg'] + '-' + args['date_end'] + '.csv'
+            rec_suffix = '_rec-external' if rec_type == 'E' else (
+                         '_rec-internal' if rec_type == 'I' else '_rec-all')
 
-            with open('tmp/' + filename, mode='w', encoding='utf-8') as file:
+            outname = f"dhis2_{filename}_{args['date_beg']}-{args['date_end']}{rec_suffix}.csv"
+
+            with open('tmp/' + outname, mode='w', encoding='utf-8') as file:
                 writer = csv.writer(file, delimiter=',')
                 for line in l_data:
                     writer.writerow(line)
@@ -360,90 +430,86 @@ class ExportDHIS2Api(Resource):
         args = request.get_json()
 
         if 'date_beg' not in args or 'date_end' not in args or 'filename' not in args or 'id_user' not in args or \
-           'period' not in args or 'dhs_ser' not in args or 'dry_run' not in args:
+           'period' not in args or 'rec_type' not in args or 'dhs_ser' not in args or 'dry_run' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         period   = args['period']
         filename = args['filename'][:-4]
+        rec_type = args['rec_type']
 
         l_period = []
 
+        try:
+            date_beg = datetime.strptime(args['date_beg'], '%Y-%m-%d')
+            date_end = datetime.strptime(args['date_end'], '%Y-%m-%d')
+        except Exception as e:
+            self.log.error(Logs.fileline() + f' : TRACE ExportDHIS2 ERROR bad dates: {e}')
+            return compose_ret('', Constants.cst_content_type_json, 409)
+
         # build list of period
         if period == 'W':
-            firstday = datetime.strptime(args['date_beg'], '%Y-%m-%d')
-            lastday  = datetime.strptime(args['date_end'], '%Y-%m-%d')
-
-            # firstday has to be a monday and lastday a sunday
-            firstday = firstday + timedelta(days=-firstday.weekday())
-            lastday  = lastday + timedelta(days=6 - lastday.weekday())
-
-            next_monday = firstday + timedelta(days=7)  # firstday + timedelta(days=-firstday.weekday(), weeks=1)
-            next_sunday = next_monday - timedelta(days=1)  # next_monday - timedelta(days=1)
-
-            while next_monday < lastday:
-                period_interv = []
-
-                tmp_period = datetime.strftime(firstday, "%YW") + str(firstday.isocalendar().week)
-
-                period_interv.append(tmp_period)
-                period_interv.append(firstday)
-                period_interv.append(next_sunday)
-
-                l_period.append(period_interv)
-
-                firstday = next_monday
-                next_monday = firstday + timedelta(days=7)
-                next_sunday = next_monday - timedelta(days=1)
-
-            period_interv = []
-
-            tmp_period = datetime.strftime(firstday, "%YW") + str(firstday.isocalendar().week)
-
-            period_interv.append(tmp_period)
-            period_interv.append(firstday)
-            period_interv.append(lastday)
-
-            l_period.append(period_interv)
+            # Weekly: iterate Monday..Sunday blocks
+            cur = date_beg
+            while cur <= date_end:
+                iso_year, iso_week, _ = cur.isocalendar()
+                tmp_period = f"{iso_year}W{iso_week:02d}"
+                cur_end = cur + timedelta(days=6)
+                if cur_end > date_end:
+                    cur_end = date_end
+                l_period.append([tmp_period, cur, cur_end])
+                cur = cur + timedelta(days=7)
 
         elif period == 'M':
-            firstday = datetime.strptime(args['date_beg'], '%Y-%m-%d')
-            firstday = firstday.replace(day=1)
-            lastday  = datetime.strptime(args['date_end'], '%Y-%m-%d')
+            # Monthly: 1st..last day of each month
+            import calendar
+            y, m = date_beg.year, date_beg.month
+            while (y, m) <= (date_end.year, date_end.month):
+                last_dom = calendar.monthrange(y, m)[1]
+                cur_start = datetime(y, m, 1)
+                cur_end   = datetime(y, m, last_dom)
+                tmp_period = f"{y}M{m:02d}"
+                l_period.append([tmp_period, cur_start, cur_end])
+                if m == 12:
+                    y, m = y + 1, 1
+                else:
+                    m = m + 1
 
-            firstday_of_nextmonth = firstday + timedelta(days=31)
-            firstday_of_nextmonth = firstday_of_nextmonth.replace(day=1)
-            lastday_of_month  = firstday_of_nextmonth - timedelta(days=1)
+        elif period in ('B', 'T', 'Q', 'S', 'A'):
+            # Multi-month groups anchored to January; front already aligned to group start
+            import calendar
+            span_map = {'B': 2, 'T': 3, 'Q': 4, 'S': 6, 'A': 12}
+            span = span_map[period]
 
-            while firstday_of_nextmonth < lastday:
-                period_interv = []
+            y, m = date_beg.year, date_beg.month  # group start month
+            while (y, m) <= (date_end.year, date_end.month):
+                # Compute date_end month of the group (inclusive)
+                end_month_index = (m - 1) + (span - 1)
+                y_end = y + (end_month_index // 12)
+                m_end = (end_month_index % 12) + 1
+                last_dom = calendar.monthrange(y_end, m_end)[1]
+                cur_start = datetime(y, m, 1)
+                cur_end   = datetime(y_end, m_end, last_dom)
 
-                tmp_period = datetime.strftime(firstday, "%Y%m")
+                # Index within the year for the label
+                if period == 'S':
+                    idx = 1 if m <= 6 else 2
+                elif period == 'A':
+                    idx = 1
+                elif period == 'B':
+                    idx = ((m - 1) // 2) + 1
+                elif period == 'T':
+                    idx = ((m - 1) // 3) + 1
+                else:  # 'Q'
+                    idx = ((m - 1) // 4) + 1
 
-                period_interv.append(tmp_period)
-                period_interv.append(firstday)
-                period_interv.append(lastday_of_month)
+                tmp_period = f"{y}{period}{idx:02d}"
+                l_period.append([tmp_period, cur_start, cur_end])
 
-                l_period.append(period_interv)
-
-                firstday = firstday_of_nextmonth
-                firstday_of_nextmonth = firstday + timedelta(days=31)
-                firstday_of_nextmonth = firstday_of_nextmonth.replace(day=1)
-                lastday_of_month  = firstday_of_nextmonth - timedelta(days=1)
-
-            period_interv = []
-
-            tmp_period = datetime.strftime(firstday, "%Y%m")
-
-            firstday_of_nextmonth = firstday + timedelta(days=31)
-            firstday_of_nextmonth = firstday_of_nextmonth.replace(day=1)
-            lastday_of_month  = firstday_of_nextmonth - timedelta(days=1)
-
-            period_interv.append(tmp_period)
-            period_interv.append(firstday)
-            period_interv.append(lastday_of_month)
-
-            l_period.append(period_interv)
+                # Advance to next group start by 'span' months
+                next_index = (m - 1) + span
+                y, m = y + (next_index // 12), (next_index % 12) + 1
+        
         else:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api ERROR wrong period : ' + str(period))
             return compose_ret('', Constants.cst_content_type_json, 409)
@@ -458,31 +524,91 @@ class ExportDHIS2Api(Resource):
             l_data = [["period", "code patient", "record number", "record date", "analysis outsourced"]]
 
             for period in l_period:
-                l_rows = Export.getListOutsourcing(period[1], period[2])
+                l_rows = Export.getListOutsourcing(period[1], period[2], rec_type)
 
-                for row in l_rows:
-                    if row:
+                for row in (l_rows or []):
+                    data = []
 
-                        data = []
+                    code = str(row['code'])
 
-                        code = str(row['code'])
+                    if row['code_patient']:
+                        code += ' / ' + str(row['code_patient'])
 
-                        if row['code_patient']:
-                            code += ' / ' + str(row['code_patient'])
+                    num_rec = str(row['num_dos_an'])
 
-                        num_rec = str(row['num_dos_an'])
+                    date_rec = str(row['date_rec'])
 
-                        date_rec = str(row['date_rec'])
+                    ana_outsourced = str(row['ana_code']) + ' ' + str(row['ana_name'])
 
-                        ana_outsourced = str(row['ana_code']) + ' ' + str(row['ana_name'])
+                    data.append(period[0])
+                    data.append(code)
+                    data.append(num_rec)
+                    data.append(date_rec)
+                    data.append(ana_outsourced)
 
-                        data.append(period[0])
-                        data.append(code)
-                        data.append(num_rec)
-                        data.append(date_rec)
-                        data.append(ana_outsourced)
+                    l_data.append(data)
 
-                        l_data.append(data)
+        elif filename == "LIST_EEQ":
+            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api LIST_EEQ')
+
+            # Data headers
+            l_data = [["period", "control name", "control date",  "supplier", "result date", "result", "comment"]]
+
+            for period in l_period:
+                l_rows = Export.getListEEQ(period[1], period[2])
+
+                for row in (l_rows or []):
+                    result_map = {'Y': 'Conforme', 'N': 'Non conforme', 'U': 'Autres'}
+                    result = result_map.get(row.get('cte_conform'), '')
+
+                    data = []
+
+                    data.append(period[0])
+                    data.append(row.get('ctq_name'))
+                    data.append(row.get('ctq_date'))
+                    data.append(row.get('cte_date'))
+                    data.append(row.get('cte_organizer'))
+                    data.append(result)
+                    data.append(row.get('cte_comment'))
+
+                    l_data.append(data)
+
+        elif filename == "LIST_EQUIPMENT_FAILURE":
+            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api LIST_EQUIPMENT_FAILURE')
+
+            l_data = [["period", "Equipment name", "Manufacturer name", "Supplier name", "Inventory number", "Date of failure", "Comment"]]
+
+            for period in l_period:
+                l_rows = Export.getListEqpFailure(period[1], period[2])
+
+                for row in (l_rows or []):
+                    data = []
+
+                    data.append(period[0])
+                    data.append(row.get('eqp_name'))
+                    data.append(row.get('eqp_manufacturer'))
+                    data.append(row.get('supplier_name'))
+                    data.append(row.get('eqp_invent_num'))
+                    data.append(row.get('eqf_date'))
+                    data.append(row.get('eqf_comm'))
+
+                    l_data.append(data)
+
+        elif filename == "LIST_STOCK_STATUS":
+            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api LIST_STOCK')
+
+            l_data = [["period", "product name", "Expiration status", "Quantity status"]]
+
+            for period in l_period:
+                l_rows = Export.getListStockStatus(period[1], period[2])
+
+                for row in (l_rows or []):
+                    l_data.append([
+                        period[0],
+                        str(row.get('prd_name') or ''),
+                        str(row.get('exp_status') or ''),
+                        str(row.get('qty_status') or '')
+                    ])
         else:
             # Data headers
             l_data = [["dataelement", "period", "orgunit", "categoryoptioncombo", "attributeoptioncombo", "value",
@@ -507,10 +633,10 @@ class ExportDHIS2Api(Resource):
 
             idx_version = l_cols.index("version")
 
-            if idx_version:
+            if "version" in l_cols:
+                idx_version = l_cols.index("version")
                 version = l_rows[1][idx_version]
-
-                if version != 'v1' and version != 'v2' and version != 'v3':
+                if version not in ("v1", "v2", "v3"):
                     self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api ERROR spreadsheet wrong version :' + str(version))
                     return compose_ret('', Constants.cst_content_type_json, 409)
             else:
@@ -557,6 +683,10 @@ class ExportDHIS2Api(Resource):
                 for period in l_period:
                     for row in l_rows:
 
+                        # in case of an empty line
+                        if not row or all(str(c).strip() == '' for c in row):
+                            continue
+
                         if row:
                             data = []
 
@@ -583,7 +713,7 @@ class ExportDHIS2Api(Resource):
 
                             # --- check if formula or others statistic object  ---
                             # formula case
-                            if filter_row.startswith("$") or filter_row.startswith("{"):
+                            if filter_row.startswith("$") or filter_row.startswith("{") or filter_row.lstrip().startswith("("):
                                 # Parse formula for result request
                                 formula   = filter_row
 
@@ -600,19 +730,37 @@ class ExportDHIS2Api(Resource):
 
                                 req_part = Report.ParseFormula(formula, type_samp)
 
+                                """ OLD CALL 23/09/2025
                                 result = Report.getResultEpidemio(inner_req=req_part['inner'],
                                                                   end_req=req_part['end'],
                                                                   date_beg=period_beg_db,
-                                                                  date_end=period_end_db)
+                                                                  date_end=period_end_db,
+                                                                  rec_type=rec_type)"""
 
+                                result = Report.getResultEpidemio(req_part=req_part,
+                                                                  date_beg=period_beg_db,
+                                                                  date_end=period_end_db,
+                                                                  rec_type=rec_type)
+
+                                # result normalization
+                                value_to_write = ''
+                                if isinstance(result, dict):
+                                    value_to_write = result.get('value', '')
+                                elif isinstance(result, (list, tuple)) and len(result) > 0:
+                                    value_to_write = result[0]
+                                elif result is not None:
+                                    value_to_write = result
+                                data.append(str(value_to_write) if value_to_write != '' else '')
+
+                                """ OLD 23/09/2025
                                 if result:
                                     data.append(str(result['value']))
                                 else:
-                                    data.append('')
+                                    data.append('')"""
 
                             # statistic case
                             else:
-                                result = Export.getStatDHIS2(period_beg_db, period_end_db, filter_row)
+                                result = Export.getStatDHIS2(period_beg_db, period_end_db, filter_row, rec_type)
 
                                 if result:
                                     data.append(str(result['value']))
