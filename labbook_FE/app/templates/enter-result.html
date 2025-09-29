@@ -116,11 +116,25 @@
                 <div id="no_result" class="error mt-3">{{ _("Aucune analyse") }}</div>
                 <div id="list_result" class="mt-3"></div>
             </form>
-            {% if has_permission("RECORD_16") %}
+
+            {% if has_permission("RECORD_16") or has_permission("RECORD_6") %}
             <div class="float-end mt-3 mb-3">
-                <input type="button" onclick="download_report();" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _('Feuille de paillasse') }}">
+                {% if has_permission("RECORD_16") %}
+                <input type="button"
+                       onclick="download_report();"
+                       class="btn btn-lbk btn-{{ session['user_role']|safe }} text-white"
+                       value="{{ _('Feuille de paillasse') }}">
+                {% endif %}
+            
+                {% if has_permission("RECORD_6") %}
+                <a id="btn_bio_validate"
+                   class="btn btn-lbk btn-{{ session['user_role']|safe }} text-white text-decoration-none ms-2 d-none">
+                   {{ _("Validation biologique") }}
+                </a>
+                {% endif %}
             </div>
             {% endif %}
+            
 
             {% if has_permission("RECORD_17") and args['list_res'] %}
             <form autocomplete="off">
@@ -324,6 +338,9 @@ function display_result( num_page )
     $("#no_result").hide() ;
 
 gen_ihm_res( data_res ) ;
+
+// Update biological validation button visibility
+toggle_bio_button();
 }
 
 function enabled_save( id_rec, ref_ana )
@@ -1359,6 +1376,52 @@ let boxCoordSpan = aliquotForm.querySelector(".box_coord");
     }
 }
 
+// Return true if at least one result is technically validated (type_validation == 251)
+function has_tech_validated() 
+{
+    if (!Array.isArray(data_res) || data_res.length === 0) return false;
+    for (let i = 0; i < data_res.length; i++) 
+    {
+        const v = data_res[i].validation;
+        if (v && Number(v.type_validation) === 251) return true;
+    }
+    return false;
+}
+
+// Show/hide the biological validation button and set its href
+function toggle_bio_button()
+{
+    const $btn = $("#btn_bio_validate");
+    if ($btn.length === 0) return; // permission or markup not present
+
+    // Determine record id (prefer list_res[0].id_dos like elsewhere)
+    let id_rec = 0;
+    if (Array.isArray(data_res) && data_res.length > 0 && data_res[0].id_dos) 
+    {
+        id_rec = data_res[0].id_dos;
+    }
+    else 
+    {
+        {% if args['record'] and args['record']['id_data'] %}
+        id_rec = {{ args['record']['id_data'] }};
+        {% endif %}
+    }
+
+    if (id_rec)
+    {
+        $btn.attr("href", "{{ session['server_ext'] }}/biological-validation/S/" + id_rec);
+    }
+
+    if (has_tech_validated()) 
+    {
+        $btn.removeClass("d-none");
+    } 
+    else
+    {
+        $btn.addClass("d-none");
+    }
+}
+
 {% include 'js/display_histo.js' %}
 
 {% if has_permission("RECORD_14") %}
@@ -1391,6 +1454,9 @@ rec_num_int = data_res[0].rec_num_int
 display_result( 1 ) ;
 
 info_pat_title() ;
+
+// Update biological validation button visibility
+toggle_bio_button();
 
     {% if ihm['anchor'] %}
     setTimeout(function()

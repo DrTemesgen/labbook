@@ -1042,20 +1042,6 @@ class EquipmentDet(Resource):
                 item[key] = ''
 
         """
-        l_lic = Quality.getListComment(id_item, 'E', 'B')
-
-        if l_lic:
-            item['breakdown'] = l_lic
-        else:
-            item['breakdown'] = []
-
-        l_lic = Quality.getListComment(id_item, 'E', 'M')
-
-        if l_lic:
-            item['maintenance'] = l_lic
-        else:
-            item['maintenance'] = []
-
         if item['date_endcontract']:
             item['date_endcontract'] = datetime.strftime(item['date_endcontract'], Constants.cst_isodate)"""
 
@@ -1081,35 +1067,12 @@ class EquipmentDet(Resource):
            'model' not in args or 'funct' not in args or 'location' not in args or 'section' not in args or \
            'supplier' not in args or 'serial' not in args or 'inventory' not in args or 'incharge' not in args or \
            'date_receipt' not in args or 'date_buy' not in args or 'date_onduty' not in args or \
-           'date_revoc' not in args or 'comment' not in args or 'critical' not in args:
+           'date_revoc' not in args or 'comment' not in args or 'critical' not in args or 'eqp_status' not in args:
             self.log.error(Logs.fileline() + ' : EquipmentDet ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Update item
         if id_item > 0:
-            """
-            if args['breakdown']:
-                ret = Quality.insertListComment(lic_ref=id_item,
-                                                lic_type='E',
-                                                lic_sub_type='B',
-                                                lic_user=args['id_owner'],
-                                                lic_comm=args['breakdown'])
-
-                if not ret:
-                    self.log.error(Logs.alert() + ' : EquipmentDet ERROR insert list comment breakdown')
-                    return compose_ret('', Constants.cst_content_type_json, 500)
-
-            if args['maintenance']:
-                ret = Quality.insertListComment(lic_ref=id_item,
-                                                lic_type='E',
-                                                lic_sub_type='M',
-                                                lic_user=args['id_owner'],
-                                                lic_comm=args['maintenance'])
-
-                if not ret:
-                    self.log.error(Logs.alert() + ' : EquipmentDet ERROR insert list comment maintenance')
-                    return compose_ret('', Constants.cst_content_type_json, 500)"""
-
             ret = Quality.updateEquipment(id_data=id_item,
                                           id_owner=args['id_owner'],
                                           name=args['name'],
@@ -1132,7 +1095,8 @@ class EquipmentDet(Resource):
                                           date_onduty=args['date_onduty'],
                                           date_revoc=args['date_revoc'],
                                           critical=args['critical'],
-                                          comment=args['comment'])
+                                          comment=args['comment'],
+                                          eqp_status=args['eqp_status'])
 
             if ret is False:
                 self.log.error(Logs.alert() + ' : EquipmentDet ERROR update')
@@ -1161,36 +1125,14 @@ class EquipmentDet(Resource):
                                           date_onduty=args['date_onduty'],
                                           date_revoc=args['date_revoc'],
                                           critical=args['critical'],
-                                          comment=args['comment'])
+                                          comment=args['comment'],
+                                          eqp_status=args['eqp_status'])
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : EquipmentDet ERROR  insert')
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             id_item = ret
-
-            """
-            if args['breakdown']:
-                ret = Quality.insertListComment(lic_ref=id_item,
-                                                lic_type='E',
-                                                lic_sub_type='B',
-                                                lic_user=args['id_owner'],
-                                                lic_comm=args['breakdown'])
-
-                if not ret:
-                    self.log.error(Logs.alert() + ' : EquipmentDet ERROR insert list comment breakdown')
-                    return compose_ret('', Constants.cst_content_type_json, 500)
-
-            if args['maintenance']:
-                ret = Quality.insertListComment(lic_ref=id_item,
-                                                lic_type='E',
-                                                lic_sub_type='M',
-                                                lic_user=args['id_owner'],
-                                                lic_comm=args['maintenance'])
-
-                if not ret:
-                    self.log.error(Logs.alert() + ' : EquipmentDet ERROR insert list comment maintenance')
-                    return compose_ret('', Constants.cst_content_type_json, 500)"""
 
         self.log.info(Logs.fileline() + ' : TRACE EquipmentDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
@@ -1343,9 +1285,9 @@ class EquipmentExport(Resource):
     log = logging.getLogger('log_services')
 
     def post(self):
-        l_data = [['id_data', 'creation_date', 'name', 'maker', 'model', 'funct', 'location', 'section', 'supplier',
-                   'serial_number', 'inventory_number', 'incharge', 'purchase_date', 'receipt_date', 'commissioning_date',
-                   'withdrawal_date', 'critical', 'comments']]
+        l_data = [['id_data', 'creation_date', 'name', 'maker', 'model', 'funct', 'location', 'status', 'section',
+                   'supplier', 'serial_number', 'inventory_number', 'incharge', 'purchase_date', 'receipt_date',
+                   'commissioning_date', 'withdrawal_date', 'critical', 'comments']]
         dict_data = Quality.getEquipmentListExport()
 
         Various.useLangDB()
@@ -1361,6 +1303,7 @@ class EquipmentExport(Resource):
                 data.append(d['model'])
                 data.append(d['funct'])
                 data.append(d['location'])
+                data.append(d['status'] or '')
                 section = d['section']
                 if section:
                     data.append(_(section.strip()))

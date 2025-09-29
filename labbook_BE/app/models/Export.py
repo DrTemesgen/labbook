@@ -213,7 +213,7 @@ class Export:
         return l_res
 
     @staticmethod
-    def getStatDHIS2(date_beg, date_end, key, rec_type='A'):
+    def getStatDHIS2(date_beg, date_end, key, rec_type='A', lite_filter='A'):
         res = ''
 
         cursor = DB.cursor()
@@ -224,14 +224,24 @@ class Export:
                    'from sigl_02_data '
                    'where (rec_date_receipt between %s and %s) and statut > 181')
             params = [date_beg, date_end]
-        
+
             # Optional rec_type filter
             type_map = {'E': 183, 'I': 184}
             tval = type_map.get(rec_type)
             if tval is not None:
                 req += ' and type = %s'
                 params.append(tval)
-        
+
+            # LabBook Lite 3-state filter:
+            #  - 'A' (All): no filter
+            #  - 'N' (Exclude Lite): rec.rec_lite = 0
+            #  - 'Y' (Only Lite):    rec.rec_lite > 0
+            lf = (lite_filter or 'A').upper()
+            if lf == 'N':
+                req += ' and rec.rec_lite = 0'
+            elif lf == 'Y':
+                req += ' and rec.rec_lite > 0'
+
             cursor.execute(req, tuple(params))
             res = cursor.fetchone()
 
@@ -243,14 +253,24 @@ class Export:
                    'inner join sigl_05_data as ref on ref.id_data = req.ref_analyse and ref.cote_unite != "PB" '
                    'where (rec.rec_date_receipt between %s and %s) and rec.statut > 181 and ref.actif=4')
             params = [date_beg, date_end]
-        
+
             # Optional rec_type filter
             type_map = {'E': 183, 'I': 184}
             tval = type_map.get(rec_type)
             if tval is not None:
                 req += ' and rec.type = %s'
                 params.append(tval)
-        
+
+            # LabBook Lite 3-state filter:
+            #  - 'A' (All): no filter
+            #  - 'N' (Exclude Lite): rec.rec_lite = 0
+            #  - 'Y' (Only Lite):    rec.rec_lite > 0
+            lf = (lite_filter or 'A').upper()
+            if lf == 'N':
+                req += ' and rec.rec_lite = 0'
+            elif lf == 'Y':
+                req += ' and rec.rec_lite > 0'
+
             cursor.execute(req, tuple(params))
             res = cursor.fetchone()
 
@@ -263,14 +283,24 @@ class Export:
                    'where (rec.rec_date_receipt between %s and %s) and rec.statut > 181 and ref.actif=4 '
                    'and req.req_outsourced = "Y"')
             params = [date_beg, date_end]
-        
+
             # Optional rec_type filter
             type_map = {'E': 183, 'I': 184}
             tval = type_map.get(rec_type)
             if tval is not None:
                 req += ' and rec.type = %s'
                 params.append(tval)
-        
+
+            # LabBook Lite 3-state filter:
+            #  - 'A' (All): no filter
+            #  - 'N' (Exclude Lite): rec.rec_lite = 0
+            #  - 'Y' (Only Lite):    rec.rec_lite > 0
+            lf = (lite_filter or 'A').upper()
+            if lf == 'N':
+                req += ' and rec.rec_lite = 0'
+            elif lf == 'Y':
+                req += ' and rec.rec_lite > 0'
+
             cursor.execute(req, tuple(params))
             res = cursor.fetchone()
 
@@ -537,12 +567,12 @@ class Export:
         return res
 
     @staticmethod
-    def getListOutsourcing(date_beg, date_end, rec_type='A'):
+    def getListOutsourcing(date_beg, date_end, rec_type='A', lite_filter='A'):
         cursor = DB.cursor()
 
         sql = (
             'select pat.code, pat.code_patient, rec.num_dos_an, rec.rec_date_receipt as date_rec, '
-            'ref.code as ana_code, ref.nom as ana_name '
+            'ref.code as ana_code, ref.nom as ana_name, rec.rec_lite '
             'from sigl_02_data as rec '
             'inner join sigl_03_data as pat on pat.id_data=rec.id_patient '
             'inner join sigl_04_data as req on req.id_dos=rec.id_data '
@@ -559,6 +589,16 @@ class Export:
             if tval is not None:
                 sql += ' and rec.type = %s'
                 params.append(tval)
+
+        # LabBook Lite 3-state filter:
+        #  - 'A' (All): no filter
+        #  - 'N' (Exclude Lite): rec.rec_lite = 0
+        #  - 'Y' (Only Lite):    rec.rec_lite > 0
+        lf = (lite_filter or 'A').upper()
+        if lf == 'N':
+            sql += ' and rec.rec_lite = 0'
+        elif lf == 'Y':
+            sql += ' and rec.rec_lite > 0'
 
         cursor.execute(sql, tuple(params))
         return cursor.fetchall()
@@ -613,12 +653,12 @@ class Export:
     @staticmethod
     def getListStockStatus(date_beg, date_end):
         cursor = DB.cursor()
-    
+
         # Load setting (warning in days)
         cursor.execute('select sos_expir_warning from stock_setting order by sos_ser desc limit 1')
         st = cursor.fetchone() or {}
         warn_days = int(st.get('sos_expir_warning', 14))
-    
+
         # per product: total supplied, total used, earliest non-empty expiry date
         sql = (
             'select '
@@ -655,11 +695,11 @@ class Export:
         )
         cursor.execute(sql)
         rows = cursor.fetchall()
-    
+
         # Build one row per product with combined statuses
         from datetime import datetime
         now = datetime.now()
-    
+
         out = []
         for r in rows or []:
             prd_name   = r['prd_name']
@@ -669,7 +709,7 @@ class Export:
             nb_use     = int(r['nb_use'] or 0)
             qty_stock  = nb_sup - nb_use
             next_exp   = r['min_expir_date']
-    
+
             # Quantity status
             if qty_stock <= 0:
                 qty_status = 'Out of stock'
@@ -677,7 +717,7 @@ class Export:
                 qty_status = f'Warning {qty_stock}'
             else:
                 qty_status = ''
-    
+
             # Expiration status
             if expir_obl and next_exp:
                 days_to_exp = (next_exp - now).days
@@ -690,7 +730,7 @@ class Export:
                     exp_status = ''
             else:
                 exp_status = ''
-    
+
             # Only include products that are in at least one of the 4 states
             if exp_status or qty_status:
                 out.append({
@@ -698,5 +738,5 @@ class Export:
                     'exp_status': exp_status,
                     'qty_status': qty_status,
                 })
-    
+
         return out

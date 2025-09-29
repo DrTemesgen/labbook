@@ -36,6 +36,7 @@
                             <th class="text-start cursor-act">{{ _("Localisation") }}</th>
                             <th class="text-start cursor-act">{{ _("Section") }}</th>
                             <th class="text-start cursor-act">{{ _("Fonction") }}</th>
+                            <th class="text-start cursor-act">{{ _("État") }}</th>
                         </tr>
                     </thead>
                     <tbody id="tbody_items">
@@ -101,7 +102,7 @@ let res = "" ;
 
 {% if not args %}
 res = "<tr>" +
-      "<td colspan=\"8\">" +
+      "<td colspan=\"9\">" +
       "<div>{{ _("Aucune donnée à afficher") }}</div></td></tr>" ;
 {% else %}
 let data_len = data_items.length ;
@@ -157,7 +158,8 @@ $("#list_items_total").html( data_len ) ;
            "<td><div class=\"text-start\">" + data_items[i].model + "</div></td>" +
            "<td><div class=\"text-start\">" + data_items[i].location + "</div></td>" +
            "<td><div class=\"text-start\">" + data_items[i].section + "</div></td>" +
-           "<td><div class=\"text-start\">" + data_items[i].funct + "</div></td></tr>" ;
+           "<td><div class=\"text-start\">" + data_items[i].funct + "</div></td>" +
+           "<td><div class=\"text-start\">" + data_items[i].eqp_status + "</div></td></tr>" ;
     }
 {% endif %}
 

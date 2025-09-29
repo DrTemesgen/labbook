@@ -66,6 +66,14 @@
                             <option value="E">{{ _("Externe") }}</option>
                             <option value="I">{{ _("Interne") }}</option>
                         </select>
+
+                        {# LabBook Lite filter #}
+                        <label for="lite_filter" class="form-label text-end ms-3 mt-2 me-1">{{ _("LabBook Lite") }}</label>
+                        <select id="lite_filter" name="lite_filter" class="form-select w-auto">
+                            <option value="A" selected="selected">{{ _("Inclure LabBook Lite") }}</option>
+                            <option value="N">{{ _("Exclure LabBook Lite") }}</option>
+                            <option value="Y">{{ _("Uniquement LabBook Lite") }}</option>
+                        </select>
                     </div>
                 </div>
 
@@ -86,8 +94,8 @@
                             </div>
                             <div>
                                 <input id="btn-send" type="button" class="btn btn-lbk btn-{{ session['user_role']|safe }}" onclick="send_dhis2();" value="{{ _("Envoyer les données") }}">
-                                <label for="dry_run" class="form-label align-self-center text-lg-end ms-2 me-1">{{ _("Tester") }}</label>
-                                <input type="checkbox" id="dry_run" name="dry_run" value="Y">
+                                    <label for="dry_run" class="form-label align-self-center text-lg-end ms-2 me-1">{{ _("Tester") }}</label>
+                                    <input type="checkbox" id="dry_run" name="dry_run" value="Y">
                             </div>
                         </div>
                         {% endif %}
@@ -121,6 +129,7 @@ var date_end = $("#date_end").val();
 var period   = $("#type_period").val() ;
 var filename = $("#spreadsheet").val() ;
 var rec_type = $("#rec_type").val() || "A" ;
+var lite_filter = $("#lite_filter").val() || "A";
 
     if ( filename == "" ) { alert("{{ _("Veuillez sélectionner une feuille de calcul.") }}") ; return false ; }
     if ( period == "" ) { alert("{{ _("Veuillez sélectionner une période.") }}") ; return false ; }
@@ -140,6 +149,7 @@ var param = '{"date_beg":"' + rng.beg + '", ' +
              '"period":"' + period + '", ' +
              '"filename":"' + filename + '", ' +
              '"rec_type":"' + rec_type + '", ' +
+             '"lite_filter":"' + lite_filter + '", ' +
              '"id_user":' + id_user + '}' ;
 
     $("#dial-wait").off('shown.bs.modal') ;
@@ -185,6 +195,7 @@ var date_end = $("#date_end").val() ;
 var period   = $("#type_period").val() ;
 var filename = $("#spreadsheet").val() ;
 var rec_type = $("#rec_type").val() || "A" ;
+var lite_filter = $("#lite_filter").val() || "A";
 var dhs_ser  = $("#dhs_list").val() ;
 var dry_run  = "N" ; 
 
@@ -211,6 +222,7 @@ var param    = '{"date_beg":"' + rng.beg + '", ' +
                 '"period":"' + period + '", ' +
                 '"filename":"' + filename + '", ' +
                 '"rec_type":"' + rec_type + '", ' +
+                '"lite_filter":"' + lite_filter + '", ' +
                 '"dhs_ser":' + dhs_ser + ', ' +
                 '"id_user":' + id_user + ', ' +
                 '"dry_run":"' + dry_run + '"}' ;

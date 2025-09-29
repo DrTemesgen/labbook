@@ -2264,7 +2264,7 @@ class Setting:
                     "type": "header",
                     "parameters": [{
                         "type": "document",
-                        "document": { "id": media_id }
+                        "document": {"id": media_id}
                     }]
                 })
 
@@ -2284,7 +2284,7 @@ class Setting:
 
             template = {
                 "name": template_name,
-                "language": {"code": lang} 
+                "language": {"code": lang}
             }
             if components:
                 template["components"] = components
@@ -2551,11 +2551,11 @@ class Setting:
         if not tpl:
             return ''
         import re
-    
+
         def repl(m):
             key = (m.group(1) or '').strip()
             val = ctx.get(key)
             return '' if val is None else str(val)
-    
+
         # Matches {{ something }}
         return re.sub(r"\{\{\s*(.*?)\s*\}\}", repl, tpl)

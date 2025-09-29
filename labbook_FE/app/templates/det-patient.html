@@ -118,6 +118,9 @@ param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
         window.location.href = "{{ session['server_ext'] }}/det-req-ext/Y/" + id_pat ;
         {% elif type_req == 'I' %}
         window.location.href = "{{ session['server_ext'] }}/det-req-int/Y/" + id_pat ;
+        {% elif type_req.startswith('A_') %}
+            {% set parts = type_req.split('_') %} 
+            window.location.href = "{{ session['server_ext'] }}/administrative-record/{{parts[1]}}/{{parts[2]}}" ;
         {% else %}
         window.location.href = "{{ session['server_ext'] }}/homepage" ;
         {% endif %}

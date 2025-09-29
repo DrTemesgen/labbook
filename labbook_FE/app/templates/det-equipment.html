@@ -68,6 +68,17 @@
                         </select>			
                     </div>
                 </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="eqp_status" class="form-label col-3 text-end mt-2 me-1">{{ _("État de l'équipement") }}</label>
+                    <div>					
+                        <select id="eqp_status" name="eqp_status" class="form-select">
+                            {% from 'macros.html' import select_eqp_status %}
+                            {{ select_eqp_status(ihm['statuses'], args['det_eqp']['eqp_status']) }}
+                        </select>			
+                    </div>
+                </div>
+
                 <div class="form-group d-lg-flex align-items-start mt-3">
                     <label for="search_supplier" class="form-label col-3 text-end mt-2 me-1">{{ _("Fournisseur") }}</label>
                     <div>
@@ -268,8 +279,9 @@ var id_item     = {{ args['id_eqp']|safe }}    ;
 var name        = $("#name").val()             ;
 var maker       = $("#maker").val()            ;
 var model       = $("#model").val()            ;
-var funct       = $("#funct").val()         ;
+var funct       = $("#funct").val()            ;
 var locat       = $("#location").val()         ;
+var eqp_status  = $("#eqp_status").val()       ;
 var section     = $("#section").val()          ;
 var supplier    = $("#search_supplier").val()  ;
 var serial      = $("#serial").val()           ;
@@ -311,6 +323,7 @@ var param = '{ "id_owner":' + id_owner + ', ' +
               '"model":"' + model + '", ' +
               '"funct":"' + funct + '", ' +
               '"location":"' + locat + '", ' +
+              '"eqp_status":' + eqp_status + ', ' +              
               '"section":' + section + ', ' +
               '"supplier":' + supplier + ', ' +
               '"serial":"' + serial + '", ' +

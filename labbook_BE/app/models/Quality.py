@@ -481,9 +481,11 @@ class Quality:
         cursor = DB.cursor()
 
         req = ('select eqp.id_data, eqp.nom as name, eqp.nom_fabriquant as maker, eqp.modele as model, '
-               'eqp.fonction as funct, eqp.localisation as location, dict.label as section '
+               'eqp.fonction as funct, eqp.localisation as location, dict.label as section, '
+               'COALESCE(dict_stat.label, "") as eqp_status '
                'from sigl_equipement_data as eqp '
                'left join sigl_dico_data as dict on dict.id_data=eqp.section '
+               'left join sigl_dico_data as dict_stat on dict_stat.id_data = eqp.eqp_status '
                'order by name asc')
 
         cursor.execute(req)
@@ -496,6 +498,7 @@ class Quality:
 
         req = ('select eqp.id_data, date_format(eqp.sys_creation_date, %s) as creation_date, eqp.nom as name, '
                'eqp.nom_fabriquant as maker, eqp.modele as model, eqp.fonction as funct, eqp.localisation as location, '
+               'COALESCE(dict_stat.label, "") as status, '
                'dict.label as section, supp.fournisseur_nom as supplier, eqp.no_serie as serial_number, '
                'eqp.no_inventaire as inventory_number, date_format(eqp.date_achat, %s) as purchase_date, '
                'TRIM(CONCAT(u1.lastname," ",u1.firstname," - ",u1.username)) as incharge, '
@@ -504,6 +507,7 @@ class Quality:
                'date_format(eqp.date_de_retrait, %s) as withdrawal_date, eqp.eqp_critical, eqp.commentaires as comments '
                'from sigl_equipement_data as eqp '
                'left join sigl_dico_data as dict on dict.id_data=eqp.section '
+               'left join sigl_dico_data as dict_stat on dict_stat.id_data = eqp.eqp_status '
                'left join sigl_fournisseurs_data as supp on supp.id_data=eqp.fournisseur_id '
                'left join sigl_user_data as u1 on u1.id_data=eqp.responsable_id '
                'order by name asc')
@@ -540,7 +544,7 @@ class Quality:
                'eqp.no_serie as serial, eqp.no_inventaire as inventory, eqp.responsable_id as incharge_id, '
                'eqp.date_reception as date_receipt, eqp.date_achat as date_buy, eqp_critical, '
                'eqp.date_mise_en_service as date_onduty, eqp.date_de_retrait as date_revoc, eqp.commentaires as comment, '
-               'u1.fournisseur_nom as supplier, '
+               'u1.fournisseur_nom as supplier, eqp.eqp_status, '
                'TRIM(CONCAT(u2.lastname," ",u2.firstname," - ",u2.username)) as incharge '
                'from sigl_equipement_data as eqp '
                'left join sigl_fournisseurs_data as u1 on u1.id_data=eqp.fournisseur_id '
@@ -560,12 +564,12 @@ class Quality:
                            '(id_owner, sys_creation_date, sys_last_mod_date, sys_last_mod_user, nom, nom_fabriquant, '
                            'modele, fonction, localisation, section, fournisseur_id, no_serie, no_inventaire, '
                            'responsable_id, date_reception, date_achat, '
-                           'date_mise_en_service, date_de_retrait, eqp_critical, commentaires) '
+                           'date_mise_en_service, date_de_retrait, eqp_critical, commentaires, eqp_status) '
                            'values '
                            '(%(id_owner)s, NOW(), NOW(), %(id_owner)s, %(name)s, %(maker)s, %(model)s, '
                            '%(funct)s, %(location)s, %(section)s, %(supplier)s, %(serial)s, %(inventory)s, '
                            '%(incharge)s, %(date_receipt)s, %(date_buy)s, '
-                           '%(date_onduty)s, %(date_revoc)s, %(critical)s, %(comment)s)', params)
+                           '%(date_onduty)s, %(date_revoc)s, %(critical)s, %(comment)s, %(eqp_status)s)', params)
 
             Quality.log.info(Logs.fileline())
 
@@ -585,7 +589,8 @@ class Quality:
                            'fournisseur_id=%(supplier)s, no_serie=%(serial)s, no_inventaire=%(inventory)s, '
                            'responsable_id=%(incharge)s, date_reception=%(date_receipt)s, '
                            'date_achat=%(date_buy)s, date_mise_en_service=%(date_onduty)s, '
-                           'date_de_retrait=%(date_revoc)s, eqp_critical=%(critical)s, commentaires=%(comment)s  '
+                           'date_de_retrait=%(date_revoc)s, eqp_critical=%(critical)s, commentaires=%(comment)s, '
+                           'eqp_status=%(eqp_status)s '
                            'where id_data=%(id_data)s', params)
 
             Quality.log.info(Logs.fileline())

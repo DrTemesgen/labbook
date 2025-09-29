@@ -165,3 +165,11 @@
         <option value="{{ printer['prt_script'] }}" {% if printer['prt_default'] == "Y" %}selected{% endif %}>{{ printer['prt_name'] }}</option>
     {% endfor %}
 {%- endmacro %}
+
+{% macro select_eqp_status(l_statuses, id_selected) -%}
+    <option value="0" {% if not id_selected or id_selected|int == 0 %}selected{% endif %}></option>
+    {% for st in l_statuses %}
+        <option value="{{ st['id_data'] }}" {% if id_selected and id_selected|int == st['id_data']|int %}selected{% endif %}>{{ st['label'] }}</option>
+    {% endfor %}
+{%- endmacro %}
+

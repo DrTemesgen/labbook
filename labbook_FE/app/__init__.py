@@ -5416,6 +5416,17 @@ def det_equipment(id_eqp=0):
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests sections failed, err=%s , url=%s', err, url)
 
+    # Load equipment status
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/dict/det/etat_equipement'
+        req = requests.get(url, timeout=10)
+
+        if req.status_code == 200:
+            json_ihm['statuses'] = req.json()
+
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests equipment status failed, err=%s , url=%s', err, url)
+
     if id_eqp > 0:
         # Load Equipment Photo files
         try:

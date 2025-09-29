@@ -119,6 +119,15 @@
             <div id="no_result" class="error mt-3">{{ _("Aucune analyse") }}</div>
             <div id="list_result" class="mt-3"></div>
 
+            {% if has_permission("RECORD_6") %}
+            <div id="bio_button" class="d-flex justify-content-end mt-2 d-none">
+                <a id="btn_bio_validate"
+                   class="btn btn-lbk btn-{{ session['user_role']|safe }} text-white">
+                    {{ _("Validation biologique") }}
+                </a>
+            </div>
+            {% endif %}
+
             <!-- Popup cancel -->
             <div class="modal" id="dial-cancel" tabindex="-1">
                 <div class="modal-dialog w-50 mw-75" style="background:#EEE;">
@@ -305,6 +314,9 @@ function display_result( num_page )
     $("#no_result").hide() ;
 
 gen_ihm_res( data_res ) ;
+
+// Update biological validation button visibility
+toggle_bio_button();
 }
 
 function enabled_save( id_rec, ref_ana )
@@ -825,6 +837,61 @@ info = " - {% if args['patient']['pat_code_lab'] %}{{ args['patient']['pat_code_
 {% endif %}
 }
 
+// Return true if at least one result is technically validated (type_validation == 251)
+function has_tech_validated()
+{
+    // defensive checks
+    if (!Array.isArray(data_res) || data_res.length === 0) return false;
+
+    for (let i = 0; i < data_res.length; i++) 
+    {
+        const v = data_res[i].validation;
+        // 251 == Technical validation
+        if (v && Number(v.type_validation) === 251) return true;
+    }
+    return false;
+}
+
+// Show/hide the biological validation button and set its href
+function toggle_bio_button()
+{
+    // Only present if the permission block rendered the container
+    const $container = $("#bio_button");
+    const $btn = $("#btn_bio_validate");
+    if ($container.length === 0 || $btn.length === 0) return;
+
+    // Determine record id (id_dos used elsewhere for API calls)
+    let id_rec = 0;
+    if (Array.isArray(data_res) && data_res.length > 0 && data_res[0].id_dos) 
+    {
+        id_rec = data_res[0].id_dos;
+    } 
+    else
+    {
+        // fallback with server-side context if available
+        {% if args['record'] and args['record']['id_data'] %}
+        id_rec = {{ args['record']['id_data'] }};
+        {% endif %}
+    }
+
+    // Build destination URL
+    if (id_rec)
+    {
+        // Use server_ext prefix consistently with the rest of the page
+        $btn.attr("href", "{{ session['server_ext'] }}/biological-validation/S/" + id_rec);
+    }
+
+    // Toggle visibility depending on technical validation presence
+    if (has_tech_validated())
+    {
+        $container.removeClass("d-none");
+    } 
+    else 
+    {
+        $container.addClass("d-none");
+    }
+}
+
 {% include 'js/display_histo.js' %}
 
 {% if has_permission("RECORD_9") %}
@@ -850,6 +917,9 @@ rec_stat = status_rec(data_res[0].stat) ;
 display_result( 1 ) ;
 
 info_pat_title() ;
+
+// Update biological validation button visibility
+toggle_bio_button();
 
     {% if ihm['anchor'] %}
     setTimeout(function()

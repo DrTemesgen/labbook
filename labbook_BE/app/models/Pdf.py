@@ -1444,10 +1444,10 @@ class Pdf:
         # === ANALYZES details ===
         data['l_data'] = []
         analysis       = {"fam_name": "", "ana_name": "", "ana_comm": "", "l_res": [], "validate": "",
-                "ana_outsourced": "", "ana_ast": "N", "ana_with_one_result": "N", "tech_validate": ""}
+                          "ana_outsourced": "", "ana_ast": "N", "ana_with_one_result": "N", "tech_validate": ""}
         result         = {"label": "", "value": "", "unit": "", "references": "", "prev_date": "", "prev_val": "",
                           "prev_unit": "", "comm": "", "var_comm": "", "bold_value": "N", "highlight": "N",
-                          "highlight": "Y", "formatting": "N", "valueConv": "", "unitConv": ""}
+                          "in_report": "Y", "formatting": "N", "valueConv": "", "unitConv": ""}
 
         """
         [{'analysis': {'fam_name': FAMILY, 'ana_name': NAME, 'ana_comm': COMMENT, "ana_outsourced": Y/N, 'ana_ast': Y/N,
@@ -1579,7 +1579,7 @@ class Pdf:
 
                             # init new analysis
                             tmp_ana = {"fam_name": "", "ana_name": "", "ana_comm": "", "l_res": [], "validate": "",
-                                    "ana_outsourced": "", "ana_ast": "N", "ana_with_one_result": "N", "tech_validate": ""}
+                                       "ana_outsourced": "", "ana_ast": "N", "ana_with_one_result": "N", "tech_validate": ""}
 
                             tmp_ana['ana_with_one_result'] = "Y" if res.get('res_count', 0) == 1 else "N"
 

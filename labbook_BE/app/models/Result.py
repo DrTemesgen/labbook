@@ -220,14 +220,14 @@ class Result:
         )
 
         params = [id_res]
-    
+
         # Optional filter only when positive validation type is provided
         if type_vld > 0:
             req += 'and v.type_validation = %s '
             params.append(type_vld)
-    
+
         req += 'order by v.id_data desc limit 1'
-    
+
         cursor.execute(req, tuple(params))
 
         return cursor.fetchone()
@@ -286,7 +286,7 @@ class Result:
             'group by vld.utilisateur, vld.commentaire '
             'order by vld.id_data asc'
         )
- 
+
         cursor.execute(req, (id_rec, type_vld))
         return cursor.fetchall()
 

@@ -47,13 +47,14 @@ class ExportDHIS2(Resource):
         args = request.get_json()
 
         if 'date_beg' not in args or 'date_end' not in args or 'filename' not in args or 'id_user' not in args or \
-           'period' not in args or 'rec_type' not in args:
+           'period' not in args or 'rec_type' not in args or 'lite_filter' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
-        period   = args['period']
-        filename = args['filename'][:-4]
-        rec_type = args['rec_type']
+        period    = args['period']
+        filename  = args['filename'][:-4]
+        rec_type  = args['rec_type']
+        lite_filter = args['lite_filter']
 
         l_period = []
 
@@ -126,7 +127,7 @@ class ExportDHIS2(Resource):
                 # Advance to next group start by 'span' months
                 next_index = (m - 1) + span
                 y, m = y + (next_index // 12), (next_index % 12) + 1
-        
+
         else:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR wrong period : ' + str(period))
             return compose_ret('', Constants.cst_content_type_json, 409)
@@ -138,10 +139,10 @@ class ExportDHIS2(Resource):
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 LIST_OUTSOURCING')
 
             # Data headers
-            l_data = [["period", "code patient", "record number", "record date", "analysis outsourced"]]
+            l_data = [["period", "code patient", "record number", "record date", "analysis outsourced", "LabBook Lite"]]
 
             for period in l_period:
-                l_rows = Export.getListOutsourcing(period[1], period[2], rec_type)
+                l_rows = Export.getListOutsourcing(period[1], period[2], rec_type, lite_filter)
 
                 for row in (l_rows or []):
                     data = []
@@ -157,11 +158,14 @@ class ExportDHIS2(Resource):
 
                     ana_outsourced = str(row['ana_code']) + ' ' + str(row['ana_name'])
 
+                    lite_flag = 'Y' if (row.get('rec_lite') or 0) > 0 else 'N'
+
                     data.append(period[0])
                     data.append(code)
                     data.append(num_rec)
                     data.append(date_rec)
                     data.append(ana_outsourced)
+                    data.append(lite_flag)
 
                     l_data.append(data)
 
@@ -331,7 +335,7 @@ class ExportDHIS2(Resource):
                             # --- check if formula or others statistic object  ---
                             # formula case
                             # if filter_row.startswith("$") or filter_row.startswith("{") or filter_row.startswith("( "):
-                            if filter_row.startswith("$") or filter_row.startswith("{") or filter_row.lstrip().startswith("("):                            
+                            if filter_row.startswith("$") or filter_row.startswith("{") or filter_row.lstrip().startswith("("):
                                 # Parse formula for result request
                                 formula   = filter_row
 
@@ -360,7 +364,8 @@ class ExportDHIS2(Resource):
                                 result = Report.getResultEpidemio(req_part=req_part,
                                                                   date_beg=period_beg_db,
                                                                   date_end=period_end_db,
-                                                                  rec_type=rec_type)
+                                                                  rec_type=rec_type,
+                                                                  lite_filter=lite_filter)
 
                                 # result normalization
                                 value_to_write = ''
@@ -380,7 +385,7 @@ class ExportDHIS2(Resource):
 
                             # statistic case
                             else:
-                                result = Export.getStatDHIS2(period_beg_db, period_end_db, filter_row, rec_type)
+                                result = Export.getStatDHIS2(period_beg_db, period_end_db, filter_row, rec_type, lite_filter)
 
                                 if result:
                                     data.append(str(result['value']))
@@ -408,7 +413,11 @@ class ExportDHIS2(Resource):
             rec_suffix = '_rec-external' if rec_type == 'E' else (
                          '_rec-internal' if rec_type == 'I' else '_rec-all')
 
-            outname = f"dhis2_{filename}_{args['date_beg']}-{args['date_end']}{rec_suffix}.csv"
+            # Lite suffix: A => '', N => '_without-Lite', Y => '_only-Lite'
+            lf = (args.get('lite_filter', 'A') or 'A').upper()
+            lite_suffix = '_without-Lite' if lf == 'N' else ('_only-Lite' if lf == 'Y' else '')
+
+            outname = f"dhis2_{filename}_{args['date_beg']}-{args['date_end']}{rec_suffix}{lite_suffix}.csv"
 
             with open('tmp/' + outname, mode='w', encoding='utf-8') as file:
                 writer = csv.writer(file, delimiter=',')
@@ -430,13 +439,15 @@ class ExportDHIS2Api(Resource):
         args = request.get_json()
 
         if 'date_beg' not in args or 'date_end' not in args or 'filename' not in args or 'id_user' not in args or \
-           'period' not in args or 'rec_type' not in args or 'dhs_ser' not in args or 'dry_run' not in args:
+           'period' not in args or 'rec_type' not in args or 'dhs_ser' not in args or 'dry_run' not in args or \
+           'lite_filter' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         period   = args['period']
         filename = args['filename'][:-4]
         rec_type = args['rec_type']
+        lite_filter = args['lite_filter']
 
         l_period = []
 
@@ -509,7 +520,7 @@ class ExportDHIS2Api(Resource):
                 # Advance to next group start by 'span' months
                 next_index = (m - 1) + span
                 y, m = y + (next_index // 12), (next_index % 12) + 1
-        
+
         else:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api ERROR wrong period : ' + str(period))
             return compose_ret('', Constants.cst_content_type_json, 409)
@@ -521,10 +532,10 @@ class ExportDHIS2Api(Resource):
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api LIST_OUTSOURCING')
 
             # Data headers
-            l_data = [["period", "code patient", "record number", "record date", "analysis outsourced"]]
+            l_data = [["period", "code patient", "record number", "record date", "analysis outsourced", "LabBook Lite"]]
 
             for period in l_period:
-                l_rows = Export.getListOutsourcing(period[1], period[2], rec_type)
+                l_rows = Export.getListOutsourcing(period[1], period[2], rec_type, lite_filter)
 
                 for row in (l_rows or []):
                     data = []
@@ -540,11 +551,14 @@ class ExportDHIS2Api(Resource):
 
                     ana_outsourced = str(row['ana_code']) + ' ' + str(row['ana_name'])
 
+                    lite_flag = 'Y' if (row.get('rec_lite') or 0) > 0 else 'N'
+
                     data.append(period[0])
                     data.append(code)
                     data.append(num_rec)
                     data.append(date_rec)
                     data.append(ana_outsourced)
+                    data.append(lite_flag)
 
                     l_data.append(data)
 
@@ -740,7 +754,8 @@ class ExportDHIS2Api(Resource):
                                 result = Report.getResultEpidemio(req_part=req_part,
                                                                   date_beg=period_beg_db,
                                                                   date_end=period_end_db,
-                                                                  rec_type=rec_type)
+                                                                  rec_type=rec_type,
+                                                                  lite_filter=lite_filter)
 
                                 # result normalization
                                 value_to_write = ''
@@ -760,7 +775,7 @@ class ExportDHIS2Api(Resource):
 
                             # statistic case
                             else:
-                                result = Export.getStatDHIS2(period_beg_db, period_end_db, filter_row, rec_type)
+                                result = Export.getStatDHIS2(period_beg_db, period_end_db, filter_row, rec_type, lite_filter)
 
                                 if result:
                                     data.append(str(result['value']))

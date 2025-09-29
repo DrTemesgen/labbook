@@ -128,7 +128,7 @@ class Report:
         req = ('select count(distinct rec.id_data) as value '
                'from sigl_02_data as rec ' + params['inner_req'] + ' '
                'where (rec.rec_date_receipt between %(date_beg)s and %(date_end)s) ' + params['end_req'])
-        
+
         # rec_type filter option
         sql_params = dict(params)
         rec_type = params.get('rec_type')
@@ -1277,7 +1277,7 @@ class Report:
                     # Expect '(' then a list of codes until the matching ')'
                     if i + 1 < len(tokens) and tokens[i + 1] == '(':
                         inner_text, close_idx = collect_parenthesized(tokens, i + 1)
-                
+
                         # Ensure we have a current measurement alias to attach ON(...) to
                         if current_aliases is None:
                             current_aliases = new_alias_set(alias_counter)
@@ -1293,7 +1293,7 @@ class Report:
                                 )
                             base_conditions = start_measurement_conditions(current_aliases, variable_id=0)
                             group_state["where_atoms"].append('(' + ' and '.join(base_conditions + ['1=1']) + ')')
-                
+
                         # Rebuild the function call text and inject into the last measurement atom
                         apply_on_clause(current_aliases, f"ON({inner_text})", group_state["where_atoms"])
                         i = close_idx + 1
@@ -1337,48 +1337,58 @@ class Report:
             # ensure correlation with outer rec
             correlation = f"{base_req}.id_dos = rec.id_data"
             where_clause = f"{correlation} AND {final_where}" if final_where else correlation
-            
+
             subquery = (
                 f"SELECT 1 FROM sigl_04_data as {base_req}"
                 f"{join_sql}"
                 f" WHERE {where_clause} LIMIT 1"
             )
-            
+
             exists_subqueries.append(subquery)
 
-        return {"exists_subqueries": exists_subqueries}    
-    
-    def getResultEpidemio(req_part, date_beg, date_end, rec_type=None):
+        return {"exists_subqueries": exists_subqueries}
+
+    def getResultEpidemio(req_part, date_beg, date_end, rec_type=None, lite_filter='A'):
         """
         Execute COUNT(DISTINCT rec.id_data) with EXISTS subqueries built by ParseFormula.
         Always return {"value": <int>}.
         """
         cursor = DB.cursor()
-    
+
         sql = (
             "SELECT COUNT(DISTINCT rec.id_data) AS value "
             "FROM sigl_02_data AS rec "
             "WHERE (rec.rec_date_receipt BETWEEN %(date_beg)s AND %(date_end)s)"
         )
         sql_params = {"date_beg": date_beg, "date_end": date_end}
-    
+
         rec_type_code = 183 if rec_type == 'E' else (184 if rec_type == 'I' else None)
         if rec_type_code is not None:
             sql += " AND rec.type = %(rec_type_code)s"
             sql_params["rec_type_code"] = rec_type_code
-    
+
+        # LabBook Lite 3-state filter:
+        #  - 'A' (All): no filter
+        #  - 'N' (Exclude Lite): rec.rec_lite = 0
+        #  - 'Y' (Only Lite):    rec.rec_lite > 0
+        lf = (lite_filter or 'A').upper()
+        if lf == 'N':
+            sql += " AND rec.rec_lite = 0"
+        elif lf == 'Y':
+            sql += " AND rec.rec_lite > 0"
+
         exists_parts = []
         if req_part and "exists_subqueries" in req_part:
             exists_parts = req_part["exists_subqueries"]
-    
+
         if exists_parts:
             exists_sql = " OR ".join([f"EXISTS ({subq})" for subq in exists_parts])
             sql += f" AND ({exists_sql})"
-    
+
         Report.log.info('getResultEpidemio (EXISTS) sql=' + sql)
         cursor.execute(sql, sql_params)
         row = cursor.fetchone()
-    
+
         # normalize to dict with 'value'
         if row is None:
             return {"value": 0}
@@ -1391,9 +1401,3 @@ class Report:
         except Exception:
             Report.log.error(f"Unexpected row type from cursor.fetchone(): {type(row)} -> {row}")
             return {"value": 0}
-    
-        
-        
-        
-    
-        

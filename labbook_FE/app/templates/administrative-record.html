@@ -92,6 +92,13 @@
                         <span class="font-info">{{ args['patient']['pat_email'] }}</span>
                         {% endif %}
                     </div>
+
+                    <div class="col-auto mt-2">
+                        <a class="btn btn-lbk btn-{{ session['user_role']|safe }} text-white"
+                           href="{{ session['server_ext'] }}/det-patient/A_{{ type_req }}_{{args['record']['id_data']}}/{{ args['patient']['id_data'] }}">
+                          {{ _("Modifier patient") }}
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Prescription -->
