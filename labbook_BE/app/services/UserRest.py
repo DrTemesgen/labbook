@@ -41,8 +41,13 @@ class UserAccess(Resource):
         ret = User.checkUserAccess(login, pwd_db)
 
         if ret is True:
+            payload = {
+                "id_user": int(user["id_data"]),
+                "role_type": user["role_type"],
+                "login": login
+            }
             self.log.info(Logs.fileline() + ' : UserAccess authorized role=' + str(user['role_type']) + ' | login=' + str(login))
-            return compose_ret(user['role_type'], Constants.cst_content_type_json)
+            return compose_ret(payload, Constants.cst_content_type_json)
         elif ret is False:
             self.log.info(Logs.fileline() + ' : UserAccess not authorized ' + str(login))
             return compose_ret('', Constants.cst_content_type_json, 401)

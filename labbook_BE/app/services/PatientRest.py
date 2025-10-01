@@ -86,7 +86,20 @@ class PatientListFromExt(Resource):
                 if not l_patients:
                     self.log.error(Logs.fileline() + ' : TRACE PatientListFromExt not found')
 
+                sex_map = {1: 'M', 2: 'F', 3: 'U'}
+
                 for patient in l_patients:
+                    patient['sex'] = sex_map.get(patient.get('sex'), 'U')
+
+                    lite_val = patient.get('lite')
+                    patient['lite'] = 'Y' if lite_val and int(lite_val) > 0 else 'N'
+
+                    birth_val = patient.get('birth_approx')
+                    if birth_val == 4:
+                        patient['birth_approx'] = 'Y'
+                    if birth_val == 5:
+                        patient['birth_approx'] = 'N'
+
                     # Replace None by empty string
                     for key, value in list(patient.items()):
                         if patient[key] is None:

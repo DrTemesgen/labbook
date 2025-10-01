@@ -21,6 +21,10 @@ from flask import Flask
 from flask_restful import Api
 from flask_cors import CORS
 
+from authlib.integrations.flask_oauth2 import AuthorizationServer, ResourceProtector
+from authlib.oauth2.rfc6749 import grants
+from app.security.oauth_routes import bp_oauth, authorization
+
 from app.models.Logs import Logs
 from app.models.Various import *
 from app.services.GeneralRest import *
@@ -76,6 +80,8 @@ log = logging.getLogger('log_services')
 
 app = Flask(__name__)
 app.config.from_object('default_settings')
+app.register_blueprint(bp_oauth, url_prefix='/services')
+
 # Limits CORS to the subdomain beginning with /services/external/
 CORS(
     app,
@@ -86,6 +92,8 @@ CORS(
     }},
     supports_credentials=False  # set True only if you need cookies/Authorization headers
 )
+
+authorization.init_app(app)
 
 config_envvar = 'LOCAL_SETTINGS'
 

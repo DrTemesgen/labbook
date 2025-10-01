@@ -52,12 +52,15 @@ class Patient:
                 params.append(args['sex'])
 
         req = ('select id_data, id_owner, code, code_patient as code_lab, nom as lastname, prenom as firstname, '
-               'date_format(ddn, %s) as birth, sexe as sex '
+               'nom_jf as maidenname, date_format(ddn, %s) as birth, sexe as sex, tel as phone1, pat_phone2 as phone2, '
+               'pat_email as email, adresse as address, cp as zipcode, ville as city, profession as job, '
+               'quartier as suburb, bp as pbox, ddn_approx as birth_approx, pat_midname as midname, '
+               'pat_resident as resident, pat_lite as lite, pat_agreement as agreement '
                'from sigl_03_data '
                'where ' + filter_cond +
                'order by lastname asc, firstname asc ' + limit)
 
-        params.append(Constants.cst_isodate)
+        params.insert(0, Constants.cst_isodate)
 
         cursor.execute(req, params)
 

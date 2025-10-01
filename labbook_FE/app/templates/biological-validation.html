@@ -241,14 +241,14 @@
             {% include 'no-rights.html' %} 
             {% endif %}
 
-                </div>
         </div>
-    </div><!-- close content -->
-    {% endblock %}        
+    </div>
+</div><!-- close content -->
+{% endblock %}        
 
-    {% block add_script %}
-    <script type="text/javascript" nonce="{{ session['nonce'] }}">
-        var data_res     = [] ;
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+    var data_res     = [] ;
 var data_reports = {% if args['data_reports'] %}{{ args['data_reports']|safe }}{% else %}[]{% endif %} ;
 var list_id_ana  = [] ;
 var num_rec_y    = 0  ;
@@ -346,13 +346,13 @@ function add_analysis()
         }
 
         let param_ana = '{ "id_owner":' + id_user + ', ' +
-                '"id_rec":' + id_rec  + ', ' +
-                '"id_ana":' + list_id_ana[i] + ', ' +
-                '"price":0, ' +
-                '"paid": 5, ' +
-                '"emer": 5, ' +
-                '"outsourced":"N", ' +
-                '"req": 5 }' ;
+            '"id_rec":' + id_rec  + ', ' +
+            '"id_ana":' + list_id_ana[i] + ', ' +
+            '"price":0, ' +
+            '"paid": 5, ' +
+            '"emer": 5, ' +
+            '"outsourced":"N", ' +
+            '"req": 5 }' ;
 
         let param_res = '{ "ref_analyse":' + list_id_ana[i] + '}' ;
 
@@ -361,262 +361,262 @@ function add_analysis()
     }
 
     param_list_ana += value_ana + ' ] }';
-param_list_res += value_res +' ] }';
+    param_list_res += value_res +' ] }';
 
-$("#dial-wait").off('shown.bs.modal') ;
-$("#dial-wait").modal("show") ;
+    $("#dial-wait").off('shown.bs.modal') ;
+    $("#dial-wait").modal("show") ;
 
-// Send analysis information
-$.ajax( 
-    {
-        type: "POST",
-        url: "{{ session['server_ext'] }}/services/analysis/list/req",
-        dataType: 'json',
-        contentType: "application/json; charset=utf-8",
-        data: param_list_ana,
-        success: function(ret_ana)
+    // Send analysis information
+    $.ajax( 
         {
-            // create in DB list of results to enter and corresponding validation
-            $.ajax(
-                {
-                    type : 'POST',
-                    url : "{{ session['server_ext'] }}/services/result/create/" + id_rec,
-                    dataType: 'json',
-                    contentType: "application/json; charset=utf-8",
-                    data: param_list_res,
-                    success : function(response)
+            type: "POST",
+            url: "{{ session['server_ext'] }}/services/analysis/list/req",
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            data: param_list_ana,
+            success: function(ret_ana)
+            {
+                // create in DB list of results to enter and corresponding validation
+                $.ajax(
                     {
-                        let param_stat = '{ "stat":182 }' ; 
+                        type : 'POST',
+                        url : "{{ session['server_ext'] }}/services/result/create/" + id_rec,
+                        dataType: 'json',
+                        contentType: "application/json; charset=utf-8",
+                        data: param_list_res,
+                        success : function(response)
+                        {
+                            let param_stat = '{ "stat":182 }' ; 
 
-                        // update record stat to 182 = Validé administrativement
-                        $.ajax(
-                            {
-                                type : 'POST',
-                                url : "{{ session['server_ext'] }}/services/record/stat/" + id_rec,
-                                dataType: 'json',
-                                contentType: "application/json; charset=utf-8",
-                                data: param_stat,
-                                success : function(response)
+                            // update record stat to 182 = Validé administrativement
+                            $.ajax(
                                 {
-                                    $("#dial-wait").modal("hide") ;
+                                    type : 'POST',
+                                    url : "{{ session['server_ext'] }}/services/record/stat/" + id_rec,
+                                    dataType: 'json',
+                                    contentType: "application/json; charset=utf-8",
+                                    data: param_stat,
+                                    success : function(response)
+                                    {
+                                        $("#dial-wait").modal("hide") ;
 
-                                    window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec ;
-                                },
-                                error: function(response)
-                                {
-                                    $("#dial-wait").modal("hide") ;
+                                        window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec ;
+                                    },
+                                    error: function(response)
+                                    {
+                                        $("#dial-wait").modal("hide") ;
 
-                                    console.log("ERROR record stat") ;
-                                    alert("{{ _("Une erreur est survenue du changement de statut du dossier") }}") ;
-                                }
-                            } ) ;
-                    },
-                    error: function(response)
-                    {
-                        $("#dial-wait").modal("hide") ;
+                                        console.log("ERROR record stat") ;
+                                        alert("{{ _("Une erreur est survenue du changement de statut du dossier") }}") ;
+                                    }
+                                } ) ;
+                        },
+                        error: function(response)
+                        {
+                            $("#dial-wait").modal("hide") ;
 
-                        console.log("ERROR result create") ;
-                        alert("{{ _("Une erreur est survenue lors de création des résultats") }}") ;
-                    }
-                } ) ;
-        },
-        error: function(ret_ana)
-        {
-            $("#dial-wait").modal("hide") ;
+                            console.log("ERROR result create") ;
+                            alert("{{ _("Une erreur est survenue lors de création des résultats") }}") ;
+                        }
+                    } ) ;
+            },
+            error: function(ret_ana)
+            {
+                $("#dial-wait").modal("hide") ;
 
-            console.log("ERROR analysis list req") ;
-            alert("{{ _("Une erreur est survenue lors de l'enregistrement des analyses") }}") ;
-        } 
-    } ) ;
+                console.log("ERROR analysis list req") ;
+                alert("{{ _("Une erreur est survenue lors de l'enregistrement des analyses") }}") ;
+            } 
+        } ) ;
 }
 
 function display_result( num_page )
 {
     // hide no_result
     if (data_res.length < 1)
-                            $("#no_result").show() ;
-                            else
-                            $("#no_result").hide() ;
+        $("#no_result").show() ;
+    else
+        $("#no_result").hide() ;
 
-                            gen_ihm_res( data_res ) ;
-                            }
+    gen_ihm_res( data_res ) ;
+}
 
-                            function reset_res( id_rec, id_res )
-                            {
-                            if ( window.confirm("{{ _("Etes-vous sur de vouloir effacer ce résultat ?") }}") )
-                            {
-                            let param_res = '{ "id_owner": {{ session["user_id"]}}, "id_res":' + id_res + '}' ;
+function reset_res( id_rec, id_res )
+{
+    if ( window.confirm("{{ _("Etes-vous sur de vouloir effacer ce résultat ?") }}") )
+    {
+        let param_res = '{ "id_owner": {{ session["user_id"]}}, "id_res":' + id_res + '}' ;
 
-                            // result to reset
-                            $.ajax( 
-                            {
-                            type: "POST",
-                            url: "{{ session['server_ext'] }}/services/result/reset/" + id_rec,
-                            dataType: 'json',
-                            contentType: "application/json; charset=utf-8",
-                            data: param_res,
-                            success: function(data)
-                            {
-                            window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec ;
-                            },
-                            error: function(data)
-                            {
-                            console.log("ERROR result reset") ;
-                            alert("{{ _("Une erreur est survenue lors de réinitialisation d'une valeur saisie") }}") ;
-                            }
-                            } ) ;
-                            }
-                            }
+        // result to reset
+        $.ajax( 
+            {
+                type: "POST",
+                url: "{{ session['server_ext'] }}/services/result/reset/" + id_rec,
+                dataType: 'json',
+                contentType: "application/json; charset=utf-8",
+                data: param_res,
+                success: function(data)
+                {
+                    window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec ;
+                },
+                error: function(data)
+                {
+                    console.log("ERROR result reset") ;
+                    alert("{{ _("Une erreur est survenue lors de réinitialisation d'une valeur saisie") }}") ;
+                }
+            } ) ;
+    }
+}
 
-                            function cancel_res( id_rec, id_res )
-                            {
-                            if ( window.confirm("{{ _("Etes-vous sur de vouloir annuler ce résultat ?\\nCette action est irreversible.") }}") )
-                            {
-                            id_rec_tmp = id_rec ;
-                            id_res_tmp = id_res ;
+function cancel_res( id_rec, id_res )
+{
+    if ( window.confirm("{{ _("Etes-vous sur de vouloir annuler ce résultat ?\\nCette action est irreversible.") }}") )
+    {
+        id_rec_tmp = id_rec ;
+        id_res_tmp = id_res ;
 
-                            // popup reason and comment
-                            $( "#dial-cancel" ).modal( "show" ) ;
-                            }
-                            else
-                            {
-                            id_rec_tmp = 0 ;
-                            id_res_tmp = 0 ;
-                            }
-                            }
+        // popup reason and comment
+        $( "#dial-cancel" ).modal( "show" ) ;
+    }
+    else
+    {
+        id_rec_tmp = 0 ;
+        id_res_tmp = 0 ;
+    }
+}
 
-                            function send_cancel()
-                            {
-                            let reason    = $("#cancel_reason").val() ;
-                            let comment   = JSON.stringify( $.trim( $("#cancel_comm").val() ) ) ;
-                            let param_res = '{ "id_owner": {{ session['user_id']}}, ' +
-                            '"id_res":' + id_res_tmp + ', ' +
-                            '"reason":' + reason + ',' +
-                            '"comment":' + comment  + '}' ; // NO QUOTE DUE TO STRINGIFY PROCESS
+function send_cancel()
+{
+    let reason    = $("#cancel_reason").val() ;
+    let comment   = JSON.stringify( $.trim( $("#cancel_comm").val() ) ) ;
+    let param_res = '{ "id_owner": {{ session['user_id']}}, ' +
+        '"id_res":' + id_res_tmp + ', ' +
+        '"reason":' + reason + ',' +
+        '"comment":' + comment  + '}' ; // NO QUOTE DUE TO STRINGIFY PROCESS
 
-                            $('#dial-cancel').modal("hide") ;
+    $('#dial-cancel').modal("hide") ;
 
-                            // result to cancel
-                            $.ajax( 
-                            {
-                            type: "POST",
-                            url: "{{ session['server_ext'] }}/services/result/cancel/" + id_rec_tmp,
-                            dataType: 'json',
-                            contentType: "application/json; charset=utf-8",
-                            data: param_res,
-                            success: function(data)
-                            {
-                            window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec_tmp ;
-                            },
-                            error: function(data)
-                            {
-                            console.log("ERROR result cancel") ;
-                            alert("{{ _("Une erreur est survenue lors de l'annulation d'une valeur saisie") }}") ;
-                            }
-                            } ) ;
-                            }
+    // result to cancel
+    $.ajax( 
+        {
+            type: "POST",
+            url: "{{ session['server_ext'] }}/services/result/cancel/" + id_rec_tmp,
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            data: param_res,
+            success: function(data)
+            {
+                window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec_tmp ;
+            },
+            error: function(data)
+            {
+                console.log("ERROR result cancel") ;
+                alert("{{ _("Une erreur est survenue lors de l'annulation d'une valeur saisie") }}") ;
+            }
+        } ) ;
+}
 
-                            function save_valid( id_rec )
-                            {
-                            let date_valid = $("#date_bio").val() ;
-                            let user_valid = $("#id_validator").val() ;
-                            let comm_valid = JSON.stringify( $.trim( $("#comm_valid").val() ) ) ;
-                            let template   = $("#tpl_result").val() ;
-                            let reedit     = "N" ;
+function save_valid( id_rec )
+{
+    let date_valid = $("#date_bio").val() ;
+    let user_valid = $("#id_validator").val() ;
+    let comm_valid = JSON.stringify( $.trim( $("#comm_valid").val() ) ) ;
+    let template   = $("#tpl_result").val() ;
+    let reedit     = "N" ;
 
-                            // New analysis added after biological validation
-                            // we need to reedit for add Cancel and replace text
-                            if ( data_reports.length > 0 && data_res[0].rec_modified == 'Y' )
-                                reedit = "Y" ;
+    // New analysis added after biological validation
+    // we need to reedit for add Cancel and replace text
+    if ( data_reports.length > 0 && data_res[0].rec_modified == 'Y' )
+        reedit = "Y" ;
 
-                                let param_list_valid = '{ "reedit": "' + reedit + '", "template": "' + template + '", "comm_valid": ' + comm_valid + ', "list_valid":[ ' ;
+    let param_list_valid = '{ "reedit": "' + reedit + '", "template": "' + template + '", "comm_valid": ' + comm_valid + ', "list_valid":[ ' ;
 
-                                    // GET id_res and value
-                                    $(".cbx-" + id_rec + ":checked" ).each( function(i, elem)
-                                        {
-                                            let id_res  = $(this).attr("id").substr(4) ;
-                                            let val_res = $("#res_"+id_res).val() ;
+    // GET id_res and value
+    $(".cbx-" + id_rec + ":checked" ).each( function(i, elem)
+        {
+            let id_res  = $(this).attr("id").substr(4) ;
+            let val_res = $("#res_"+id_res).val() ;
 
-if (i > 0)
-param_list_valid += ', ' ;
+            if (i > 0)
+                param_list_valid += ', ' ;
 
-let param_valid = '{ "id_owner": {{ session['user_id']}}, ' +
+            let param_valid = '{ "id_owner": {{ session['user_id']}}, ' +
 '"id_res":' + id_res + ', ' +
 '"date_valid":"' + date_valid + '", ' +
 '"user_valid":' + user_valid + ', ' +
 '"value":"' + val_res + '"}' ;
 
-param_list_valid += param_valid ;
-} ) ;
+            param_list_valid += param_valid ;
+        } ) ;
 
-param_list_valid += ' ] }' ;
+    param_list_valid += ' ] }' ;
 
-$("#dial-wait").off('shown.bs.modal') ;
-$("#dial-wait").modal("show") ;
+    $("#dial-wait").off('shown.bs.modal') ;
+    $("#dial-wait").modal("show") ;
 
-let param_rec_valid = '{ "id_user": {{ session['user_id']}}, "comm": ' + comm_valid + '}' ;
+    let param_rec_valid = '{ "id_user": {{ session['user_id']}}, "comm": ' + comm_valid + '}' ;
 
-// result to validate
-$.ajax( 
-{
-type: "POST",
-url: "{{ session['server_ext'] }}/services/record/valid/" + id_rec,
-dataType: 'json',
-contentType: "application/json; charset=utf-8",
-data: param_rec_valid,
-success: function(data)
-{
-// result to validate
-$.ajax( 
-{
-type: "POST",
-url: "{{ session['server_ext'] }}/services/result/valid/B/" + id_rec,
-dataType: 'json',
-contentType: "application/json; charset=utf-8",
-data: param_list_valid,
-success: function(data)
-{
-$("#dial-wait").modal("hide") ;
+    // result to validate
+    $.ajax( 
+        {
+            type: "POST",
+            url: "{{ session['server_ext'] }}/services/record/valid/" + id_rec,
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            data: param_rec_valid,
+            success: function(data)
+            {
+                // result to validate
+                $.ajax( 
+                    {
+                        type: "POST",
+                        url: "{{ session['server_ext'] }}/services/result/valid/B/" + id_rec,
+                        dataType: 'json',
+                        contentType: "application/json; charset=utf-8",
+                        data: param_list_valid,
+                        success: function(data)
+                        {
+                            $("#dial-wait").modal("hide") ;
 
-{% if ihm['mode'] == 'G' %}
-// save id record in session storage
-if ( sessionStorage.getItem( "l_id_rec_vld" ) != "null" )
-{
-let l_id_rec_vld = JSON.parse( sessionStorage.getItem("l_id_rec_vld") ) ;
+                            {% if ihm['mode'] == 'G' %}
+                            // save id record in session storage
+                            if ( sessionStorage.getItem( "l_id_rec_vld" ) != "null" )
+                            {
+                                let l_id_rec_vld = JSON.parse( sessionStorage.getItem("l_id_rec_vld") ) ;
 
-l_id_rec_vld.push(id_rec) ;
+                                l_id_rec_vld.push(id_rec) ;
 
-sessionStorage.setItem( "l_id_rec_vld", JSON.stringify(l_id_rec_vld) ) ;
-}
-else
-{
-let l_id_rec_vld = [] ;
+                                sessionStorage.setItem( "l_id_rec_vld", JSON.stringify(l_id_rec_vld) ) ;
+                            }
+                            else
+                            {
+                                let l_id_rec_vld = [] ;
 
-l_id_rec_vld.push(id_rec) ;
+                                l_id_rec_vld.push(id_rec) ;
 
-sessionStorage.setItem( "l_id_rec_vld", JSON.stringify(l_id_rec_vld) ) ;
-}
-{% endif %}
+                                sessionStorage.setItem( "l_id_rec_vld", JSON.stringify(l_id_rec_vld) ) ;
+                            }
+                            {% endif %}
 
-window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec ;
-},
-error: function(data)
-{
-$("#dial-wait").modal("hide") ;
+                            window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec ;
+                        },
+                        error: function(data)
+                        {
+                            $("#dial-wait").modal("hide") ;
 
-console.log("ERROR result valid bio") ;
-alert("{{ _("Une erreur est survenue lors de validation biologique des valeurs saisies") }}") ;
-}
-} ) ;
-},
-    error: function(data)
-{
-    $("#dial-wait").modal("hide") ;
+                            console.log("ERROR result valid bio") ;
+                            alert("{{ _("Une erreur est survenue lors de validation biologique des valeurs saisies") }}") ;
+                        }
+                    } ) ;
+            },
+            error: function(data)
+            {
+                $("#dial-wait").modal("hide") ;
 
-    console.log("ERROR record validation") ;
-    alert("{{ _("Une erreur est survenue lors de validation biologique des valeurs saisies") }}") ;
-}
-} ) ;
+                console.log("ERROR record validation") ;
+                alert("{{ _("Une erreur est survenue lors de validation biologique des valeurs saisies") }}") ;
+            }
+        } ) ;
 }
 
 function gen_ihm_res( data )
@@ -650,244 +650,244 @@ function gen_ihm_res( data )
 
             if (res_fam.length < 4) res_fam = "" ;
 
-                            res += '<form enctype="application/x-www-form-urlencoded" method="post" action="">' +
-                            '<fieldset class="d-lg-flex flex-lg-wrap border px-3 py-2">' +
-                            '<legend class="legend-lbk">' + res_name + res_fam + '</legend>' +
-                            '<span class="rec-num me-2 mb-2">' + num_rec + '</span>' + per_rec +
-                            '<table class="table table-striped table-hover table-lbk">' +
-                            '<tbody class="mx-1">' ;
-                                    }
+            res += '<form enctype="application/x-www-form-urlencoded" method="post" action="">' +
+                '<fieldset class="d-lg-flex flex-lg-wrap border px-3 py-2">' +
+                '<legend class="legend-lbk">' + res_name + res_fam + '</legend>' +
+                '<span class="rec-num me-2 mb-2">' + num_rec + '</span>' + per_rec +
+                '<table class="table table-striped table-hover table-lbk">' +
+                '<tbody class="mx-1">' ;
+        }
 
-                                    // new analysis so new result line
-                                    if ( id_res != id_res_p )
-                                    {
-                                    let res_valid  = data[i].validation.type_validation
-                                    let res_stat   = status_res(res_valid) ;
-                                    let res_emer   = emer(data[i].urgent)
-                                    let res_label  = data[i].libelle ;
-                                    let res_unit   = data[i].unit ;
-                                    let value      = data[i].res_label ;
-                                    let res_limit  = '' ;
-                                    let res_outsrc = "" ;
-                                    let res_check  = '<td class="text-center"><span><input type="checkbox" id="cbx_' + id_res + '" value="N" class="invisible result-checkbox cbx-' + id_rec + '"></span></td>' ;
-                                                                                                                                             let res_reset  = '' ;
-                                                                                                                                             let res_cancel = '' ;
-                                                                                                                                             let res_type   = data[i].type_resultat ;
-                                                                                                                                             let show_minmax= data[i].var_show_minmax ;
-                                                                                                                                             let minmax     = "" ;
-                                                                                                                                             let conv2_val  = "" ;
+        // new analysis so new result line
+        if ( id_res != id_res_p )
+        {
+            let res_valid  = data[i].validation.type_validation
+            let res_stat   = status_res(res_valid) ;
+            let res_emer   = emer(data[i].urgent)
+            let res_label  = data[i].libelle ;
+            let res_unit   = data[i].unit ;
+            let value      = data[i].res_label ;
+            let res_limit  = '' ;
+            let res_outsrc = "" ;
+            let res_check  = '<td class="text-center"><span><input type="checkbox" id="cbx_' + id_res + '" value="N" class="invisible result-checkbox cbx-' + id_rec + '"></span></td>' ;
+            let res_reset  = '' ;
+            let res_cancel = '' ;
+            let res_type   = data[i].type_resultat ;
+            let show_minmax= data[i].var_show_minmax ;
+            let minmax     = "" ;
+            let conv2_val  = "" ;
 
-                                                                                                                                             /* result of type labeled */
-                                                                                                                                             if ( res_type == 265 )
-                                                                                                                                             res_label = '<b>' + res_label + '</b>' ;
+            /* result of type labeled */
+            if ( res_type == 265 )
+                res_label = '<b>' + res_label + '</b>' ;
 
-                                                                                                                                             if ( show_minmax == 'Y' )
-                                                                                                                                             {
-                                                                                                                                             let val_min = "" ;
-                                                                                                                                             let val_max = "" ;
+            if ( show_minmax == 'Y' )
+            {
+                let val_min = "" ;
+                let val_max = "" ;
 
-                                                                                                                                             if (data[i].normal_min != "")
-                                                                                                                                             val_min = data[i].normal_min ;
+                if (data[i].normal_min != "")
+                    val_min = data[i].normal_min ;
 
-                                                                                                                                             if (data[i].normal_max != "")
-                                                                                                                                             val_max = data[i].normal_max ;
+                if (data[i].normal_max != "")
+                    val_max = data[i].normal_max ;
 
-                                                                                                                                             if (data[i].normal_min != "" && data[i].normal_max != "")
-                                                                                                                                             val_max = " - " + val_max ;
-                                                                                                                                             else if (val_min)
-                                                                                                                                             val_min = "> " + val_min ;
-                                                                                                                                             else if (val_max)
-                                                                                                                                             val_max = "< " + val_max ;
+                if (data[i].normal_min != "" && data[i].normal_max != "")
+                    val_max = " - " + val_max ;
+                else if (val_min)
+                    val_min = "> " + val_min ;
+                else if (val_max)
+                    val_max = "< " + val_max ;
 
-                                                                                                                                             minmax = "<span class=\"xs-text\">[" + val_min + val_max + "]</span>" ;
-                                                                                                                                                             }
+                minmax = "<span class=\"xs-text\">[" + val_min + val_max + "]</span>" ;
+            }
 
-                                                                                                                                                             if ( data[i].normal_min != "" && data[i].normal_max != "" && value != "" )
-                                                                                                                                                             {
-                                                                                                                                                             let ico_limit = "d-none" ;
+            if ( data[i].normal_min != "" && data[i].normal_max != "" && value != "" )
+            {
+                let ico_limit = "d-none" ;
 
-                                                                                                                                                             if ( value < parseFloat(data[i].normal_min) || value > parseFloat(data[i].normal_max) )
-                                                                                                                                                                 ico_limit = "show" ;
+                if ( value < parseFloat(data[i].normal_min) || value > parseFloat(data[i].normal_max) )
+                    ico_limit = "show" ;
 
-                                                                                                                                                                 res_limit = '<span id="limit_' + id_res + '" class="warning ' + ico_limit + '" title="[&nbsp;' + data[i].normal_min + '&nbsp;-&nbsp;' + data[i].normal_max + '&nbsp;]"></span>' ;
-                                                                                                                                                             }
+                res_limit = '<span id="limit_' + id_res + '" class="warning ' + ico_limit + '" title="[&nbsp;' + data[i].normal_min + '&nbsp;-&nbsp;' + data[i].normal_max + '&nbsp;]"></span>' ;
+            }
 
-                                        // outsourced icon
-                                        if (data[i].outsourced == "Y")
-                                        {
-                                            res_outsrc += "<span title=\"{{ _("Sous-traitée") }}\"><i class=\"bi bi-building-gear fs-5 color-T\"></i></span>" ;
-                                                                 }
+            // outsourced icon
+            if (data[i].outsourced == "Y")
+            {
+                res_outsrc += "<span title=\"{{ _("Sous-traitée") }}\"><i class=\"bi bi-building-gear fs-5 color-T\"></i></span>" ;
+            }
 
-                                                                 if ( value != "" && res_valid != 252 )
-                                                                 {
-                                                                 res_check = '<td class="text-center"><span><input type="checkbox" id="cbx_' + id_res + '" value="O" checked="checked" class="show result-checkbox cbx-' + id_rec + '"></span></td>' ;
+            if ( value != "" && res_valid != 252 )
+            {
+                res_check = '<td class="text-center"><span><input type="checkbox" id="cbx_' + id_res + '" value="O" checked="checked" class="show result-checkbox cbx-' + id_rec + '"></span></td>' ;
 
-                                                                                                                                                                                       disp_valid = "show d-lg-flex" ;
-                                                                                                                                                                                       }
+                disp_valid = "show d-lg-flex" ;
+            }
 
-                                                                                                                                                                                       /* possible to reset value */
-                                                                                                                                                                                       if ( res_type != 265  )
-                                                                                                                                                                                       res_reset = "<a title=\"{{ _("Réinitialiser la valeur") }}\" class=\"color-B ms-2\" onclick=\"reset_res(" + id_rec +","+ id_res + ");\"><i class=\"bi bi-bootstrap-reboot\" /></i></a>" ;
+            /* possible to reset value */
+            if ( res_type != 265  )
+                res_reset = "<a title=\"{{ _("Réinitialiser la valeur") }}\" class=\"color-B ms-2\" onclick=\"reset_res(" + id_rec +","+ id_res + ");\"><i class=\"bi bi-bootstrap-reboot\" /></i></a>" ;
 
-                                                                                                                                                                                                       res += '<tr>' +
-                                                                                                                                                                                                       res_check +
-                                                                                                                                                                                                       '<td class="col-lg-1"><div class="d-flex flex-column">' + res_limit + minmax + '</div>' + res_outsrc + '</td>' +
-                                                                                                                                                                                                       '<td class="col-lg-1 text-center">' + res_emer + '</td>' +
-                                                                                                                                                                                                       '<td class="text-start">' + res_stat + '</td>' +
-                                                                                                                                                                                                       '<td class="text-center">' +
-                                                                                                                                                                                                       '<div class="history" onclick="display_histo(' + i + ');"></div>' +
-                                                                                                                                                                                                       '</td>' +
-                                                                                                                                                                                                       '<td class="col-lg-5 text-center">' + res_label + '</td>' ;
+            res += '<tr>' +
+                res_check +
+                '<td class="col-lg-1"><div class="d-flex flex-column">' + res_limit + minmax + '</div>' + res_outsrc + '</td>' +
+                '<td class="col-lg-1 text-center">' + res_emer + '</td>' +
+                '<td class="text-start">' + res_stat + '</td>' +
+                '<td class="text-center">' +
+                '<div class="history" onclick="display_histo(' + i + ');"></div>' +
+                '</td>' +
+                '<td class="col-lg-5 text-center">' + res_label + '</td>' ;
 
-                                                                                                                                                                                                            res += '<td class="text-center"><span class="value">' ;
+            res += '<td class="text-center"><span class="value">' ;
 
-                                                                                                                                                                                                                                                  if ( res_valid == 251 || (res_valid == 252 && value != "") )
-                                                                                                                                                                                                                                                  res_cancel = '<a title="Annuler" class="color-B" onclick="cancel_res(' + id_rec +','+ id_res + ');"><i class="bi bi-x-circle" /></i></a>' ;
+            if ( res_valid == 251 || (res_valid == 252 && value != "") )
+                res_cancel = '<a title="Annuler" class="color-B" onclick="cancel_res(' + id_rec +','+ id_res + ');"><i class="bi bi-x-circle" /></i></a>' ;
 
-                                                                                                                                                                                                                                                                   if ( value != "" )
-                                                                                                                                                                                                                                                                   {
-                                                                                                                                                                                                                                                                   // Convert formula
-                                                                                                                                                                                                                                                                   if (data[i].formule_unite2 != "")
-                                                                                                                                                                                                                                                                   {
-                                                                                                                                                                                                                                                                   console.log("DEBUG formule_unite2 not empty") ;
+            if ( value != "" )
+            {
+                // Convert formula
+                if (data[i].formule_unite2 != "")
+                {
+                    console.log("DEBUG formule_unite2 not empty") ;
 
-                                                                                                                                                                                                                                                                   conv2_val = conv_val( data[i].formule_unite2,  data[i].precision2, value) ;
+                    conv2_val = conv_val( data[i].formule_unite2,  data[i].precision2, value) ;
 
-                                                                                                                                                                                                                                                                   if ( conv2_val != "") 
-                                                                                                                                                                                                                                                                   conv2_val = conv2_val + ' ' + data[i].unit2 ;
-                                                                                                                                                                                                                                                                   }
+                    if ( conv2_val != "") 
+                        conv2_val = conv2_val + ' ' + data[i].unit2 ;
+                }
 
-                                                                                                                                                                                                                                                                   res += '<div class="d-flex flex-column"><span>' + value + " " + res_unit + '</span><span id="conv2_' + id_res + '" class="mt-1">' + conv2_val + '</span></div><input id="res_' + id_res + '" type="hidden" value="' + data[i].valeur + '">' ;
-                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                else if ( res_valid == 252 )
-                                                                                                                                                                                                                                                                                {
-                                                                                                                                                                                                                                                                                res += '<span>ANNULE</span>' ;
-                                                                                                                                                                                                                                                                                res_cancel = '<span>' + data[i].validation.label_motif + '<br />' + data[i].validation.commentaire + '</span>' ;
-                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                /* result of type labeled */
-                                                                                                                                                                                                                                                                                else if ( res_type == 265 )
-                                                                                                                                                                                                                                                                                {
-                                                                                                                                                                                                                                                                                res += '<span></span>' ;
-                                                                                                                                                                                                                                                                                }
-                                                                                                                                                                                                                                                                                else
-                                                                                                                                                                                                                                                                                res += '<span>Non rempli</span>' ;
+                res += '<div class="d-flex flex-column"><span>' + value + " " + res_unit + '</span><span id="conv2_' + id_res + '" class="mt-1">' + conv2_val + '</span></div><input id="res_' + id_res + '" type="hidden" value="' + data[i].valeur + '">' ;
+            }
+            else if ( res_valid == 252 )
+            {
+                res += '<span>ANNULE</span>' ;
+                res_cancel = '<span>' + data[i].validation.label_motif + '<br />' + data[i].validation.commentaire + '</span>' ;
+            }
+            /* result of type labeled */
+            else if ( res_type == 265 )
+            {
+                res += '<span></span>' ;
+            }
+            else
+                res += '<span>Non rempli</span>' ;
 
-                                                                                                                                                                                                                                                                                /* Previous result */
-                                                                                                                                                                                                                                                                                res_prev = '<span class="xs-text">' + data[i].prev_val + '</span><span class="xs-text ms-2">' + data[i].prev_date + '</span>' ;
+            /* Previous result */
+            res_prev = '<span class="xs-text">' + data[i].prev_val + '</span><span class="xs-text ms-2">' + data[i].prev_date + '</span>' ;
 
-                                                                                                                                                                                                                                                                                                  /* Assemble result type, previous results and reset and cancel buttons */
-                                                                                                                                                                                                                                                                                                  res += '<input type="hidden" value="' + data[i].type_resultat + '"></span></td>' +
-                                                                                                                                                                                                                                                                                                  '<td>' + res_prev + '</td>' +
-                                                                                                                                                                                                                                                                                                  '<td class="text-center">' + res_cancel + res_reset + '</td></tr>' ;
-                                                                                                                                                                                                                                                                                                       }
+            /* Assemble result type, previous results and reset and cancel buttons */
+            res += '<input type="hidden" value="' + data[i].type_resultat + '"></span></td>' +
+                '<td>' + res_prev + '</td>' +
+                '<td class="text-center">' + res_cancel + res_reset + '</td></tr>' ;
+        }
 
-                                                                                                                                                                                                                                                                                                       ref_ana_p = ref_ana ;
-                                                                                                                                                                                                                                                                                                       id_res_p  = id_res  ;
-                                                                                                                                                                                                                                                                                                       }
+        ref_ana_p = ref_ana ;
+        id_res_p  = id_res  ;
+    }
 
-                                                                                                                                                                                                                                                                                                       // close last form
-                                                                                                                                                                                                                                                                                                       if ( res != "" )
-                                                                                                                                                                                                                                                                                                       {
-                                                                                                                                                                                                                                                                                                       // close the form and table
-                                                                                                                                                                                                                                                                                                       res += '</tbody></table>' +
-                                                                                                                                                                                                                                                                                                       '</fieldset>' +
-                                                                                                                                                                                                                                                                                                       '</form>' ;
-                                                                                                                                                                                                                                                                                                       }
+    // close last form
+    if ( res != "" )
+    {
+        // close the form and table
+        res += '</tbody></table>' +
+            '</fieldset>' +
+            '</form>' ;
+    }
 
-                                                                                                                                                                                                                                                                                                       if (disp_valid == "d-none")
-                                                                                                                                                                                                                                                                                                       $("#valid_div").hide() ;
+    if (disp_valid == "d-none")
+        $("#valid_div").hide() ;
 
-                                                                                                                                                                                                                                                                                                       $("#list_result").html( res ) ;
-                                                                                                                                                                                                                                                                                                       {% endif %}
-                                                                                                                                                                                                                                                                                                       }
+    $("#list_result").html( res ) ;
+    {% endif %}
+}
 
-                                                                                                                                                                                                                                                                                                       function load_report( data )
-                                                                                                                                                                                                                                                                                                       {
-                                                                                                                                                                                                                                                                                                       let div_report = '' ;
-                                                                                                                                                                                                                                                                                                       const obj = Array.isArray(data) ? data : [] ;
-                                                                                                                                                                                                                                                                                                       const n = obj.length ;
+function load_report( data )
+{
+    let div_report = '' ;
+    const obj = Array.isArray(data) ? data : [] ;
+    const n = obj.length ;
 
-                                                                                                                                                                                                                                                                                                       for (let i = 0; i < n; i++)
-                                                                                                                                                                                                                                                                                                       {
-                                                                                                                                                                                                                                                                                                       if ( obj[i].id_data > 0 )
-                                                                                                                                                                                                                                                                                                           {
-                                                                                                                                                                                                                                                                                                               const isLast = (i === n - 1);
+    for (let i = 0; i < n; i++)
+    {
+        if ( obj[i].id_data > 0 )
+        {
+            const isLast = (i === n - 1);
 
-                                                                                                                                                                                                                                                                                                               let tmp_div = '<span class="px-5">' ;
+            let tmp_div = '<span class="px-5">' ;
 
-                                                                                                                                                                                                                                                                                                               tmp_div += '<a class="report" style="color:#FFF;" onclick="download_file(\'RP\', \'' + obj[i].file + '\', \'GEN\', ' + num_dos + ');"><img src="{{ url_for('static', filename='img/ico_pdf.png') }}" class="me-2">' + obj[i].date ;
-                                                                                                                                                                                                                                                                                                                   tmp_div += ' - {{ _("Dossier") }} ' + num_dos + ' - {{ _("Modèle") }} : ' + obj[i].tpl_name ;
-                                                                                                                                                                                                                                                                                                                   tmp_div += ' (' + obj[i].nb_download + ')</a>' ;
+            tmp_div += '<a class="report" style="color:#FFF;" onclick="download_file(\'RP\', \'' + obj[i].file + '\', \'GEN\', ' + num_dos + ');"><img src="{{ url_for('static', filename='img/ico_pdf.png') }}" class="me-2">' + obj[i].date ;
+            tmp_div += ' - {{ _("Dossier") }} ' + num_dos + ' - {{ _("Modèle") }} : ' + obj[i].tpl_name ;
+            tmp_div += ' (' + obj[i].nb_download + ')</a>' ;
 
-                                                                                                                                                                                                                                                                                                                   {% if has_permission("RECORD_176") %}
-                                                                                                                                                                                                                                                                                                                   if (isLast) 
-                                                                                                                                                                                                                                                                                                                   {
-                                                                                                                                                                                                                                                                                                                       if (patAgreement === 'Y' || docAgreement === 'Y') 
-                                                                                                                                                                                                                                                                                                                       {
-                                                                                                                                                                                                                                                                                                                           tmp_div += ' <span class="ms-2 d-inline-flex align-items-center gap-1" id="send-inline">'
-                                                                                                                                                                                                                                                                                                                               +   '<select id="send_method_last" class="form-select form-select-sm d-inline w-auto"></select>'
-                                                                                                                                                                                                                                                                                                                               +   '<select id="send_template_last" class="form-select form-select-sm d-inline w-auto"></select>'
-                                                                                                                                                                                                                                                                                                                               +   '<input id="send_recipient_last" type="text" class="form-control form-control-sm d-inline"'
-                                                                                                                                                                                                                                                                                                                               +          ' style="max-width:220px" placeholder="{{ _("Destinataire") }}">'
-                                                                                                                                                                                                                                                                                                                               +   '<button class="btn btn-sm btn-success"'
-                                                                                                                                                                                                                                                                                                                               +           ' onclick="send_last_report(\'' + obj[i].file.replace(/'/g, "\\'") + '\')">{{ _("Envoyer") }}</button>'
-                                                                                                                                                                                                                                                                                                                                             {% if args['patient']['pat_agreement'] == 'Y' and args['doctor']['doc_agreement'] == 'Y' %}
-                                                                                                                                                                                                                                                                                                                                             +    '<button type="button" id="btn_toggle_recipient"'
-                                                                                                                                                                                                                                                                                                                                                           +    '        class="btn btn-sm btn-light ms-2"'
-                                                                                                                                                                                                                                                                                                                                                                         +    '        data-bs-toggle="tooltip" data-bs-placement="top"'
-                                                                                                                                                                                                                                                                                                                                                                                       +    '        title="{{ _("Récupérer contact du praticien") }}"'
-                                                                                                                                                                                                                                                                                                                                                                                                     +    '        onclick="toggleRecipient()">'
-                                                                                                                                                                                                                                                                                                                                                                                                                   +    '    <i class="bi bi-arrow-left-right"></i>'
-                                                                                                                                                                                                                                                                                                                                                                                                                                +    '</button>'
-                                                                                                                                                                                                                                                                                                                                                                                                                                {% endif %}
-                                                                                                                                                                                                                                                                                                                                                                                                                                + '</span>'
-                                                                                                                                                                                                                                                                                                                                                                                                                                + '<small id="send_inline_help" class="text-white-75 d-block mt-1 ms-0"></small>';
-                                                                                                                                                                                                                                                                                                                                                                                                                                          } 
-                                                                                                                                                                                                                                                                                                                                                                                                                                          else
-                                                                                                                                                                                                                                                                                                                                                                                                                                          {
-                                                                                                                                                                                                                                                                                                                                                                                                                                          tmp_div += ' <span class="badge bg-secondary ms-2">{{ _("Envoi indisponible (consentement/destinataire)") }}</span>';
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             {% endif %}
+            {% if has_permission("RECORD_176") %}
+            if (isLast) 
+            {
+                if (patAgreement === 'Y' || docAgreement === 'Y') 
+                {
+                    tmp_div += ' <span class="ms-2 d-inline-flex align-items-center gap-1" id="send-inline">'
+                        +   '<select id="send_method_last" class="form-select form-select-sm d-inline w-auto"></select>'
+                        +   '<select id="send_template_last" class="form-select form-select-sm d-inline w-auto"></select>'
+                        +   '<input id="send_recipient_last" type="text" class="form-control form-control-sm d-inline"'
+                        +          ' style="max-width:220px" placeholder="{{ _("Destinataire") }}">'
+                        +   '<button class="btn btn-sm btn-success"'
+                        +           ' onclick="send_last_report(\'' + obj[i].file.replace(/'/g, "\\'") + '\')">{{ _("Envoyer") }}</button>'
+                    {% if args['patient']['pat_agreement'] == 'Y' and args['doctor']['doc_agreement'] == 'Y' %}
+                        +    '<button type="button" id="btn_toggle_recipient"'
+                        +    '        class="btn btn-sm btn-light ms-2"'
+                        +    '        data-bs-toggle="tooltip" data-bs-placement="top"'
+                        +    '        title="{{ _("Récupérer contact du praticien") }}"'
+                        +    '        onclick="toggleRecipient()">'
+                        +    '    <i class="bi bi-arrow-left-right"></i>'
+                        +    '</button>'
+                    {% endif %}
+                        + '</span>'
+                        + '<small id="send_inline_help" class="text-white-75 d-block mt-1 ms-0"></small>';
+                } 
+                else
+                {
+                    tmp_div += ' <span class="badge bg-secondary ms-2">{{ _("Envoi indisponible (consentement/destinataire)") }}</span>';
+                }
+            }
+            {% endif %}
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             tmp_div += '</span><br />' ;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             div_report += tmp_div ;
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
+            tmp_div += '</span><br />' ;
+            div_report += tmp_div ;
+        }
+    }
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             $("#report").append(div_report) ;
+    $("#report").append(div_report) ;
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             // Init list for method sending
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             if ($("#send-inline").length) 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             initSendInline();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
+    // Init list for method sending
+    if ($("#send-inline").length) 
+    {
+        initSendInline();
+    }
+}
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             function normMethod(m) 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             return {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             id: String(m.sdi_ser),
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             code: String(m.sdi_type || '').toUpperCase(),
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             label: m.sdi_name,
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             isDefault: m.sdi_default === 'Y'
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             };
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
+function normMethod(m) 
+{
+    return {
+        id: String(m.sdi_ser),
+        code: String(m.sdi_type || '').toUpperCase(),
+        label: m.sdi_name,
+        isDefault: m.sdi_default === 'Y'
+    };
+}
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             function normModel(t) 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             return {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             id: String(t.mdl_ser),
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             code: String(t.mdl_type || '').toUpperCase(),
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             name: t.mdl_displayname
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             };
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
+function normModel(t) 
+{
+    return {
+        id: String(t.mdl_ser),
+        code: String(t.mdl_type || '').toUpperCase(),
+        name: t.mdl_displayname
+    };
+}
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             function modelsForMethod(method) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             const code = String(method?.code || '').toUpperCase();
+function modelsForMethod(method) {
+    const code = String(method?.code || '').toUpperCase();
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             return (SEND_MODELS || []).map(normModel).filter(x => x.code === code);
-                                                                                                                                                                                                                                                                                                                                                                                                                                                             }
+    return (SEND_MODELS || []).map(normModel).filter(x => x.code === code);
+}
 
 // criterion: W needs phone, S/M need email
 function methodCriterionOK(m) {
@@ -1105,129 +1105,129 @@ function load_data()
     $("#report").empty() ;
 
     if (data_reports.length < 1)
-                                             {
-                                             let div_report = '<span class="px-5" style="color:#CCC;">Aucun compte rendu</span>' ;
+    {
+        let div_report = '<span class="px-5" style="color:#CCC;">Aucun compte rendu</span>' ;
 
-                                                                                  $("#report").append(div_report) ;
-                                                                                  }
-                                                                                  else
-                                                                                  {
-                                                                                  load_report( data_reports ) ;
-                                                                                  }
-                                                                                  }
+        $("#report").append(div_report) ;
+    }
+    else
+    {
+        load_report( data_reports ) ;
+    }
+}
 
-                                                                                  $("#search_analysis").select2(
-                                                                                  {
-                                                                                  placeholder: "{{ _("Cliquer pour commencer une recherche") }}",
-                                                                                  tags: false,
-                                                                                  multiple: false,
-                                                                                  tokenSeparators: [','],
-                                                                                  minimumInputLength: 2,
-                                                                                  ajax: {
-                                                                                  url: "{{ session['server_ext'] }}/services/analysis/search/A",
-                                                                                  type: "POST",
-                                                                                  dataType: "json",
-                                                                                  contentType: "application/json; charset=utf-8",
-                                                                                  term: $("#search_analysis").text(),
-                                                                                  data: function (params) {
-                                                                                  return JSON.stringify(
-                                                                                  {
-                                                                                  term: params.term,
-                                                                                  link_fam: {{ session['user_link_fam'] or [] }}
-                                                                                  } ) ;
-                                                                                  },
-                                                                                  processResults: function (data) {
-                                                                                  return {
-                                                                                  // data need id key if not no focus selection displayed
-                                                                                  results: data
-                                                                                  } ;
-                                                                                  }
-                                                                                  },
-                                                                                  templateResult: formatRepoAnalysis
-                                                                                  } ) ;
+$("#search_analysis").select2(
+    {
+        placeholder: "{{ _("Cliquer pour commencer une recherche") }}",
+        tags: false,
+        multiple: false,
+        tokenSeparators: [','],
+        minimumInputLength: 2,
+        ajax: {
+            url: "{{ session['server_ext'] }}/services/analysis/search/A",
+            type: "POST",
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            term: $("#search_analysis").text(),
+            data: function (params) {
+                return JSON.stringify(
+                    {
+                        term: params.term,
+                        link_fam: {{ session['user_link_fam'] or [] }}
+                    } ) ;
+            },
+            processResults: function (data) {
+                return {
+                    // data need id key if not no focus selection displayed
+                    results: data
+                } ;
+            }
+        },
+        templateResult: formatRepoAnalysis
+    } ) ;
 
-                                                                                  function formatRepoAnalysis(repo)
-                                                                                  {
-                                                                                  if (repo.loading)
-                                                                                  return repo.text ;
+function formatRepoAnalysis(repo)
+{
+    if (repo.loading)
+        return repo.text ;
 
-                                                                                  var code = "" ;
+    var code = "" ;
 
-                                                                                  if (repo.code)
-                                                                                  code += "[" + repo.code + "]" ;
+    if (repo.code)
+        code += "[" + repo.code + "]" ;
 
-                                                                                  var name = "" ;
+    var name = "" ;
 
-                                                                                  if (repo.name)
-                                                                                  name += repo.name ;
+    if (repo.name)
+        name += repo.name ;
 
-                                                                                  var cat = "" ;
+    var cat = "" ;
 
-                                                                                  if (repo.label)
-                                                                                  cat += repo.label ;
+    if (repo.label)
+        cat += repo.label ;
 
-                                                                                  var display = $(
-                                                                                  "<div class='select2-result-repository clearfix'>" +
-                                                                                  "<div class='select2-result-repository__meta'>" +
-                                                                                  "<div class='select2-result-repository__code'><b>" + code + "</b></div>" +
-                                                                                  "<div class='select2-result-repository__name'>" + name + "</div>" +
-                                                                                  "<div class='select2-result-repository__category'>" + cat + "</div>" +
-                                                                                  "</div>" +
-                                                                                  "</div>") ;
+    var display = $(
+        "<div class='select2-result-repository clearfix'>" +
+        "<div class='select2-result-repository__meta'>" +
+        "<div class='select2-result-repository__code'><b>" + code + "</b></div>" +
+        "<div class='select2-result-repository__name'>" + name + "</div>" +
+        "<div class='select2-result-repository__category'>" + cat + "</div>" +
+        "</div>" +
+        "</div>") ;
 
-                                                                                        return display ;
-                                                                                        }
+    return display ;
+}
 
-                                                                                        $("#search_analysis").on("select2:select", function (e) 
-                                                                                        {
-                                                                                        let id_ana = $(e.currentTarget).val() ;
+$("#search_analysis").on("select2:select", function (e) 
+    {
+        let id_ana = $(e.currentTarget).val() ;
 
-                                                                                        for ( k in data_res )
-                                                                                        {
-                                                                                        if ( data_res[k].ref_ana == id_ana )
-                                                                                        {
-                                                                                        alert("{{ _("Analyse déjà présente !") }}") ;
-                                                                                        return;
-                                                                                        }
-                                                                                        }
+        for ( k in data_res )
+        {
+            if ( data_res[k].ref_ana == id_ana )
+            {
+                alert("{{ _("Analyse déjà présente !") }}") ;
+                return;
+            }
+        }
 
-                                                                                        list_id_ana.push( id_ana ) ;
+        list_id_ana.push( id_ana ) ;
 
-                                                                                        $("#div_add_analysis").show() ;
+        $("#div_add_analysis").show() ;
 
-                                                                                        // GET det analysis
-                                                                                        $.ajax( 
-                                                                                        {
-                                                                                        type: "GET",
-                                                                                        url: "{{ session['server_ext'] }}/services/analysis/det/" + id_ana,
-                                                                                        success: function(data_ana)
-                                                                                        {
-                                                                                        let new_ana  = '<div id="new-analysis-' + id_ana + '" class="new-analysis">' + data_ana.nom + '<input type="hidden" name="new-analysis[]" value="' + id_ana + '"></div>' ;
+        // GET det analysis
+        $.ajax( 
+            {
+                type: "GET",
+                url: "{{ session['server_ext'] }}/services/analysis/det/" + id_ana,
+                success: function(data_ana)
+                {
+                    let new_ana  = '<div id="new-analysis-' + id_ana + '" class="new-analysis">' + data_ana.nom + '<input type="hidden" name="new-analysis[]" value="' + id_ana + '"></div>' ;
 
-                                                                                                                                                                                                                                  let prev_new_ana = $("#new_analysis").html() ;
+                    let prev_new_ana = $("#new_analysis").html() ;
 
-                                                                                                                                                                                                                                  $("#new_analysis").html( prev_new_ana + new_ana ) ;
-                                                                                                                                                                                                                                  },
-                                                                                                                                                                                                                                  error: function(data_ana)
-                                                                                                                                                                                                                                  {
-                                                                                                                                                                                                                                  console.log("ERROR GET det analysis");
-                                                                                                                                                                                                                                  alert("{{ _("Erreur lors de la récupération d'une analyse") }}") ;
-                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                  } ) ;
-                                                                                                                                                                                                                                  } ) ;
+                    $("#new_analysis").html( prev_new_ana + new_ana ) ;
+                },
+                error: function(data_ana)
+                {
+                    console.log("ERROR GET det analysis");
+                    alert("{{ _("Erreur lors de la récupération d'une analyse") }}") ;
+                }
+            } ) ;
+    } ) ;
 
 // fix bug between jquery 3.6.0 and select2
 $(document).on('select2:open', () => 
-{
-document.querySelector('.select2-search__field').focus() ;
-} ) ;
+    {
+        document.querySelector('.select2-search__field').focus() ;
+    } ) ;
 
 function info_pat_title()
 {
-{% if args['patient'] %}
-let info = "" ;
+    {% if args['patient'] %}
+    let info = "" ;
 
-info = " - {% if args['patient']['pat_code_lab'] %}{{ args['patient']['pat_code_lab'] }} {% endif %}" +
+    info = " - {% if args['patient']['pat_code_lab'] %}{{ args['patient']['pat_code_lab'] }} {% endif %}" +
 "{% if args['patient']['pat_code'] %}{{ args['patient']['pat_code'] }}{% endif %} - " +
 "{% if args['patient']['pat_firstname'] %}{{ args['patient']['pat_firstname'] }} {% endif %}" +
 "{% if args['patient']['pat_name'] %}{{ args['patient']['pat_name'] }} {% endif %}" +
@@ -1239,118 +1239,118 @@ info = " - {% if args['patient']['pat_code_lab'] %}{{ args['patient']['pat_code_
 "{% elif args['patient']['pat_age_unit'] == 1035 %}{{ _("semaines") }}" +
 "{% elif args['patient']['pat_age_unit'] == 1034 %}{{ _("jours") }}{% endif %}" ;
 
-if (info != "")
-$("#info_pat_title").text(info) ;
-{% endif %}
+    if (info != "")
+        $("#info_pat_title").text(info) ;
+    {% endif %}
 }
 
 function print_grp_rec()
 {
-let l_id_rec_vld = [] ;
+    let l_id_rec_vld = [] ;
 
-if ( sessionStorage.getItem( "l_id_rec_vld" ) != "null" )
-{
-l_id_rec_vld = JSON.parse( sessionStorage.getItem("l_id_rec_vld") ) ;
+    if ( sessionStorage.getItem( "l_id_rec_vld" ) != "null" )
+    {
+        l_id_rec_vld = JSON.parse( sessionStorage.getItem("l_id_rec_vld") ) ;
 
-var interv_id = l_id_rec_vld[0] + "-to-" + l_id_rec_vld[l_id_rec_vld.length - 1] ;
+        var interv_id = l_id_rec_vld[0] + "-to-" + l_id_rec_vld[l_id_rec_vld.length - 1] ;
 
-var filename = "grouped-reports_" + interv_id + ".pdf" ;
+        var filename = "grouped-reports_" + interv_id + ".pdf" ;
 
-var param = '{ "filename": "' + filename + '", "l_id_rec_vld": ['
-var i;
+        var param = '{ "filename": "' + filename + '", "l_id_rec_vld": ['
+        var i;
 
-for (i = 0; i < l_id_rec_vld.length; i++) 
-{
-if ( i > 0 )
-param += ', ' ;
+        for (i = 0; i < l_id_rec_vld.length; i++) 
+        {
+            if ( i > 0 )
+                param += ', ' ;
 
-param += l_id_rec_vld[i];
-}
+            param += l_id_rec_vld[i];
+        }
 
-param += ' ] }'
+        param += ' ] }'
 
-$("#dial-wait").off('shown.bs.modal') ;
-$("#dial-wait").modal("show") ;
+        $("#dial-wait").off('shown.bs.modal') ;
+        $("#dial-wait").modal("show") ;
 
-// Send information
-$.ajax( 
-{
-type: "POST",
-url: "{{ session['server_ext'] }}/services/pdf/report/grouped",
-dataType: 'json',
-contentType: "application/json; charset=utf-8",
-data: param,
-success: function(ret)
-{
-$("#dial-wait").modal("hide") ;
+        // Send information
+        $.ajax( 
+            {
+                type: "POST",
+                url: "{{ session['server_ext'] }}/services/pdf/report/grouped",
+                dataType: 'json',
+                contentType: "application/json; charset=utf-8",
+                data: param,
+                success: function(ret)
+                {
+                    $("#dial-wait").modal("hide") ;
 
-if (ret == 0)
-download_file( "PY", filename, "REC", 0 ) ;
-else
-alert("{{ _("Erreur lors de la génération du PDF") }}") ;
-},
-error: function(data)
-{
-$("#dial-wait").modal("hide") ;
+                    if (ret == 0)
+                        download_file( "PY", filename, "REC", 0 ) ;
+                    else
+                        alert("{{ _("Erreur lors de la génération du PDF") }}") ;
+                },
+                error: function(data)
+                {
+                    $("#dial-wait").modal("hide") ;
 
-console.log("ERROR pdf group report") ;
-alert("{{ _("Une erreur est survenue") }}") ;
-}
-} ) ;
-}
+                    console.log("ERROR pdf group report") ;
+                    alert("{{ _("Une erreur est survenue") }}") ;
+                }
+            } ) ;
+    }
 }
 
 function return_home()
 {
-if ( window.confirm("{{ _("Attention vous allez quitter ce dossier sans l'avoir validé.") }}") )
-                                                                                                                                                                                                                                  {
-                                                                                                                                                                                                                                  window.location.href = "{{ session['server_ext'] }}/sigl/homepage" ;
-                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                  }
+    if ( window.confirm("{{ _("Attention vous allez quitter ce dossier sans l'avoir validé.") }}") )
+    {
+        window.location.href = "{{ session['server_ext'] }}/homepage" ;
+    }
+}
 
-                                                                                                                                                                                                                                  {% if ihm['mode'] == 'G' %}
-                                                                                                                                                                                                                                  function next_record()
-                                                                                                                                                                                                                                  {
-                                                                                                                                                                                                                                  window.location = "{{ session['server_ext'] }}/biological-validation/G/{{ ihm['id_rec_next'] }}" ;
-                                                                                                                                                                                                                                  }
-                                                                                                                                                                                                                                  {% endif %}
+{% if ihm['mode'] == 'G' %}
+function next_record()
+{
+    window.location = "{{ session['server_ext'] }}/biological-validation/G/{{ ihm['id_rec_next'] }}" ;
+}
+{% endif %}
 
-                                                                                                                                                                                                                                  {% include 'js/display_histo.js' %}
+{% include 'js/display_histo.js' %}
 
-                                                                                                                                                                                                                                  {% if has_permission("RECORD_6") %}
-                                                                                                                                                                                                                                  $( document ).ready( function()
-                                                                                                                                                                                                                                  {
-                                                                                                                                                                                                                                  data_res = {% if args['list_res'] %}{{ args['list_res']|safe }}{% elif args['record'] %}[{{ args['record']|safe }}]{% else %}[]{% endif %}
+{% if has_permission("RECORD_6") %}
+$( document ).ready( function()
+    {
+        data_res = {% if args['list_res'] %}{{ args['list_res']|safe }}{% elif args['record'] %}[{{ args['record']|safe }}]{% else %}[]{% endif %}
 
-                                                                                                                                                                                                                                  num_rec_y = {{ args['record']['num_dos_an'] }} ;
+        num_rec_y = {{ args['record']['num_dos_an'] }} ;
 
-                                                                                                                                                                                                                                  {% if session['record_period'] == 1070 %} // Month period
-                                                                                                                                                                                                                                  num_dos = data_res[0].num_dos_mois ;
-                                                                                                                                                                                                                                  {% else %} // Annual period
-                                                                                                                                                                                                                                  num_dos = data_res[0].num_dos_an ;
-                                                                                                                                                                                                                                  {% endif %}
+        {% if session['record_period'] == 1070 %} // Month period
+        num_dos = data_res[0].num_dos_mois ;
+        {% else %} // Annual period
+        num_dos = data_res[0].num_dos_an ;
+        {% endif %}
 
-                                                                                                                                                                                                                                  num_rec  = fmt_num_rec( num_dos, {{ session['record_format'] }}, {{ session['record_period'] }} ) ;
-                                                                                                                                                                                                                                  /* AlC DESACT 26/12/2023 */
-                                                                                                                                                                                                                                  // per_rec  = per_num_rec( num_dos, {{ session['record_format'] }}, {{ session['record_period'] }} ) ;
-                                                                                                                                                                                                                                  per_rec = per_num_rec(data_res[0].rec_date_receipt, "{{ session['lang_select'] }}" ) ;
-                                                                                                                                                                                                                                  rec_stat = status_rec(data_res[0].stat) ;
+        num_rec  = fmt_num_rec( num_dos, {{ session['record_format'] }}, {{ session['record_period'] }} ) ;
+        /* AlC DESACT 26/12/2023 */
+        // per_rec  = per_num_rec( num_dos, {{ session['record_format'] }}, {{ session['record_period'] }} ) ;
+        per_rec = per_num_rec(data_res[0].rec_date_receipt, "{{ session['lang_select'] }}" ) ;
+        rec_stat = status_rec(data_res[0].stat) ;
 
-                                                                                                                                                                                                                                  $("#num_rec").html(num_rec)   ;
-                                                                                                                                                                                                                                  $("#rec_stat").html(rec_stat) ;
+        $("#num_rec").html(num_rec)   ;
+        $("#rec_stat").html(rec_stat) ;
 
-                                                                                                                                                                                                                                  display_result( 1 ) ;
-                                                                                                                                                                                                                                  fill_bio_list() ;
+        display_result( 1 ) ;
+        fill_bio_list() ;
 
-                                                                                                                                                                                                                                  load_data() ;
+        load_data() ;
 
-                                                                                                                                                                                                                                  info_pat_title() ;
+        info_pat_title() ;
 
-                                                                                                                                                                                                                                  if ( sessionStorage.getItem( "l_id_rec_vld" ) != "null" )
-                                                                                                                                                                                                                                  $("#print-grp-rec").prop("disabled", false) ;
-                                                                                                                                                                                                                                  else
-                                                                                                                                                                                                                                  $("#print-grp-rec").prop("disabled", true) ;
-                                                                                                                                                                                                                                  } ) ;
-                                                                                                                                                                                                                                  {% endif %}
-    </script>
-    {% endblock %}
+        if ( sessionStorage.getItem( "l_id_rec_vld" ) != "null" )
+            $("#print-grp-rec").prop("disabled", false) ;
+        else
+            $("#print-grp-rec").prop("disabled", true) ;
+    } ) ;
+{% endif %}
+</script>
+{% endblock %}

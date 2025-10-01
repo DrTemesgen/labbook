@@ -37,7 +37,8 @@ paths:
         in: path
         description: unique analysis code
         required: true
-        type: string
+        schema:
+          type: string
       security:
       - BasicAuth: []
       responses:
@@ -59,7 +60,8 @@ paths:
         in: path
         description: Serial of an analysis
         required: true
-        type: integer
+        schema:
+          type: integer
       security:
       - BasicAuth: []
       responses:
@@ -129,6 +131,7 @@ paths:
               properties:
                 record:
                   type: object
+                  required: [rec_type, rec_date, rec_date_prescr]
                   properties:
                     rec_type:
                       type: string
@@ -140,17 +143,14 @@ paths:
                       - E
                       - I
                       default: E
-                      required: true
                     rec_date:
                       type: string
                       format: date-time
                       description: datetime of receipt, (format YYYY-MM-DD HH:MM:SS)
-                      required: true
                     rec_date_prescr:
                       type: string
                       format: date
                       description: date of prescription, (format YYYY-MM-DD)
-                      required: true
                     rec_num_int:
                       type: string
                       description: internal laboratory record number
@@ -171,10 +171,9 @@ paths:
                       description: parcel identifier
                       default: ""
                     rec_parcel_date:
-                      type: string
-                      format: date-time
+                      allOf:
+                        - $ref: '#/components/schemas/DateTimeOrEmpty'
                       description: datetime of receipt of parcel, (format YYYY-MM-DD HH:MM:SS)
-                      default: ""
                     rec_invoice_discount:
                       type: string
                       description: |
@@ -204,10 +203,9 @@ paths:
                       description: invoice receipt number
                       default: ""
                     rec_date_hosp:
-                      type: string
-                      format: date
+                      allOf:
+                        - $ref: '#/components/schemas/DateOrEmpty'
                       description: date of admission, (format YYYY-MM-DD)
-                      default: ""
                     rec_int_service:
                       type: string
                       description: requesting department
@@ -267,10 +265,9 @@ paths:
                       - U
                       default: "U"
                     pat_birth:
-                      type: string
-                      format: date
+                      allOf:
+                        - $ref: '#/components/schemas/DateOrEmpty'
                       description: patient's date of birth (format YYYY-MM-DD), name + firstname + sex + date of birth or age and age_unit will be used to search for a match.
-                      default: ""
                     pat_date_approx:
                       type: string
                       description: approximate date of birth, Yes / No
@@ -504,17 +501,17 @@ paths:
                   type: array
                   items:
                     type: object
+                    required: [ana_code]
                     properties:
                       ana_code:
                         type: string
                         description: analysis code
-                        exemple: "B001"
+                        example: "B001"
                         default: ""
-                        required: true
                       ana_loinc:
                         type: string
                         description: analysis LOINC code
-                        exemple: "14933-6"
+                        example: "14933-6"
                         default: ""
                       ana_emer:
                         type: string
@@ -545,18 +542,16 @@ paths:
                       samp_ana:
                         type: string
                         description: analysis code
-                        exemple: "B001"
+                        example: "B001"
                         default: ""
                       samp_date:
-                        type: string
-                        format: date-time
+                        allOf:
+                          - $ref: '#/components/schemas/DateTimeOrEmpty'
                         description: datetime of sampling, (format YYYY-MM-DD HH:MM:SS)
-                        default: ""
                       samp_date_receipt:
-                        type: string
-                        format: date-time
+                        allOf:
+                          - $ref: '#/components/schemas/DateTimeOrEmpty'
                         description: datetime of receipt sample, (format YYYY-MM-DD HH:MM:SS)
-                        default: ""
                       samp_type:
                         type: string
                         description: |
@@ -683,9 +678,12 @@ paths:
       parameters:
       - name: id_pres
         in: path
-        description: serial of prescriber
-        required: false
-        type: integer
+        required: true
+        description: serial of prescriber. Use 0 to mean "all prescribers".
+        schema:
+          type: integer
+          default: 0
+          example: 0
       requestBody:
         required: false
         content:
@@ -979,55 +977,31 @@ components:
     Patient:
       type: object
       properties:
-        id_data:
-          type: integer
-        id_owner:
-          type: integer
-        code:
+        id_data:      { type: integer }
+        id_owner:     { type: integer }
+        code:         { type: string }
+        code_lab:     { type: string }
+        lastname:     { type: string }
+        firstname:    { type: string }
+        maidenname:   { type: string }
+        birth:        { type: string }
+        sex:
           type: string
-        code_patient:
-          type: string
-        nom:
-          type: string
-        prenom:
-          type: string
-        ddn:
-          type: string
-          format: date
-        sexe:
-          type: integer
-        adresse:
-          type: string
-        cp:
-          type: string
-        ville:
-          type: string
-        tel:
-          type: string
-        pat_phone2:
-          type: string
-        profession:
-          type: string
-        nom_jf:
-          type: string
-        quartier:
-          type: string
-        bp:
-          type: string
-        ddn_approx:
-          type: integer
-        age:
-          type: integer
-        unite:
-          type: integer
-        pat_midname:
-          type: string
-        pat_nation:
-          type: integer
-        pat_blood_group:
-          type: integer
-        pat_blood_rhesus:
-          type: integer
+          enum: [M, F, U]
+        phone1:       { type: string }
+        phone2:       { type: string }
+        email:        { type: string, format: email }
+        address:      { type: string }
+        zipcode:      { type: string }
+        city:         { type: string }
+        job:          { type: string }
+        suburb:       { type: string }
+        pbox:         { type: string }
+        birth_approx: { type: integer }
+        midname:      { type: string }
+        resident:     { type: string }
+        lite:         { type: string }
+        agreement:    { type: string }
     Record:
       type: object
       properties:
@@ -1060,22 +1034,25 @@ components:
         id_colis:
           type: string
         rec_parcel_date:
-          type: string
-          format: date-time
+          $ref: '#/components/schemas/DateTimeOrEmpty'
         rc:
           type: string
         colis:
           type: integer
         prix:
-          type: float
+          type: number
+          format: float
         remise:
           type: integer
         remise_pourcent:
-          type: float
+          type: number
+          format: float
         assu_pourcent:
-          type: float
+          type: number
+          format: float
         a_payer:
-          type: float
+          type: number
+          format: float
         num_quittance:
           type: string
         num_fact:
@@ -1083,8 +1060,7 @@ components:
         statut:
           type: integer
         date_hosp:
-          type: string
-          format: date
+          $ref: '#/components/schemas/DateOrEmpty'
     Result:
       type: object
       properties:
@@ -1125,8 +1101,7 @@ components:
           type: string
           format: date
         expire_date:
-          type: string
-          format: date
+          $ref: '#/components/schemas/DateOrEmpty'
         cps_id:
           type: string
         oauth_provider_id_user:
@@ -1138,8 +1113,7 @@ components:
         intiale:
           type: string
         ddn:
-          type: string
-          format: date
+          $ref: '#/components/schemas/DateOrEmpty'
         position:
           type: string
         adresse:
@@ -1147,8 +1121,7 @@ components:
         tel:
           type: string
         darrive:
-          type: string
-          format: date
+          $ref: '#/components/schemas/DateOrEmpty'
         cv:
           type: string
         diplome:
@@ -1156,8 +1129,7 @@ components:
         formation:
           type: string
         deval:
-          type: string
-          format: date
+          $ref: '#/components/schemas/DateOrEmpty'
         section:
           type: integer
         commentaire:
@@ -1195,4 +1167,18 @@ components:
           - L
           - Z
           - API
+    DateOrEmpty:
+      oneOf:
+        - type: string
+          format: date
+        - type: string
+          enum: [""]
+      default: ""
+    DateTimeOrEmpty:
+      oneOf:
+        - type: string
+          format: date-time
+        - type: string
+          enum: [""]
+      default: ""
 

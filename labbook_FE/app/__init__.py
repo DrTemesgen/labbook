@@ -532,12 +532,21 @@ def index():
 @app.route('/confirm-access', methods=['POST'])
 def confirm_access():
     args = request.get_json()
-    session['login_ok'] = args['login']
+    login = args.get('login', '')
+    id_user = args.get('id_user', None)
+
+    if id_user is None:
+        return jsonify({'error': 'id_user missing'}), 400
+
+    session['login_ok'] = login
+    session['user_id'] = int(id_user)
     session.modified = True
 
-    url = url_for('homepage', login=str(session['login_ok']), _external=True)
+    redirect_url = session.pop('next', None)
+    if not redirect_url:
+        redirect_url = url_for('homepage', login=str(session['login_ok']), _external=True)
 
-    return jsonify({'redirect_url': url})
+    return jsonify({'redirect_url': redirect_url})
 
 
 # Page : labbook_BE not ready

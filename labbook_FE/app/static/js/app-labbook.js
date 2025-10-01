@@ -1,5 +1,5 @@
 /* javascript functions for labbook project */
-var disconnect_page = "/sigl/disconnect" ;
+var disconnect_page = "/disconnect" ;
 var page_timeout    = 0 ;
 
 function tempAlert(msg, id_elem)

@@ -65,11 +65,10 @@ sessionStorage.setItem("backup-alert", "") ;
 
 function send_login()
 {
-let login = $("#login").val() ;
-let pwd   = $("#password").val() ;
+const login = $("#login").val() ;
+const pwd   = $("#password").val() ;
 
 var param = '{ "login":"' + login + '", "pwd":"' + pwd + '"}' ;
-var param_login = '{ "login":"' + login + '"}' ;
 
     $.ajax( 
     {
@@ -83,28 +82,43 @@ var param_login = '{ "login":"' + login + '"}' ;
         $("#auth_msg").addClass("d-none");
         console.log("SUCCESS post login") ;
 
-            $.ajax( 
-            {
+        const payload = JSON.stringify({ login: login, id_user: ret_ws.id_user });
+
+            $.ajax({
                 type: "POST",
-                url: "{{ session['server_ext'] }}/confirm-access",
+                url: "{{ session['server_ext'] }}/services/confirm-access",
                 dataType: "json",
                 contentType: "application/json; charset=utf-8",
-                data: param_login,
-                success: function(response) 
+                data: payload,
+                success: function(beResp) 
                 {
-                    console.log("Session updated successfully:", response);
-                    if (response.redirect_url)
-                    window.location.href = response.redirect_url;
+                    $.ajax( 
+                    {
+                        type: "POST",
+                        url: "{{ session['server_ext'] }}/confirm-access",
+                        dataType: "json",
+                        contentType: "application/json; charset=utf-8",
+                        data: payload,
+                        success: function(feResp) 
+                        {
+                            const target = (beResp && beResp.redirect_url) || (feResp && feResp.redirect_url) || "{{ session['server_ext'] }}/";
+                            window.location.href = target;
+                        },
+                        error: function(xhr, status, error) 
+                        {
+                            console.error("Error confirm-access FE:", status, error);
+                        }
+                    } ) ;
                 },
                 error: function(xhr, status, error) 
                 {
-                    console.error("Error updating session:", status, error);
+                    console.error("BE confirm-access error:", status, error);
                 }
-            } ) ;
+            });
         },
-        error: function(ret_ws)
+        error: function(xhr, status, error) 
         {
-        console.log("ERROR post login=" + login) ;
+        console.error("User access error login=" + login + ":", status, error);
         $("#auth_msg").removeClass("d-none");
         }
     } ) ;

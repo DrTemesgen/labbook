@@ -526,7 +526,7 @@ class File:
             c.setFontSize(80)
             c.setFillColorCMYK(2, 2, 2, 0, alpha=0.2)
             c.rotate(-45)
-            c.drawCentredString(-140, A4[0], _("DUPLICATA"), None, 24)
+            c.drawCentredString(-140, A4[0], _("DUPLICATA"))
             c.save()
 
             watermark_pdf = pikepdf.open(watermark_path)

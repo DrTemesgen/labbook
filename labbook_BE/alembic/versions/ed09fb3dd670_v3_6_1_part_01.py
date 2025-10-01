@@ -54,6 +54,102 @@ def upgrade():
     except Exception as err:
         print("ERROR insert 8 equipment status dictionary,\n\terr=" + str(err))
 
+    # --- OAUTH2 CLIENTS ----------------------------------------------------------
+    try:
+        conn.execute(text("""
+            CREATE TABLE oauth2_client (
+              oacl_ser INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+              oacl_client_id VARCHAR(128) NOT NULL,
+              oacl_client_secret VARCHAR(256) NOT NULL DEFAULT '',
+              oacl_client_name VARCHAR(255) NOT NULL DEFAULT '',
+              oacl_user_id INT UNSIGNED NOT NULL DEFAULT 0,
+              oacl_redirect_uris TEXT NOT NULL,
+              oacl_scope TEXT NOT NULL,
+              oacl_grant_types VARCHAR(255) NOT NULL DEFAULT 'authorization_code refresh_token client_credentials',
+              oacl_response_types VARCHAR(255) NOT NULL DEFAULT 'code',
+              oacl_token_endpoint_auth_method VARCHAR(50) NOT NULL DEFAULT 'client_secret_basic',
+              oacl_is_active VARCHAR(1) NOT NULL DEFAULT 'Y',
+              oacl_created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              oacl_updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+              UNIQUE KEY uq_oacl_client_id (oacl_client_id),
+              KEY idx_oacl_user (oacl_user_id)
+            ) CHARACTER SET=utf8
+        """))
+    except Exception as err:
+        print("ERROR create table oauth2_client,\n\terr=" + str(err))
+    
+    # --- OAUTH2 TOKENS ---
+    try:
+        conn.execute(text("""
+            CREATE TABLE oauth2_token (
+              oato_ser INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+              oato_client_id VARCHAR(128) NOT NULL,
+              oato_token_type VARCHAR(40) NOT NULL DEFAULT 'Bearer',
+              oato_access_token VARCHAR(512) NOT NULL,
+              oato_refresh_token VARCHAR(512) NULL,
+              oato_scope TEXT NULL,
+              oato_revoked VARCHAR(1) NOT NULL DEFAULT 'N',
+              oato_issued_at INT UNSIGNED NOT NULL,
+              oato_expires_in INT UNSIGNED NOT NULL,
+              oato_created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              KEY idx_oato_access (oato_access_token(191)),
+              KEY idx_oato_refresh (oato_refresh_token(191)),
+              KEY idx_oato_client (oato_client_id)
+            ) CHARACTER SET=utf8
+        """))
+    except Exception as err:
+        print("ERROR create table oauth2_token,\n\terr=" + str(err))
+    
+    # --- OAUTH2 AUTHORIZATION CODES (PKCE) ---
+    try:
+        conn.execute(text("""
+            CREATE TABLE oauth2_code (
+              oaco_ser INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+              oaco_code VARCHAR(255) NOT NULL,
+              oaco_client_id VARCHAR(128) NOT NULL,
+              oaco_redirect_uri VARCHAR(512) NOT NULL DEFAULT '',
+              oaco_scope TEXT NULL,
+              oaco_auth_time INT UNSIGNED NOT NULL DEFAULT 0,
+              oaco_nonce VARCHAR(255) NOT NULL DEFAULT '',
+              oaco_code_challenge VARCHAR(255) NOT NULL DEFAULT '',
+              oaco_code_challenge_method VARCHAR(10) NOT NULL DEFAULT '',
+              oaco_expires_at INT UNSIGNED NOT NULL,
+              oaco_created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              UNIQUE KEY uq_oaco_code (oaco_code),
+              KEY idx_oaco_client (oaco_client_id)
+            ) CHARACTER SET=utf8
+        """))
+    except Exception as err:
+        print("ERROR create table oauth2_code,\n\terr=" + str(err))
+    
+    # --- LabBook FE ---
+    try:
+        conn.execute(text("""
+            INSERT INTO oauth2_client (
+              oacl_client_id,
+              oacl_client_secret,
+              oacl_client_name,
+              oacl_user_id,
+              oacl_redirect_uris,
+              oacl_scope,
+              oacl_grant_types,
+              oacl_token_endpoint_auth_method,
+              oacl_is_active
+            ) VALUES (
+              'labbook-FE',
+              '',
+              'LabBook Front-End',
+              0,
+              '/oauth/callback',
+              '',
+              'authorization_code refresh_token',
+              'none',
+              'Y'
+            )
+        """))
+    except Exception as err:
+        print("ERROR insert oauth2_client (FE),\n\terr=" + str(err))
+
     print(str(datetime.today()) + " : END of migration v3_6_1_part_01 revision=ed09fb3dd670")
 
 

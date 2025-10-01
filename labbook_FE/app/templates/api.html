@@ -49,7 +49,7 @@
 
 {% if debug == 1 or has_permission("API_2") %}
 <body>
-    <button class="logout-button" onclick="window.location.href='/sigl/disconnect'">
+    <button class="logout-button" onclick="window.location.href='/disconnect'">
         {{ _("Déconnexion") }}
     </button>
     <div id="swagger-ui"></div>
@@ -84,7 +84,7 @@
 {% else %}
 <body>
     <div>{{ _("Accès non autorisé") }}</div>
-    <meta http-equiv="refresh" content="3;url=/sigl/disconnect">
+    <meta http-equiv="refresh" content="3;url=/disconnect">
 <body>
 {% endif %}
 </html>
