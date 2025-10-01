@@ -1,10 +1,14 @@
 # -*- coding:utf-8 -*-
 import logging
 import gettext
+import csv, re
+import os
 
 from datetime import datetime, timedelta
 from flask import request
 from flask_restful import Resource
+from pathlib import Path
+from io import StringIO
 
 from app.models.General import compose_ret
 from app.models.Constants import Constants
@@ -236,14 +240,21 @@ class ExportDHIS2(Resource):
                        "storedby", "lastupdated", "comment", "followup", "deleted"]]
 
             # Read CSV spreadsheet
-            import os
-
-            from csv import reader
-
-            path = Constants.cst_dhis2
-
-            with open(os.path.join(path, args['filename']), 'r', encoding='utf-8') as csv_file:
-                csv_reader = reader(csv_file, delimiter=';')
+            base_dir = Path(Constants.cst_dhis2).resolve()
+            base_dir.mkdir(parents=True, exist_ok=True)
+            
+            safe_name = re.sub(r'[^A-Za-z0-9._-]+', '_', str(args['filename']))[:80]
+            if not safe_name.lower().endswith('.csv'):
+                safe_name += '.csv'
+            
+            csv_path = (base_dir / safe_name).resolve()
+            
+            if base_dir not in csv_path.parents:
+                self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR invalid input path')
+                return compose_ret('', Constants.cst_content_type_json, 400)
+            
+            with csv_path.open('r', encoding='utf-8', newline='') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=';')
                 l_rows = list(csv_reader)
 
             if not l_rows or len(l_rows) < 2:
@@ -406,10 +417,7 @@ class ExportDHIS2(Resource):
         if len(l_data) < 2:
             return compose_ret('', Constants.cst_content_type_json, 404)
 
-        # write csv file
         try:
-            import csv
-
             rec_suffix = '_rec-external' if rec_type == 'E' else (
                          '_rec-internal' if rec_type == 'I' else '_rec-all')
 
@@ -417,12 +425,31 @@ class ExportDHIS2(Resource):
             lf = (args.get('lite_filter', 'A') or 'A').upper()
             lite_suffix = '_without-Lite' if lf == 'N' else ('_only-Lite' if lf == 'Y' else '')
 
-            outname = f"dhis2_{filename}_{args['date_beg']}-{args['date_end']}{rec_suffix}{lite_suffix}.csv"
+            # --- Build a SAFE filename; never trust raw user input ---
+            # Use parsed dates (not raw args) to avoid injection
+            beg_str = date_beg.strftime('%Y-%m-%d')
+            end_str = date_end.strftime('%Y-%m-%d')
 
-            with open('tmp/' + outname, mode='w', encoding='utf-8') as file:
+            # Keep only safe chars for {filename}; fallback to 'export' if empty
+            safe_token = re.sub(r'[^A-Za-z0-9._-]+', '_', str(filename))[:64] or 'export'
+
+            outname = f"dhis2_{safe_token}_{beg_str}-{end_str}{rec_suffix}{lite_suffix}.csv"
+
+            # Fixed base directory + path traversal guard
+            base_dir = Path('tmp').resolve()
+            base_dir.mkdir(parents=True, exist_ok=True)  # ensure it exists
+
+            outpath = (base_dir / outname).resolve()
+
+            # Final guard: forbid escaping the base directory
+            if base_dir not in outpath.parents:
+                self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR invalid output path')
+                return compose_ret('', Constants.cst_content_type_json, 400)
+
+            # Write CSV
+            with outpath.open(mode='w', encoding='utf-8', newline='') as file:  # newline='' for csv module
                 writer = csv.writer(file, delimiter=',')
-                for line in l_data:
-                    writer.writerow(line)
+                writer.writerows(l_data)
 
         except Exception as err:
             self.log.error(Logs.fileline() + ' : post ExportDHIS2 failed, err=%s', err)
@@ -629,14 +656,21 @@ class ExportDHIS2Api(Resource):
                        "storedby", "lastupdated", "comment", "followup", "deleted"]]
 
             # Read CSV spreadsheet
-            import os
-
-            from csv import reader
-
-            path = Constants.cst_dhis2
-
-            with open(os.path.join(path, args['filename']), 'r', encoding='utf-8') as csv_file:
-                csv_reader = reader(csv_file, delimiter=';')
+            base_dir = Path(Constants.cst_dhis2).resolve()
+            base_dir.mkdir(parents=True, exist_ok=True)
+            
+            safe_name = re.sub(r'[^A-Za-z0-9._-]+', '_', str(args['filename']))[:80]
+            if not safe_name.lower().endswith('.csv'):
+                safe_name += '.csv'
+            
+            csv_path = (base_dir / safe_name).resolve()
+            
+            if base_dir not in csv_path.parents:
+                self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR invalid input path')
+                return compose_ret('', Constants.cst_content_type_json, 400)
+            
+            with csv_path.open('r', encoding='utf-8', newline='') as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=';')
                 l_rows = list(csv_reader)
 
             if not l_rows or len(l_rows) < 2:
@@ -809,10 +843,6 @@ class ExportDHIS2Api(Resource):
         pwd   = api['dhs_pwd']
 
         # convert l_data to CSV string
-        from io import StringIO
-
-        import csv
-
         csv_data = StringIO()
         csv_writer = csv.writer(csv_data)
         csv_writer.writerows(l_data)

@@ -35,17 +35,16 @@ RUN yum update -y && yum install -y \
 
 # specific for wkhtmltopdf used by pdfkit
 COPY vendor/*.rpm /tmp
-RUN yum install -y /tmp/*.rpm && rm -f /tmp/*.rpm
 
-RUN yum clean all
-
-# install supervisor
-RUN python3.11 -m pip install --upgrade pip && python3.11 -m pip install supervisor pipenv
-
-RUN mkdir -p /home/supervisor/log \
-             /home/supervisor/tmp \
-             /home/apps/labbook_FE/labbook_FE \
-             /home/apps/labbook_BE/labbook_BE
+RUN set -eux \
+    && yum install -y /tmp/*.rpm \
+    && rm -f /tmp/*.rpm \
+    && yum clean all \
+    && python3.11 -m pip install --upgrade pip \
+    && python3.11 -m pip install --no-cache-dir supervisor pipenv \
+    && mkdir -p /home/supervisor/log /home/supervisor/tmp \
+               /home/apps/labbook_FE/labbook_FE \
+               /home/apps/labbook_BE/labbook_BE
 
 COPY supervisor/etc /home/supervisor/etc
 
