@@ -1,10 +1,13 @@
 # -*- coding:utf-8 -*-
 import logging
 import gettext
+import os
 
 from datetime import datetime
 from flask import request
 from flask_restful import Resource
+from pathlib import Path
+from csv import reader
 
 from app.models.General import compose_ret
 from app.models.Constants import *
@@ -1328,17 +1331,50 @@ class AnalysisImport(Resource):
                 DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR initTableTest', type='ANA')
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
-        # Read CSV user
-        import os
+        # --- Read CSV user ---
+        base_dir = Path(Constants.cst_path_tmp).resolve()
 
-        from csv import reader
+        raw_filename = args['filename']
+        if not isinstance(raw_filename, str) or not raw_filename:
+            self.log.error(Logs.fileline() + ' : TRACE AnalysisImport ERROR invalid filename (empty or not a string)')
+            DB.insertDbStatus(stat='ERR;AnalysisImport ERROR invalid filename', type='ANA')
+            return compose_ret('', Constants.cst_content_type_json, 400)
 
-        path = Constants.cst_path_tmp
+        # Keep only the final component; if it changes, separators were present -> reject
+        safe_name = os.path.basename(raw_filename)
+        if safe_name != raw_filename:
+            self.log.error(Logs.fileline() + f' : TRACE AnalysisImport ERROR invalid filename "{raw_filename}" (path separators)')
+            DB.insertDbStatus(stat='ERR;AnalysisImport ERROR invalid filename (separators)', type='ANA')
+            return compose_ret('', Constants.cst_content_type_json, 400)
 
-        with open(os.path.join(path, filename), 'r', encoding='utf-8') as csv_file:
+        # Enforce .csv extension
+        if not safe_name.lower().endswith('.csv'):
+            self.log.error(Logs.fileline() + f' : TRACE AnalysisImport ERROR invalid extension for "{safe_name}" (must be .csv)')
+            DB.insertDbStatus(stat='ERR;AnalysisImport ERROR invalid extension', type='ANA')
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        # Build and validate the final path, then ensure it stays under base_dir
+        candidate_path = (base_dir / safe_name).resolve()
+        try:
+            if os.path.commonpath([str(candidate_path), str(base_dir)]) != str(base_dir):
+                raise ValueError('path escapes base_dir')
+        except Exception:
+            self.log.error(Logs.fileline() + f' : TRACE AnalysisImport ERROR path traversal detected for "{safe_name}"')
+            DB.insertDbStatus(stat='ERR;AnalysisImport ERROR path traversal', type='ANA')
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        # Ensure file exists
+        if not candidate_path.is_file():
+            self.log.error(Logs.fileline() + f' : TRACE AnalysisImport ERROR file not found "{candidate_path}"')
+            DB.insertDbStatus(stat='ERR;AnalysisImport ERROR file not found', type='ANA')
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        # Safe open
+        with candidate_path.open('r', encoding='utf-8') as csv_file:
             csv_reader = reader(csv_file, delimiter=';', quotechar='"')
             l_rows = list(csv_reader)
 
+        # --- CSV treament ---
         # clean double quotes
         l_rows = [[col.strip('"') if col else col for col in row] for row in l_rows]
 
