@@ -2,6 +2,9 @@
 import logging
 import os
 import gettext
+import subprocess
+import csv
+import re
 
 from datetime import datetime
 from flask import request, session
@@ -651,25 +654,71 @@ class ScriptProgbackup(Resource):
             self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR args missing')
             return compose_ret('1', Constants.cst_content_type_json, 400)
 
-        start_time = str(args['start_time'])
+        # Extract inputs
+        start_time = str(args.get('start_time', ''))
+        user_pwd = args.get('user_pwd', '')
 
-        os.environ['LABBOOK_USER_PWD'] = args['user_pwd']
+        if not re.fullmatch(r"[A-Za-z0-9 _:\-./TZ]{1,64}", start_time):
+            self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR invalid start_time')
+            return compose_ret('1', Constants.cst_content_type_json, 400)
 
-        cmd = 'sh ' + Constants.cst_path_script + '/' + Constants.cst_script_backup + ' -w "' + start_time + '" ' + Constants.cst_io_progbackup
+        # Build absolute script path without string concatenation in the shell
+        script_path = os.path.join(Constants.cst_path_script, Constants.cst_script_backup)
 
-        self.log.error(Logs.fileline() + ' : ScriptProgbackup cmd=' + cmd)
-        ret = os.system(cmd)
+        if not os.path.isfile(script_path):
+            self.log.error(Logs.fileline() + f" : ScriptProgbackup ERROR script not found path={script_path}")
+            return compose_ret('1', Constants.cst_content_type_json, 500)
 
-        if ret == 0:
-            start_time = start_time + ':00'  # add seconds default value
-            ret_db = Setting.updateBackupSetting(bks_start_time=start_time)
+        argv = [
+            "sh",
+            script_path,
+            "-w",
+            start_time,
+            Constants.cst_io_progbackup
+        ]
 
-            if ret_db is False:
-                self.log.error(Logs.alert() + ' : ScriptProgbackup ERROR update')
-                return compose_ret('1', Constants.cst_content_type_json, 500)
+        env = os.environ.copy()
+        env['LABBOOK_USER_PWD'] = user_pwd
 
-        self.log.info(Logs.fileline() + ' : TRACE ScriptProgbackup ret=' + str(ret))
-        return compose_ret(ret, Constants.cst_content_type_json)
+        try:
+            result = subprocess.run(
+                argv,
+                env=env,
+                shell=False,          # Critical: no shell
+                check=False,          # We handle return code ourselves
+                capture_output=True,
+                text=True,
+                timeout=60            # Optional: avoid hanging
+            )
+        except Exception as exc:
+            self.log.error(Logs.fileline() + f" : ScriptProgbackup ERROR execution failed err={exc}")
+            return compose_ret('1', Constants.cst_content_type_json, 500)
+
+        # Handle return code
+        if result.returncode != 0:
+            self.log.error(
+                Logs.fileline() + f" : ScriptProgbackup ERROR rc={result.returncode} stdout_len={len(result.stdout or '')} stderr_len={len(result.stderr or '')}"
+            )
+            return compose_ret('1', Constants.cst_content_type_json, 500)
+
+        start_time_db = start_time
+        if re.fullmatch(r"\d{2}:\d{2}", start_time):
+            start_time_db = start_time + ':00'
+
+        try:
+            ret_db = Setting.updateBackupSetting(bks_start_time=start_time_db)
+        except Exception as exc:
+            self.log.error(Logs.fileline() + f" : ScriptProgbackup ERROR DB update failed err={exc}")
+            return compose_ret('1', Constants.cst_content_type_json, 500)
+
+        if not ret_db:
+            self.log.error(Logs.fileline() + " : ScriptProgbackup ERROR DB update returned falsy")
+            return compose_ret('1', Constants.cst_content_type_json, 500)
+
+        self.log.info(
+            Logs.fileline() + f" : ScriptProgbackup done rc=0 stdout_len={len(result.stdout or '')} stderr_len={len(result.stderr or '')}"
+        )
+        return compose_ret('0', Constants.cst_content_type_json, 200)
 
 
 class ScriptRestart(Resource):
@@ -912,14 +961,10 @@ class ZipCityAdd(Resource):
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Read CSV zipcity
-        import os
-
-        from csv import reader
-
         path = Constants.cst_path_tmp
 
         with open(os.path.join(path, filename), 'r', encoding='utf-8') as csv_file:
-            csv_reader = reader(csv_file, delimiter=';')
+            csv_reader = csv.reader(csv_file, delimiter=';')
             l_rows = list(csv_reader)
 
         if not l_rows or len(l_rows) < 2:

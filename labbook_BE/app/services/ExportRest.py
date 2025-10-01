@@ -33,12 +33,24 @@ class ExportCSV(Resource):
 
         # write csv file
         try:
-            f = open('tmp/' + args['filename'], "w")
-            f.write(args['csv_str'])
-            f.close()
+            # Ensure tmp directory exists
+            tmp_dir = Path("tmp")
+            tmp_dir.mkdir(parents=True, exist_ok=True)
+
+            # Sanitize user-provided filename to prevent path traversal and invalid characters
+            raw_name = str(args['filename'])
+            safe_name = re.sub(r'[^A-Za-z0-9._-]+', '_', raw_name).strip('_') or 'export.csv'
+
+            # Always build the path inside the controlled directory
+            file_path = tmp_dir / safe_name
+
+            # Write CSV content safely
+            with file_path.open("w", encoding="utf-8", newline="") as f:
+                f.write(args['csv_str'])
 
         except Exception as err:
-            self.log.error(Logs.fileline() + ' : post ExportWhonet failed, err=%s', err)
+            # Log error and return failure
+            self.log.error(Logs.fileline() + ' : ERROR post ExportCSV failed, err=%s', err)
             return False
 
         self.log.info(Logs.fileline() + ' : TRACE ExportCSV')
@@ -1096,14 +1108,21 @@ class ExportWhonet(Resource):
 
         # write csv file
         try:
-            import csv
+            # Build a deterministic filename from request dates
+            raw_filename = f"whonet_{args['date_beg'][:-6]}_{args['date_end'][:-6]}.txt"
 
-            filename = 'whonet_' + args['date_beg'][:-6] + '_' + args['date_end'][:-6] + '.txt'
+            # Sanitize to avoid path traversal or illegal characters
+            safe_filename = re.sub(Constants.cst_safe_pattern, '_', raw_filename).strip('_') or 'whonet.txt'
 
-            with open('tmp/' + filename, mode='w', encoding='utf-8') as file:
+            # Ensure tmp directory exists and build path safely
+            tmp_dir = Path("tmp")
+            tmp_dir.mkdir(parents=True, exist_ok=True)
+            file_path = tmp_dir / safe_filename
+
+            # Write TSV content safely
+            with file_path.open(mode='w', encoding='utf-8', newline='') as file:
                 writer = csv.writer(file, delimiter='\t')
-                for line in l_data:
-                    writer.writerow(line)
+                writer.writerows(l_data)
 
         except Exception as err:
             self.log.error(Logs.fileline() + ' : post ExportWhonet failed, err=%s', err)

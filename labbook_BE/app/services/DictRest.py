@@ -1,10 +1,14 @@
 # -*- coding:utf-8 -*-
 import logging
 import gettext
+import re
+import csv
+import os
 
 from datetime import datetime
 from flask import request
 from flask_restful import Resource
+from pathlib import Path
 
 from app.models.General import compose_ret
 from app.models.Constants import *
@@ -290,22 +294,24 @@ class DictExport(Resource):
 
         # write csv file
         try:
-            import csv
-
             today = datetime.now().strftime("%Y%m%d")
-
-            if dico_name:
-                dico_name = '-' + str(dico_name)
-
-            filename = 'dict' + dico_name  + '_' + str(today) + '.csv'
-
-            with open('tmp/' + filename, mode='w', encoding='utf-8') as file:
+        
+            raw = str(dico_name) if dico_name else ''
+            safe = re.sub(Constants.cst_safe_pattern, '_', raw).strip('_')
+            suffix = f"-{safe}" if safe else ""
+        
+            filename = f"dict{suffix}_{today}.csv"
+        
+            tmp_dir = Path("tmp")
+            tmp_dir.mkdir(parents=True, exist_ok=True)
+        
+            file_path = tmp_dir / filename
+            with file_path.open(mode="w", encoding="utf-8", newline="") as file:
                 writer = csv.writer(file, delimiter=';')
-                for line in l_data:
-                    writer.writerow(line)
-
+                writer.writerows(l_data)
+        
         except Exception as err:
-            self.log.error(Logs.fileline() + ' : post DictExport failed, err=%s', err)
+            self.log.error(Logs.fileline() + ' :ERROR post DictExport failed, err=%s', err)
             return False
 
         self.log.info(Logs.fileline() + ' : TRACE DictExport')
@@ -322,14 +328,10 @@ class DictImport(Resource):
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Read CSV user
-        import os
-
-        from csv import reader
-
         path = Constants.cst_path_tmp
 
         with open(os.path.join(path, filename), 'r', encoding='utf-8') as csv_file:
-            csv_reader = reader(csv_file, delimiter=';', quotechar='"')
+            csv_reader = csv.reader(csv_file, delimiter=';', quotechar='"')
             l_rows = list(csv_reader)
 
         # clean double quotes
