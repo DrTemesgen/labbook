@@ -1,7 +1,8 @@
 # -*- coding:utf-8 -*-
 import logging
 import gettext
-import csv, re
+import csv
+import re
 import os
 
 from datetime import datetime, timedelta
@@ -242,17 +243,17 @@ class ExportDHIS2(Resource):
             # Read CSV spreadsheet
             base_dir = Path(Constants.cst_dhis2).resolve()
             base_dir.mkdir(parents=True, exist_ok=True)
-            
-            safe_name = re.sub(r'[^A-Za-z0-9._-]+', '_', str(args['filename']))[:80]
+
+            safe_name = re.sub(Constants.cst_safe_pattern, '_', str(args['filename']))[:80]
             if not safe_name.lower().endswith('.csv'):
                 safe_name += '.csv'
-            
+
             csv_path = (base_dir / safe_name).resolve()
-            
+
             if base_dir not in csv_path.parents:
                 self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR invalid input path')
                 return compose_ret('', Constants.cst_content_type_json, 400)
-            
+
             with csv_path.open('r', encoding='utf-8', newline='') as csv_file:
                 csv_reader = csv.reader(csv_file, delimiter=';')
                 l_rows = list(csv_reader)
@@ -431,7 +432,7 @@ class ExportDHIS2(Resource):
             end_str = date_end.strftime('%Y-%m-%d')
 
             # Keep only safe chars for {filename}; fallback to 'export' if empty
-            safe_token = re.sub(r'[^A-Za-z0-9._-]+', '_', str(filename))[:64] or 'export'
+            safe_token = re.sub(Constants.cst_safe_pattern, '_', str(filename))[:64] or 'export'
 
             outname = f"dhis2_{safe_token}_{beg_str}-{end_str}{rec_suffix}{lite_suffix}.csv"
 
@@ -658,17 +659,17 @@ class ExportDHIS2Api(Resource):
             # Read CSV spreadsheet
             base_dir = Path(Constants.cst_dhis2).resolve()
             base_dir.mkdir(parents=True, exist_ok=True)
-            
-            safe_name = re.sub(r'[^A-Za-z0-9._-]+', '_', str(args['filename']))[:80]
+
+            safe_name = re.sub(Constants.cst_safe_pattern, '_', str(args['filename']))[:80]
             if not safe_name.lower().endswith('.csv'):
                 safe_name += '.csv'
-            
+
             csv_path = (base_dir / safe_name).resolve()
-            
+
             if base_dir not in csv_path.parents:
                 self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR invalid input path')
                 return compose_ret('', Constants.cst_content_type_json, 400)
-            
+
             with csv_path.open('r', encoding='utf-8', newline='') as csv_file:
                 csv_reader = csv.reader(csv_file, delimiter=';')
                 l_rows = list(csv_reader)

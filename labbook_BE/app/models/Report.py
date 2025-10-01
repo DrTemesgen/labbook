@@ -5,6 +5,10 @@ from app.models.DB import DB
 from app.models.Setting import Setting
 
 
+AND = ' and '
+OR  = ' or '
+
+
 class Report:
     log = logging.getLogger('log_db')
 
@@ -446,7 +450,7 @@ class Report:
                             req['end'] = req['end'] + 'and ('
                             first_id_var = True
 
-                        req['end'] = req['end'] + 'res' + str(idx) + '.ref_variable=' + id_var + ' or '
+                        req['end'] = req['end'] + 'res' + str(idx) + '.ref_variable=' + id_var + OR
 
                     # take of last 'or' and add a ')'
                     req['end'] = req['end'][:-3] + ') and res' + str(idx) + '.valeur '
@@ -702,7 +706,7 @@ class Report:
                             req['end'] = req['end'] + 'and ('
                             first_id_var = True
 
-                        req['end'] = req['end'] + 'res' + str(idx) + '.ref_variable=' + id_var + ' or '
+                        req['end'] = req['end'] + 'res' + str(idx) + '.ref_variable=' + id_var + OR
 
                     # take of last 'or' and add a ')'
                     req['end'] = req['end'][:-3] + ') and res' + str(idx) + '.valeur '
@@ -1207,7 +1211,7 @@ class Report:
                         else:
                             value_predicate = f"{current_aliases['res']}.valeur {operator_token} {raw_value}"
 
-                        atom = '(' + ' and '.join(base_conditions + [value_predicate]) + ')'
+                        atom = '(' + AND.join(base_conditions + [value_predicate]) + ')'
                         group_state["where_atoms"].append(atom)
                         i += 3
                         continue
@@ -1234,7 +1238,7 @@ class Report:
                         in_pred = f"{current_aliases['res']}.valeur IN ({', '.join(mapped)})"
                         if not_prefix:
                             in_pred = f"NOT ({in_pred})"
-                        atom = '(' + ' and '.join(base_conditions + [in_pred]) + ')'
+                        atom = '(' + AND.join(base_conditions + [in_pred]) + ')'
                         group_state["where_atoms"].append(atom)
                         i += 3 if not_prefix else 2
                         i += 1  # consume (...) token
@@ -1242,7 +1246,7 @@ class Report:
 
                     elif tokens[i + 1].startswith('[') and tokens[i + 1].endswith(']'):
                         dict_value = parse_dictionary_token(tokens[i + 1])
-                        atom = '(' + ' and '.join(base_conditions + [f"{current_aliases['res']}.valeur = {dict_value}"]) + ')'
+                        atom = '(' + AND.join(base_conditions + [f"{current_aliases['res']}.valeur = {dict_value}"]) + ')'
                         group_state["where_atoms"].append(atom)
                         i += 2
                         continue
@@ -1268,7 +1272,7 @@ class Report:
 
                     base = start_measurement_conditions(current_aliases, variable_id=0)
                     or_parts = [f"{current_aliases['res']}.ref_variable={int(v)}" for v in var_ids]
-                    atom = '(' + ' and '.join(base + ['(' + ' or '.join(or_parts) + ')']) + ')'
+                    atom = '(' + AND.join(base + ['(' + OR.join(or_parts) + ')']) + ')'
                     group_state["where_atoms"].append(atom)
                     i += 1
                     continue
@@ -1292,7 +1296,7 @@ class Report:
                                     build_required_joins(current_aliases, include_req_join=True)
                                 )
                             base_conditions = start_measurement_conditions(current_aliases, variable_id=0)
-                            group_state["where_atoms"].append('(' + ' and '.join(base_conditions + ['1=1']) + ')')
+                            group_state["where_atoms"].append('(' + AND.join(base_conditions + ['1=1']) + ')')
 
                         # Rebuild the function call text and inject into the last measurement atom
                         apply_on_clause(current_aliases, f"ON({inner_text})", group_state["where_atoms"])
@@ -1329,8 +1333,8 @@ class Report:
             if group_state["where_atoms"]:
                 where_parts.append(' '.join(group_state["where_atoms"]))
             if group_state["patient_conditions"]:
-                where_parts.append(' and '.join(group_state["patient_conditions"]))
-            final_where = ' and '.join([p for p in where_parts if p]) or '1=1'
+                where_parts.append(AND.join(group_state["patient_conditions"]))
+            final_where = AND.join([p for p in where_parts if p]) or '1=1'
 
             base_req = group_state["first_req_alias"] or "req0"
 
@@ -1348,6 +1352,7 @@ class Report:
 
         return {"exists_subqueries": exists_subqueries}
 
+    @staticmethod
     def getResultEpidemio(req_part, date_beg, date_end, rec_type=None, lite_filter='A'):
         """
         Execute COUNT(DISTINCT rec.id_data) with EXISTS subqueries built by ParseFormula.

@@ -21,8 +21,6 @@ from flask import Flask
 from flask_restful import Api
 from flask_cors import CORS
 
-from authlib.integrations.flask_oauth2 import AuthorizationServer, ResourceProtector
-from authlib.oauth2.rfc6749 import grants
 from app.security.oauth_routes import bp_oauth, authorization
 
 from app.models.Logs import Logs

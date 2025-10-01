@@ -5,6 +5,10 @@ from app.models.DB import DB
 from app.models.Logs import Logs
 from app.models.Various import Various
 
+# --- SQL fragments (avoid magic strings) ---
+LITE_EXCLUDE_CLAUSE = ' and rec.rec_lite = 0'   # exclude LabBook Lite
+LITE_ONLY_CLAUSE    = ' and rec.rec_lite > 0'   # only LabBook Lite
+
 
 class Export:
     log = logging.getLogger('log_db')
@@ -238,9 +242,9 @@ class Export:
             #  - 'Y' (Only Lite):    rec.rec_lite > 0
             lf = (lite_filter or 'A').upper()
             if lf == 'N':
-                req += ' and rec.rec_lite = 0'
+                req += LITE_EXCLUDE_CLAUSE
             elif lf == 'Y':
-                req += ' and rec.rec_lite > 0'
+                req += LITE_ONLY_CLAUSE
 
             cursor.execute(req, tuple(params))
             res = cursor.fetchone()
@@ -267,9 +271,9 @@ class Export:
             #  - 'Y' (Only Lite):    rec.rec_lite > 0
             lf = (lite_filter or 'A').upper()
             if lf == 'N':
-                req += ' and rec.rec_lite = 0'
+                req += LITE_EXCLUDE_CLAUSE
             elif lf == 'Y':
-                req += ' and rec.rec_lite > 0'
+                req += LITE_ONLY_CLAUSE
 
             cursor.execute(req, tuple(params))
             res = cursor.fetchone()
@@ -297,9 +301,9 @@ class Export:
             #  - 'Y' (Only Lite):    rec.rec_lite > 0
             lf = (lite_filter or 'A').upper()
             if lf == 'N':
-                req += ' and rec.rec_lite = 0'
+                req += LITE_EXCLUDE_CLAUSE
             elif lf == 'Y':
-                req += ' and rec.rec_lite > 0'
+                req += LITE_ONLY_CLAUSE
 
             cursor.execute(req, tuple(params))
             res = cursor.fetchone()
@@ -596,9 +600,9 @@ class Export:
         #  - 'Y' (Only Lite):    rec.rec_lite > 0
         lf = (lite_filter or 'A').upper()
         if lf == 'N':
-            sql += ' and rec.rec_lite = 0'
+            sql += LITE_EXCLUDE_CLAUSE
         elif lf == 'Y':
-            sql += ' and rec.rec_lite > 0'
+            sql += LITE_ONLY_CLAUSE
 
         cursor.execute(sql, tuple(params))
         return cursor.fetchall()

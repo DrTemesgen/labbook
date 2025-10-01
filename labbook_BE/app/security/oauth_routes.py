@@ -1,8 +1,9 @@
 # app/security/oauth_routes.py
-import time, os, base64, hashlib
+import time
+import base64
 
-from urllib.parse import urlparse, urlencode
-from flask import Blueprint, request, redirect, jsonify, session, url_for
+from urllib.parse import urlparse
+from flask import Blueprint, request, redirect, jsonify, session
 
 # Authlib
 from authlib.integrations.flask_oauth2 import AuthorizationServer
@@ -16,8 +17,10 @@ from app.models.DB import DB
 
 bp_oauth = Blueprint('oauth', __name__)
 
+
 def _b64url(b: bytes) -> str:
     return base64.urlsafe_b64encode(b).rstrip(b'=').decode()
+
 
 def _load_client(client_id: str):
     cur = DB.cursor()
@@ -26,6 +29,7 @@ def _load_client(client_id: str):
         (client_id,)
     )
     return cur.fetchone()
+
 
 def _validate_redirect_uri(client_row: dict, redirect_uri: str) -> bool:
     # DB stores only PATH (e.g. "/oauth/callback")
@@ -41,6 +45,7 @@ def _validate_redirect_uri(client_row: dict, redirect_uri: str) -> bool:
         return False
     return u.path in paths
 
+
 # --------- Authlib glue ---------
 
 def query_client(client_id):
@@ -55,7 +60,7 @@ def query_client(client_id):
         grant_types = (row['oacl_grant_types'] or '').split()
         response_types = (row.get('oacl_response_types') or 'code').split()
         scope = row['oacl_scope']
-        redirect_uris = [p.strip() for p in (row['oacl_redirect_uris'] or '').replace('\r','\n').split('\n') if p.strip()]
+        redirect_uris = [p.strip() for p in (row['oacl_redirect_uris'] or '').replace('\r', '\n').split('\n') if p.strip()]
         client_secret = row['oacl_client_secret'] or None
 
         def check_redirect_uri(self, redirect_uri):
@@ -63,6 +68,7 @@ def query_client(client_id):
             return _validate_redirect_uri(row, redirect_uri)
 
     return Client()
+
 
 def save_token(token, req):
     cur = DB.cursor(ecr=True)
@@ -81,6 +87,7 @@ def save_token(token, req):
         int(token.get('expires_in') or 3600)
     ))
 
+
 class AuthorizationCodeGrantPKCE(grants.AuthorizationCodeGrant):
     def save_authorization_code(self, code, req):
         cur = DB.cursor(ecr=True)
@@ -95,9 +102,9 @@ class AuthorizationCodeGrantPKCE(grants.AuthorizationCodeGrant):
             req.redirect_uri or '',
             req.scope or '',
             int(time.time()),
-            req.data.get('nonce',''),
-            req.data.get('code_challenge',''),
-            req.data.get('code_challenge_method',''),
+            req.data.get('nonce', ''),
+            req.data.get('code_challenge', ''),
+            req.data.get('code_challenge_method', ''),
             int(time.time()) + 600
         ))
         return code
@@ -113,7 +120,8 @@ class AuthorizationCodeGrantPKCE(grants.AuthorizationCodeGrant):
 
     def authenticate_user(self, code):
         # Attach your logged-in user (session)
-        class U: pass
+        class U:
+            pass
         u = U()
         u.id = session.get('user_id', 0)
         return u
@@ -123,6 +131,7 @@ class AuthorizationCodeGrantPKCE(grants.AuthorizationCodeGrant):
         challenge = authorization_code['oaco_code_challenge']
         return CodeChallenge(method).verify(code_verifier, challenge)
 
+
 # Create server bound to this blueprint's app on first request
 authorization = AuthorizationServer(
     query_client=query_client,
@@ -131,8 +140,8 @@ authorization = AuthorizationServer(
 authorization.register_grant(AuthorizationCodeGrantPKCE, [CodeChallenge(required=True)])
 
 # ----- Resource ----
-
 require_oauth = ResourceProtector()
+
 
 class MyBearerTokenValidator(BearerTokenValidator):
     # Check if the token exists and is not expired
@@ -167,8 +176,10 @@ class MyBearerTokenValidator(BearerTokenValidator):
         needed = scope.split()
         return not all(s in token_scopes for s in needed)
 
+
 # Register the validator
 require_oauth.register_token_validator(MyBearerTokenValidator())
+
 
 # --------- Routes ---------
 
@@ -180,14 +191,15 @@ def oauth_authorize():
     # Authlib handles response building (validations, state, etc.)
     return authorization.create_authorization_response(grant_user=type('U', (), {'id': session['user_id']}))
 
+
 @bp_oauth.route('/oauth/token', methods=['POST'])
 def oauth_token():
     return authorization.create_token_response()
 
+
 @bp_oauth.route('/confirm-access', methods=['POST'])
 def confirm_access():
     args = request.get_json() or {}
-    login = args.get('login', '')
     id_user = args.get('id_user', None)
     if id_user is None:
         return jsonify({'error': 'id_user missing'}), 400
@@ -195,7 +207,7 @@ def confirm_access():
     # Set BE session (used by /services/oauth/authorize)
     session['user_id'] = int(id_user)
     session.modified = True
-    
+
     # Only return the paused OAuth authorize URL if presetn; no fallback here
     redirect_url = session.pop('next', None)
     return jsonify({'redirect_url': redirect_url})

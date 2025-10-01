@@ -78,3 +78,5 @@ class Constants:
     cst_msg_whatsapp   = cst_base_whatsapp + "/{pnid}/messages"
     cst_media_whatsapp = cst_base_whatsapp + "/{pnid}/media"
     cst_model_test_whatsapp = "hello_world"
+
+    cst_safe_pattern = r'[^A-Za-z0-9._-]+'
