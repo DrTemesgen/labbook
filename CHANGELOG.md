@@ -8,8 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
-## [3.6.1] - 2025-09-29
+## [3.6.1] - 2025-10-01
 ### Added
+- upgrade python, almalinux, reportlab, pikepdf ...
 - new dictionary for equipment status
 - equipment status in details, list and export of equipment
 - filter for include, exclude or only LabBook Lite records for DHIS2 export

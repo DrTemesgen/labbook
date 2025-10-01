@@ -21,7 +21,7 @@ RUN yum update -y && yum install -y \
     binutils \
     glibc-devel \
     mysql \
-    python39 \
+    python3.13 python3.13-devel python3.13-pip \
     which \
     openssh-clients \
     httpd \
