@@ -52,4 +52,12 @@ def upgrade():
 
 
 def downgrade():
-    pass
+    """
+    No-op by design.
+
+    This migration is intentionally irreversible per the organization's
+    forward-only policy. It includes destructive operations and/or renames
+    that cannot be safely undone. To roll back, restore a verified backup
+    taken before revision ee493ffd1c9b.
+    """
+    print("downgrade skipped: irreversible migration ee493ffd1c9b (forward-only policy)")
