@@ -41,7 +41,7 @@
                         <input type="button" onclick="return_back();" id="btn_return" value="{{ _("Retour") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }}">
                     </div>
                     {% if has_permission("SETTING_53") %}
-                    <div class="float-end me-2" style="margin-start:0px;">
+                    <div class="float-end me-2 ms-0">
                         <input type="button" id="import-dict" onclick="import_dict();" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Import de dictionnaire") }}" disabled>
                     </div>
                     {% endif %}

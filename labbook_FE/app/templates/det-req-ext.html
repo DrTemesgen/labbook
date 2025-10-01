@@ -966,7 +966,7 @@ let other_fct = '' ;
 
     // example : onchange for price
     if ( fct != "" )
-    other_fct += fct + '(this);" ' ;
+    other_fct += fct + '(this);' ;
 
 let tmp_input = '<input class="form-control form-lbk" id="' + id + '" type="' + type + '" value="' + val + '" onfocus="old_value=this.value;" onChange="change_data(this);' + other_fct + '"' ;
 

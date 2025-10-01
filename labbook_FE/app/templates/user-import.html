@@ -37,7 +37,7 @@
                     <div class="float-start ms-0">
                         <input type="button" onclick="return_back();" id="btn_return" value="{{ _("Retour") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }}">
                     </div>
-                    <div class="float-end me-2" style="margin-start:0px;">
+                    <div class="float-end me-2 ms-0">
                         <input type="button" id="import-users" onclick="import_users();" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Importer des utilisateurs") }}" disabled>
                     </div>
                 </div>

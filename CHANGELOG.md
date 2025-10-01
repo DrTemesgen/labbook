@@ -17,6 +17,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - show Biological Validation button on Enter Results and Technical Validation pages if the user has permission and at least one result is technically validated
 - Modify patient button in administrative record page
 
+### Fixed
+- request for tests for hospitalized patients page
+
 ## [3.6.0] - 2025-09-24
 ### Added
 - new setting to indicate whether a variable should be displayed in the report
