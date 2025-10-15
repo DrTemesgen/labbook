@@ -139,6 +139,7 @@ let param = '{ "date_beg":"' + date_beg  + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success : function(data)
         {
         console.log( "success dataset " + dataset_name) ;

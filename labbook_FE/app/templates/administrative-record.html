@@ -489,6 +489,7 @@ function del_ana(id_req, id_ana, type_samp, price)
                 dataType: 'json',
                 contentType: "application/json; charset=utf-8",
                 data: param,
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                 success: function(ret)
                 {
                     $("#dial-wait").modal("hide") ;
@@ -660,14 +661,9 @@ function modelsForMethod(method) {
     return (SEND_MODELS || []).map(normModel).filter(x => x.code === code);
 }
 
-// criterion: W needs phone, S/M need email
-function methodCriterionOK(m) {
-    return m.code === 'W' ? hasPhone() : hasEmail();
-}
-
 // possible = criterion OK + at least one model
 function methodPossible(m) {
-    return methodCriterionOK(m) && modelsForMethod(m).length > 0;
+    return modelsForMethod(m).length > 0;
 }
 
 function orderMethods(methodsAll) {
@@ -685,6 +681,7 @@ function initSendInline() {
 
     // Keep only methods that meet criterion (email for S/M, phone for W) AND have at least one model
     const possible = methodsAll.filter(methodPossible);
+
     if (!possible.length) {
         $("#send_inline_help_last").text("Aucune méthode utilisable pour ce patient.");
         $("#send_method_last, #send_template_last, #send_recipient_last").prop("disabled", true);
@@ -872,6 +869,7 @@ function send_last_report(reportFile) {
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         data: payload,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function () 
         {
             $("#dial-wait").modal("hide") ;
@@ -995,6 +993,7 @@ function reedit_report( id_rec, filename )
             {
                 type : 'GET',
                 url : "{{ session['server_ext'] }}/services/pdf/report/" + id_rec + "/" + filename + "/" + template + "/Y/{{ session['user_id'] }}",
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                 success : function(response)
                 {
                     $("#dial-wait").modal("hide") ;
@@ -1030,6 +1029,7 @@ function save_comm()
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret_rec)
             {
                 $("#dial-wait").modal("hide") ;
@@ -1062,6 +1062,7 @@ function upload_file( id_rec )
             contentType: false,
             processData: false,
             data: param_form,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success : function(response)
             {
                 $("#dial-wait").modal("hide") ;
@@ -1089,6 +1090,7 @@ function delete_file( id_file )
             {
                 type: "DELETE",
                 url: "{{ session['server_ext'] }}/services/file/document/REC/" + id_file,
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                 success: function(ret)
                 {
                     $("#dial-wait").modal("hide") ;
@@ -1118,6 +1120,7 @@ function print_outsourced( id_rec )
         {
             type: "GET",
             url: "{{ session['server_ext'] }}/services/pdf/outsourced/" + id_rec + "/" + template + "/" + filename,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
                 $("#dial-wait").modal("hide") ;
@@ -1146,6 +1149,7 @@ function print_invoice( id_rec )
         {
             type: "GET",
             url: "{{ session['server_ext'] }}/services/pdf/invoice/" + id_rec + "/" + template + "/" + filename,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
                 $("#dial-wait").modal("hide") ;
@@ -1182,6 +1186,7 @@ function print_sticker()
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
                 $("#dial-wait").modal("hide") ;
@@ -1225,7 +1230,7 @@ function info_pat_title()
 
 function return_home()
 {
-    window.location.href = "{{ session['server_ext'] }}/homepage";
+    window.location.href = "{{ url_for('homepage') }}";
 }
 
 {% if has_permission("RECORD_18") %}

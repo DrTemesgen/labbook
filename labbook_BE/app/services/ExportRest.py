@@ -3,7 +3,6 @@ import logging
 import gettext
 import csv
 import re
-import os
 
 from datetime import datetime, timedelta
 from flask import request
@@ -19,11 +18,13 @@ from app.models.Report import Report
 from app.models.Logs import Logs
 from app.models.User import User
 from app.models.Setting import Setting
+from app.security.oauth_routes import require_oauth
 
 
 class ExportCSV(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -60,6 +61,7 @@ class ExportCSV(Resource):
 class ExportDHIS2(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -111,14 +113,14 @@ class ExportDHIS2(Resource):
                     m = m + 1
 
         elif period in ('B', 'T', 'Q', 'S', 'A'):
-            # Multi-month groups anchored to January; front already aligned to group start
+            # Grouped periods; front already aligned range to group start
             import calendar
             span_map = {'B': 2, 'T': 3, 'Q': 4, 'S': 6, 'A': 12}
             span = span_map[period]
 
             y, m = date_beg.year, date_beg.month  # group start month
             while (y, m) <= (date_end.year, date_end.month):
-                # Compute date_end month of the group (inclusive)
+                # Compute end of the group (inclusive)
                 end_month_index = (m - 1) + (span - 1)
                 y_end = y + (end_month_index // 12)
                 m_end = (end_month_index % 12) + 1
@@ -126,19 +128,27 @@ class ExportDHIS2(Resource):
                 cur_start = datetime(y, m, 1)
                 cur_end   = datetime(y_end, m_end, last_dom)
 
-                # Index within the year for the label
-                if period == 'S':
+                # Build period label with new formats
+                if period == 'A':
+                    # Annual: YYYY
+                    tmp_period = f"{y}"
+                elif period == 'S':
+                    # Semester: YYYYSn (n=1..2)
                     idx = 1 if m <= 6 else 2
-                elif period == 'A':
-                    idx = 1
-                elif period == 'B':
-                    idx = ((m - 1) // 2) + 1
+                    tmp_period = f"{y}S{idx}"
                 elif period == 'T':
+                    # Quarter: YYYYQn (n=1..4)
                     idx = ((m - 1) // 3) + 1
-                else:  # 'Q'
+                    tmp_period = f"{y}Q{idx}"
+                elif period == 'B':
+                    # Bi-monthly: YYYYiiB (ii=01..06)
+                    idx = ((m - 1) // 2) + 1
+                    tmp_period = f"{y}{idx:02d}B"
+                else:  # period == 'Q'
+                    # Quadrimestrial: YYYYQnC (n=1..3)
                     idx = ((m - 1) // 4) + 1
+                    tmp_period = f"{y}Q{idx}C"
 
-                tmp_period = f"{y}{period}{idx:02d}"
                 l_period.append([tmp_period, cur_start, cur_end])
 
                 # Advance to next group start by 'span' months
@@ -475,6 +485,7 @@ class ExportDHIS2(Resource):
 class ExportDHIS2Api(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -886,6 +897,7 @@ class ExportDHIS2Api(Resource):
 class ExportWhonet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 

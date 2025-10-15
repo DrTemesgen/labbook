@@ -168,6 +168,7 @@ let param = '{ "login":"' + login + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
             {
             data_users = data ;
@@ -286,6 +287,7 @@ var id_owner = {{ session['user_id']|safe}} ;
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
             location.reload() ;
@@ -326,6 +328,7 @@ var param    = '{"id_user":' + id_user + '}' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;
@@ -363,7 +366,7 @@ window.location.href = "{{ session['server_ext'] }}/setting-det-user/0";
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage";
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 $(".cnx_trigger").keyup( function(event) 

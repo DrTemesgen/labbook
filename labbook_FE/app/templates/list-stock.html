@@ -171,6 +171,7 @@ let param = '{ "prod_name":"' + prod_name + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
         data_items = data ;
@@ -303,6 +304,7 @@ var id_user = {{ session['user_id']|safe}} ;
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
             $("#dial-wait").modal("hide") ;
@@ -339,6 +341,7 @@ var id_user = {{ session['user_id']|safe}} ;
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
             $("#dial-wait").modal("hide") ;
@@ -397,6 +400,7 @@ let param = '{ "prod_name":"' + prod_name + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;
@@ -439,6 +443,7 @@ function export_products()
     {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/quality/stock/export/products",
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;
@@ -481,6 +486,7 @@ function export_supplies()
     {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/quality/stock/export/supplies",
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;
@@ -523,6 +529,7 @@ function export_uses()
     {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/quality/stock/export/uses",
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;
@@ -557,7 +564,7 @@ function export_uses()
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage" ;
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 $(".cnx_trigger").keyup( function(event) 

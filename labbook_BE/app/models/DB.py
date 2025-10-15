@@ -87,7 +87,7 @@ class DB:
         with open(file_path, 'r') as file:
             content = file.read()
 
-            matches = re.findall(r'(\w+)\s*=\s*([\'"])(.*?)\2', content)
+            matches = re.findall(Constants.cst_keyvalue_pattern, content)
 
             for match in matches:
                 key, _, value = match

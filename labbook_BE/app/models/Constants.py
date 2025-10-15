@@ -79,4 +79,7 @@ class Constants:
     cst_media_whatsapp = cst_base_whatsapp + "/{pnid}/media"
     cst_model_test_whatsapp = "hello_world"
 
+    # example : report_2025-10-06.pdf
     cst_safe_pattern = r'[^A-Za-z0-9._-]+'
+    # example : name="Alice" → ('name','"', 'Alice')
+    cst_keyvalue_pattern = r'(\w+)\s*=\s*([\'"])(.*?)\2'

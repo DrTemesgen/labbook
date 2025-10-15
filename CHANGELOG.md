@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
-## [3.6.1] - 2025-10-01
+## [3.6.1] - 2025-10-16
 ### Added
 - upgrade python, almalinux, reportlab, pikepdf ...
 - new dictionary for equipment status
@@ -16,9 +16,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - filter for include, exclude or only LabBook Lite records for DHIS2 export
 - show Biological Validation button on Enter Results and Technical Validation pages if the user has permission and at least one result is technically validated
 - Modify patient button in administrative record page
+- oauth2 protocol for back-end API, front-end and swagger oauth client add in DB by default 
+- GUI for add an oauth2 client to interact with the external API outside of Swagger
+
+### Changed
+- Report sending allows manual entry of recipient when at least one consent and one method with a model exist, without requiring a prefilled contact.
 
 ### Fixed
 - request for tests for hospitalized patients page
+- forwarding a message from the message list
+- export DHIS2 fix interpretation of {var1,var2}, of $_var IN (...) and $_var NOT IN (...)
+- export DHIS2 format of period
 
 ## [3.6.0] - 2025-09-24
 ### Added

@@ -14,11 +14,13 @@ from app.models.Logs import Logs
 from app.models.Report import Report
 from app.models.Result import Result
 from app.models.Various import Various
+from app.security.oauth_routes import require_oauth
 
 
 class ReportEpidemio(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -138,6 +140,7 @@ class ReportEpidemio(Resource):
 class ReportIndicator(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -265,6 +268,7 @@ class ReportIndicator(Resource):
 class ReportActivity(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -317,6 +321,7 @@ class ReportActivity(Resource):
 class ReportStat(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -363,6 +368,7 @@ class ReportStat(Resource):
 class ReportTAT(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -521,6 +527,7 @@ class ReportTAT(Resource):
 class ReportBilling(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -555,6 +562,7 @@ class ReportBilling(Resource):
 class ReportToday(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -595,6 +603,7 @@ class ReportToday(Resource):
 class ReportTodayExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 

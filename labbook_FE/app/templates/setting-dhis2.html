@@ -145,6 +145,7 @@ var id_user = {{ session['user_id']|safe}} ;
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
             $("#dial-wait").modal("hide") ;
@@ -181,6 +182,7 @@ param_form.append('file', $('input[type=file]')[0].files[0]) ;
         contentType: false,
         processData: false,
         data: param_form,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success : function(response)
         {
         tempAlert("{{ _("Dépôt réussi") }}", "btn-upload") ;
@@ -241,6 +243,7 @@ function delete_file( filename )
         {
             type: "GET",
             url: "{{ session['server_ext'] }}/delete-file/DH/" + filename,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
             $("#dial-wait").modal("hide") ;
@@ -260,7 +263,7 @@ function delete_file( filename )
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage";
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 {% if has_permission("SETTING_71") %}

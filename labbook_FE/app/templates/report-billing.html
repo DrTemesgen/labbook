@@ -126,6 +126,7 @@ $("#search_user").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_doctor").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -185,6 +186,7 @@ let param = '{ "date_beg":"' + date_beg  + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
         data_bills = data ;
@@ -276,6 +278,7 @@ let param = '{ "date_beg":"' + date_beg  + ' 00:00", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;

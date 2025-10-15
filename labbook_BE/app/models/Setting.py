@@ -2495,8 +2495,8 @@ class Setting:
                     subject_tpl  = f"{model.get('mdl_displayname') or 'Report'} – dossier"
                     body_txt_tpl = (model.get('mdl_text') or "Veuillez trouver le compte rendu en pièce jointe.") + "\n"
 
-                    subject  = Setting._render_vars(subject_tpl, info_pat)
-                    body_txt = Setting._render_vars(body_txt_tpl, info_pat) + "\n"
+                    subject  = Setting.render_vars(subject_tpl, info_pat)
+                    body_txt = Setting.render_vars(body_txt_tpl, info_pat) + "\n"
 
                     ok, msg  = Setting.sendSmtpWithAttachment(method, recipient, subject, body_txt, tmp_path)
 
@@ -2505,9 +2505,9 @@ class Setting:
                     html_body_tpl = (model.get('mdl_text') or "<p>Veuillez trouver le compte rendu en pièce jointe.</p>")
                     text_body_tpl = "Veuillez trouver le compte rendu en pièce jointe."
 
-                    subject   = Setting._render_vars(subject_tpl, info_pat)
-                    html_body = Setting._render_vars(html_body_tpl, info_pat)
-                    text_body = Setting._render_vars(text_body_tpl, info_pat)
+                    subject   = Setting.render_vars(subject_tpl, info_pat)
+                    html_body = Setting.render_vars(html_body_tpl, info_pat)
+                    text_body = Setting.render_vars(text_body_tpl, info_pat)
 
                     ok, msg   = Setting.sendMailjetWithAttachment(method, recipient, subject, html_body, text_body, tmp_path)
 
@@ -2559,3 +2559,93 @@ class Setting:
 
         # Matches {{ something }}
         return re.sub(r"\{\{\s*(.*?)\s*\}\}", repl, tpl)
+
+    @staticmethod
+    def getSettingOauthList():
+        cursor = DB.cursor()
+
+        req = ('SELECT oacl_ser, oacl_client_id, oacl_client_secret, oacl_client_name, '
+               'oacl_user_id, oacl_redirect_uris, oacl_scope, oacl_grant_types, '
+               'oacl_response_types, oacl_token_endpoint_auth_method, oacl_is_active, '
+               'oacl_created_at, oacl_updated_at '
+               'FROM oauth2_client '
+               'ORDER BY oacl_created_at DESC, oacl_ser DESC')
+
+        cursor.execute(req)
+
+        return cursor.fetchall()
+
+    @staticmethod
+    def getSettingOauth(id_item):
+        cursor = DB.cursor()
+
+        req = ('SELECT * FROM oauth2_client WHERE oacl_ser=%s LIMIT 1')
+
+        cursor.execute(req, (id_item,))
+
+        return cursor.fetchone()
+
+    @staticmethod
+    def insertSettingOauth(**params):
+        try:
+            cursor = DB.cursor()
+
+            cursor.execute(
+                'INSERT INTO oauth2_client ('
+                ' oacl_client_id, oacl_client_secret, oacl_client_name, oacl_user_id,'
+                ' oacl_redirect_uris, oacl_scope, oacl_grant_types, oacl_response_types,'
+                ' oacl_token_endpoint_auth_method, oacl_is_active'
+                ') VALUES ('
+                ' %(oacl_client_id)s, %(oacl_client_secret)s, %(oacl_client_name)s, %(oacl_user_id)s,'
+                ' %(oacl_redirect_uris)s, %(oacl_scope)s, %(oacl_grant_types)s, %(oacl_response_types)s,'
+                ' %(oacl_token_endpoint_auth_method)s, %(oacl_is_active)s)', params
+            )
+
+            Setting.log.info(Logs.fileline())
+
+            return cursor.lastrowid
+        except mysql.connector.Error as e:
+            Setting.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
+            return 0
+
+    @staticmethod
+    def updateSettingOauth(**params):
+        try:
+            cursor = DB.cursor()
+
+            cursor.execute(
+                'UPDATE oauth2_client SET '
+                ' oacl_client_id=%(oacl_client_id)s,'
+                ' oacl_client_secret=%(oacl_client_secret)s,'
+                ' oacl_client_name=%(oacl_client_name)s,'
+                ' oacl_user_id=%(oacl_user_id)s,'
+                ' oacl_redirect_uris=%(oacl_redirect_uris)s,'
+                ' oacl_scope=%(oacl_scope)s,'
+                ' oacl_grant_types=%(oacl_grant_types)s,'
+                ' oacl_response_types=%(oacl_response_types)s,'
+                ' oacl_token_endpoint_auth_method=%(oacl_token_endpoint_auth_method)s,'
+                ' oacl_is_active=%(oacl_is_active)s '
+                'WHERE oacl_ser=%(oacl_ser)s AND oacl_client_id <> "labbook-FE"', params
+            )
+
+            Setting.log.info(Logs.fileline())
+
+            return True
+        except mysql.connector.Error as e:
+            Setting.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
+            return False
+
+    @staticmethod
+    def deleteSettingOauth(id_item):
+        try:
+            cursor = DB.cursor()
+
+            cursor.execute('delete from oauth2_client '
+                           'where oacl_ser=%s AND oacl_client_id <> "labbook-FE"', (id_item,))
+
+            Setting.log.info(Logs.fileline())
+
+            return True
+        except mysql.connector.Error as e:
+            Setting.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
+            return False

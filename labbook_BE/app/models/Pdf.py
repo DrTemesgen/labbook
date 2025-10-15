@@ -129,9 +129,17 @@ class Pdf:
                    'margin-right': '0.00mm',
                    'margin-bottom': '0.00mm',
                    'margin-left': '0.00mm',
-                   'no-outline': None}
+                   'no-outline': None,
+                   'enable-local-file-access': None,
+                   'load-error-handling': 'ignore',
+                   'load-media-error-handling': 'ignore',
+                   'disable-javascript': None}
 
-        pdfkit.from_string(form_cont, path + filename, options=options)
+        try:
+            pdfkit.from_string(form_cont, path + filename, options=options)
+        except Exception:
+            Pdf.log.exception("ERROR PDF pdfkit.from_string failed")
+            return False
 
         return True
 
@@ -180,9 +188,17 @@ class Pdf:
                    'margin-right': '0mm',
                    'margin-bottom': '0mm',
                    'margin-left': '0mm',
-                   'no-outline': None}
+                   'no-outline': None,
+                   'enable-local-file-access': None,
+                   'load-error-handling': 'ignore',
+                   'load-media-error-handling': 'ignore',
+                   'disable-javascript': None}
 
-        pdfkit.from_string(form_cont, path + filename, options=options)
+        try:
+            pdfkit.from_string(form_cont, path + filename, options=options)
+        except Exception:
+            Pdf.log.exception("ERROR PDF pdfkit.from_string failed")
+            return False
 
         return True
 
@@ -253,9 +269,17 @@ class Pdf:
                    'margin-right': '0mm',
                    'margin-bottom': '0mm',
                    'margin-left': '0mm',
-                   'no-outline': None}
+                   'no-outline': None,
+                   'enable-local-file-access': None,
+                   'load-error-handling': 'ignore',
+                   'load-media-error-handling': 'ignore',
+                   'disable-javascript': None}
 
-        pdfkit.from_string(form_cont, path + filename, options=options)
+        try:
+            pdfkit.from_string(form_cont, path + filename, options=options)
+        except Exception:
+            Pdf.log.exception("ERROR PDF pdfkit.from_string failed")
+            return False
 
         return True
 

@@ -118,6 +118,7 @@ $("#search_product").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_product").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -145,6 +146,7 @@ let id_item = $(e.currentTarget).val() ;
     $.ajax( {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/quality/stock/product/det/" +  id_item,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data_prod)
             {
             expir_oblig = data_prod.prd_expir_oblig ;
@@ -235,6 +237,7 @@ var param = '{ "id_owner":' + id_owner + ', ' +
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
                if ('referrer' in document) 

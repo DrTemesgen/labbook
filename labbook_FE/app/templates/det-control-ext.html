@@ -214,6 +214,7 @@ var param = '{ "id_item":' + id_item + ', ' +
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
            tempAlert("{{ _("Enregistrement réussi") }}", "btn_save") ; 
@@ -252,6 +253,7 @@ var param = '{}' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;
@@ -297,6 +299,7 @@ $("#search_eqp").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_eqp").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({

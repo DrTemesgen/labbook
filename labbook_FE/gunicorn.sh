@@ -68,6 +68,7 @@ GUNICORN_DIR=${HOME_APP}/gunicorn
 GUNICORN_TIMEOUT=120
 
 SHARED_SECRET=/home/apps/shared/secret_key.py
+OAUTH_SHARED="$(dirname "$SHARED_SECRET")/oauth_client_secret.py"
 
 # shellcheck disable=SC1091
 source ${VENV_DIR}/bin/activate
@@ -109,6 +110,40 @@ if [ ! -f "$LOCAL_SETTINGS" ]; then
     # Replace the SECRET_KEY line with the shared one
     sed -i "/^SECRET_KEY/c\\$(cat $SHARED_SECRET)" "$LOCAL_SETTINGS"
 fi
+
+# --- start OAuth FE client secret block ---
+# If shared secret file exists, read it; otherwise generate a new one
+if [ -f "$OAUTH_SHARED" ]; then
+    OAUTH_SECRET=$(python3 - <<'PY'
+ns={}
+with open('/home/apps/shared/oauth_client_secret.py','r') as f: exec(f.read(), ns)
+print(ns.get('OAUTH_CLIENT_SECRET',''))
+PY
+)
+else
+    echo "Generating FE OAuth client secret..."
+    OAUTH_SECRET=$(python3 -c "import secrets; print(secrets.token_urlsafe(48))")
+    echo "OAUTH_CLIENT_SECRET = '$OAUTH_SECRET'" > "$OAUTH_SHARED"
+fi
+
+# Ensure constants exist in local_settings.py
+#  - If key exists: replace value
+#  - If missing: append
+if grep -qE "^[[:space:]]*OAUTH_CLIENT_SECRET[[:space:]]*=" "$LOCAL_SETTINGS"; then
+    sed -i "s|^[[:space:]]*OAUTH_CLIENT_SECRET[[:space:]]*=.*|OAUTH_CLIENT_SECRET = '${OAUTH_SECRET}'|" "$LOCAL_SETTINGS"
+else
+    printf "\nOAUTH_CLIENT_SECRET = '%s'\n" "$OAUTH_SECRET" >> "$LOCAL_SETTINGS"
+fi
+
+if grep -qE "^[[:space:]]*OAUTH_CLIENT_ID[[:space:]]*=" "$LOCAL_SETTINGS"; then
+    sed -i "s|^[[:space:]]*OAUTH_CLIENT_ID[[:space:]]*=.*|OAUTH_CLIENT_ID = 'labbook-FE'|" "$LOCAL_SETTINGS"
+else
+    printf "OAUTH_CLIENT_ID = 'labbook-FE'\n" >> "$LOCAL_SETTINGS"
+fi
+
+# Export for later bootstrap steps (BE/Alembic may reuse it)
+export LABBOOK_OAUTH_FE_SECRET="${OAUTH_SECRET}"
+# --- end OAuth FE client secret block ---
 
 cd ${APP_DIR} || exit 1
 

@@ -576,6 +576,7 @@ $("#search_patient1").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_patient1").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
             return JSON.stringify({
                 term: params.term
@@ -604,6 +605,7 @@ $("#search_patient2").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_patient2").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
             return JSON.stringify({
                 term: params.term
@@ -726,6 +728,7 @@ var param = '{ "id_user":' + id_owner + ', ' +
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
            tempAlert("{{ _("Enregistrement réussi") }}", "btn-save") ; 
@@ -802,6 +805,7 @@ id_pat1 = $(e.currentTarget).val();
     {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/patient/det/" + id_pat1,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data_pat1)
             {
             load_data_pat(data_pat1, 1) ;
@@ -825,6 +829,7 @@ id_pat2 = $(e.currentTarget).val();
     {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/patient/det/" + id_pat2,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data_pat2)
             {
             load_data_pat(data_pat2, 2) ;
@@ -923,6 +928,7 @@ function save_request()
         {
         type: "POST",
         url: "{{ session['server_ext'] }}/services/patient/combine/" + id_pat1 + "/" + id_pat2,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data_pat2)
             {
                 $("#dial-wait").modal("hide") ;
@@ -955,6 +961,7 @@ $("#search_zipcity").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_zipcity").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -983,6 +990,7 @@ let id_item = $(e.currentTarget).val();
         {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/setting/zipcity/det/" + id_item,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data_zipcity)
             {
             $("#cp_1").val(data_zipcity.zic_zip) ;
@@ -998,7 +1006,7 @@ let id_item = $(e.currentTarget).val();
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage";
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 $( document ).ready( function()

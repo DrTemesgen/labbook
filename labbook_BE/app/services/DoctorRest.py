@@ -7,16 +7,18 @@ from flask import request
 from flask_restful import Resource
 
 from app.models.General import compose_ret
-from app.models.Constants import *
-from app.models.Doctor import *
-from app.models.User import *
+from app.models.Constants import Constants
+from app.models.Doctor import Doctor
+# from app.models.User import User
 from app.models.Logs import Logs
 from app.models.Various import Various
+from app.security.oauth_routes import require_oauth
 
 
 class DoctorList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -45,6 +47,7 @@ class DoctorList(Resource):
 class DoctorSearch(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -60,6 +63,7 @@ class DoctorSearch(Resource):
 class DoctorDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_doctor):
         doctor = Doctor.getDoctor(id_doctor)
 
@@ -79,6 +83,7 @@ class DoctorDet(Resource):
         self.log.info(Logs.fileline() + ' : DoctorDet id_doctor=' + str(id_doctor))
         return compose_ret(doctor, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_doctor):
         args = request.get_json()
 
@@ -146,6 +151,7 @@ class DoctorDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE DoctorDet id_doctor=' + str(id_doctor))
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_doctor):
         ret = Doctor.deleteDoctor(id_doctor)
 
@@ -160,6 +166,7 @@ class DoctorDet(Resource):
 class DoctorExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 

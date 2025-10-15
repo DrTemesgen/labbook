@@ -249,6 +249,7 @@ param_list_res += value_res + ' ] }';
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_list_ana,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret_ana)
         {
             // create in DB list of results to enter and corresponding validation
@@ -259,6 +260,7 @@ param_list_res += value_res + ' ] }';
                 dataType: 'json',
                 contentType: "application/json; charset=utf-8",
                 data: param_list_res,
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                 success : function(response)
                 {
                 let param_stat = '{ "stat":182 }' ; 
@@ -271,6 +273,7 @@ param_list_res += value_res + ' ] }';
                         dataType: 'json',
                         contentType: "application/json; charset=utf-8",
                         data: param_stat,
+                        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                         success : function(response)
                         {
                             $("#dial-wait").modal("hide") ;
@@ -338,6 +341,7 @@ function reset_res( id_rec, id_res )
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param_res,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(data)
                 {
                 window.location.href = "{{ session['server_ext'] }}/technical-validation/{{ ihm['mode'] }}/" + id_rec ;
@@ -387,6 +391,7 @@ let param_res = '{ "id_owner": {{ session['user_id']}}, ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_res,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
             {
             window.location.href = "{{ session['server_ext'] }}/technical-validation/{{ ihm['mode'] }}/" + id_rec_tmp ;
@@ -435,6 +440,7 @@ param_list_valid += ' ] }' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_list_valid,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
             $("#dial-wait").modal("hide") ;
@@ -722,6 +728,7 @@ $("#search_analysis").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_analysis").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
             return JSON.stringify(
             {
@@ -793,6 +800,7 @@ list_id_ana.push( id_ana ) ;
         {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/analysis/det/" + id_ana,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data_ana)
             {
             let new_ana  = "<div id=\"new-analysis-" + id_ana + "\" class=\"new-analysis\">" + data_ana.nom + "<input type=\"hidden\" name=\"new-analysis[]\" value=\"" + id_ana + "\"></div>" ;

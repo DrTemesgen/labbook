@@ -211,6 +211,7 @@ let param       = '{ "pru_user": ' + id_user + ', ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
             {
             location.reload() ;
@@ -250,6 +251,7 @@ let param = '{ "prod_name":"' + prod_name + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;

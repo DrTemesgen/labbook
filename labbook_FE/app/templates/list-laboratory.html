@@ -299,6 +299,7 @@ param += tmp_value + ' ] }';
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
            tempAlert("{{ _("Enregistrement réussi") }}", "btn_save") ;
@@ -347,6 +348,7 @@ param_form.append('file', $('input[type=file]')[0].files[0]) ;
         contentType: false,
         processData: false,
         data: param_form,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success : function(response)
         {
         location.reload() ;
@@ -371,6 +373,7 @@ function delete_file( id_file )
         {
             type: "DELETE",
             url: "{{ session['server_ext'] }}/services/file/document/LABO/" + id_file,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
             $("#dial-wait").modal("hide") ;
@@ -390,7 +393,7 @@ function delete_file( id_file )
 
 function cancel()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage" ;
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 {% if has_permission("LAB_78") %}

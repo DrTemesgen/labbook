@@ -140,6 +140,7 @@ var param = '{ "id_item":' + id_item + ', ' +
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
            let ref = JSON.stringify(data) ;
@@ -175,6 +176,7 @@ let input_file = $('#' + type_ref)[0] ;
             contentType: false,
             processData: false,
             data: param_form,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success : function(response)
             {
             console.log( "success upload ") ;

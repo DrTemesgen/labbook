@@ -107,6 +107,7 @@ $("#search_manual").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_manual").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -152,6 +153,7 @@ $("#search_procedure").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_procedure").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -222,6 +224,7 @@ let param = '{ "id_user":' + id_user + ', ' +
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
            let param = '{ "comm":' + comment + '}' ; // No quotes with stringify
@@ -232,6 +235,7 @@ let param = '{ "id_user":' + id_user + ', ' +
                    dataType: 'json',
                    contentType: "application/json; charset=utf-8",
                    data: param,
+                   headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                    success: function(data)
                        {
                            $("#dial-wait").modal("hide") ;

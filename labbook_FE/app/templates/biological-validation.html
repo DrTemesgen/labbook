@@ -18,7 +18,7 @@
             {% if has_permission("RECORD_6") %}
             <form autocomplete="off">
                 <div class="d-lg-flex align-items-start ms-3 mt-1">
-                    <span>{{ _("Dossier") }} :</span> 
+                    <span>{{ _("Dossier") }} :</span>/ 
                     <span class="rec-num ms-1" id="num_rec"></span>
                     <div class="ms-2" id="rec_stat"></div>
                     {% if args['record'] and args['record']['rec_num_int'] %}
@@ -105,6 +105,12 @@
                                     {% if args['doctor']['facility'] %} – {{ args['doctor']['facility'] }}{% endif %}
                                 </span>
                             </div>
+
+                            {% if args['doctor']['service'] %}
+                            <div class="col-lg-12">
+                                {{ _("Service") }} : {{ args['doctor']['service'] }}
+                            </div>
+                            {% endif %}
 
                             <div class="col-lg-12 mt-2">
                                 {% if args['doctor'].get('mobile') %}<span class="font-info">{{ args['doctor'].get('mobile') }}</span>{% endif %}
@@ -374,6 +380,7 @@ function add_analysis()
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param_list_ana,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret_ana)
             {
                 // create in DB list of results to enter and corresponding validation
@@ -384,6 +391,7 @@ function add_analysis()
                         dataType: 'json',
                         contentType: "application/json; charset=utf-8",
                         data: param_list_res,
+                        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                         success : function(response)
                         {
                             let param_stat = '{ "stat":182 }' ; 
@@ -396,6 +404,7 @@ function add_analysis()
                                     dataType: 'json',
                                     contentType: "application/json; charset=utf-8",
                                     data: param_stat,
+                                    headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                                     success : function(response)
                                     {
                                         $("#dial-wait").modal("hide") ;
@@ -455,6 +464,7 @@ function reset_res( id_rec, id_res )
                 dataType: 'json',
                 contentType: "application/json; charset=utf-8",
                 data: param_res,
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                 success: function(data)
                 {
                     window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec ;
@@ -504,6 +514,7 @@ function send_cancel()
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param_res,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(data)
             {
                 window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec_tmp ;
@@ -564,6 +575,7 @@ function save_valid( id_rec )
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param_rec_valid,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(data)
             {
                 // result to validate
@@ -574,6 +586,7 @@ function save_valid( id_rec )
                         dataType: 'json',
                         contentType: "application/json; charset=utf-8",
                         data: param_list_valid,
+                        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                         success: function(data)
                         {
                             $("#dial-wait").modal("hide") ;
@@ -889,14 +902,9 @@ function modelsForMethod(method) {
     return (SEND_MODELS || []).map(normModel).filter(x => x.code === code);
 }
 
-// criterion: W needs phone, S/M need email
-function methodCriterionOK(m) {
-    return m.code === 'W' ? hasPhone() : hasEmail();
-}
-
 // possible = criterion OK + at least one model
 function methodPossible(m) {
-    return methodCriterionOK(m) && modelsForMethod(m).length > 0;
+    return modelsForMethod(m).length > 0;
 }
 
 function orderMethods(methodsAll) {
@@ -1085,6 +1093,7 @@ function send_last_report(reportFile) {
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         data: payload,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function () 
         {
             $("#dial-wait").modal("hide") ;
@@ -1129,6 +1138,7 @@ $("#search_analysis").select2(
             dataType: "json",
             contentType: "application/json; charset=utf-8",
             term: $("#search_analysis").text(),
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             data: function (params) {
                 return JSON.stringify(
                     {
@@ -1200,6 +1210,7 @@ $("#search_analysis").on("select2:select", function (e)
             {
                 type: "GET",
                 url: "{{ session['server_ext'] }}/services/analysis/det/" + id_ana,
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                 success: function(data_ana)
                 {
                     let new_ana  = '<div id="new-analysis-' + id_ana + '" class="new-analysis">' + data_ana.nom + '<input type="hidden" name="new-analysis[]" value="' + id_ana + '"></div>' ;
@@ -1280,6 +1291,7 @@ function print_grp_rec()
                 dataType: 'json',
                 contentType: "application/json; charset=utf-8",
                 data: param,
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                 success: function(ret)
                 {
                     $("#dial-wait").modal("hide") ;
@@ -1304,7 +1316,7 @@ function return_home()
 {
     if ( window.confirm("{{ _("Attention vous allez quitter ce dossier sans l'avoir validé.") }}") )
     {
-        window.location.href = "{{ session['server_ext'] }}/homepage" ;
+        window.location.href = "{{ url_for('homepage') }}";
     }
 }
 

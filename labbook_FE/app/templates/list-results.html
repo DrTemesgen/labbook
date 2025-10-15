@@ -170,6 +170,7 @@ $("#search_analysis").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_analysis").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
             return JSON.stringify(
             {
@@ -310,6 +311,7 @@ param_list_answer += ' ] }' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_list_answer,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
         filter_result() ; // refresh page with filter parameters
@@ -487,6 +489,7 @@ param_list_valid += ' ] }' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_list_valid,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
             $("#dial-wait").modal("hide") ;
@@ -994,6 +997,7 @@ let param = '{ "date_beg":"' + date_beg  + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
             {
             data_res = data ;
@@ -1014,17 +1018,19 @@ let param = '{ "date_beg":"' + date_beg  + '", ' +
 
 function download_report()
 {
-var html_report = JSON.stringify($("#benchsheet")[0].outerHTML) ;
-html_report = html_report.replaceAll("border:0", "border:1px solid #000") ;
-html_report = html_report.replaceAll("vld-block;", "display:none;") ;
+// STEP 1: Build the HTML payload safely
+var html_report = $("#benchsheet")[0].outerHTML;
+html_report = html_report.replaceAll("border:0", "border:1px solid #000");
+html_report = html_report.replaceAll("vld-block;", "display:none;");
 
-var param = '{ "html": ' + html_report + ', ' + // No quotes with stringify
-              '"filename": "benchsheet"}' ;
+// STEP 2: Build a valid JSON string (no manual concatenation)
+var param = JSON.stringify({ html: html_report, filename: "benchsheet" });
 
-    // popup wait
+    // STEP 3: Show wait dialog
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
+    // STEP 4: Send request
     $.ajax( 
     {
         type: "POST",
@@ -1032,8 +1038,10 @@ var param = '{ "html": ' + html_report + ', ' + // No quotes with stringify
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
+            // STEP 5: Hide dialog and trigger download
             $("#dial-wait").modal("hide") ;
         
         let today = new Date();
@@ -1054,6 +1062,7 @@ var param = '{ "html": ' + html_report + ', ' + // No quotes with stringify
         },
         error: function(ret)
         {
+            // STEP 5: Hide dialog and report error
             $("#dial-wait").modal("hide") ;
 
         alert("{{ _("Erreur lors de la génération du fichier") }}") ;
@@ -1116,7 +1125,7 @@ let aliquots = [];
 
     fetch("{{ session['server_ext'] }}/services/quality/storage/aliquot/det/0", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", "Content-Type": "application/json" },
         body: JSON.stringify({ aliquots: aliquots })
     })
     .then(response => {
@@ -1185,7 +1194,9 @@ let boxCoordSpan = aliquotForm.querySelector(".box_coord");
     if (boxId) {
         let url = `{{ session['server_ext'] }}/services/quality/storage/box/coord/${boxId}`;
 
-        fetch(url)
+        fetch(url, {
+            headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}" }
+            })
             .then(response => response.json())
             .then(data => {
                 if (data.sbo_label) {

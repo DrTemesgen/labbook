@@ -159,6 +159,7 @@ var id_user = {{ session['user_id']|safe}} ;
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
             $("#dial-wait").modal("hide") ;

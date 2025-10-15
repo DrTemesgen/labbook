@@ -367,12 +367,12 @@ class Export:
 
             res = cursor.fetchone()
 
-        # Number of breakdown equipement  on a period
+        # Number of breakdown equipement on a period
         elif key == 'NB_EQP_BREAKDOWN':
             req = ('select count(*) as value '
-                   'from list_comment as comm '
-                   'inner join sigl_equipement_data as eqp on eqp.id_data=comm.lic_ref and comm.lic_type="E" '
-                   'where (comm.lic_date between %s and %s) and comm.lic_sub_type="B"')
+                   'from eqp_failure as fail '
+                   'inner join sigl_equipement_data as eqp on eqp.id_data=fail.eqf_eqp '
+                   'where (fail.eqf_date between %s and %s) and fail.eqf_type="FAIL"')
 
             cursor.execute(req, (date_beg, date_end))
 

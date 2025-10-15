@@ -224,6 +224,7 @@ var tmp_value = '' ;
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
                showToast("{{ _('Enregistrement réussi') }}");
@@ -271,7 +272,7 @@ function showToast(message)
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage" ;
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 $( document ).ready( function()

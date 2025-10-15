@@ -138,7 +138,10 @@ function loadItemsTable() {
             "type": "POST",
             "contentType": "application/json; charset=utf-8",
             "data": function () { return JSON.stringify({}); },
-            "dataSrc": ""
+            "dataSrc": "",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer {{ session.get("be_access_token","") }}');
+            }
         },
         "columns": [
             { 
@@ -197,6 +200,7 @@ function resend_sending(sde_ser, el)
         contentType: 'application/json; charset=utf-8',
         dataType: 'json',
         timeout: 30000,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(resp){
             $('#sendingTable').DataTable().ajax.reload(null, false);
             const msg = (resp && resp.message) ? String(resp.message) : "{{ _('Ré-envoi déclenché.')|e }}";
@@ -239,7 +243,7 @@ function showToast(message, variant)
 
 function return_home()
 {
-    window.location.href = "{{ session['server_ext'] }}/homepage" ;
+    window.location.href = "{{ url_for('homepage') }}";
 }
 
 {% if has_permission("RECORD_177") %}

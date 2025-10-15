@@ -13,6 +13,7 @@ $("#search_zipcity").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_zipcity").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -41,6 +42,7 @@ let id_item = $(e.currentTarget).val();
         {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/setting/zipcity/det/" + id_item,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data_zipcity)
             {
             $("#pat_zipcode").val(data_zipcity.zic_zip) ;

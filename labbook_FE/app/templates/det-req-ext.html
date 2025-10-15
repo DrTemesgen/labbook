@@ -417,6 +417,7 @@ $("#search_doctor").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_doctor").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -449,6 +450,7 @@ $("#search_analysis").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_analysis").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
             return JSON.stringify(
             {
@@ -515,6 +517,7 @@ let data_exist = false ;
         $.ajax( {
             type: "GET",
             url: "{{ session['server_ext'] }}/services/analysis/det/" + id_item,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(data_ana)
                 {
                 let tmp_struct_ana = JSON.parse(JSON.stringify(struct_ana)) ; // copy structure
@@ -547,6 +550,7 @@ let data_exist = false ;
                             $.ajax( {
                                 type: "GET",
                                 url: "{{ session['server_ext'] }}/services/analysis/det/" +  data_ana.produit_biologique,
+                                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                                 success: function(data_samp)
                                     {
                                     let tmp_struct_samp = JSON.parse(JSON.stringify(struct_samp)) ;
@@ -583,6 +587,7 @@ let data_exist = false ;
                         $.ajax( {
                             type: "GET",
                             url: "{{ session['server_ext'] }}/services/analysis/type/product/" +  id_type_prod,
+                            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                             success: function(data_prod)
                                 {
                                 let tmp_struct_prod = JSON.parse(JSON.stringify(struct_prod)) ;
@@ -1203,6 +1208,7 @@ var rec_num_int = $("#rec_num_int").val() ;
         {
             type: "GET",
             url: "{{ session['server_ext'] }}/services/record/search/num/int/" + rec_num_int,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
                 if ( ret > 0 )
@@ -1369,6 +1375,7 @@ var rec_num_int   = $("#rec_num_int").val() ;
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret_rec)
             {
             var id_rec = ret_rec.id_rec ;
@@ -1427,6 +1434,7 @@ var rec_num_int   = $("#rec_num_int").val() ;
                     dataType: 'json',
                     contentType: "application/json; charset=utf-8",
                     data: param_list_ana,
+                    headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                     success: function(ret_ana)
                     {
                     var param_list_prod = '{ "list_prod":[ ';
@@ -1468,6 +1476,7 @@ var rec_num_int   = $("#rec_num_int").val() ;
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
                             data: param_list_prod,
+                            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                             success: function(ret_prod)
                             {
                             let param_res = '{ "id_owner":' + id_user + ', "user_role":"' + user_role + '"}' ;
@@ -1480,6 +1489,7 @@ var rec_num_int   = $("#rec_num_int").val() ;
                                     dataType: 'json',
                                     contentType: "application/json; charset=utf-8",
                                     data: param_res,
+                                    headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                                     success : function(response)
                                     {
                                     let param_stat = '{ "stat":182 }' ; 
@@ -1492,6 +1502,7 @@ var rec_num_int   = $("#rec_num_int").val() ;
                                             dataType: 'json',
                                             contentType: "application/json; charset=utf-8",
                                             data: param_stat,
+                                            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                                             success : function(response)
                                             {
                                                 $("#dial-wait").modal("hide") ;
@@ -1568,6 +1579,7 @@ let param_res = '{ "id_owner":' + id_user + ', "user_role":"' + user_role + '"}'
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_res,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success : function(response)
         {
         let param_stat = '{ "stat":182 }' ; 
@@ -1580,6 +1592,7 @@ let param_res = '{ "id_owner":' + id_user + ', "user_role":"' + user_role + '"}'
                 dataType: 'json',
                 contentType: "application/json; charset=utf-8",
                 data: param_stat,
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                 success : function(response)
                 {
                     $("#dial-wait").modal("hide") ;
@@ -1650,7 +1663,7 @@ window.open("{{ session['server_ext'] }}/det-doctor/0", "_blank") ;
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage";
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 $( document ).ready( function()

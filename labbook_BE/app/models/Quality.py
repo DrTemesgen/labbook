@@ -2402,52 +2402,6 @@ class Quality:
         return cursor.fetchall()
 
     @staticmethod
-    def getListComment(id_item, type, sub_type):
-        cursor = DB.cursor()
-
-        req = ('select lic_ser, date_format(lic_date, "%Y-%m-%d %H:%i") as lic_date, username, lic_comm '
-               'from list_comment '
-               'left join sigl_user_data on id_data=lic_user '
-               'where lic_ref=%s and lic_type=%s and lic_sub_type=%s '
-               'order by lic_date asc')
-
-        cursor.execute(req, (id_item, type, sub_type))
-
-        return cursor.fetchall()
-
-    @staticmethod
-    def insertListComment(**params):
-        try:
-            cursor = DB.cursor()
-
-            cursor.execute('insert into list_comment '
-                           '(lic_date, lic_ref, lic_type, lic_sub_type, lic_user, lic_comm) '
-                           'values '
-                           '(NOW(), %(lic_ref)s, %(lic_type)s, %(lic_sub_type)s, %(lic_user)s, %(lic_comm)s)', params)
-
-            Quality.log.info(Logs.fileline())
-
-            return cursor.lastrowid
-        except mysql.connector.Error as e:
-            Quality.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
-            return 0
-
-    @staticmethod
-    def deleteListComment(id_item):
-        try:
-            cursor = DB.cursor()
-
-            cursor.execute('delete from list_comment '
-                           'where lic_ser=%s', (id_item,))
-
-            Quality.log.info(Logs.fileline())
-
-            return True
-        except mysql.connector.Error as e:
-            Quality.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
-            return False
-
-    @staticmethod
     def getTraceList(type_trace):
         cursor = DB.cursor()
 

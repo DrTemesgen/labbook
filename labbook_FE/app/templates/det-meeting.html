@@ -93,6 +93,7 @@ $("#search_promoter").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_promoter").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -167,6 +168,7 @@ var param = '{ "id_owner":' + id_owner + ', ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
         let ref = JSON.stringify(data) ;
@@ -234,6 +236,7 @@ let input_file = $("#MEET")[0] ;
             contentType: false,
             processData: false,
             data: param_form,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success : function(response)
             {
             console.log( "success upload ") ;

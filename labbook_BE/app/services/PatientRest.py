@@ -7,16 +7,17 @@ from flask import request
 from flask_restful import Resource
 
 from app.models.General import compose_ret
-from app.models.Constants import *
-from app.models.Patient import *
-from app.models.User import *
+from app.models.Constants import Constants
+from app.models.Patient import Patient
 from app.models.Logs import Logs
 from app.models.Various import Various
+from app.security.oauth_routes import require_oauth
 
 
 class PatientList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -43,80 +44,39 @@ class PatientList(Resource):
 class PatientListFromExt(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth('external/patient')
     def post(self):
-        auth = request.authorization
+        self.log.info(Logs.fileline() + ' : PatientListFromExt API access authorized')
+        args = request.get_json()
 
-        if not auth:
-            self.log.error(Logs.fileline() + ' : PatientListFromExt ERROR auth missing')
-            err = {"error": "Authentication required"}
-            return compose_ret(err, Constants.cst_content_type_json, 401)
+        if not args:
+            args = {}
 
-        login = auth.username
-        pwd   = auth.password
+        l_patients = Patient.getPatientList(args)
 
-        user = User.getUserByLogin(login)
+        # self.log.info(Logs.fileline() + ' : TRACE l_patients=' + str(l_patients))
 
-        if not user:
-            self.log.error(Logs.fileline() + ' : PatientListFromExt login not found')
-            err = {"error": str(login) + " not found"}
-            return compose_ret(err, Constants.cst_content_type_json, 404)
+        if not l_patients:
+            self.log.error(Logs.fileline() + ' : TRACE PatientListFromExt not found')
 
-        salt_start = user['password'].find(":")
-        salt = user['password'][salt_start + 1:]
+        sex_map = {1: 'M', 2: 'F', 3: 'U'}
 
-        pwd_db = User.getPasswordDB(pwd, salt)
+        for patient in l_patients:
+            patient['sex'] = sex_map.get(patient.get('sex'), 'U')
 
-        ret = User.checkUserAccess(login, pwd_db)
+            lite_val = patient.get('lite')
+            patient['lite'] = 'Y' if lite_val and int(lite_val) > 0 else 'N'
 
-        l_patients = []
+            birth_val = patient.get('birth_approx')
+            if birth_val == 4:
+                patient['birth_approx'] = 'Y'
+            if birth_val == 5:
+                patient['birth_approx'] = 'N'
 
-        if ret is True:
-            self.log.info(Logs.fileline() + ' : PatientListFromExt role=' + str(user['role_type']) + ' | login=' + str(login))
-            if user['role_type'] == Constants.cst_user_type_api:
-                self.log.info(Logs.fileline() + ' : PatientListFromExt API access authorized')
-                args = request.get_json()
-
-                if not args:
-                    args = {}
-
-                l_patients = Patient.getPatientList(args)
-
-                # self.log.info(Logs.fileline() + ' : TRACE l_patients=' + str(l_patients))
-
-                if not l_patients:
-                    self.log.error(Logs.fileline() + ' : TRACE PatientListFromExt not found')
-
-                sex_map = {1: 'M', 2: 'F', 3: 'U'}
-
-                for patient in l_patients:
-                    patient['sex'] = sex_map.get(patient.get('sex'), 'U')
-
-                    lite_val = patient.get('lite')
-                    patient['lite'] = 'Y' if lite_val and int(lite_val) > 0 else 'N'
-
-                    birth_val = patient.get('birth_approx')
-                    if birth_val == 4:
-                        patient['birth_approx'] = 'Y'
-                    if birth_val == 5:
-                        patient['birth_approx'] = 'N'
-
-                    # Replace None by empty string
-                    for key, value in list(patient.items()):
-                        if patient[key] is None:
-                            patient[key] = ''
-            else:
-                self.log.info(Logs.fileline() + ' : PatientListFromExt role type not authorized')
-                err = {"error": str(login) + " not authorized"}
-                return compose_ret(err, Constants.cst_content_type_json, 401)
-
-        elif ret is False:
-            self.log.info(Logs.fileline() + ' : PatientListFromExt not authorized ' + str(login))
-            err = {"error": str(login) + " not authorized"}
-            return compose_ret(err, Constants.cst_content_type_json, 401)
-        else:
-            self.log.error(Logs.fileline() + ' : PatientListFromExt ERROR checkUserAccess')
-            err = {"error": "checkUserAccess is in error"}
-            return compose_ret(err, Constants.cst_content_type_json, 500)
+            # Replace None by empty string
+            for key, value in list(patient.items()):
+                if patient[key] is None:
+                    patient[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE PatientListFromExt')
         return compose_ret(l_patients, Constants.cst_content_type_json)
@@ -125,6 +85,7 @@ class PatientListFromExt(Resource):
 class PatientListExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -181,6 +142,7 @@ class PatientListExport(Resource):
 class PatientSearch(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -207,6 +169,7 @@ class PatientSearch(Resource):
 class PatientCode(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         code = Patient.newPatientCode()
 
@@ -221,6 +184,7 @@ class PatientCode(Resource):
 class PatientCodeLab(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, pat_code_lab):
         ret = Patient.codeLab_exist(pat_code_lab)
 
@@ -239,6 +203,7 @@ class PatientCodeLab(Resource):
 class PatientCombine(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_pat1, id_pat2):
         if id_pat1 <= 0 or id_pat2 <= 0:
             self.log.error(Logs.fileline() + ' : ' + 'PatientCombine ERROR wrong id_pat')
@@ -257,6 +222,7 @@ class PatientCombine(Resource):
 class PatientDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_pat):
         patient = Patient.getPatient(id_pat)
 
@@ -275,6 +241,7 @@ class PatientDet(Resource):
         self.log.info(Logs.fileline() + ' : PatientDet id_pat=' + str(id_pat))
         return compose_ret(patient, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_pat=0):
         args = request.get_json()
 
@@ -458,6 +425,7 @@ class PatientDet(Resource):
 class PatientFormItem(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_pat):
         l_vals  = {}
         l_items = Patient.getFormItems(id_pat)
@@ -476,6 +444,7 @@ class PatientFormItem(Resource):
 class PatientHistoric(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_pat):
         l_datas = {}
 

@@ -20,11 +20,13 @@ from app.models.Result import Result
 from app.models.Setting import Setting
 from app.models.User import User
 from app.models.Various import Various
+from app.security.oauth_routes import require_oauth
 
 
 class ResultValue(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -48,6 +50,7 @@ class ResultValue(Resource):
 class ResultList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -182,6 +185,7 @@ class ResultList(Resource):
 class ResultRecord(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_rec):
         args = request.get_json()
 
@@ -282,6 +286,7 @@ class ResultRecord(Resource):
 class ResultCreate(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_rec):
         args = request.get_json()
 
@@ -348,6 +353,7 @@ class ResultCreate(Resource):
 class ResultValid(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, type_valid, id_rec):
         args = request.get_json()
 
@@ -455,6 +461,7 @@ class ResultValid(Resource):
 class ResultReset(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_rec):
         args = request.get_json()
 
@@ -512,6 +519,7 @@ class ResultReset(Resource):
 class ResultCancel(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_rec):
         args = request.get_json()
 
@@ -569,6 +577,7 @@ class ResultCancel(Resource):
 class ResultHisto(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_res):
         l_valid = Result.getResultListValidation(id_res)
 
@@ -606,6 +615,7 @@ class ResultHisto(Resource):
 class ResultPrevious(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -654,134 +664,86 @@ class ResultPrevious(Resource):
 class ResultFromExt(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth('external/result')
     def get(self, id_rec):
         l_res = {}
 
-        auth = request.authorization
+        self.log.info(Logs.fileline() + ' : ResultFromExt API access authorized')
+        l_results = Result.getResultRecord(id_rec, True)
 
-        if not auth:
-            self.log.error(Logs.fileline() + ' : ResultFromExt ERROR auth missing')
-            err = {"error": "Authentication required"}
-            return compose_ret(err, Constants.cst_content_type_json, 401)
+        l_res = {
+            "record_id": id_rec,
+            "analysis": []
+        }
 
-        login = auth.username
-        pwd   = auth.password
+        ana_map = {}
 
-        user = User.getUserByLogin(login)
+        for res in l_results:
+            id_ana = res['id_ana']
 
-        if not user:
-            self.log.error(Logs.fileline() + ' : ResultFromExt login not found')
-            err = {"error": str(login) + " not found"}
-            return compose_ret(err, Constants.cst_content_type_json, 404)
-
-        salt_start = user['password'].find(":")
-        salt = user['password'][salt_start + 1:]
-
-        pwd_db = User.getPasswordDB(pwd, salt)
-
-        ret = User.checkUserAccess(login, pwd_db)
-
-        if ret is True:
-            self.log.info(Logs.fileline() + ' : ResultFromExt role=' + str(user['role_type']) + ' | login=' + str(login))
-            if user['role_type'] == Constants.cst_user_type_api:
-                self.log.info(Logs.fileline() + ' : ResultFromExt API access authorized')
-                l_results = Result.getResultRecord(id_rec, True)
-
-                l_res = {
-                    "record_id": id_rec,
-                    "analysis": []
+            if id_ana not in ana_map:
+                # first occurrence
+                ana_map[id_ana] = {
+                    "ref_ana": res['ref_ana'],
+                    "id_ana": id_ana,
+                    "name": res['nom'],
+                    "variables": []
                 }
 
-                ana_map = {}
+            # resolve unit label using dico
+            unit_label = None
+            if res['unite']:
+                dico = Various.getDicoById(res['unite'])
+                if dico and "label" in dico:
+                    unit_label = dico["label"]
 
-                for res in l_results:
-                    id_ana = res['id_ana']
+            # default value
+            value = res["valeur"]
 
-                    if id_ana not in ana_map:
-                        # first occurrence
-                        ana_map[id_ana] = {
-                            "ref_ana": res['ref_ana'],
-                            "id_ana": id_ana,
-                            "name": res['nom'],
-                            "variables": []
-                        }
+            # handle dictionary-typed results
+            possible_values = None
+            if res.get("type_resultat"):
+                dico_type = Various.getDicoById(res["type_resultat"])
+                if dico_type and dico_type.get("short_label", "").startswith("dico_"):
+                    # replace value by its label
+                    val_dico = Various.getDicoById(value)
+                    if val_dico and "label" in val_dico:
+                        value = val_dico["label"]
 
-                    # resolve unit label using dico
-                    unit_label = None
-                    if res['unite']:
-                        dico = Various.getDicoById(res['unite'])
-                        if dico and "label" in dico:
-                            unit_label = dico["label"]
+                    # Get dictionary entries using class Dict
+                    short_label = dico_type.get("short_label", "")
 
-                    # default value
-                    value = res["valeur"]
+                    if short_label.startswith("dico_"):
+                        dict_name = short_label[5:]  # remove "dico_"
+                        dict_entries = Dict.getDictDetails(dict_name)
+                    possible_values = []
+                    for entry in dict_entries:
+                        possible_values.append({
+                            "id": entry["id_data"],
+                            "label": entry["label"]
+                        })
 
-                    # handle dictionary-typed results
-                    possible_values = None
-                    if res.get("type_resultat"):
-                        dico_type = Various.getDicoById(res["type_resultat"])
-                        if dico_type and dico_type.get("short_label", "").startswith("dico_"):
-                            # replace value by its label
-                            val_dico = Various.getDicoById(value)
-                            if val_dico and "label" in val_dico:
-                                value = val_dico["label"]
+            var_data = {
+                "id_res": res["id_res"],
+                "id_var": res["id_data"],
+                "code_var": res["code_var"],
+                "label": res["libelle"],
+                "value": value,
+                "unit": unit_label
+            }
 
-                            # Get dictionary entries using class Dict
-                            short_label = dico_type.get("short_label", "")
+            if possible_values:
+                var_data["possible_values"] = possible_values
 
-                            if short_label.startswith("dico_"):
-                                dict_name = short_label[5:]  # remove "dico_"
-                                dict_entries = Dict.getDictDetails(dict_name)
-                            possible_values = []
-                            for entry in dict_entries:
-                                possible_values.append({
-                                    "id": entry["id_data"],
-                                    "label": entry["label"]
-                                })
+            ana_map[id_ana]["variables"].append(var_data)
 
-                    var_data = {
-                        "id_res": res["id_res"],
-                        "id_var": res["id_data"],
-                        "code_var": res["code_var"],
-                        "label": res["libelle"],
-                        "value": value,
-                        "unit": unit_label
-                    }
-
-                    if possible_values:
-                        var_data["possible_values"] = possible_values
-
-                    ana_map[id_ana]["variables"].append(var_data)
-
-                l_res["analysis"] = list(ana_map.values())
-            else:
-                self.log.info(Logs.fileline() + ' : ResultFromExt role type not authorized')
-                err = {"error": str(login) + " not authorized"}
-                return compose_ret(err, Constants.cst_content_type_json, 401)
-
-        elif ret is False:
-            self.log.info(Logs.fileline() + ' : ResultFromExt not authorized ' + str(login))
-            err = {"error": str(login) + " not authorized"}
-            return compose_ret(err, Constants.cst_content_type_json, 401)
-        else:
-            self.log.error(Logs.fileline() + ' : ResultFromExt ERROR checkUserAccess')
-            err = {"error": "checkUserAccess is in error"}
-            return compose_ret(err, Constants.cst_content_type_json, 500)
+        l_res["analysis"] = list(ana_map.values())
 
         self.log.info(Logs.fileline() + ' : ResultFromExt id_rec=' + str(id_rec))
         return compose_ret(l_res, Constants.cst_content_type_json, 200)
 
+    @require_oauth('external/result')
     def post(self, id_rec):
-        auth = request.authorization
-
-        if not auth:
-            self.log.error(Logs.fileline() + ' : ResultFromExt ERROR auth missing')
-            err = {"error": "Authentication required"}
-            return compose_ret(err, Constants.cst_content_type_json, 401)
-
-        login = auth.username
-        pwd = auth.password
-
         args = request.get_json()
         self.log.info(Logs.fileline() + ' : DEBUG args= ' + str(args))
 
@@ -789,28 +751,6 @@ class ResultFromExt(Resource):
             self.log.error(Logs.fileline() + ' : ResultFromExt ERROR args missing')
             err = {"error": "list_results missing"}
             return compose_ret(err, Constants.cst_content_type_json, 400)
-
-        user = User.getUserByLogin(login)
-        if not user:
-            self.log.error(Logs.fileline() + ' : ResultFromExt login not found')
-            err = {"error": str(login) + " not found"}
-            return compose_ret(err, Constants.cst_content_type_json, 404)
-
-        salt_start = user['password'].find(":")
-        salt = user['password'][salt_start + 1:]
-        pwd_db = User.getPasswordDB(pwd, salt)
-
-        ret = User.checkUserAccess(login, pwd_db)
-
-        if ret is not True:
-            self.log.info(Logs.fileline() + ' : ResultFromExt not authorized ' + str(login))
-            err = {"error": str(login) + " not authorized"}
-            return compose_ret(err, Constants.cst_content_type_json, 401)
-
-        if user['role_type'] != Constants.cst_user_type_api:
-            self.log.info(Logs.fileline() + ' : ResultFromExt role type not authorized')
-            err = {"error": str(login) + " not authorized"}
-            return compose_ret(err, Constants.cst_content_type_json, 401)
 
         self.log.info(Logs.fileline() + ' : ResultFromExt API access authorized')
 
@@ -826,7 +766,7 @@ class ResultFromExt(Resource):
                 continue
 
             try:
-                ok = Result.updateResult(id_data=id_res, id_owner=user['id_data'], valeur=value)
+                ok = Result.updateResult(id_data=id_res, id_owner=0, valeur=value)
                 if ok is True:
                     updated.append(str(id_res))
                 else:

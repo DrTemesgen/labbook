@@ -110,6 +110,7 @@ let param = '{ "doc_name":"' + doc_name + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
         data_items = data ;
@@ -179,7 +180,7 @@ $("#list_items_total").html( data_len ) ;
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage";
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 $(".cnx_trigger").keyup( function(event) 

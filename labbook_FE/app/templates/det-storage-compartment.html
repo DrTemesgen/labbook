@@ -119,7 +119,7 @@ let chamber = document.getElementById("sco_chamber").value;
     
     fetch("{{ session['server_ext'] }}/services/quality/storage/compartment/det/" + {{ args['id_item']|safe}}, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", "Content-Type": "application/json" },
         body: JSON.stringify(compartmentData)
     })
     .then(response => response.json())

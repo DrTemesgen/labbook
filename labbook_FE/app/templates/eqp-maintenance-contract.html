@@ -87,6 +87,7 @@ $("#search_supplier").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_supplier").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -153,6 +154,7 @@ var param = '{ "id_user":' + id_user + ', ' +
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
            let ref = JSON.stringify(data) ;
@@ -223,6 +225,7 @@ let input_file = $('#' + type_ref)[0] ;
                 contentType: false,
                 processData: false,
                 data: param_form,
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                 success : function(response)
                 {
                 console.log( "success upload ") ;
@@ -262,6 +265,7 @@ function delete_file( type_ref, id_file )
         {
             type: "DELETE",
             url: "{{ session['server_ext'] }}/services/file/document/" + type_ref + "/" + id_file,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
             $("#dial-wait").modal("hide") ;

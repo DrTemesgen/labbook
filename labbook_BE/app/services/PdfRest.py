@@ -7,16 +7,19 @@ from flask import request
 from flask_restful import Resource
 
 from app.models.General import compose_ret
-from app.models.Constants import *
-from app.models.Pdf import *
+from app.models.Constants import Constants
+from app.models.Pdf import Pdf
 from app.models.Logs import Logs
-from app.models.Record import *
-from app.models.Report import *
+from app.models.Report import Report
+from app.models.Setting import Setting
+from app.models.File import File
+from app.security.oauth_routes import require_oauth
 
 
 class PdfBillList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -48,6 +51,7 @@ class PdfBillList(Resource):
 class PdfInvoice(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_rec, template, filename):
         tpl = Setting.getTemplateByFile(template)
 
@@ -68,6 +72,7 @@ class PdfInvoice(Resource):
 class PdfReport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_rec, template, filename, reedit='N', id_user=0):
         if reedit == 'Y':
             tpl = Setting.getTemplateByFile(template)
@@ -115,6 +120,7 @@ class PdfReport(Resource):
 class PdfReportGeneric(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -125,7 +131,7 @@ class PdfReportGeneric(Resource):
         ret = Pdf.getPdfReportGeneric(args['html'], args['filename'])
 
         if not ret:
-            self.log.error(Logs.fileline() + ' : PdfReportGeneric failed id_rec=%s', str(id_rec))
+            self.log.error(Logs.fileline() + ' : PdfReportGeneric failed')
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE PdfReportGeneric')
@@ -135,6 +141,7 @@ class PdfReportGeneric(Resource):
 class PdfReportGrouped(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -155,6 +162,7 @@ class PdfReportGrouped(Resource):
 class PdfReportGlobal(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -181,6 +189,7 @@ class PdfReportGlobal(Resource):
 class PdfSticker(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, template):
         args = request.get_json()
 
@@ -201,6 +210,7 @@ class PdfSticker(Resource):
 class PdfTemplate(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         tpl = Setting.getTemplate(id_item)
 
@@ -231,6 +241,7 @@ class PdfTemplate(Resource):
 class PdfOutsourced(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_rec, template, filename):
         tpl = Setting.getTemplateByFile(template)
 
@@ -251,6 +262,7 @@ class PdfOutsourced(Resource):
 class PdfReportToday(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -277,6 +289,7 @@ class PdfReportToday(Resource):
 class PrintByScript(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, script_name):
         # args = request.get_json()
 

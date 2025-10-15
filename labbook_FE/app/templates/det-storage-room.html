@@ -67,7 +67,7 @@ let label = document.getElementById("sro_label").value.trim();
     
     fetch("{{ session['server_ext'] }}/services/quality/storage/room/det/" + {{ args['id_item']|safe}}, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", "Content-Type": "application/json" },
         body: JSON.stringify(roomData)
     })
     .then(response => response.json())

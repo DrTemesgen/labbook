@@ -1,7 +1,7 @@
 # -*- coding:utf-8 -*-
 import json
 
-from app.models.Constants import *
+from app.models.Constants import Constants
 from datetime import datetime
 from flask import make_response
 

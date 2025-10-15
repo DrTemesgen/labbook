@@ -206,6 +206,7 @@ param += tmp_value + ' ] }';
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
            showToast("{{ _('Enregistrement réussi') }}");

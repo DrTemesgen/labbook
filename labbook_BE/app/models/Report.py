@@ -1217,16 +1217,23 @@ class Report:
                         continue
 
                     elif operator_token == 'IN' or (operator_token == 'NOT' and i + 2 < len(tokens) and tokens[i + 2].upper() == 'IN'):
+                        # Handle: $_123 IN (...)  and  $_123 NOT IN (...)
                         not_prefix = (operator_token == 'NOT')
-                        paren_index = i + 2 if not_prefix else i + 1
-                        if paren_index + 1 >= len(tokens):
-                            Report.log.error("Missing list after IN/NOT IN")
+                        in_index = i + 2 if not_prefix else i + 1
+
+                        # Expect '(' right after IN
+                        if in_index + 1 >= len(tokens) or tokens[in_index + 1] != '(':
+                            Report.log.error("IN/NOT IN without '('")
                             break
-                        raw_list = tokens[paren_index + 1].strip()
-                        if not (raw_list.startswith('(') and raw_list.endswith(')')):
-                            Report.log.error("IN(...) list malformed")
+
+                        # Capture everything until the matching ')'
+                        inner_text, close_idx = collect_parenthesized(tokens, in_index + 1)  # content without the outer pair
+                        if inner_text == '':
+                            Report.log.error("IN/NOT IN empty list")
                             break
-                        items = [s.strip() for s in raw_list[1:-1].split(',') if s.strip()]
+
+                        # Map each item: [DICT.CODE] -> numeric id, "str" -> quoted, others pass-through
+                        items = [s.strip() for s in inner_text.split(',') if s.strip()]
                         mapped = []
                         for it in items:
                             if it.startswith('[') and it.endswith(']'):
@@ -1235,13 +1242,16 @@ class Report:
                                 mapped.append(sql_quote_string_literal(it[1:-1]))
                             else:
                                 mapped.append(it)
+
                         in_pred = f"{current_aliases['res']}.valeur IN ({', '.join(mapped)})"
                         if not_prefix:
                             in_pred = f"NOT ({in_pred})"
+
                         atom = '(' + AND.join(base_conditions + [in_pred]) + ')'
                         group_state["where_atoms"].append(atom)
-                        i += 3 if not_prefix else 2
-                        i += 1  # consume (...) token
+
+                        # Consume up to the matching ')'
+                        i = close_idx + 1
                         continue
 
                     elif tokens[i + 1].startswith('[') and tokens[i + 1].endswith(']'):
@@ -1255,8 +1265,22 @@ class Report:
                         Report.log.error(f"Unsupported operator after variable: {tokens[i+1]}")
                         break
 
-                elif token.startswith('{') and token.endswith('}'):
-                    var_ids = [t.strip() for t in token[1:-1].split(',') if t.strip()]
+                elif token.startswith('{'):
+                    # Merge tokens until closing '}' to support "{391, 344}" split as "{391," + "344}"
+                    brace = token
+                    while not brace.strip().endswith('}') and i + 1 < len(tokens):
+                        i += 1
+                        brace += ' ' + tokens[i]
+                    brace = brace.strip()
+                    if not brace.endswith('}'):
+                        Report.log.error(f"Unbalanced curly list near: {brace}")
+                        i += 1
+                        continue
+
+                    # Now we have the full "{...}" block
+                    inner = brace[1:-1].replace(', ', ',')
+                    var_ids = [t.strip() for t in inner.split(',') if t.strip()]
+
                     current_aliases = new_alias_set(alias_counter)
                     alias_counter += 1
 

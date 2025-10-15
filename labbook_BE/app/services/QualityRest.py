@@ -12,11 +12,13 @@ from app.models.Logs import Logs
 from app.models.Quality import Quality
 from app.models.File import File
 from app.models.Various import Various
+from app.security.oauth_routes import require_oauth
 
 
 class QualityLastMeeting(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         meeting = Quality.getLastMeeting()
 
@@ -45,6 +47,7 @@ class QualityLastMeeting(Resource):
 class QualityNbNonCompl(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, period):
         res = Quality.getNbNonCompliance(period)
 
@@ -61,6 +64,7 @@ class QualityNbNonCompl(Resource):
 class ConformityList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -95,6 +99,7 @@ class ConformityList(Resource):
 class ConformityDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getNonConformity(id_item)
 
@@ -122,6 +127,7 @@ class ConformityDet(Resource):
         self.log.info(Logs.fileline() + ' : ConformityDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -403,6 +409,7 @@ class ConformityDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ConformityDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteNonConformity(id_item)
 
@@ -417,6 +424,7 @@ class ConformityDet(Resource):
 class ConformityExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -480,6 +488,7 @@ class ConformityExport(Resource):
 class ControlList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, type_ctrl):
         if type_ctrl != 'INT' and type_ctrl != 'EXT':
             self.log.error(Logs.fileline() + ' : ControlList ERROR wrong type')
@@ -503,6 +512,7 @@ class ControlList(Resource):
 class ControlDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getControlDet(id_item)
 
@@ -518,6 +528,7 @@ class ControlDet(Resource):
         self.log.info(Logs.fileline() + ' : ControlDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -560,6 +571,7 @@ class ControlDet(Resource):
 class ControlIntExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         l_data = [['ctq_ser', 'ctq_name', 'ctq_type_ctrl', 'ctq_type_val', 'eqp_name', ]]
         dict_data = Quality.getControlList('INT')
@@ -606,6 +618,7 @@ class ControlIntExport(Resource):
 class ControlIntResList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_ctrl):
         l_items = Quality.getControlIntResList(id_ctrl)
 
@@ -628,6 +641,7 @@ class ControlIntResList(Resource):
 class ControlIntRes(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getControlIntRes(id_item)
 
@@ -658,6 +672,7 @@ class ControlIntRes(Resource):
         self.log.info(Logs.fileline() + ' : ControlIntRes id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -705,6 +720,7 @@ class ControlIntRes(Resource):
 class ControlIntResExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_ctrl):
         l_data = [['ctq_ser', 'ctq_name', 'ctq_type_val', 'eqp_name', 'cti_date', 'cti_target', 'cti_result', 'cti_comment', ]]
         controlDet = Quality.getControlDet(id_ctrl)
@@ -769,6 +785,7 @@ class ControlIntResExport(Resource):
 class ControlExtExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         l_data = [['ctq_ser', 'ctq_name', 'ctq_type_ctrl', 'ctq_type_val', 'eqp_name', ]]
         dict_data = Quality.getControlList('EXT')
@@ -815,6 +832,7 @@ class ControlExtExport(Resource):
 class ControlExtResList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_ctrl):
         l_items = Quality.getControlExtResList(id_ctrl)
 
@@ -850,6 +868,7 @@ class ControlExtResList(Resource):
 class ControlExtRes(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getControlExtRes(id_item)
 
@@ -868,6 +887,7 @@ class ControlExtRes(Resource):
         self.log.info(Logs.fileline() + ' : ControlExtRes id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -916,6 +936,7 @@ class ControlExtRes(Resource):
 class ControlExtResExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_ctrl):
         l_data = [['ctq_ser', 'ctq_name', 'ctq_type_val', 'eqp_name', 'cte_date', 'cte_organizer', 'cte_contact', 'cte_conform', 'cte_comment', ]]
         controlDet = Quality.getControlDet(id_ctrl)
@@ -981,6 +1002,7 @@ class ControlExtResExport(Resource):
 class EquipmentList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Quality.getEquipmentList()
 
@@ -1014,6 +1036,7 @@ class EquipmentList(Resource):
 class EquipmentSearch(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -1029,6 +1052,7 @@ class EquipmentSearch(Resource):
 class EquipmentDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getEquipment(id_item)
 
@@ -1060,6 +1084,7 @@ class EquipmentDet(Resource):
         self.log.info(Logs.fileline() + ' : EquipmentDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -1137,6 +1162,7 @@ class EquipmentDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE EquipmentDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteEquipment(id_item)
 
@@ -1175,6 +1201,7 @@ class EquipmentDet(Resource):
 class EquipmentComm(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, type, id_eqp):
         comm = Quality.getEquipmentComm(type, id_eqp)
 
@@ -1188,6 +1215,7 @@ class EquipmentComm(Resource):
         self.log.info(Logs.fileline() + ' : TRACE EquipmentComm')
         return compose_ret(comm, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, type, id_eqp):
         args = request.get_json()
 
@@ -1208,6 +1236,7 @@ class EquipmentComm(Resource):
 class EqpDoc(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, type, id_eqp):
         l_items = Quality.getEquipmentDoc(type, id_eqp)
 
@@ -1223,6 +1252,7 @@ class EqpDoc(Resource):
         self.log.info(Logs.fileline() + ' : TRACE EqpDoc')
         return compose_ret(l_items, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, id_eqp):
         args = request.get_json()
 
@@ -1284,6 +1314,7 @@ class EqpDoc(Resource):
 class EquipmentExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         l_data = [['id_data', 'creation_date', 'name', 'maker', 'model', 'funct', 'location', 'status', 'section',
                    'supplier', 'serial_number', 'inventory_number', 'incharge', 'purchase_date', 'receipt_date',
@@ -1350,6 +1381,7 @@ class EquipmentExport(Resource):
 class EqpFailureList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_eqp):
         l_items = Quality.getEqpFailureList(id_eqp)
 
@@ -1375,6 +1407,7 @@ class EqpFailureList(Resource):
 class EqpFailureExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_eqp):
         eqp = Quality.getEquipment(id_eqp)
 
@@ -1430,6 +1463,7 @@ class EqpFailureExport(Resource):
 class EqpFailureDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -1489,6 +1523,7 @@ class EqpFailureDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE EqpFailureDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteEqpFailure(id_item)
 
@@ -1503,6 +1538,7 @@ class EqpFailureDet(Resource):
 class EqpMetrologyList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_eqp):
         l_items = Quality.getEqpMetrologyList(id_eqp)
 
@@ -1528,6 +1564,7 @@ class EqpMetrologyList(Resource):
 class EqpMetrologyExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_eqp):
         eqp = Quality.getEquipment(id_eqp)
 
@@ -1576,6 +1613,7 @@ class EqpMetrologyExport(Resource):
 class EqpMetrologyDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -1633,6 +1671,7 @@ class EqpMetrologyDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE EqpMetrologyDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteEqpMetrology(id_item)
 
@@ -1647,6 +1686,7 @@ class EqpMetrologyDet(Resource):
 class EqpPreventList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_eqp):
         l_items = Quality.getEquipmentPreventiveList(id_eqp)
 
@@ -1672,6 +1712,7 @@ class EqpPreventList(Resource):
 class EqpPreventExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_eqp):
         eqp = Quality.getEquipment(id_eqp)
 
@@ -1718,6 +1759,7 @@ class EqpPreventExport(Resource):
 class EqpPreventiveDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -1775,6 +1817,7 @@ class EqpPreventiveDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE EqpPreventiveDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteEqpPreventive(id_item)
 
@@ -1789,6 +1832,7 @@ class EqpPreventiveDet(Resource):
 class EqpContractList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_eqp):
         l_items = Quality.getEquipmentContractList(id_eqp)
 
@@ -1817,6 +1861,7 @@ class EqpContractList(Resource):
 class EqpContractExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_eqp):
         eqp = Quality.getEquipment(id_eqp)
 
@@ -1864,6 +1909,7 @@ class EqpContractExport(Resource):
 class EqpContractDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -1922,6 +1968,7 @@ class EqpContractDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE EqpContractDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteEqpContract(id_item)
 
@@ -1936,6 +1983,7 @@ class EqpContractDet(Resource):
 class ManualList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -1986,6 +2034,7 @@ class ManualList(Resource):
 class ManualDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getManual(id_item)
 
@@ -2010,6 +2059,7 @@ class ManualDet(Resource):
         self.log.info(Logs.fileline() + ' : ManualDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -2061,6 +2111,7 @@ class ManualDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ManualDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteManual(id_item)
 
@@ -2075,6 +2126,7 @@ class ManualDet(Resource):
 class ManualExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -2137,6 +2189,7 @@ class ManualExport(Resource):
 class ManualSearch(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -2152,6 +2205,7 @@ class ManualSearch(Resource):
 class MeetingList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Quality.getMeetingList()
 
@@ -2191,6 +2245,7 @@ class MeetingList(Resource):
 class MeetingDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getMeeting(id_item)
 
@@ -2209,6 +2264,7 @@ class MeetingDet(Resource):
         self.log.info(Logs.fileline() + ' : MeetingDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -2247,6 +2303,7 @@ class MeetingDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE MeetingDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteMeeting(id_item)
 
@@ -2261,6 +2318,7 @@ class MeetingDet(Resource):
 class MeetingExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         l_data = [['id_data', 'date_meeting', 'type', 'type_id', 'promoter', 'report', ]]
         dict_data = Quality.getMeetingList()
@@ -2309,6 +2367,7 @@ class MeetingExport(Resource):
 class ProcedureList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Quality.getProcedureList()
 
@@ -2354,6 +2413,7 @@ class ProcedureList(Resource):
 class ProcedureDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getProcedure(id_item)
 
@@ -2378,6 +2438,7 @@ class ProcedureDet(Resource):
         self.log.info(Logs.fileline() + ' : ProcedureDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -2427,6 +2488,7 @@ class ProcedureDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ProcedureDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteProcedure(id_item)
 
@@ -2441,6 +2503,7 @@ class ProcedureDet(Resource):
 class ProcedureExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         l_data = [['id_data', 'title', 'reference', 'writer', 'auditor', 'approver', 'date_insert',
                    'date_apply', 'date_update', 'section', ]]
@@ -2497,6 +2560,7 @@ class ProcedureExport(Resource):
 class ProcedureSearch(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -2512,6 +2576,7 @@ class ProcedureSearch(Resource):
 class StaffExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         l_data = [['id_data', 'lastname', 'firstname', 'initial', 'birth', 'address',
                    'phone', 'email', 'arrived', 'position', 'section', 'last_eval', 'username', ]]
@@ -2571,6 +2636,7 @@ class StaffExport(Resource):
 class StockCancelIO(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -2591,6 +2657,7 @@ class StockCancelIO(Resource):
 class StockList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -2649,6 +2716,7 @@ class StockList(Resource):
 class StockListDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item, id_local):
         l_stocks = Quality.getStockListDet(id_item, id_local)
 
@@ -2696,6 +2764,7 @@ class StockListDet(Resource):
 class StockProductHist(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_item, id_local):
         args = request.get_json()
 
@@ -2762,6 +2831,7 @@ class StockProductHist(Resource):
 class StockProductList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_products = Quality.getStockProductList()
 
@@ -2787,6 +2857,7 @@ class StockProductList(Resource):
 class StockProductSearch(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -2802,6 +2873,7 @@ class StockProductSearch(Resource):
 class StockProductDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         stock = Quality.getStockProduct(id_item)
 
@@ -2817,6 +2889,7 @@ class StockProductDet(Resource):
         self.log.info(Logs.fileline() + ' : StockProductDet id_item=' + str(id_item))
         return compose_ret(stock, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -2862,6 +2935,7 @@ class StockProductDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE StockProductDet id_item=' + str(id_item))
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteStockProduct(id_item)
 
@@ -2876,6 +2950,7 @@ class StockProductDet(Resource):
 class StockSupplyList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -2908,6 +2983,7 @@ class StockSupplyList(Resource):
 class StockSupplyDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -2960,6 +3036,7 @@ class StockSupplyDet(Resource):
 class StockSupplyMove(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -3027,6 +3104,7 @@ class StockSupplyMove(Resource):
 class StockSupplyRemove(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_item, id_local):
         args = request.get_json()
 
@@ -3047,6 +3125,7 @@ class StockSupplyRemove(Resource):
 class StockUse(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, prs_ser):
         stock_use = Quality.getNbStockUse(prs_ser)
 
@@ -3063,6 +3142,7 @@ class StockUse(Resource):
         self.log.info(Logs.fileline() + ' : nb StockUse prs_ser=' + str(prs_ser))
         return compose_ret(nb_stock_use, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -3099,6 +3179,7 @@ class StockUse(Resource):
 class StockExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -3176,6 +3257,7 @@ class StockExport(Resource):
 class StockProductsExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_data = [['prd_ser', 'date', 'name', 'type', 'nb_by_pack', 'supplier', 'ref_supplier', 'conserv',
                    'safe_limit']]
@@ -3239,6 +3321,7 @@ class StockProductsExport(Resource):
 class StockSuppliesExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_data = [['prs_ser', 'date', 'product', 'nb_pack', 'receipt_date', 'expir_date', 'rack', 'batch_num',
                    'buy_price', 'user', 'empty', 'cancel', 'user_cancel', 'lessor', 'remove', 'user_remove']]
@@ -3297,6 +3380,7 @@ class StockSuppliesExport(Resource):
 class StockUsesExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_data = [['pru_ser', 'date', 'product', 'nb_pack', 'user', 'cancel', 'user_cancel']]
         dict_data = Quality.getStockExportUses()
@@ -3345,6 +3429,7 @@ class StockUsesExport(Resource):
 class StockLocalList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Quality.getStockLocalList()
 
@@ -3371,6 +3456,7 @@ class StockLocalList(Resource):
 class StorageList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -3409,6 +3495,7 @@ class StorageList(Resource):
 class StorageRoomList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Quality.getStorageRoomList()
 
@@ -3428,6 +3515,7 @@ class StorageRoomList(Resource):
 class StorageRoomDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getStorageRoom(id_item)
 
@@ -3443,6 +3531,7 @@ class StorageRoomDet(Resource):
         self.log.info(Logs.fileline() + ' : StorageRoomDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -3478,6 +3567,7 @@ class StorageRoomDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE StorageRoomDet id_item=' + str(id_item))
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteStorageRoom(id_item)
 
@@ -3492,6 +3582,7 @@ class StorageRoomDet(Resource):
 class StorageChamberList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Quality.getStorageChamberList()
 
@@ -3511,6 +3602,7 @@ class StorageChamberList(Resource):
 class StorageChamberDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getStorageChamber(id_item)
 
@@ -3526,6 +3618,7 @@ class StorageChamberDet(Resource):
         self.log.info(Logs.fileline() + ' : StorageChamberDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -3564,6 +3657,7 @@ class StorageChamberDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE StorageChamberDet id_item=' + str(id_item))
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteStorageChamber(id_item)
 
@@ -3578,6 +3672,7 @@ class StorageChamberDet(Resource):
 class StorageCompList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Quality.getStorageCompList()
 
@@ -3597,6 +3692,7 @@ class StorageCompList(Resource):
 class StorageCompDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getStorageComp(id_item)
 
@@ -3612,6 +3708,7 @@ class StorageCompDet(Resource):
         self.log.info(Logs.fileline() + ' : StorageCompDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -3656,6 +3753,7 @@ class StorageCompDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE StorageCompDet id_item=' + str(id_item))
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteStorageComp(id_item)
 
@@ -3670,6 +3768,7 @@ class StorageCompDet(Resource):
 class StorageBoxList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Quality.getStorageBoxList()
 
@@ -3689,6 +3788,7 @@ class StorageBoxList(Resource):
 class StorageBoxDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getStorageBox(id_item)
 
@@ -3704,6 +3804,7 @@ class StorageBoxDet(Resource):
         self.log.info(Logs.fileline() + ' : StorageBoxDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -3748,6 +3849,7 @@ class StorageBoxDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE StorageBoxDet id_item=' + str(id_item))
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteStorageBox(id_item)
 
@@ -3762,6 +3864,7 @@ class StorageBoxDet(Resource):
 class StorageBoxCoord(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getStorageBoxCoord(id_item)
 
@@ -3781,6 +3884,7 @@ class StorageBoxCoord(Resource):
 class StorageAliquotDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getStorageAliquot(id_item)
 
@@ -3796,6 +3900,7 @@ class StorageAliquotDet(Resource):
         self.log.info(Logs.fileline() + ' : StorageAliquotDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -3844,6 +3949,7 @@ class StorageAliquotDet(Resource):
             self.log.info(Logs.fileline() + ' : TRACE StorageAliquotDet id_item=' + str(ret))
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteStorageAliquot(id_item)
 
@@ -3858,6 +3964,7 @@ class StorageAliquotDet(Resource):
 class StorageAliquotDestock(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -3884,6 +3991,7 @@ class StorageAliquotDestock(Resource):
 class StorageAliquotRestock(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -3905,6 +4013,7 @@ class StorageAliquotRestock(Resource):
 class SupplierList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Quality.getSupplierList()
 
@@ -3924,6 +4033,7 @@ class SupplierList(Resource):
 class SupplierSearch(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -3939,6 +4049,7 @@ class SupplierSearch(Resource):
 class SupplierDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getSupplier(id_item)
 
@@ -3954,6 +4065,7 @@ class SupplierDet(Resource):
         self.log.info(Logs.fileline() + ' : SupplierDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -4007,6 +4119,7 @@ class SupplierDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SupplierDet id_item=' + str(id_item))
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deleteSupplier(id_item)
 
@@ -4021,6 +4134,7 @@ class SupplierDet(Resource):
 class SupplierExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         l_data = [['id_data', 'id_owner', 'supplier', 'lastname', 'firstname', 'funct', 'address',
                    'phone', 'mobile', 'fax', 'email', 'comment', 'critical',
@@ -4075,23 +4189,10 @@ class SupplierExport(Resource):
         return compose_ret('', Constants.cst_content_type_json)
 
 
-class ListComment(Resource):
-    log = logging.getLogger('log_services')
-
-    def delete(self, id_item):
-        ret = Quality.deleteListComment(id_item)
-
-        if not ret:
-            self.log.error(Logs.fileline() + ' : TRACE ListComment delete ERROR')
-            return compose_ret('', Constants.cst_content_type_json, 500)
-
-        self.log.info(Logs.fileline() + ' : TRACE ListComment delete id_item=' + str(id_item))
-        return compose_ret('', Constants.cst_content_type_json)
-
-
 class TraceDownload(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -4120,6 +4221,7 @@ class TraceDownload(Resource):
 class TraceList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, type_trace):
         l_items = Quality.getTraceList(type_trace)
 
@@ -4144,6 +4246,7 @@ class TraceList(Resource):
         self.log.info(Logs.fileline() + ' : TRACE TraceList')
         return compose_ret(l_items, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, type_trace):
         args = request.get_json()
 
@@ -4174,6 +4277,7 @@ class TraceList(Resource):
 class MessageList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_user):
         l_items = Quality.getMessageList(id_user)
 
@@ -4209,6 +4313,7 @@ class MessageList(Resource):
 class MessageDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getMessage(id_item)
 
@@ -4227,6 +4332,7 @@ class MessageDet(Resource):
         self.log.info(Logs.fileline() + ' : MessageDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -4253,6 +4359,7 @@ class MessageDet(Resource):
 class MessageDel(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_item, id_user):
         ret = Quality.deleteMessage(id_item, id_user)
 
@@ -4269,6 +4376,7 @@ class MessageDel(Resource):
 class MessageRead(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_item):
         ret = Quality.messageRead(id_item)
 
@@ -4283,6 +4391,7 @@ class MessageRead(Resource):
 class MessageUnread(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_user):
         res = Quality.countMessageUnread(id_user)
 
@@ -4299,6 +4408,7 @@ class MessageUnread(Resource):
 class PrinterList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         l_printers = Quality.getPrinterList()
 
@@ -4318,6 +4428,7 @@ class PrinterList(Resource):
 class PrinterDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Quality.getPrinter(id_item)
 
@@ -4333,6 +4444,7 @@ class PrinterDet(Resource):
         self.log.info(Logs.fileline() + ' : PrinterDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -4368,6 +4480,7 @@ class PrinterDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE PrinterDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Quality.deletePrinter(id_item)
 

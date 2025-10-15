@@ -22,11 +22,13 @@ from app.models.Product import Product
 from app.models.Record import Record
 from app.models.Result import Result
 from app.models.Various import Various
+from app.security.oauth_routes import require_oauth
 
 
 class LiteSetupList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         l_setup = Lite.getLiteSetupList()
 
@@ -46,6 +48,7 @@ class LiteSetupList(Resource):
 class LiteSetupDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Lite.getLiteSetup(id_item)
 
@@ -64,6 +67,7 @@ class LiteSetupDet(Resource):
         self.log.info(Logs.fileline() + ' : LiteSetupDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 

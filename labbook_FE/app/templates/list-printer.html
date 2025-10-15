@@ -95,9 +95,12 @@ function loadItemsTable()
             }
         },
         "ajax": {
-        "url": "{{ session['server_ext'] }}/services/quality/printer/list",
-        "type": "POST",
-        "contentType": "application/json"
+            "url": "{{ session['server_ext'] }}/services/quality/printer/list",
+            "type": "POST",
+            "contentType": "application/json",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer {{ session.get("be_access_token","") }}');
+            }
         },
         "columns": [
             {
@@ -147,9 +150,7 @@ function delete_item(id_item)
         fetch(`{{ session['server_ext'] }}/services/quality/printer/det/${id_item}`, 
         {
             method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => 
         {
@@ -188,6 +189,7 @@ let fileInput = document.getElementById("upload-printer");
 
     fetch(url, {
         method: 'POST',
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}" },
         body: formData
     })
     .then(response => response.json())
@@ -236,7 +238,7 @@ window.location.href = "{{ session['server_ext'] }}/det-printer/0" ;
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage" ;
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 {% if has_permission("PRINT_174") %}

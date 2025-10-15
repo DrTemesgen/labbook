@@ -1,90 +1,69 @@
 <html lang="{{ locale }}" {% if locale == 'ar' %}dir="rtl"{% else %}dir="ltr"{% endif %}>
-<head>
-    <title>{{ _("LabBook API") }}</title>
-    <meta charset="utf-8">
-    <link href="{{ url_for('static', filename='img/favicon.ico') }}" rel="shortcut icon" type="image/x-icon" />
-    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='vendor/swagger-ui/swagger-ui.css') }}" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"> 
-    <style>
-      html
-      {
-        box-sizing: border-box;
-        overflow: -moz-scrollbars-vertical;
-        overflow-y: scroll;
-      }
+    <head>
+        <title>{{ _("LabBook API") }}</title>
+        <meta charset="utf-8">
+        <link href="{{ url_for('static', filename='img/favicon.ico') }}" rel="shortcut icon" type="image/x-icon" />
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='vendor/swagger-ui/swagger-ui.css') }}" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"> 
+        <style>
+          html { box-sizing: border-box; overflow-y: scroll; }
+          *, *:before, *:after { box-sizing: inherit; }
+          body { margin: 0; background: #fafafa; }
+          .logout-button {
+            display: inline-block; margin: 5px; padding: 10px 20px;
+            background-color: #d9534f; color: #fff; text-decoration: none;
+            border-radius: 5px; font-size: 16px; border: none; cursor: pointer;
+          }
+          .logout-button:hover { background-color: #c9302c; }
+        </style>
+    </head>
 
-      *,
-      *:before,
-      *:after
-      {
-        box-sizing: inherit;
-      }
-
-      body
-      {
-        margin:0;
-        background: #fafafa;
-      }
-
-      .logout-button 
-      {
-        display: inline-block;
-        margin: 5px;
-        padding: 10px 20px;
-        background-color: #d9534f;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-        font-size: 16px;
-        border: none;
-        cursor: pointer;
-      }
-
-      .logout-button:hover 
-      {
-        background-color: #c9302c;
-      }
-    </style>
-</head>
-
-{% if debug == 1 or has_permission("API_2") %}
-<body>
-    <button class="logout-button" onclick="window.location.href='/disconnect'">
+    {% if debug == 1 or has_permission("API_2") %}
+    <body>
+        <button class="logout-button" onclick="window.location.href='{{ url_for('disconnect', _external=True) }}'">
         {{ _("Déconnexion") }}
-    </button>
-    <div id="swagger-ui"></div>
-    
-    <script src="{{ url_for('static', filename='vendor/swagger-ui/swagger-ui-bundle.js') }}" charset="UTF-8"> </script>
-    <script src="{{ url_for('static', filename='vendor/swagger-ui/swagger-ui-standalone-preset.js') }}" charset="UTF-8"> </script>
-    <script>
-    window.onload = function()
-    {
-        // Begin Swagger UI call region
-        const ui = SwaggerUIBundle(
-        {
-            url: "{{ url_for('swagger_api') }}",
-            dom_id: '#swagger-ui',
-            deepLinking: true,
-            presets: [
-                SwaggerUIBundle.presets.apis,
-                SwaggerUIStandalonePreset
-            ],
-            plugins: [
-                SwaggerUIBundle.plugins.DownloadUrl
-            ],
-            layout: "StandaloneLayout"
-        } ) ;
-        // End Swagger UI call region
+        </button>        
+        <div id="swagger-ui"></div>
 
-        window.ui = ui;
-    } ;
-    </script>
-  
-</body>
-{% else %}
-<body>
-    <div>{{ _("Accès non autorisé") }}</div>
-    <meta http-equiv="refresh" content="3;url=/disconnect">
-<body>
-{% endif %}
+        <script defer src="{{ url_for('static', filename='vendor/swagger-ui/swagger-ui-bundle.js') }}" charset="UTF-8"> </script>
+        <script defer src="{{ url_for('static', filename='vendor/swagger-ui/swagger-ui-standalone-preset.js') }}" charset="UTF-8"> </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function ()
+            {
+                // Ensure BE session is set before Swagger OAuth
+                fetch("{{ url_for('confirm_access', _external=True) }}", {
+                  method: "POST",
+                  headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", "Content-Type": "application/json" },
+                  credentials: "same-origin",
+                  body: JSON.stringify({ id_user: {{ session['user_id']|int }} })
+                }).catch(()=>{ /* no-op */ });
+
+                const ui = SwaggerUIBundle({
+                    url: "{{ url_for('swagger_api') }}",
+                    dom_id: '#swagger-ui',
+                    deepLinking: true,
+                    presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
+                    plugins: [SwaggerUIBundle.plugins.DownloadUrl],
+                    layout: "StandaloneLayout",
+                    oauth2RedirectUrl: "{{ url_for('static', filename='vendor/swagger-ui/oauth2-redirect.html', _external=True) }}",
+                    persistAuthorization: true
+                });
+
+                ui.initOAuth({
+                    clientId: "labbook-API",
+                    usePkceWithAuthorizationCodeGrant: true,
+                    appName: "LabBook External API",
+                    scopeSeparator: " "
+                });
+
+                window.ui = ui;
+            });
+        </script>
+    </body>
+    {% else %}
+    <body>
+        <div>{{ _("Accès non autorisé") }}</div>
+        <meta http-equiv="refresh" content="3;url=/disconnect">
+    </body>
+    {% endif %}
 </html>

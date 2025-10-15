@@ -7,21 +7,23 @@ from flask import request
 from flask_restful import Resource
 from hl7apy.parser import parse_message
 from hl7apy.core import Message
-from hl7apy.consts import VALIDATION_LEVEL
+# from hl7apy.consts import VALIDATION_LEVEL
 
 from app.models.General import compose_ret
-from app.models.Constants import *
+from app.models.Constants import Constants
 from app.models.Analyzer import Analyzer
-from app.models.Record import Record
+# from app.models.Record import Record
 from app.models.Product import Product
-from app.models.User import User
-from app.models.DB import *
+# from app.models.User import User
+# from app.models.DB import DB
 from app.models.Logs import Logs
+from app.security.oauth_routes import require_oauth
 
 
 class ConnectSetting(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         setting = Analyzer.getConnectSetting()
 
@@ -32,6 +34,7 @@ class ConnectSetting(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ConnectSetting')
         return compose_ret(setting, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -52,6 +55,7 @@ class ConnectSetting(Resource):
 class AnalyzerList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_analyzers = Analyzer.getAnalyzerList()
 
@@ -65,6 +69,7 @@ class AnalyzerList(Resource):
 class AnalyzerDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_analyzer):
         item = Analyzer.getAnalyzerDet(id_analyzer)
 
@@ -80,6 +85,7 @@ class AnalyzerDet(Resource):
         self.log.info(Logs.fileline() + ' : AnalyzerDet id_analyzer=' + str(id_analyzer))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_analyzer):
         args = request.get_json()
 
@@ -123,6 +129,7 @@ class AnalyzerDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE AnalyzerDet id_analyzer=' + str(id_analyzer))
         return compose_ret(id_analyzer, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_analyzer):
         args = request.get_json()
 
@@ -142,6 +149,7 @@ class AnalyzerDet(Resource):
 class AnalyzerFile(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_analyzers = Analyzer.getAnalyzerFiles()
 
@@ -382,6 +390,7 @@ class AnalyzerLab29(Resource):
 class AnalyzerMsgList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -407,6 +416,7 @@ class AnalyzerMsgList(Resource):
 class AnalyzerMsgDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def delete(self, id_msg):
         ret = Analyzer.deleteMsgAnalyzer(id_msg)
 

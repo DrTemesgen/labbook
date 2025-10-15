@@ -12,6 +12,7 @@ from datetime import timedelta
 
 DEBUG                      = True
 SECRET_KEY                 = 'replace-me-with-random-secret-key'
+OAUTH_CLIENT_SECRET        = 'replace-me-with-random-secret-key'
 # SESSION_COOKIE_SECURE      = True
 PERMANENT_SESSION_LIFETIME = timedelta(days=1)
 BABEL_DEFAULT_LOCALE       = 'fr_FR'

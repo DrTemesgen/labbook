@@ -15,6 +15,9 @@
 import os
 import logging
 
+# DEBUG TEST 06/10/2025
+# os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
+
 from logging.handlers import WatchedFileHandler
 
 from flask import Flask
@@ -56,6 +59,7 @@ LANGUAGES = {
     'pt': 'Portuguese',
 }
 
+
 # ######################################
 # Initializing stuff
 # ######################################
@@ -78,7 +82,7 @@ log = logging.getLogger('log_services')
 
 app = Flask(__name__)
 app.config.from_object('default_settings')
-app.register_blueprint(bp_oauth, url_prefix='/services')
+app.register_blueprint(bp_oauth)
 
 # Limits CORS to the subdomain beginning with /services/external/
 CORS(
@@ -90,6 +94,11 @@ CORS(
     }},
     supports_credentials=False  # set True only if you need cookies/Authorization headers
 )
+
+app.config['OAUTH2_TOKEN_EXPIRES_IN'] = {
+    'client_credentials': 7200,  # 2h M2M
+    'authorization_code': 7200,  # 2h labbook-FE
+}
 
 authorization.init_app(app)
 
@@ -155,6 +164,15 @@ if config_envvar in os.environ:
 else:
     print(("No local configuration available: {} is undefined in the environment".format(config_envvar)))
 
+# ===== Authlib insecure transport toggle =====
+# If not provided by the container, default to 1 so HTTP works in dev/lab.
+val = os.environ.get('AUTHLIB_INSECURE_TRANSPORT')
+if val is None:
+    os.environ['AUTHLIB_INSECURE_TRANSPORT'] = '1'
+    log.info(Logs.fileline() + ' : AUTHLIB_INSECURE_TRANSPORT not set → defaulting to 1')
+else:
+    log.info(Logs.fileline() + f' : AUTHLIB_INSECURE_TRANSPORT={val}')
+
 # app.config["CACHE_TYPE"] = "null"  # NOTE : Use if flask keep translation in cache
 
 
@@ -196,8 +214,8 @@ api.add_resource(AnalysisVarList,       '/services/analysis/variable/list/<int:i
 api.add_resource(AnalysisVarDet,        '/services/analysis/variable/det/<int:id_var>')
 api.add_resource(AnalyzerDet,           '/services/device/analyzer/det/<int:id_analyzer>')
 api.add_resource(AnalyzerFile,          '/services/device/analyzer/file')
-api.add_resource(AnalyzerLab27,         '/services/external/device/analyzer/lab27/<string:id_analyzer>')
-api.add_resource(AnalyzerLab29,         '/services/external/device/analyzer/lab29/<string:id_analyzer>')
+api.add_resource(AnalyzerLab27,         '/services/external/device/analyzer/lab27/<string:id_analyzer>')  # no oauth required
+api.add_resource(AnalyzerLab29,         '/services/external/device/analyzer/lab29/<string:id_analyzer>')  # no oauth required
 api.add_resource(AnalyzerList,          '/services/device/analyzer/list')
 api.add_resource(AnalyzerMsgList,       '/services/device/analyzer/message/list')
 api.add_resource(AnalyzerMsgDet,        '/services/device/analyzer/message/det/<int:id_msg>')
@@ -258,13 +276,12 @@ api.add_resource(FileReport,            '/services/file/report/record/<int:id_re
 api.add_resource(FileReportCopy,        '/services/file/report/<string:filename>/copy/<string:copy_name>')
 api.add_resource(FileReportNbDL,        '/services/file/report/nb_download/<string:filename>')
 api.add_resource(FileStorage,           '/services/file/storage')
-api.add_resource(InitVersion,           '/services/init/version')
-api.add_resource(ListComment,           '/services/quality/list/comment/<int:id_item>')
+api.add_resource(InitVersion,           '/services/init/version')  # no oauth required
 api.add_resource(LiteSetupList,         '/services/lite/setup/list')
 api.add_resource(LiteSetupDet,          '/services/lite/setup/det/<int:id_item>')
-api.add_resource(LiteSetupLoad,         '/services/lite/setup/load')
-api.add_resource(LiteDataRecovery,      '/services/lite/recovery/data')
-api.add_resource(LiteReportRecovery,    '/services/lite/recovery/report')
+api.add_resource(LiteSetupLoad,         '/services/lite/setup/load')       # no oauth required
+api.add_resource(LiteDataRecovery,      '/services/lite/recovery/data')    # no oauth required
+api.add_resource(LiteReportRecovery,    '/services/lite/recovery/report')  # no oauth required
 api.add_resource(ManualList,            '/services/quality/manual/list')
 api.add_resource(ManualDet,             '/services/quality/manual/det/<int:id_item>')
 api.add_resource(ManualExport,          '/services/quality/manual/export')
@@ -356,6 +373,8 @@ api.add_resource(SettingLinkUnit,       '/services/setting/link/unit/<string:typ
 api.add_resource(SettingLinkByUser,     '/services/setting/link/user/<int:id_user>')
 api.add_resource(SettingManual,         '/services/setting/manual')
 api.add_resource(SettingManualCat,      '/services/setting/manual/category')
+api.add_resource(SettingOauthList,      '/services/setting/oauth/list')
+api.add_resource(SettingOauthDet,       '/services/setting/oauth/det/<int:id_item>')
 api.add_resource(SettingPref,           '/services/setting/pref/list', '/services/setting/pref/list/<int:id_owner>')
 api.add_resource(SettingRecNum,         '/services/setting/record/number')
 api.add_resource(SettingReqServices,    '/services/setting/requesting/services')
@@ -419,7 +438,7 @@ api.add_resource(TemplateDet,           '/services/setting/template/det/<int:id_
 api.add_resource(TemplateList,          '/services/setting/template/list', '/services/setting/template/list/<string:type>')
 api.add_resource(TraceDownload,         '/services/quality/trace/download')
 api.add_resource(TraceList,             '/services/quality/trace/list/<string:type_trace>')
-api.add_resource(UserAccess,            '/services/user/access')
+api.add_resource(UserAccess,            '/services/user/access')  # no oauth required
 api.add_resource(UserByLogin,           '/services/user/login/<string:login>')
 api.add_resource(UserConnExport,        '/services/user/connection/export')
 api.add_resource(UserCount,             '/services/user/count')

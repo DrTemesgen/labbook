@@ -1,0 +1,201 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+<title>{{ _("OAuth client") }}</title>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+            <h2 class="page-title page-title-color"><span>{{ _("OAuth client") }}</span></h2>
+            {% if session['user_role'] in ('A') %}
+            <form autocomplete="off">
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="reference" class="form-label col-3 text-end mt-2 me-1">{{ _("Nom") }} *</label>
+                    <div>					
+                        <input type="text" name="name" id="name" value="{{ args['item'].get('oacl_client_name','') }}" class="form-control form-lbk">	
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="client_id" class="form-label col-3 text-end mt-2 me-1">{{ _("Id client") }} *</label>
+                    <div>
+                        <input type="text" name="client_id" id="client_id" value="{{ args['item'].get('oacl_client_id','') }}" class="form-control form-lbk">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="client_secret" class="form-label col-3 text-end mt-2 me-1">{{ _("Secret") }}</label>
+                    <div>
+                        <input type="text" name="client_secret" id="client_secret" value="{{ args['item'].get('oacl_client_secret','') }}" class="form-control form-lbk">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="redirect_uris" class="form-label col-3 text-end mt-2 me-1">{{ _("Redirect URIs") }}</label>
+                    <div>
+                        <textarea id="redirect_uris" class="form-control form-lbk" rows="2">{{ args['item'].get('oacl_redirect_uris','') }}</textarea>
+                        <small>{{ _("Séparer par des espaces") }}</small>
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="scope" class="form-label col-3 text-end mt-2 me-1">{{ _("Scope") }}</label>
+                    <div>
+                        <input type="text" id="scope" value="{{ args['item'].get('oacl_scope','') }}" class="form-control form-lbk">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="grant_types" class="form-label col-3 text-end mt-2 me-1">{{ _("Grant types") }}</label>
+                    <div>
+                        <input type="text" id="grant_types" value="{{ args['item'].get('oacl_grant_types','') }}" class="form-control form-lbk">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="response_types" class="form-label col-3 text-end mt-2 me-1">{{ _("Response types") }}</label>
+                    <div>
+                        <input type="text" id="response_types" value="{{ args['item'].get('oacl_response_types','') }}" class="form-control form-lbk">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="auth_method" class="form-label col-3 text-end mt-2 me-1">{{ _("Auth method") }}</label>
+                    <div>
+                        <input type="text" id="auth_method" value="{{ args['item'].get('oacl_token_endpoint_auth_method','') }}" class="form-control form-lbk">
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="is_active" class="form-label col-3 text-end mt-2 me-1">{{ _("Actif") }}</label>
+                    <div class="mt-2">
+                        <input type="checkbox" id="is_active" {% if args['item'].get('oacl_is_active','Y') == 'Y' %}checked{% endif %}>
+                    </div>
+                </div>
+
+            </form>
+
+            <div class="my-2 clearfix">
+                <div class="float-start ms-0">
+                    <input type="button" onclick="cancel();" id="btn_cancel" value="{{ _("Annuler") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                </div>
+                <div class="float-end">
+                    <input type="button" onclick="save_item();" id="btn_save" value="{{ _("Enregistrer") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
+                </div>
+            </div>
+
+            {% else %}
+            {% include 'no-rights.html' %} 
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+function save_item()
+{
+    var id_item = {{ args['id_item']|safe }} ;
+    var name    = $("#name").val()   ;
+    var client_id = $("#client_id").val().trim();
+    var client_secret = $("#client_secret").val().trim();
+    var redirect_uris = $("#redirect_uris").val().trim();
+    var scope = $("#scope").val().trim();
+    var grant_types = $("#grant_types").val().trim();
+    var response_types = $("#response_types").val().trim();
+    var auth_method = $("#auth_method").val().trim();
+    var is_active = $("#is_active").is(":checked") ? "Y" : "N";
+
+    // Basic validation
+    var msg = "";
+
+    if (name === "") msg += "{{ _('Veuillez saisir un nom.') }}\n";
+    if (client_id === "") msg += "{{ _('Veuillez saisir un Id client.') }}\n";
+    if (msg !== "") { alert(msg); return false; }  
+
+    // Build BE payload
+    var param = JSON.stringify({
+        "oacl_client_name": name,
+        "oacl_client_id": client_id,
+        "oacl_client_secret": client_secret,
+        "oacl_redirect_uris": redirect_uris,
+        "oacl_scope": scope,
+        "oacl_grant_types": grant_types,
+        "oacl_response_types": response_types,
+        "oacl_token_endpoint_auth_method": auth_method,
+        "oacl_is_active": is_active,
+        "oacl_user_id": {{ session['user_id']|safe }}
+    })
+
+    // popup wait
+    $("#dial-wait").off('shown.bs.modal') ;
+    $("#dial-wait").modal("show") ;
+
+    $.ajax( {
+        type: "POST",
+        url: "{{ session['server_ext'] }}/services/setting/oauth/det/" + id_item,
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        success: function(data)
+        {
+            window.location = document.referrer ;
+        },
+        error: function(data)
+        {
+            console.log("ERROR POST item det") ;
+
+            $("#dial-wait").modal("hide") ;
+
+            if (xhr.status === 403) 
+            {
+                alert("{{ _('Client protégé : enregistrement interdit.') }}");
+            }
+            else 
+            {
+                console.log("ERROR POST item det", xhr);
+                alert("{{ _("Une erreur est survenue lors de l'enregistrement") }}") ;
+            }
+        }
+    } ) ;
+}
+
+(function()
+    {
+        const clientId = "{{ args['item'].get('oacl_client_id','') }}";
+        const isProtected = (clientId === 'labbook-FE');
+
+        if (isProtected) {
+            // Disable all inputs for protected client
+            ['name','client_id','client_secret','redirect_uris','scope','grant_types','response_types','auth_method','is_active']
+                .forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (el.type === 'checkbox') {
+                            el.disabled = true;
+                        } else {
+                            el.readOnly = true; // keep style but block editing
+                            el.classList.add('disabled');
+                        }
+                    }
+                });
+            // Disable Save button
+            const btn = document.getElementById('btn_save');
+            if (btn) {
+                btn.disabled = true;
+                btn.title = "{{ _('Client protégé : enregistrement désactivé') }}";
+            }
+        }
+    })();
+
+function cancel()
+{
+    window.location.href = "{{ session['server_ext'] }}/setting-oauth-list";
+}
+</script>
+{% endblock %}

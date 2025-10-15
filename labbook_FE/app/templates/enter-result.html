@@ -313,6 +313,7 @@ param_list_answer += ' ] }' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_list_answer,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
             $("#dial-wait").modal("hide") ;
@@ -495,6 +496,7 @@ param_list_valid += ' ] }' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_list_valid,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
             $("#dial-wait").modal("hide") ;
@@ -1003,6 +1005,7 @@ param_list_res += value_res + ' ] }';
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_list_ana,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret_ana)
         {
             // create in DB list of results to enter and corresponding validation
@@ -1013,6 +1016,7 @@ param_list_res += value_res + ' ] }';
                 dataType: 'json',
                 contentType: "application/json; charset=utf-8",
                 data: param_list_res,
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                 success : function(response)
                 {
                 let param_stat = '{ "stat":182 }' ; 
@@ -1025,6 +1029,7 @@ param_list_res += value_res + ' ] }';
                         dataType: 'json',
                         contentType: "application/json; charset=utf-8",
                         data: param_stat,
+                        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                         success : function(response)
                         {
                         window.location.href = "{{ session['server_ext'] }}/enter-result/" + id_rec ;
@@ -1064,6 +1069,7 @@ $("#search_analysis").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_analysis").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
             return JSON.stringify(
             {
@@ -1135,6 +1141,7 @@ $("#div_add_analysis").show() ;
         {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/analysis/det/" + id_ana,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data_ana)
             {
             let new_ana  = '<div id="new-analysis-' + id_ana + '" class="new-analysis">' + data_ana.nom + '<input type="hidden" name="new-analysis[]" value="' + id_ana + '"></div>' ;
@@ -1177,6 +1184,7 @@ var param = '{ "html": ' + html_report + ', ' + // No quotes with stringify
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;
@@ -1282,7 +1290,7 @@ let aliquots = [];
 
     fetch("{{ session['server_ext'] }}/services/quality/storage/aliquot/det/0", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", "Content-Type": "application/json" },
         body: JSON.stringify({ aliquots: aliquots })
     })
     .then(response => {
@@ -1351,7 +1359,9 @@ let boxCoordSpan = aliquotForm.querySelector(".box_coord");
     if (boxId) {
         let url = `{{ session['server_ext'] }}/services/quality/storage/box/coord/${boxId}`;
 
-        fetch(url)
+        fetch(url, {
+            headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}" }
+            })
             .then(response => response.json())
             .then(data => {
                 if (data.sbo_label) {

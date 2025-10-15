@@ -1,0 +1,179 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+<title>{{ _("Paramètrage OAuth client") }}</title>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+            <h2 class="page-title page-title-color"><span>{{ _("Paramètrage OAuth client") }}</span></h2>
+
+            {% if session['user_role'] in ('A') %}
+            <table id="itemsTable" class="display table table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>{{ _("Action") }}</th>
+                        <th hidden>{{ _("ID") }}</th>
+                        <th>{{ _("Nom") }}</th>
+                        <th>{{ _("Id client") }}</th>
+                        <th>{{ _("Scope") }}</th>
+                        <th>{{ _("Actif") }}</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <div class="clearfix mt-2 mb-5">
+                <div class="float-start ms-0">
+                    <input type="button" onclick="return_home();" id="btn_return" value="{{ _("Retour") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                </div>
+                <div class="float-end d-lg-flex align-items-end">
+                    <div>
+                        <input type="button" onclick="add_item();" id="add_printer" value="{{ _("Ajouter une configuration") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            {% include 'no-rights.html' %} 
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+
+    function loadItemsTable() 
+{
+    $('#itemsTable').DataTable().destroy();
+    $('#itemsTable').DataTable({
+        "pageLength": 25,
+        "language": {
+            "lengthMenu": "{{ _("Afficher _MENU_ entrées") }}",
+            "zeroRecords": "{{ _("Aucun enregistrement trouvé") }}",
+            "info": "{{ _("Affichage de _START_ à _END_ sur _TOTAL_ entrées") }}",
+            "infoEmpty": "{{ _("Aucune entrée disponible") }}",
+            "infoFiltered": "{{ _("(filtré de _MAX_ entrées au total)") }}",
+            "search": "{{ _("Rechercher") }}:",
+            "paginate": {
+                "first": "{{ _("Premier") }}",
+                "last": "{{ _("Dernier") }}",
+                "next": "{{ _("Suivant") }}",
+                "previous": "{{ _("Précédent") }}"
+            }
+        },
+        "ajax": {
+            "url": "{{ session['server_ext'] }}/services/setting/oauth/list",
+            "type": "GET",
+            "dataSrc": "",
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer {{ session.get("be_access_token","") }}');
+            },
+        },
+        error: function (xhr) {
+            // Basic bounce: if unauthorized/forbidden, reload to trigger your usual flow
+            if (xhr.status === 401 || xhr.status === 403) {
+                window.location.reload();
+            }
+        },
+        "columns": [
+            {
+                "data": null,
+                "orderable": false,
+                "render": function (data, type, row) {
+                    let menu = `
+                        <nav class="nav-item dropdown">
+                        <a class="dropdown-toggle menu-act" data-bs-toggle="dropdown" aria-expanded="false"></a>
+                        <div class="dropdown-menu nav-style menu-act-drop">`;
+
+                    menu += `<a class="dropdown-item menu-act-item" href="{{ session['server_ext'] }}/det-oauth-client/${row.oacl_ser}">{{ _("Éditer") }}</a>`;
+                    // Do not allow deletion of the protected FE client
+                    if (row.oacl_client_id !== 'labbook-FE') 
+                    {
+                        menu += `
+                            <a class="dropdown-item menu-act-item" href="#" onclick="delete_item(${row.oacl_ser}); return false;">
+                            {{ _("Supprimer") }}
+                            </a>`;
+                    }
+                    else
+                    {
+                        menu += `<span class="dropdown-item disabled">{{ _("Protégé") }}</span>`;
+                    }
+
+                    menu += `</div></nav>`;
+
+                    return menu;
+                }
+            },
+            { "data": "oacl_ser", "visible": false },
+            { "data": "oacl_client_name" },
+            { "data": "oacl_client_id" },
+            { "data": "oacl_scope" },
+            {
+                "data": "oacl_is_active",
+                "className": "text-center",
+                "orderable": false,
+                "render": function (data) {
+                    return data === 'Y'
+                        ? '<i class="bi bi-check text-success" aria-label="Actif"></i>'
+                        : '<i class="bi bi-x text-danger" aria-label="Inactif"></i>';
+                }
+            }
+        ]
+    } ) ;
+}
+
+function delete_item(id_item)
+{
+    if (confirm("{{ _("Êtes-vous sûr de vouloir supprimer ?") }}"))
+    {
+        fetch(`{{ session['server_ext'] }}/services/setting/oauth/det/${id_item}`, 
+            {
+                method: 'DELETE',
+                headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(response => 
+                {
+                    if (response.status === 200 || response.status === 204) 
+                    {
+                        loadItemsTable();
+                        return;
+                    }
+                    else if (response.status === 403) 
+                    {
+                        alert("{{ _('Client protégé : suppression interdite.') }}");
+                        return;
+                    }
+                    else
+                        alert("{{ _("Une erreur s'est produite lors de la suppression.") }}");
+                })
+                .catch(error => {
+                    console.error("Erreur :", error);
+                    alert("{{ _("Une erreur s'est produite lors de la suppression.") }}");
+                });
+    }
+}
+
+function add_item()
+{
+    window.location.href = "{{ url_for('det_oauth_client', id_item=0) }}" ;
+}
+
+function return_home()
+{
+    window.location.href = "{{ url_for('homepage') }}" ;
+}
+
+{% if session['user_role'] in ('A') %}
+$(document).ready(function() 
+    {
+        loadItemsTable() ;
+    } ) ;
+{% endif %}
+</script>
+{% endblock %}

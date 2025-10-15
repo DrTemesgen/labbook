@@ -137,6 +137,7 @@ $("#search_patient").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_patient").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
             return JSON.stringify({
                 term: params.term
@@ -356,7 +357,7 @@ let hasError = false;
 
     fetch("{{ session['server_ext'] }}/services/quality/storage/aliquot/det/" + {{ args['id_item']|safe}}, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", "Content-Type": "application/json" },
         body: JSON.stringify({ aliquots: aliquots })
     })
     .then(response => {
@@ -385,7 +386,9 @@ let boxCoordSpan = aliquotForm.querySelector(".box_coord");
     if (boxId) {
         let url = `{{ session['server_ext'] }}/services/quality/storage/box/coord/${boxId}`;
 
-        fetch(url)
+        fetch(url, {
+            headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}" }
+            })
             .then(response => response.json())
             .then(data => {
                 if (data.sbo_label) {

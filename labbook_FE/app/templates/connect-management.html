@@ -40,7 +40,7 @@
                         <div class="form-group">
                             <input id="upload-plugin" type="file" class="form-control mb-2" accept=".jar"/>
                         </div>
-                        <button type="button" class="btn btn-lbk btn-{{ session['user_role']|safe }}"" onclick="uploadFile('plugin')">{{ _("Envoyer") }}</button>
+                        <button type="button" class="btn btn-lbk btn-{{ session['user_role']|safe }}" onclick="uploadFile('plugin')">{{ _("Envoyer") }}</button>
                     </div>
 
                     <!-- Upload setting file -->
@@ -49,7 +49,7 @@
                         <div class="form-group">
                             <input id="upload-setting" type="file" class="form-control mb-2"/>
                         </div>
-                        <button type="button" class="btn btn-lbk btn-{{ session['user_role']|safe }}"" onclick="uploadFile('setting')">{{ _("Envoyer") }}</button>
+                        <button type="button" class="btn btn-lbk btn-{{ session['user_role']|safe }}" onclick="uploadFile('setting')">{{ _("Envoyer") }}</button>
                     </div>
 
                     <!-- Upload Mapping (no extension) -->
@@ -58,7 +58,7 @@
                         <div class="form-group">
                             <input id="upload-mapping" type="file" class="form-control mb-2"/>
                         </div>
-                        <button type="button" class="btn btn-lbk btn-{{ session['user_role']|safe }}"" onclick="uploadFile('mapping')">{{ _("Envoyer") }}</button>
+                        <button type="button" class="btn btn-lbk btn-{{ session['user_role']|safe }}" onclick="uploadFile('mapping')">{{ _("Envoyer") }}</button>
                     </div>
                 </div>
 
@@ -114,6 +114,7 @@ let url = "{{ session['server_ext'] }}/upload-connect/" + type;
 
     fetch(url, {
         method: 'POST',
+        headers: { Authorization: "Bearer {{ session.get('be_access_token','') }}" },
         body: formData
     })
     .then(response => response.json())
@@ -182,7 +183,7 @@ function saveLabBookUrl() {
 
     fetch("{{ session['server_ext'] }}/services/connect/setting", {
         method: 'POST',
-        headers: { "Content-Type": "application/json" },
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", "Content-Type": "application/json" },
         body: JSON.stringify({ id_user:{{ session['user_id']|safe}} , url: urlInput })
     })
     .then(response => response.json())

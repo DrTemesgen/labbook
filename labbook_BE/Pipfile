@@ -28,7 +28,7 @@ bcrypt = "~=5.0.0"
 pip-audit = "~=2.9.0"
 Flask-Cors = "~=6.0.1"
 mailjet-rest = "~=1.5.1"
-authlib = "~=1.6.4"
+authlib = "~=1.6.5"
 
 [dev-packages]
 

@@ -6,14 +6,16 @@ from datetime import datetime
 from flask_restful import Resource
 
 from app.models.General import compose_ret
-from app.models.Constants import *
-from app.models.DB import *
+from app.models.Constants import Constants
+from app.models.DB import DB
 from app.models.Logs import Logs
+from app.security.oauth_routes import require_oauth
 
 
 class DbLastStat(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, type):
         ret = ''
 

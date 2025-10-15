@@ -13,6 +13,7 @@ from app.models.Constants import Constants
 from app.models.User import User
 from app.models.Logs import Logs
 from app.models.Various import Various
+from app.security.oauth_routes import require_oauth
 
 
 class UserAccess(Resource):
@@ -59,6 +60,7 @@ class UserAccess(Resource):
 class UserByLogin(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, login):
         user = User.getUserByLogin(login)
 
@@ -78,6 +80,7 @@ class UserByLogin(Resource):
 class UserDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_user):
         user = User.getUserDetails(id_user)
 
@@ -102,6 +105,7 @@ class UserDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE UserDet')
         return compose_ret(user, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, id_user):
         args = request.get_json()
 
@@ -213,6 +217,7 @@ class UserDet(Resource):
 class UserStaffDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_user):
         args = request.get_json()
 
@@ -271,6 +276,7 @@ class UserStaffDet(Resource):
 class UserList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -310,86 +316,48 @@ class UserList(Resource):
 class UserListFromExt(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth('external/user')
     def post(self):
-        auth = request.authorization
+        self.log.info(Logs.fileline() + ' : UserListFromExt API access authorized')
+        args = request.get_json()
 
-        if not auth:
-            self.log.error(Logs.fileline() + ' : UserListFromExt ERROR auth missing')
-            err = {"error": "Authentication required"}
-            return compose_ret(err, Constants.cst_content_type_json, 401)
+        if not args:
+            args = {}
 
-        login = auth.username
-        pwd   = auth.password
+        l_users = User.getUserList(args)
 
-        user = User.getUserByLogin(login)
+        if not l_users:
+            self.log.error(Logs.fileline() + ' : TRACE UserListFromExt not found')
 
-        if not user:
-            self.log.error(Logs.fileline() + ' : UserListFromExt login not found')
-            err = {"error": str(login) + " not found"}
-            return compose_ret(err, Constants.cst_content_type_json, 404)
+        Various.useLangDB()
 
-        salt_start = user['password'].find(":")
-        salt = user['password'][salt_start + 1:]
+        for user in l_users:
+            # Replace None by empty string
+            for key, value in list(user.items()):
+                if user[key] is None:
+                    user[key] = ''
+                elif key == 'section' and user[key]:
+                    user[key] = _(user[key].strip())
+                elif key == 'role' and user[key]:
+                    user[key] = _(user[key].strip())
 
-        pwd_db = User.getPasswordDB(pwd, salt)
+            if user['birth']:
+                user['birth'] = datetime.strftime(user['birth'], '%Y-%m-%d')
 
-        ret = User.checkUserAccess(login, pwd_db)
+            if user['arrived']:
+                user['arrived'] = datetime.strftime(user['arrived'], '%Y-%m-%d')
 
-        if ret is True:
-            self.log.info(Logs.fileline() + ' : UserListFromExt role=' + str(user['role_type']) + ' | login=' + str(login))
-            if user['role_type'] == Constants.cst_user_type_api:
-                self.log.info(Logs.fileline() + ' : UserListFromExt API access authorized')
-                args = request.get_json()
-
-                if not args:
-                    args = {}
-
-                l_users = User.getUserList(args)
-
-                if not l_users:
-                    self.log.error(Logs.fileline() + ' : TRACE UserListFromExt not found')
-
-                Various.useLangDB()
-
-                for user in l_users:
-                    # Replace None by empty string
-                    for key, value in list(user.items()):
-                        if user[key] is None:
-                            user[key] = ''
-                        elif key == 'section' and user[key]:
-                            user[key] = _(user[key].strip())
-                        elif key == 'role' and user[key]:
-                            user[key] = _(user[key].strip())
-
-                    if user['birth']:
-                        user['birth'] = datetime.strftime(user['birth'], '%Y-%m-%d')
-
-                    if user['arrived']:
-                        user['arrived'] = datetime.strftime(user['arrived'], '%Y-%m-%d')
-
-                    if user['last_eval']:
-                        user['last_eval'] = datetime.strftime(user['last_eval'], '%Y-%m-%d')
-            else:
-                self.log.info(Logs.fileline() + ' : UserListFromExt role type not authorized')
-                err = {"error": str(login) + " not authorized"}
-                return compose_ret(err, Constants.cst_content_type_json, 401)
-
-        elif ret is False:
-            self.log.info(Logs.fileline() + ' : UserListFromExt not authorized ' + str(login))
-            err = {"error": str(login) + " not authorized"}
-            return compose_ret(err, Constants.cst_content_type_json, 401)
-        else:
-            self.log.error(Logs.fileline() + ' : UserListFromExt ERROR checkUserAccess')
-            err = {"error": "checkUserAccess is in error"}
-            return compose_ret(err, Constants.cst_content_type_json, 500)
+            if user['last_eval']:
+                user['last_eval'] = datetime.strftime(user['last_eval'], '%Y-%m-%d')
 
         self.log.info(Logs.fileline() + ' : TRACE UserListFromExt')
-        return compose_ret(l_users, Constants.cst_content_type_json)
+        return compose_ret(l_users, Constants.cst_content_type_json, 200)
 
 
 class UserLiteList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_users = User.getUserLiteList()
 
@@ -409,6 +377,7 @@ class UserLiteList(Resource):
 class UserRoleList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, type=''):
         args = request.get_json()
 
@@ -453,6 +422,7 @@ class UserRoleList(Resource):
 class UserRoleDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, pro_ser):
         role = User.getRoleDetails(pro_ser)
 
@@ -463,6 +433,7 @@ class UserRoleDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE UserRoleDet')
         return compose_ret(role, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, pro_ser):
         args = request.get_json()
 
@@ -527,6 +498,7 @@ class UserRoleDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE UserRoleDet pro_ser=' + str(pro_ser))
         return compose_ret(ret, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, pro_ser):
         args = request.get_json()
 
@@ -547,6 +519,7 @@ class UserRoleDet(Resource):
 class UserRoleByUser(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_user):
         role = User.getRoleDetByUser(id_user)
 
@@ -561,6 +534,7 @@ class UserRoleByUser(Resource):
 class UserIdentList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_ident = User.getUserIdentList()
 
@@ -580,6 +554,7 @@ class UserIdentList(Resource):
 class UserSearch(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -601,6 +576,7 @@ class UserSearch(Resource):
 class UserRightsList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_user):
         l_rights = User.getUserListOfRights(id_user)
 
@@ -611,6 +587,7 @@ class UserRightsList(Resource):
         self.log.info(Logs.fileline() + ' : TRACE UserRightsList')
         return compose_ret(l_rights, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -639,6 +616,7 @@ class UserRightsList(Resource):
 class UserRights(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, id_user):
         args = request.get_json()
 
@@ -697,6 +675,7 @@ class UserRights(Resource):
 class UserPassword(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -719,6 +698,7 @@ class UserPassword(Resource):
 class UserStatus(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -739,6 +719,7 @@ class UserStatus(Resource):
 class UserCount(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
 
         res = User.getUserNbUsers()
@@ -756,6 +737,7 @@ class UserCount(Resource):
 class UserConnExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -810,6 +792,7 @@ class UserConnExport(Resource):
 class UserExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -1003,6 +986,7 @@ class UserExport(Resource):
 class UserImport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, filename, id_user):
 
         if not filename or id_user <= 0:
@@ -1171,6 +1155,7 @@ class UserImport(Resource):
 class UserRoleExist(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, role_label):
         ret = User.role_exist(role_label)
 

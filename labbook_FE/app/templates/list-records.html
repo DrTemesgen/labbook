@@ -238,6 +238,7 @@ let param = '{ "num_rec":"' + num_rec + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
             {
             data_records = data ;
@@ -367,6 +368,7 @@ function del_record( id_rec )
         {
             type: "DELETE",
             url: "{{ session['server_ext'] }}/services/record/det/" + id_rec,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
             $("#dial-wait").modal("hide") ;

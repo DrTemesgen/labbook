@@ -16,11 +16,13 @@ from app.models.Logs import Logs
 from app.models.Quality import Quality
 from app.models.Setting import Setting
 from app.models.Various import Various
+from app.security.oauth_routes import require_oauth
 
 
 class SettingAgeInterval(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_datas = Setting.getAgeInterval()
 
@@ -37,6 +39,7 @@ class SettingAgeInterval(Resource):
         self.log.info(Logs.fileline() + ' : SettingAgeInterval')
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -95,6 +98,7 @@ class SettingAgeInterval(Resource):
 class SettingReqServices(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_datas = Setting.getReqServices()
 
@@ -111,6 +115,7 @@ class SettingReqServices(Resource):
         self.log.info(Logs.fileline() + ' : SettingReqServices')
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -156,6 +161,7 @@ class SettingReqServices(Resource):
 class SettingFuncUnitDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_unit):
         func_unit = Setting.getFuncUnitDet(id_unit)
 
@@ -175,6 +181,7 @@ class SettingFuncUnitDet(Resource):
 class SettingFuncUnit(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_datas = Setting.getFuncUnit()
 
@@ -205,6 +212,7 @@ class SettingFuncUnit(Resource):
         self.log.info(Logs.fileline() + ' : SettingFuncUnit')
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -246,6 +254,7 @@ class SettingFuncUnit(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingFuncUnit')
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self):
         args = request.get_json()
 
@@ -266,6 +275,7 @@ class SettingFuncUnit(Resource):
 class SettingLinkUnit(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, type, id_unit):
         l_datas = Setting.getLinkUnit(type, id_unit)
 
@@ -286,6 +296,7 @@ class SettingLinkUnit(Resource):
         self.log.info(Logs.fileline() + ' : SettingLinkUnit')
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, type, id_unit):
         args = request.get_json()
 
@@ -328,6 +339,7 @@ class SettingLinkUnit(Resource):
 class SettingLinkByUser(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_user):
         l_datas = Setting.getLinkByUser(id_user)
 
@@ -342,6 +354,7 @@ class SettingLinkByUser(Resource):
 class SettingPref(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_prefs = Setting.getPrefList()
 
@@ -358,6 +371,7 @@ class SettingPref(Resource):
         self.log.info(Logs.fileline() + ' : SettingPref')
         return compose_ret(l_prefs, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_owner):
         args = request.get_json()
 
@@ -391,6 +405,7 @@ class SettingPref(Resource):
 class SettingRecNum(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         setting = Setting.getRecNumSetting()
 
@@ -412,6 +427,7 @@ class SettingRecNum(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingRecNum')
         return compose_ret(setting, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -436,6 +452,7 @@ class SettingRecNum(Resource):
 class SettingReport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         setting = Setting.getReportSetting()
 
@@ -457,6 +474,7 @@ class SettingReport(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingReport')
         return compose_ret(setting, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -480,6 +498,7 @@ class SettingReport(Resource):
 class SettingBackup(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         setting = Setting.getBackupSetting()
 
@@ -502,6 +521,7 @@ class SettingBackup(Resource):
 class ScriptBackup(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, media):
         cmd = ('sh ' + Constants.cst_path_script + '/' + Constants.cst_script_backup + ' -m "' + media +
                '" ' + Constants.cst_io_backup + ' > ' + Constants.cst_io + 'backup.out 2>&1 &')
@@ -516,6 +536,7 @@ class ScriptBackup(Resource):
 class ScriptGenkey(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -537,6 +558,7 @@ class ScriptGenkey(Resource):
 class ScriptInitMedia(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, media):
         cmd = ('sh ' + Constants.cst_path_script + '/' + Constants.cst_script_backup + ' -m "' + media +
                '" ' + Constants.cst_io_initmedia)
@@ -551,6 +573,7 @@ class ScriptInitMedia(Resource):
 class ScriptKeyexist(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         cmd = 'sh ' + Constants.cst_path_script + '/' + Constants.cst_script_backup + Constants.cst_io_keyexist
 
@@ -564,6 +587,7 @@ class ScriptKeyexist(Resource):
 class ScriptListarchive(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, media):
         args = request.get_json()
 
@@ -603,6 +627,7 @@ class ScriptListarchive(Resource):
 class ScriptListmedia(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, type):
         if type == "U":
             type = ' -U '
@@ -647,6 +672,7 @@ class ScriptListmedia(Resource):
 class ScriptProgbackup(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -724,6 +750,7 @@ class ScriptProgbackup(Resource):
 class ScriptRestart(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -745,6 +772,7 @@ class ScriptRestart(Resource):
 class ScriptRestore(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -770,6 +798,7 @@ class ScriptRestore(Resource):
 class ScriptStatus(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, mode):
         date_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -869,6 +898,7 @@ class ScriptStatus(Resource):
 class TemplateList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, type=''):
         l_items = Setting.getTemplateList(type)
 
@@ -888,6 +918,7 @@ class TemplateList(Resource):
 class TemplateDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Setting.getTemplate(id_item)
 
@@ -903,6 +934,7 @@ class TemplateDet(Resource):
         self.log.info(Logs.fileline() + ' : TemplateDet id_item=' + str(id_item))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -939,6 +971,7 @@ class TemplateDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE TemplateDet id_item=' + str(id_item))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Setting.deleteTemplate(id_item)
 
@@ -953,6 +986,7 @@ class TemplateDet(Resource):
 class ZipCityAdd(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, filename):
         args = request.get_json()
 
@@ -998,6 +1032,7 @@ class ZipCityAdd(Resource):
 class ZipCityDelAll(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -1023,6 +1058,7 @@ class ZipCityDelAll(Resource):
 class ZipCityDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Setting.getZipCity(id_item)
 
@@ -1042,6 +1078,7 @@ class ZipCityDet(Resource):
 class ZipCityList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -1066,6 +1103,7 @@ class ZipCityList(Resource):
 class ZipCitySearch(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -1081,6 +1119,7 @@ class ZipCitySearch(Resource):
 class SettingStock(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         setting = Setting.getStockSetting()
 
@@ -1096,6 +1135,7 @@ class SettingStock(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingStock')
         return compose_ret(setting, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -1151,6 +1191,7 @@ class SettingStock(Resource):
 class SettingFormList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Setting.getSettingFormList()
 
@@ -1174,6 +1215,7 @@ class SettingFormList(Resource):
 class SettingFormDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -1195,6 +1237,7 @@ class SettingFormDet(Resource):
 class SettingManual(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_datas = Setting.getManualSetting()
 
@@ -1211,6 +1254,7 @@ class SettingManual(Resource):
         self.log.info(Logs.fileline() + ' : SettingManual')
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -1256,6 +1300,7 @@ class SettingManual(Resource):
 class SettingManualCat(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_datas = Setting.getManualCategory()
 
@@ -1276,6 +1321,7 @@ class SettingManualCat(Resource):
 class SettingDHIS2List(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Setting.getDHIS2List()
 
@@ -1295,6 +1341,7 @@ class SettingDHIS2List(Resource):
 class SettingDHIS2Det(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_item):
         item = Setting.getDHIS2Det(id_item)
 
@@ -1305,6 +1352,7 @@ class SettingDHIS2Det(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingDHIS2Det')
         return compose_ret(item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, id_item):
         args = request.get_json()
 
@@ -1348,6 +1396,7 @@ class SettingDHIS2Det(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingDHIS2Det')
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, id_item):
         ret = Setting.deleteDHIS2Det(id_item)
 
@@ -1362,6 +1411,7 @@ class SettingDHIS2Det(Resource):
 class SettingSendMethodList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Setting.getSendingMethodList()
 
@@ -1384,6 +1434,7 @@ class SettingSendMethodList(Resource):
 class SettingSendMethodDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, type, id_item):
         item = Setting.getSendingMethodDet(type, id_item)
 
@@ -1403,6 +1454,7 @@ class SettingSendMethodDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingSendMethodDet')
         return compose_ret(item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, type, id_item):
         args = request.get_json()
 
@@ -1431,6 +1483,7 @@ class SettingSendMethodDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingSendMethodDet')
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, type, id_item):
         ret = Setting.deleteSendingMethodDet(type, id_item)
 
@@ -1445,6 +1498,7 @@ class SettingSendMethodDet(Resource):
 class SettingSendMethodTest(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, type, id_item):
         payload = request.get_json(silent=True) or {}
         to = payload.get('to')
@@ -1470,6 +1524,7 @@ class SettingSendMethodTest(Resource):
 class SettingSendModelList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Setting.getSendingModelList()
 
@@ -1492,6 +1547,7 @@ class SettingSendModelList(Resource):
 class SettingSendModelDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, type, id_item):
         item = Setting.getSendingModelDet(type, id_item)
 
@@ -1509,6 +1565,7 @@ class SettingSendModelDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingSendModelDet')
         return compose_ret(item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, type, id_item):
         args = request.get_json()
 
@@ -1537,6 +1594,7 @@ class SettingSendModelDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingSendModelDet')
         return compose_ret(id_item, Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, type, id_item):
         ret = Setting.deleteSendingModelDet(type, id_item)
 
@@ -1551,6 +1609,7 @@ class SettingSendModelDet(Resource):
 class SettingSendModelTest(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, type, mdl_ser):
         try:
             payload = request.get_json(force=True) or {}
@@ -1607,6 +1666,7 @@ class SettingSendModelTest(Resource):
 class SettingSendReport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
 
         data = request.get_json(silent=True) or {}
@@ -1646,6 +1706,7 @@ class SettingSendReport(Resource):
 class SettingSendList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         """
         Return a list of sending_event rows for the DataTable.
@@ -1673,6 +1734,7 @@ class SettingSendList(Resource):
 class SettingSendResend(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, sde_ser):
         data = request.get_json(silent=True) or {}
 
@@ -1694,3 +1756,112 @@ class SettingSendResend(Resource):
 
         self.log.info(Logs.fileline() + f' : SettingSendResend OK sde_ser={sde_ser} user={id_user}')
         return compose_ret({'message': "Réenvoi déclenché."}, Constants.cst_content_type_json, 200)
+
+
+class SettingOauthList(Resource):
+    log = logging.getLogger('log_services')
+
+    @require_oauth()
+    def get(self):
+        l_items = Setting.getSettingOauthList()
+
+        if not l_items:
+            self.log.error(Logs.fileline() + ' : TRACE SettingOauthList not found')
+
+        for item in l_items:
+            # Replace None by empty string
+            for key, value in list(item.items()):
+                if item[key] is None:
+                    item[key] = ''
+
+        self.log.info(Logs.fileline() + ' : TRACE SettingOauthList')
+        return compose_ret(l_items, Constants.cst_content_type_json)
+
+
+class SettingOauthDet(Resource):
+    log = logging.getLogger('log_services')
+
+    @require_oauth()
+    def get(self, id_item):
+        item = Setting.getSettingOauth(id_item)
+
+        if not item:
+            self.log.error(Logs.fileline() + ' : ' + 'SettingOauthDet ERROR not found')
+            return compose_ret('', Constants.cst_content_type_json, 404)
+
+        # Replace None by empty string
+        for key, value in list(item.items()):
+            if item[key] is None:
+                item[key] = ''
+
+        self.log.info(Logs.fileline() + ' : SettingOauthDet id_item=' + str(id_item))
+        return compose_ret(item, Constants.cst_content_type_json, 200)
+
+    @require_oauth()
+    def post(self, id_item):
+        args = request.get_json()
+
+        # STEP 1: basic shape validation
+        wanted = [
+            'oacl_client_id', 'oacl_client_secret', 'oacl_client_name',
+            'oacl_user_id', 'oacl_redirect_uris', 'oacl_scope',
+            'oacl_grant_types', 'oacl_response_types',
+            'oacl_token_endpoint_auth_method', 'oacl_is_active'
+        ]
+        # Provide server-side defaults to tolerate partial payloads
+        defaults = {
+            'oacl_client_secret': '',
+            'oacl_user_id': 0,
+            'oacl_redirect_uris': '',
+            'oacl_scope': '',
+            'oacl_grant_types': 'authorization_code',
+            'oacl_response_types': 'code',
+            'oacl_token_endpoint_auth_method': 'none',
+            'oacl_is_active': 'Y',
+        }
+        params = {k: args.get(k, defaults.get(k)) for k in wanted}
+
+        # STEP 2: protect the built-in FE client against any modification
+        if id_item > 0:
+            cur = Setting.getSettingOauth(id_item)
+            if not cur:
+                self.log.error(Logs.fileline() + ' : SettingOauthDet update target not found')
+                return compose_ret('', Constants.cst_content_type_json, 404)
+            if cur['oacl_client_id'] == 'labbook-FE':
+                self.log.error(Logs.fileline() + ' : SettingOauthDet update forbidden for labbook-FE')
+                return compose_ret({'error': 'forbidden'}, Constants.cst_content_type_json, 403)
+            # Carry id for WHERE clause
+            params['oacl_ser'] = id_item
+
+            # STEP 3: do update
+            ok = Setting.updateSettingOauth(**params)
+            if not ok:
+                self.log.error(Logs.alert() + ' : SettingOauthDet ERROR update')
+                return compose_ret('', Constants.cst_content_type_json, 500)
+            self.log.info(Logs.fileline() + ' : SettingOauthDet updated id=' + str(id_item))
+            return compose_ret(id_item, Constants.cst_content_type_json, 200)
+
+        # STEP 4: insert new row
+        new_id = Setting.insertSettingOauth(**params)
+        if new_id <= 0:
+            self.log.error(Logs.alert() + ' : SettingOauthDet ERROR insert')
+            return compose_ret('', Constants.cst_content_type_json, 500)
+        self.log.info(Logs.fileline() + ' : SettingOauthDet inserted id=' + str(new_id))
+        return compose_ret(new_id, Constants.cst_content_type_json, 200)
+
+    @require_oauth()
+    def delete(self, id_item):
+        """Delete an OAuth client by id (forbidden for labbook-FE)."""
+        cur = Setting.getSettingOauth(id_item)
+        if not cur:
+            return compose_ret('', Constants.cst_content_type_json, 404)
+        if cur['oacl_client_id'] == 'labbook-FE':
+            self.log.error(Logs.fileline() + ' : SettingOauthDet delete forbidden for labbook-FE')
+            return compose_ret({'error': 'forbidden'}, Constants.cst_content_type_json, 403)
+
+        ok = Setting.deleteSettingOauth(id_item)
+        if not ok:
+            self.log.error(Logs.fileline() + ' : SettingOauthDet delete ERROR id=' + str(id_item))
+            return compose_ret('', Constants.cst_content_type_json, 500)
+        self.log.info(Logs.fileline() + ' : SettingOauthDet delete id=' + str(id_item))
+        return compose_ret('', Constants.cst_content_type_json, 200)

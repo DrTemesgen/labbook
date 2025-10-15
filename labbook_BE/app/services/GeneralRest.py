@@ -12,15 +12,18 @@ from app.models.Patient import Patient
 from app.models.Record import Record
 from app.models.Result import Result
 from app.models.Various import Various
+from app.security.oauth_routes import require_oauth
 
 
 class Test(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         self.log.info(Logs.fileline() + ' : TRACE Test GET')
         return compose_ret('Test GET OK', Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self):
         self.log.info(Logs.fileline() + ' : TRACE Test POST')
 
@@ -32,6 +35,7 @@ class Test(Resource):
 class DicoById(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_data):
         dico = Various.getDicoById(id_data)
 
@@ -57,6 +61,7 @@ class DicoById(Resource):
 class DefaultValue(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, name):
         Various.useLangDB()
 
@@ -74,6 +79,7 @@ class DefaultValue(Resource):
         self.log.info(Logs.fileline() + ' : TRACE DefaultValue : ' + name)
         return compose_ret(val, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, name, value):
         ret = Various.updateDefaultValue(name, value)
 
@@ -103,6 +109,7 @@ class InitVersion(Resource):
 class NationalityList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         l_items = Various.getNationalityList()
 
@@ -128,6 +135,7 @@ class NationalityList(Resource):
 class DatasetByName(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, name):
         args = request.get_json()
 

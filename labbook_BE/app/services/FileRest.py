@@ -10,11 +10,13 @@ from app.models.General import compose_ret
 from app.models.Constants import Constants
 from app.models.File import File
 from app.models.Logs import Logs
+from app.security.oauth_routes import require_oauth
 
 
 class FileDocList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, type_ref, ref):
         l_files = File.getFileDocList(type_ref, ref)
 
@@ -34,6 +36,7 @@ class FileDocList(Resource):
 class FileDoc(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, type_ref, ref):
         # ref = id_file
         filedata = File.getFileData(ref)
@@ -56,6 +59,7 @@ class FileDoc(Resource):
         self.log.info(Logs.fileline() + ' : TRACE FileDoc')
         return compose_ret(filedata, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, type_ref, ref):
         # ref = id_rec
         args = request.get_json()
@@ -97,6 +101,7 @@ class FileDoc(Resource):
         self.log.info(Logs.fileline() + ' : TRACE FileDoc')
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, type_ref, ref):
         # ref= id_file
         ret = File.deleteFileDoc(type_ref, ref)
@@ -112,6 +117,7 @@ class FileDoc(Resource):
 class FileReport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_rec):
         l_report = File.getAllFileReport(id_rec)
 
@@ -134,6 +140,7 @@ class FileReport(Resource):
 class FileReportCopy(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, filename, copy_name):
         ret = File.copyReport(filename, copy_name)
 
@@ -148,6 +155,7 @@ class FileReportCopy(Resource):
 class FileReportNbDL(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, filename):
         ret = File.raiseReportNbDL(filename)
 
@@ -162,6 +170,7 @@ class FileReportNbDL(Resource):
 class FileStorage(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         storage = File.getLastFileStorage()
 
@@ -188,6 +197,7 @@ class FileStorage(Resource):
 class FileNbManual(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self):
         res = File.getFileNbManuals()
 

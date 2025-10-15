@@ -178,7 +178,7 @@ function test_method(type, id)
 
     fetch(url, {
         method: 'POST',
-        headers: {
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}",
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'X-CSRF-Token': "{{ session.get('csrf_token','') }}"
@@ -204,9 +204,7 @@ function delete_method(type, id)
 
     fetch(url, {
         method: 'DELETE',
-        headers: {
-            'X-CSRF-Token': "{{ session.get('csrf_token','') }}"
-        }
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", 'X-CSRF-Token': "{{ session.get('csrf_token','') }}" }
     })
         .then(r => {
             if (r.ok) {
@@ -236,7 +234,12 @@ function loadModelTable() {
     }
 
     modelTable = $('#modelTable').DataTable({
-        ajax: { url: "{{ session['server_ext'] }}/services/setting/sending/model/list", type: 'GET', dataSrc: '' },
+        ajax: { 
+            url: "{{ session['server_ext'] }}/services/setting/sending/model/list", 
+            type: 'GET', 
+            dataSrc: '',
+            beforeSend: function (xhr) { xhr.setRequestHeader('Authorization', 'Bearer {{ session.get("be_access_token","") }}'); }
+        },
         pageLength: 25,
         order: [[2, 'asc'], [3, 'asc']], // Type, puis Nom
         "language": {
@@ -299,7 +302,7 @@ function test_model(type, id) {
 
     fetch(url, {
         method: 'POST',
-        headers: {
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}",
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'X-CSRF-Token': "{{ session.get('csrf_token','') }}"
@@ -318,7 +321,7 @@ function delete_model(type, id) {
     const url = "{{ session['server_ext'] }}/services/setting/sending/model/det/" + type + "/" + id;
     fetch(url, {
         method: 'DELETE',
-        headers: { 'X-CSRF-Token': "{{ session.get('csrf_token','') }}" }
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", 'X-CSRF-Token': "{{ session.get('csrf_token','') }}" }
     })
         .then(r => {
             if (r.ok) { modelTable?.ajax.reload(null, false); }
@@ -329,7 +332,7 @@ function delete_model(type, id) {
 
 function return_home()
 {
-    window.location.href = "{{ session['server_ext'] }}/homepage";
+    window.location.href = "{{ url_for('homepage') }}";
 }
 
 document.addEventListener('DOMContentLoaded', () => {

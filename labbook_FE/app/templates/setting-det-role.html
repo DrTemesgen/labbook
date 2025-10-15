@@ -159,6 +159,7 @@ var param = '{ "by_user":' + by_user + ', ' +
         $.ajax( {
             type: "GET",
             url: "{{ session['server_ext'] }}/services/user/role/exist/" + role_label,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
                 if ( ret > 0 && (id_role == 0 || (id_role > 0 && role_label_ori != role_label)))
@@ -175,6 +176,7 @@ var param = '{ "by_user":' + by_user + ', ' +
                        dataType: 'json',
                        contentType: "application/json; charset=utf-8",
                        data: param,
+                       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                        success: function(data)
                            {
                            $("#dial-wait").modal("hide") ;
@@ -216,6 +218,7 @@ var param = {
     $.ajax( {
        type: "GET",
        url: "{{ session['server_ext'] }}/services/user/role/det/" + role_pro,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
                 if ( data != null )

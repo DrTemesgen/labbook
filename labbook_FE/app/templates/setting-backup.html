@@ -321,6 +321,7 @@ var param = '{ "start_time":"' + start_time + '", ' +
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
        {
        $("#dial-wait").modal("hide") ;
@@ -363,6 +364,7 @@ var param = '{ "user_pwd":"' + pwd_user + '"}' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         url: "{{ session['server_ext'] }}/services/setting/script/listmedia/" + type,
         success: function(data)
         {
@@ -387,6 +389,7 @@ function run_keyexist()
     {
        type: "GET",
        url: "{{ session['server_ext'] }}/services/setting/script/keyexist",
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
        {
        console.log("keyexist ret="+JSON.stringify(data)) ;
@@ -430,6 +433,7 @@ function initmedia(media)
     {
         type: "POST",
         url: "{{ session['server_ext'] }}/services/setting/script/initmedia/" + media,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
             $("#dial-wait").modal("hide") ;
@@ -467,6 +471,7 @@ var param = '{ "pwd_key":"' + pwd_key + '"}' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
         tempAlert("{{ _("Génération réussie") }}", "btn-run_keygen") ;
@@ -490,6 +495,7 @@ function backup(media)
     {
         type: "POST",
         url: "{{ session['server_ext'] }}/services/setting/script/backup/" + media,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
         // POLL WS status backup
@@ -526,6 +532,7 @@ var param = '{ "user_pwd":"' + pwd_user + '"}' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
         // POLL WS status archive
@@ -571,6 +578,7 @@ console.log("restore param=" + param) ;
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(data)
             {
             // POLL WS status restore
@@ -609,6 +617,7 @@ poll_count = poll_count + 1 ;
     {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/setting/script/status/" + mode,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
         console.log("status data="+JSON.stringify(data)) ;
@@ -761,6 +770,7 @@ poll_count = poll_count + 1 ;
                                 dataType: 'json',
                                 contentType: "application/json; charset=utf-8",
                                 data: param,
+                                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                                 success: function(data)
                                 {
                                 // Never go through this
@@ -825,7 +835,7 @@ poll_count = poll_count + 1 ;
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage";
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 $( document ).ready( function()

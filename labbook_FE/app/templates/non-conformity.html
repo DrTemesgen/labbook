@@ -798,6 +798,7 @@ $("#search_reporter").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_reporter").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -841,6 +842,7 @@ $("#search_followed").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_followed").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -878,6 +880,7 @@ $("#search_incharge").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_incharge").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -915,6 +918,7 @@ $("#search_validate").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_validate").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -952,6 +956,7 @@ $("#search_eqp").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_eqp").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -989,6 +994,7 @@ $("#search_supplier").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_supplier").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -1373,6 +1379,7 @@ var param = '{ "id_owner":' + id_owner + ', ' +
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
            window.location = "{{ session['server_ext'] }}/list-nonconformities" ;

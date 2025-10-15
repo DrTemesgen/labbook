@@ -121,6 +121,7 @@ var param = '{ "id_item":' + id_tpl + ', ' +
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
            {% if not args['template']['tpl_file'] %}
@@ -138,6 +139,7 @@ var param = '{ "id_item":' + id_tpl + ', ' +
                    contentType: false,
                    processData: false,
                    data: param_form,
+                   headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                    success : function(response)
                    {
                    tempAlert("{{ _("Dépôt réussi") }}", "btn_save") ;
@@ -177,6 +179,7 @@ param_form.append('file', $('input[type=file]')[0].files[0]) ;
         contentType: false,
         processData: false,
         data: param_form,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success : function(response)
         {
         tempAlert("{{ _("Dépôt réussi") }}", "btn_save") ;

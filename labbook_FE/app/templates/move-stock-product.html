@@ -117,6 +117,7 @@ let param = '{ "prod_name":"' + prod_name + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
         data_items = data ;
@@ -261,6 +262,7 @@ param += param_supply + ' ] }' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
             $("#dial-wait").modal("hide") ;

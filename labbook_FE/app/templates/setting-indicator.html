@@ -62,6 +62,7 @@ param_form.append('file', $('input[type=file]')[0].files[0]) ;
         contentType: false,
         processData: false,
         data: param_form,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success : function(response)
         {
         tempAlert("{{ _("Dépôt réussi") }}", "btn-upload") ;
@@ -112,7 +113,7 @@ $("#tbody_file").append(tr_file) ;
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage";
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 $( document ).ready( function()

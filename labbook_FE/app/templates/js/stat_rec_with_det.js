@@ -28,6 +28,7 @@ let tr_det_rec = '' ;
     {
         type: "GET",
         url: "{{ session['server_ext'] }}/services/record/list/analysis/" + id_rec,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data_rec)
         {
             for( i in data_rec )

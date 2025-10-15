@@ -172,11 +172,14 @@ let in_stock = showDestocked ? "N" : "Y";
             }
         },
         "ajax": {
-        "url": "{{ session['server_ext'] }}/services/quality/storage/list",
-        "type": "POST",
-        "contentType": "application/json",
-        "data": function(d) {
-                return JSON.stringify({ "in_stock": in_stock });
+            "url": "{{ session['server_ext'] }}/services/quality/storage/list",
+            "type": "POST",
+            "contentType": "application/json",
+            "data": function(d) {
+                    return JSON.stringify({ "in_stock": in_stock });
+                },
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer {{ session.get("be_access_token","") }}');
             }
         },
         "columns": [
@@ -344,7 +347,7 @@ let external = document.getElementById("externalDestock").checked ? "Y" : "N";
     fetch(`{{ session['server_ext'] }}/services/quality/storage/aliquot/destock/${id_item}`, 
     {
         method: 'POST',
-        headers: {
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}",
             'X-Requested-With': 'XMLHttpRequest',
             'Content-Type': 'application/json'
         },
@@ -380,7 +383,7 @@ function restock_item(id_item)
         fetch(`{{ session['server_ext'] }}/services/quality/storage/aliquot/restock/${id_item}`, 
         {
             method: 'POST',
-            headers: {
+            headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}",
                 'X-Requested-With': 'XMLHttpRequest',
                 'Content-Type': 'application/json'
             },
@@ -452,9 +455,7 @@ function directPrint(printerId, salSer)
         type: 'POST',
         contentType: 'application/json',
         dataType: 'json',
-        headers: {
-            'X-Requested-With': 'XMLHttpRequest'
-        },
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", 'X-Requested-With': 'XMLHttpRequest' },
         data: JSON.stringify({
             sal_ser: salSer
         }),
@@ -489,9 +490,7 @@ function delete_item(id_item)
         fetch(`{{ session['server_ext'] }}/services/quality/storage/aliquot/det/${id_item}`, 
         {
             method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => 
         {
@@ -537,7 +536,7 @@ window.location.href = "{{ session['server_ext'] }}/det-aliquot/0" ;
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage" ;
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 {% if has_permission("ALIQUOT_169") %}

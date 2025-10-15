@@ -11,16 +11,17 @@ from flask_restful import Resource
 
 from app.models.General import compose_ret
 from app.models.Analyzer import Analyzer
-from app.models.Constants import *
-from app.models.Product import *
-from app.models.User import *
+from app.models.Constants import Constants
+from app.models.Product import Product
 from app.models.Logs import Logs
 from app.models.Various import Various
+from app.security.oauth_routes import require_oauth
 
 
 class ProductDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_prod):
         prod = Product.getProductDet(id_prod)
 
@@ -40,6 +41,7 @@ class ProductDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ProductDet ' + str(id_prod))
         return compose_ret(prod, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, id_prod):
         args = request.get_json()
 
@@ -100,6 +102,7 @@ class ProductDet(Resource):
 class ProductList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -118,6 +121,7 @@ class ProductList(Resource):
 class ProductReq(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_rec):
         l_prod = Product.getProductReq(id_rec)
 
@@ -146,6 +150,7 @@ class ProductReq(Resource):
         self.log.info(Logs.fileline() + ' : ProductReq id_rec=' + str(id_rec))
         return compose_ret(l_prod, Constants.cst_content_type_json, 200)
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 

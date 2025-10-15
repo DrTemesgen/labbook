@@ -279,6 +279,7 @@ param += tmp_value + ' ] }';
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
             {
                 // Test if we need to update dict description
@@ -292,6 +293,7 @@ param += tmp_value + ' ] }';
                         dataType: 'json',
                         contentType: "application/json; charset=utf-8",
                         data: param,
+                        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
                         success: function(data)
                             {
                             tempAlert("{{ _("Enregistrement réussi") }}", "btn_save") ;

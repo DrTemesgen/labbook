@@ -168,6 +168,7 @@ var param = JSON.stringify({
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
            window.location = "{{ session['server_ext'] }}/setting-lite" ;

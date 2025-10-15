@@ -66,7 +66,13 @@ function loadItemsTable()
                 "previous": "{{ _("Précédent") }}"
             }
         },
-        "ajax": "{{ session['server_ext'] }}/services/quality/storage/room/list",
+        "ajax": {
+          url: "{{ session['server_ext'] }}/services/quality/storage/room/list",
+          type: "GET",
+          beforeSend: function (xhr) {
+            xhr.setRequestHeader('Authorization', 'Bearer {{ session.get("be_access_token","") }}');
+          }
+        },
         "columns": [
             {
                 "data": null,
@@ -111,9 +117,7 @@ function deleteItem(id_item)
         fetch(`{{ session['server_ext'] }}/services/quality/storage/room/det/${id_item}`, 
         {
             method: 'DELETE',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}", 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then(response => 
         {

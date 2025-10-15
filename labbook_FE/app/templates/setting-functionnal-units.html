@@ -100,7 +100,7 @@ let obj = data ;
     tmp_tr += create_td("", obj.nb_user, "text-center", "padding-top:15px;") ;
     tmp_tr += create_td("", obj.nb_fam, "text-center", "padding-top:15px;") ;
     tmp_tr += create_td("", create_input("rank_"+obj.id_ihm, "number", obj.fun_rank, 0, 20, ""), "", "") ;
-    tmp_tr += '</tr>' ;
+    tmp_tr += "</tr>" ;
 
     tr_value += tmp_tr ;
     }
@@ -131,6 +131,7 @@ function del_value( id_unit )
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
             $("#dial-wait").modal("hide") ;
@@ -246,6 +247,7 @@ param += tmp_value + ' ] }';
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
            tempAlert("{{ _("Enregistrement réussi") }}", "btn_save") ;
@@ -261,7 +263,7 @@ param += tmp_value + ' ] }';
 
 function cancel()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage" ;
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 $( document ).ready( function()

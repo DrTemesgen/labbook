@@ -75,6 +75,7 @@ var param = '{"filename": "' + filename + '", "exclu":"' + exclu + '", "date_beg
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;
@@ -101,7 +102,7 @@ var param = '{"filename": "' + filename + '", "exclu":"' + exclu + '", "date_beg
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage" ;
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 $( document ).ready( function()

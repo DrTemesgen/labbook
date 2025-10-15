@@ -2,7 +2,7 @@
 
 {% block head %}
 {{ super() }}
-    <title>{{ _("Export DHIS2") }}</title>
+<title>{{ _("Export DHIS2") }}</title>
 {% endblock %}
 
 {% block content %}
@@ -49,15 +49,15 @@
                     </div>
                     <div class="form-group d-md-flex align-items-start col-md-12 mt-3">
                         <label for="spreadsheet" class="form-label text-end mt-2 me-1"> {{ _("Feuille de calcul") }} </label>
-                       <select name="spreadsheet" id="spreadsheet" class="form-select w-auto">
-                           <option value="" selected="selected"></option>
-                           <option value="LIST_EEQ.csv">{{ _("EEQ") }}</option>
-                           <option value="LIST_EQUIPMENT_FAILURE.csv">{{ _("Pannes d'équipment") }}</option>
-                           <option value="LIST_OUTSOURCING.csv">{{ _("Sous-traitance") }}</option>
-                           <option value="LIST_STOCK_STATUS.csv">{{ _("Statut du stock") }}</option>
-                           {% for filename in args['data_dhis2'] %}
-                           <option value="{{ filename }}">{{ filename }}</option>
-                           {% endfor %}
+                        <select name="spreadsheet" id="spreadsheet" class="form-select w-auto">
+                            <option value="" selected="selected"></option>
+                            <option value="LIST_EEQ.csv">{{ _("EEQ") }}</option>
+                            <option value="LIST_EQUIPMENT_FAILURE.csv">{{ _("Pannes d'équipment") }}</option>
+                            <option value="LIST_OUTSOURCING.csv">{{ _("Sous-traitance") }}</option>
+                            <option value="LIST_STOCK_STATUS.csv">{{ _("Statut du stock") }}</option>
+                            {% for filename in args['data_dhis2'] %}
+                            <option value="{{ filename }}">{{ filename }}</option>
+                            {% endfor %}
                         </select> 
 
                         <label for="rec_type" class="form-label text-end ms-3 mt-2 me-1">{{ _("Dossier") }}</label>
@@ -82,7 +82,7 @@
                         <div>
                             <input type="button" onclick="return_home();" id="btn_return" value="{{ _("Retour") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }}">
                         </div>
-                    
+
                         {% if ihm['dhs']|length > 0 %}
                         <div class="d-flex align-items-center">
                             <div class="ms-3">
@@ -94,8 +94,8 @@
                             </div>
                             <div>
                                 <input id="btn-send" type="button" class="btn btn-lbk btn-{{ session['user_role']|safe }}" onclick="send_dhis2();" value="{{ _("Envoyer les données") }}">
-                                    <label for="dry_run" class="form-label align-self-center text-lg-end ms-2 me-1">{{ _("Tester") }}</label>
-                                    <input type="checkbox" id="dry_run" name="dry_run" value="Y">
+                                <label for="dry_run" class="form-label align-self-center text-lg-end ms-2 me-1">{{ _("Tester") }}</label>
+                                <input type="checkbox" id="dry_run" name="dry_run" value="Y">
                             </div>
                         </div>
                         {% endif %}
@@ -121,83 +121,84 @@
 
 {% block add_script %}
 <script type="text/javascript" nonce="{{ session['nonce'] }}">
-function export_dhis2()
+    function export_dhis2()
 {
-var id_user  = {{ session['user_id']|safe}} ;
-var date_beg = $("#date_beg").val() ;
-var date_end = $("#date_end").val();
-var period   = $("#type_period").val() ;
-var filename = $("#spreadsheet").val() ;
-var rec_type = $("#rec_type").val() || "A" ;
-var lite_filter = $("#lite_filter").val() || "A";
+    var id_user  = {{ session['user_id']|safe}} ;
+    var date_beg = $("#date_beg").val() ;
+    var date_end = $("#date_end").val();
+    var period   = $("#type_period").val() ;
+    var filename = $("#spreadsheet").val() ;
+    var rec_type = $("#rec_type").val() || "A" ;
+    var lite_filter = $("#lite_filter").val() || "A";
 
     if ( filename == "" ) { alert("{{ _("Veuillez sélectionner une feuille de calcul.") }}") ; return false ; }
     if ( period == "" ) { alert("{{ _("Veuillez sélectionner une période.") }}") ; return false ; }
     if (!date_beg || !date_end) { alert("{{ _('Veuillez saisir des dates') }}"); return false; }
     if (date_beg > date_end) { alert("{{ _('Veuillez saisir des dates cohérentes') }}"); return false; }
 
-var rng = computeAlignedRange(date_beg, date_end, period);
-    
+    var rng = computeAlignedRange(date_beg, date_end, period);
+
     if (!rng){ alert("{{ _('Période invalide : impossible de calculer la période.') }}"); return false; }
 
-var ids = listPeriods(rng.beg, rng.end, period);
+    var ids = listPeriods(rng.beg, rng.end, period);
 
     $("#period_preview").removeClass('d-none').text("{{ _('Période calculée') }} : " + rng.beg + " → " + rng.end + (ids.length ? " - {{ _('Séquences') }} : " + ids.join(', ') : ""));
 
-var param = '{"date_beg":"' + rng.beg + '", ' +
-             '"date_end":"' + rng.end + '", ' +
-             '"period":"' + period + '", ' +
-             '"filename":"' + filename + '", ' +
-             '"rec_type":"' + rec_type + '", ' +
-             '"lite_filter":"' + lite_filter + '", ' +
-             '"id_user":' + id_user + '}' ;
+    var param = '{"date_beg":"' + rng.beg + '", ' +
+        '"date_end":"' + rng.end + '", ' +
+        '"period":"' + period + '", ' +
+        '"filename":"' + filename + '", ' +
+        '"rec_type":"' + rec_type + '", ' +
+        '"lite_filter":"' + lite_filter + '", ' +
+        '"id_user":' + id_user + '}' ;
 
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
     $.ajax( 
-    {
-        type: "POST",
-        url: "{{ session['server_ext'] }}/services/export/dhis2",
-        dataType: 'json',
-        contentType: "application/json; charset=utf-8",
-        data: param,
-        success: function(ret)
         {
-            $("#dial-wait").modal("hide") ;
+            type: "POST",
+            url: "{{ session['server_ext'] }}/services/export/dhis2",
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+            success: function(ret)
+            {
+                $("#dial-wait").modal("hide") ;
 
-        let spreadsheet = filename.substr(0, filename.length-4) ;
+                let spreadsheet = filename.substr(0, filename.length-4) ;
 
-        var recSuffix = (rec_type === 'E') ? '_rec-external' : (rec_type === 'I') ? '_rec-internal' : '_rec-all';
+                var recSuffix = (rec_type === 'E') ? '_rec-external' : (rec_type === 'I') ? '_rec-internal' : '_rec-all';
 
-        download_file( "PY", "dhis2_" + spreadsheet + "_" + rng.beg + "-" + rng.end + recSuffix + ".csv", "GEN", 0 ) ;
-        },
-        error: function(ret)
-        {
-            $("#dial-wait").modal("hide") ;
+                download_file( "PY", "dhis2_" + spreadsheet + "_" + rng.beg + "-" + rng.end + recSuffix + ".csv", "GEN", 0 ) ;
+            },
+            error: function(ret)
+            {
+                $("#dial-wait").modal("hide") ;
 
-            if (ret.status == 404)
-            alert("{{ _("Aucun résultat à exporter !") }}") ;
-            else
-            alert("{{ _("Erreur lors de la génération du fichier") }}") ;
-        }
-    } ) ;
+                if (ret.status == 404)
+                    alert("{{ _("Aucun résultat à exporter !") }}") ;
+                else
+                    alert("{{ _("Erreur lors de la génération du fichier") }}") ;
+            }
+        } ) ;
 }
 
 function send_dhis2()
 {
-$("#div_send_log").addClass('d-none') ;
-$("#send_log").val("") ;
+    $("#div_send_log").addClass('d-none') ;
+    $("#send_log").val("") ;
 
-var id_user  = {{ session['user_id']|safe}} ;
-var date_beg = $("#date_beg").val() ;
-var date_end = $("#date_end").val() ;
-var period   = $("#type_period").val() ;
-var filename = $("#spreadsheet").val() ;
-var rec_type = $("#rec_type").val() || "A" ;
-var lite_filter = $("#lite_filter").val() || "A";
-var dhs_ser  = $("#dhs_list").val() ;
-var dry_run  = "N" ; 
+    var id_user  = {{ session['user_id']|safe}} ;
+    var date_beg = $("#date_beg").val() ;
+    var date_end = $("#date_end").val() ;
+    var period   = $("#type_period").val() ;
+    var filename = $("#spreadsheet").val() ;
+    var rec_type = $("#rec_type").val() || "A" ;
+    var lite_filter = $("#lite_filter").val() || "A";
+    var dhs_ser  = $("#dhs_list").val() ;
+    var dry_run  = "N" ; 
 
     if (filename === "") { alert("{{ _('Veuillez sélectionner une feuille de calcul.') }}"); return false; }
     if (period === "") { alert("{{ _('Veuillez sélectionner une période.') }}"); return false; }
@@ -205,68 +206,69 @@ var dry_run  = "N" ;
     if (!date_beg || !date_end) { alert("{{ _('Veuillez saisir des dates') }}"); return false; }
     if (date_beg > date_end) { alert("{{ _('Veuillez saisir des dates cohérentes') }}"); return false; }
 
-// Align range + show preview
-var rng = computeAlignedRange(date_beg, date_end, period);
+    // Align range + show preview
+    var rng = computeAlignedRange(date_beg, date_end, period);
 
     if (!rng){ alert("{{ _('Période invalide : impossible de calculer la période.') }}"); return false; }
 
-var ids = listPeriods(rng.beg, rng.end, period);
+    var ids = listPeriods(rng.beg, rng.end, period);
 
     $("#period_preview").removeClass('d-none').text("{{ _('Période calculée') }} : " + rng.beg + " → " + rng.end + (ids.length ? " — {{ _('Séquences') }} : " + ids.join(', ') : ""));
 
     if ( $("#dry_run").is(":checked") )
-    dry_run = $("#dry_run").val() ;
+        dry_run = $("#dry_run").val() ;
 
-var param    = '{"date_beg":"' + rng.beg + '", ' +
-                '"date_end":"' + rng.end + '", ' +
-                '"period":"' + period + '", ' +
-                '"filename":"' + filename + '", ' +
-                '"rec_type":"' + rec_type + '", ' +
-                '"lite_filter":"' + lite_filter + '", ' +
-                '"dhs_ser":' + dhs_ser + ', ' +
-                '"id_user":' + id_user + ', ' +
-                '"dry_run":"' + dry_run + '"}' ;
+    var param    = '{"date_beg":"' + rng.beg + '", ' +
+        '"date_end":"' + rng.end + '", ' +
+        '"period":"' + period + '", ' +
+        '"filename":"' + filename + '", ' +
+        '"rec_type":"' + rec_type + '", ' +
+        '"lite_filter":"' + lite_filter + '", ' +
+        '"dhs_ser":' + dhs_ser + ', ' +
+        '"id_user":' + id_user + ', ' +
+        '"dry_run":"' + dry_run + '"}' ;
 
 
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
     $.ajax( 
-    {
-        type: "POST",
-        url: "{{ session['server_ext'] }}/services/export/dhis2/api",
-        dataType: 'json',
-        contentType: "application/json; charset=utf-8",
-        data: param,
-        success: function(ret)
         {
-            $("#dial-wait").modal("hide") ;
-
-            $("#send_log").val(ret) ;
-            $("#div_send_log").removeClass('d-none') ;
-
-            tempAlert("{{ _("Dépôt réussi") }}", "btn-send") ;
-        },
-        error: function(ret)
-        {
-            $("#dial-wait").modal("hide") ;
-
-            if (ret && ret.responseJSON)
+            type: "POST",
+            url: "{{ session['server_ext'] }}/services/export/dhis2/api",
+            dataType: 'json',
+            contentType: "application/json; charset=utf-8",
+            data: param,
+            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+            success: function(ret)
             {
-            $("#send_log").val(ret.responseJSON) ;
-            $("#div_send_log").removeClass('d-none') ;
-            }
+                $("#dial-wait").modal("hide") ;
 
-            if (ret.status == 404)
-            alert("{{ _("Aucun résultat à exporter !") }}") ;
-            else if (ret.status == 405)
-            alert("{{ _("Paramétrage manquant !") }}") ;
-            else if (ret.status == 401)
-            alert("{{ _("Accès non autorisé") }}") ;
-            else if (ret.status == 500)
-            alert("{{ _("Une erreur est survenue lors du dépot du fichier") }}") ;
-        }
-    } ) ;
+                $("#send_log").val(ret) ;
+                $("#div_send_log").removeClass('d-none') ;
+
+                tempAlert("{{ _("Dépôt réussi") }}", "btn-send") ;
+            },
+            error: function(ret)
+            {
+                $("#dial-wait").modal("hide") ;
+
+                if (ret && ret.responseJSON)
+                {
+                    $("#send_log").val(ret.responseJSON) ;
+                    $("#div_send_log").removeClass('d-none') ;
+                }
+
+                if (ret.status == 404)
+                    alert("{{ _("Aucun résultat à exporter !") }}") ;
+                else if (ret.status == 405)
+                    alert("{{ _("Paramétrage manquant !") }}") ;
+                else if (ret.status == 401)
+                    alert("{{ _("Accès non autorisé") }}") ;
+                else if (ret.status == 500)
+                    alert("{{ _("Une erreur est survenue lors du dépot du fichier") }}") ;
+            }
+        } ) ;
 }
 
 // --- Date helpers (local time) ---
@@ -282,93 +284,114 @@ function two(n){ return String(n).padStart(2,'0'); }
 
 // ISO week (year, week)
 function isoYearWeek(d){
-  const utc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
-  const day = utc.getUTCDay() || 7; // 1..7
-  utc.setUTCDate(utc.getUTCDate() + 4 - day); // Thu of this week
-  const year = utc.getUTCFullYear();
-  const yearStart = new Date(Date.UTC(year,0,1));
-  const week = Math.ceil((((utc - yearStart)/86400000)+1)/7);
-  return {year, week};
+    const utc = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const day = utc.getUTCDay() || 7; // 1..7
+    utc.setUTCDate(utc.getUTCDate() + 4 - day); // Thu of this week
+    const year = utc.getUTCFullYear();
+    const yearStart = new Date(Date.UTC(year,0,1));
+    const week = Math.ceil((((utc - yearStart)/86400000)+1)/7);
+    return {year, week};
 }
 
 // Compute aligned bounds for [beg,end] according to admin period code
 function computeAlignedRange(begStr, endStr, code){
-  if(!begStr || !endStr || !code) return null;
-  let beg = toDate(begStr), end = toDate(endStr);
-  if(beg > end) return null;
+    if(!begStr || !endStr || !code) return null;
+    let beg = toDate(begStr), end = toDate(endStr);
+    if(beg > end) return null;
 
-  if(code==='W'){
-    const aBeg = mondayOfWeek(beg);
-    const aEnd = sundayOfWeek(end);
+    if(code==='W'){
+        const aBeg = mondayOfWeek(beg);
+        const aEnd = sundayOfWeek(end);
+        return {beg: fmt(aBeg), end: fmt(aEnd)};
+    }
+    if(code==='M'){
+        const aBeg = firstOfMonth(beg.getFullYear(), beg.getMonth());
+        const aEnd = lastOfMonth(end.getFullYear(), end.getMonth());
+        return {beg: fmt(aBeg), end: fmt(aEnd)};
+    }
+
+    const spanMap = {B:2, T:3, Q:4, S:6, A:12};
+    const span = spanMap[code];
+    if(!span) return null;
+
+    const startMonth = anchorStartMonth(beg.getMonth()+1, span);
+    const aBeg = firstOfMonth(beg.getFullYear(), startMonth-1);
+
+    const endStartMonth = anchorStartMonth(end.getMonth()+1, span);
+    const endGroupStart = firstOfMonth(end.getFullYear(), endStartMonth-1);
+    const [ey, em] = addMonths(endGroupStart.getFullYear(), endGroupStart.getMonth()+1, span);
+    const aEnd = new Date(ey, em-1, 0);
+
     return {beg: fmt(aBeg), end: fmt(aEnd)};
-  }
-  if(code==='M'){
-    const aBeg = firstOfMonth(beg.getFullYear(), beg.getMonth());
-    const aEnd = lastOfMonth(end.getFullYear(), end.getMonth());
-    return {beg: fmt(aBeg), end: fmt(aEnd)};
-  }
-
-  const spanMap = {B:2, T:3, Q:4, S:6, A:12};
-  const span = spanMap[code];
-  if(!span) return null;
-
-  const startMonth = anchorStartMonth(beg.getMonth()+1, span);
-  const aBeg = firstOfMonth(beg.getFullYear(), startMonth-1);
-
-  const endStartMonth = anchorStartMonth(end.getMonth()+1, span);
-  const endGroupStart = firstOfMonth(end.getFullYear(), endStartMonth-1);
-  const [ey, em] = addMonths(endGroupStart.getFullYear(), endGroupStart.getMonth()+1, span);
-  const aEnd = new Date(ey, em-1, 0);
-
-  return {beg: fmt(aBeg), end: fmt(aEnd)};
 }
 
 // Enumerate period IDs within aligned range
 function listPeriods(begStr, endStr, code){
-  const out = [];
-  const beg = toDate(begStr), end = toDate(endStr);
+    const out = [];
+    const beg = toDate(begStr), end = toDate(endStr);
 
-  if(code==='W'){
-    let cur = mondayOfWeek(beg);
+    // Weekly: YYYYWww
+    if(code==='W'){
+        let cur = mondayOfWeek(beg);
+        while(cur <= end){
+            const {year, week} = isoYearWeek(cur);
+            out.push(`${year}W${two(week)}`);
+            cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate()+7);
+        }
+        return out;
+    }
+
+    // Monthly: YYYYMM
+    if(code === 'M'){
+        let cur = firstOfMonth(beg.getFullYear(), beg.getMonth());
+        while(cur <= end){
+            out.push(`${cur.getFullYear()}${two(cur.getMonth()+1)}`);
+            const [ny,nm] = addMonths(cur.getFullYear(), cur.getMonth()+1, 1);
+            cur = firstOfMonth(ny, nm-1);
+        }
+        return out;
+    }
+
+    const spanMap = {B:2, T:3, Q:4, S:6, A:12};
+    const span = spanMap[code];
+    if(!span) return out;
+
+    // Start at aligned group start
+    let startMonth = anchorStartMonth(beg.getMonth()+1, span);
+    let cur = firstOfMonth(beg.getFullYear(), startMonth-1);
+
     while(cur <= end){
-      const {year, week} = isoYearWeek(cur);
-      out.push(`${year}W${two(week)}`);
-      cur = new Date(cur.getFullYear(), cur.getMonth(), cur.getDate()+7);
+        const y = cur.getFullYear();
+        const m = cur.getMonth()+1;
+
+        let idx;
+
+        if(code === 'A'){
+            // Annual: YYYY
+            out.push(`${y}`);
+        } else if(code === 'S'){
+            // Semester: YYYYSn (n=1..2)
+            idx = (m <= 6) ? 1 : 2;
+            out.push(`${y}S${idx}`);
+        } else if(code === 'T'){
+            // Quarter: YYYYQn (n=1..4)
+            idx = ((m - 1) / 3 | 0) + 1;
+            out.push(`${y}Q${idx}`);
+        } else if(code === 'B'){
+            // Bi-monthly: YYYYiiB (ii=01..06)
+            idx = ((m - 1) / 2 | 0) + 1;
+            out.push(`${y}${two(idx)}B`);
+        } else if(code === 'Q'){
+            // Quadrimestrial: YYYYQnC (n=1..3)
+            idx = ((m - 1) / 4 | 0) + 1;
+            out.push(`${y}Q${idx}C`);
+        }
+
+        // advance to next group start
+        const [ny,nm] = addMonths(cur.getFullYear(), cur.getMonth()+1, span);
+        cur = firstOfMonth(ny, nm-1);
     }
     return out;
-  }
-
-  if(code==='M'){
-    let cur = firstOfMonth(beg.getFullYear(), beg.getMonth());
-    while(cur <= end){
-      out.push(`${cur.getFullYear()}M${two(cur.getMonth()+1)}`);
-      const [ny,nm] = addMonths(cur.getFullYear(), cur.getMonth()+1, 1);
-      cur = firstOfMonth(ny, nm-1);
-    }
-    return out;
-  }
-
-  const spanMap = {B:2, T:3, Q:4, S:6, A:12};
-  const span = spanMap[code];
-
-  // Start at aligned group start
-  let startMonth = anchorStartMonth(beg.getMonth()+1, span);
-  let cur = firstOfMonth(beg.getFullYear(), startMonth-1);
-  while(cur <= end){
-    let idx;
-    const m = cur.getMonth()+1;
-    if(code==='S') idx = (m<=6)?1:2;
-    else if(code==='A') idx = 1;
-    else if(code==='B') idx = ((m-1)/2|0)+1;
-    else if(code==='T') idx = ((m-1)/3|0)+1;
-    else if(code==='Q') idx = ((m-1)/4|0)+1;
-
-    out.push(`${cur.getFullYear()}${code}${two(idx)}`);
-
-    const [ny,nm] = addMonths(cur.getFullYear(), cur.getMonth()+1, span);
-    cur = firstOfMonth(ny, nm-1);
-  }
-  return out;
 }
 
 function preview_period()
@@ -386,14 +409,14 @@ function preview_period()
 
     const ids = listPeriods(rng.beg, rng.end, period);
     const text = "{{ _('Période calculée') }} : " + rng.beg + " → " + rng.end +
-                 (ids && ids.length ? " - {{ _('Séquences') }} : " + ids.join(', ') : '');
+        (ids && ids.length ? " - {{ _('Séquences') }} : " + ids.join(', ') : '');
 
     $("#period_preview").removeClass('d-none').text(text);
 }
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage" ;
+    window.location.href = "{{ url_for('homepage') }}";
 }
 </script>
 {% endblock %}

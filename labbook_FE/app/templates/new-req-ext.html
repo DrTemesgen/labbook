@@ -56,6 +56,7 @@ $("#search_patient").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_patient").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
             return JSON.stringify({
                 term: params.term
@@ -151,7 +152,7 @@ window.location.href = "{{ session['server_ext'] }}/det-patient/E/0";
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage";
+window.location.href = "{{ url_for('homepage') }}";
 }
 </script>
 {% endblock %}

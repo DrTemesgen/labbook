@@ -27,6 +27,7 @@ tags:
 paths:
   /external/analysis/code/check/{code}:
     get:
+      security: [ { OAuth2: [ external/analysis ] } ]
       tags:
       - analysis
       summary: Checks if the analysis code doesn't already exist in DB
@@ -39,8 +40,6 @@ paths:
         required: true
         schema:
           type: string
-      security:
-      - BasicAuth: []
       responses:
         200:
           description: successful operation
@@ -50,6 +49,7 @@ paths:
                 type: integer
   /external/analysis/det/{id_ana}:
     get:
+      security: [ { OAuth2: [ external/analysis ] } ]
       tags:
       - analysis
       summary: Analysis details
@@ -62,8 +62,6 @@ paths:
         required: true
         schema:
           type: integer
-      security:
-      - BasicAuth: []
       responses:
         200:
           description: successful operation
@@ -77,6 +75,7 @@ paths:
           description: Not found
   /external/analysis/list:
     post:
+      security: [ { OAuth2: [ external/analysis ] } ]
       tags:
       - analysis
       summary: List of analysis
@@ -103,8 +102,6 @@ paths:
                   type: integer
                 type_prod:
                   type: integer
-      security:
-      - BasicAuth: []
       responses:
         200:
           description: successful operation
@@ -116,12 +113,11 @@ paths:
                   $ref: '#/components/schemas/Analysis'
   /external/record/det/0:
     post:
+      security: [ { OAuth2: [ external/record ] } ]
       tags:
       - record
       summary: Create a new record
       operationId: RecordFromExt
-      security:
-      - BasicAuth: []
       requestBody:
         required: true
         content:
@@ -633,12 +629,11 @@ paths:
                 type: integer
   /external/patient/list:
     post:
+      security: [ { OAuth2: [ external/patient ] } ]
       tags:
       - patient
       summary: List of patient
       operationId: PatientList
-      security:
-      - BasicAuth: []
       requestBody:
         required: false
         content:
@@ -669,12 +664,11 @@ paths:
                   $ref: '#/components/schemas/Patient'
   /external/record/list/{id_pres}:
     post:
+      security: [ { OAuth2: [ external/record ] } ]
       tags:
       - record
       summary: List of record
       operationId: RecordList
-      security:
-      - BasicAuth: []
       parameters:
       - name: id_pres
         in: path
@@ -748,6 +742,7 @@ paths:
                   $ref: '#/components/schemas/Record'
   /external/result/{id_rec}:
     get:
+      security: [ { OAuth2: [ external/result ] } ]
       tags:
         - result
       summary: Get record results and variables for external usage
@@ -755,8 +750,6 @@ paths:
         Return the list of requested analyses for a record, with their variables,
         current values, units (as label), and possible values if the variable type is a dictionary.
       operationId: ResultFromExtGet
-      security:
-        - BasicAuth: []
       parameters:
         - name: id_rec
           in: path
@@ -831,14 +824,13 @@ paths:
         404:
           description: Record not found or access not authorized
     post:
+      security: [ { OAuth2: [ external/result ] } ]
       tags:
         - result
       summary: Post analysis results to a record
       description: >
         Accepts a list of result values to update for a given record ID.
       operationId: ResultFromExtPost
-      security:
-        - BasicAuth: []
       parameters:
         - name: id_rec
           in: path
@@ -895,12 +887,11 @@ paths:
           description: Internal error during update
   /external/user/list:
     post:
+      security: [ { OAuth2: [ external/user ] } ]
       tags:
       - user
       summary: List of user
       operationId: UserList
-      security:
-      - BasicAuth: []
       requestBody:
         required: false
         content:
@@ -939,9 +930,19 @@ paths:
                   $ref: '#/components/schemas/User'
 components:
   securitySchemes:
-    BasicAuth:
-      type: http
-      scheme: basic
+    OAuth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: "{{ session['server_ext'] }}/services/oauth/authorize"
+          tokenUrl: "{{ session['server_ext'] }}/services/oauth/token"
+          scopes:
+            external: "Endpoints /external/*" 
+            external/analysis: "Endpoints /external/analysis/*"
+            external/patient: "Endpoints /external/patient/*"
+            external/record: "Endpoints /external/record/*"
+            external/result: "Endpoints /external/result/*"
+            external/user: "Endpoints /external/user/*"
   schemas:
     Analysis:
       type: object

@@ -146,6 +146,7 @@ let param = '{ "date_beg":"' + date_beg  + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(data)
         {
         data_today = data ;
@@ -251,6 +252,7 @@ let param = '{ "date_beg":"' + date_beg  + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;
@@ -311,6 +313,7 @@ let param = '{ "date_beg":"' + date_beg  + '", ' +
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         success: function(ret)
         {
             $("#dial-wait").modal("hide") ;
@@ -345,7 +348,7 @@ let param = '{ "date_beg":"' + date_beg  + '", ' +
 
 function return_home()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage";
+window.location.href = "{{ url_for('homepage') }}";
 }
 
 $(".cnx_trigger").keyup( function(event) 

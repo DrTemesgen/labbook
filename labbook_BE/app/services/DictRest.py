@@ -11,15 +11,18 @@ from flask_restful import Resource
 from pathlib import Path
 
 from app.models.General import compose_ret
-from app.models.Constants import *
-from app.models.Dict import *
+from app.models.Constants import Constants
+from app.models.DB import DB
+from app.models.Dict import Dict
 from app.models.Logs import Logs
 from app.models.Various import Various
+from app.security.oauth_routes import require_oauth
 
 
 class DictDescr(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self, dict_name):
         args = request.get_json()
 
@@ -40,6 +43,7 @@ class DictDescr(Resource):
 class DictDet(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, dict_name):
         l_dicts = Dict.getDictDetails(dict_name)
 
@@ -64,6 +68,7 @@ class DictDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE DictDet')
         return compose_ret(l_dicts, Constants.cst_content_type_json)
 
+    @require_oauth()
     def post(self, dict_name):
         args = request.get_json()
 
@@ -134,6 +139,7 @@ class DictDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE DictDet dict_name=' + str(dict_name))
         return compose_ret('', Constants.cst_content_type_json)
 
+    @require_oauth()
     def delete(self, dict_name):
         args = request.get_json()
 
@@ -156,6 +162,7 @@ class DictDet(Resource):
 class DictDetById(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, id_dict):
         l_dicts = Dict.getDictDetailsById(id_dict)
 
@@ -184,6 +191,7 @@ class DictDetById(Resource):
 class DictList(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -214,6 +222,7 @@ class DictList(Resource):
 class DictExport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def post(self):
         args = request.get_json()
 
@@ -295,21 +304,21 @@ class DictExport(Resource):
         # write csv file
         try:
             today = datetime.now().strftime("%Y%m%d")
-        
+
             raw = str(dico_name) if dico_name else ''
             safe = re.sub(Constants.cst_safe_pattern, '_', raw).strip('_')
             suffix = f"-{safe}" if safe else ""
-        
+
             filename = f"dict{suffix}_{today}.csv"
-        
+
             tmp_dir = Path("tmp")
             tmp_dir.mkdir(parents=True, exist_ok=True)
-        
+
             file_path = tmp_dir / filename
             with file_path.open(mode="w", encoding="utf-8", newline="") as file:
                 writer = csv.writer(file, delimiter=';')
                 writer.writerows(l_data)
-        
+
         except Exception as err:
             self.log.error(Logs.fileline() + ' :ERROR post DictExport failed, err=%s', err)
             return False
@@ -321,6 +330,7 @@ class DictExport(Resource):
 class DictImport(Resource):
     log = logging.getLogger('log_services')
 
+    @require_oauth()
     def get(self, filename, id_user):
 
         if not filename or id_user <= 0:

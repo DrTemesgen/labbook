@@ -5,6 +5,6 @@
 <script type="text/javascript" nonce="{{ session['nonce'] }}">
 function return_no_rights()
 {
-window.location.href = "{{ session['server_ext'] }}/homepage";
+window.location.href = "{{ url_for('homepage') }}";
 }
 </script>

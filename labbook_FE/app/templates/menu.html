@@ -261,6 +261,11 @@
                                 <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-lite">{{ _("Configuration LabBook Lite") }}</a>
                             </li>
                             {% endif %}
+                            {% if session['user_role'] in ('A') %}
+                            <li>
+                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-oauth-list">{{ _("Configuration OAuth Client") }}</a>
+                            </li>
+                            {% endif %}
                     </ul>
                     {% endif %}
 
@@ -532,6 +537,9 @@
                     {% endif %}
                     {% if has_permission("LITE_175") %}
                     <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-lite">{{ _("Configuration LabBook Lite") }}</a>
+                    {% endif %}
+                    {% if session['user_role'] in ('A') %}
+                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-oauth-list">{{ _("Configuration OAuth Client") }}</a>
                     {% endif %}
                   </div>
                 </li>

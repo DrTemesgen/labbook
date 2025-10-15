@@ -5,6 +5,8 @@ Revises: 7ae305af7750
 Create Date: 2025-09-26 16:56:03.278018
 
 """
+import os
+
 from alembic import op
 from sqlalchemy import text
 
@@ -122,33 +124,67 @@ def upgrade():
     except Exception as err:
         print("ERROR create table oauth2_code,\n\terr=" + str(err))
     
-    # --- LabBook FE ---
+    # --- access LabBook FE (idempotent insert; secret from env) ---
     try:
-        conn.execute(text("""
-            INSERT INTO oauth2_client (
-              oacl_client_id,
-              oacl_client_secret,
-              oacl_client_name,
-              oacl_user_id,
-              oacl_redirect_uris,
-              oacl_scope,
-              oacl_grant_types,
-              oacl_token_endpoint_auth_method,
-              oacl_is_active
-            ) VALUES (
-              'labbook-FE',
-              '',
-              'LabBook Front-End',
-              0,
-              '/oauth/callback',
-              '',
-              'authorization_code refresh_token',
-              'none',
-              'Y'
-            )
-        """))
+        # STEP 1: check if client already exists
+        exists = conn.execute(text(
+            "SELECT 1 FROM oauth2_client WHERE oacl_client_id='labbook-FE' LIMIT 1"
+        )).scalar()
+
+        if not exists:
+            # STEP 2: read secret from env (exported by BE gunicorn)
+            fe_secret = os.environ.get("LABBOOK_OAUTH_FE_SECRET", "").strip()
+            if not fe_secret:
+                raise RuntimeError("LABBOOK_OAUTH_FE_SECRET not set for first-time FE OAuth client insert")
+
+            # STEP 3: insert client once (confidential + PKCE)
+            conn.execute(text("""
+                INSERT INTO oauth2_client (
+                  oacl_client_id,
+                  oacl_client_secret,
+                  oacl_client_name,
+                  oacl_user_id,
+                  oacl_redirect_uris,
+                  oacl_scope,
+                  oacl_grant_types,
+                  oacl_response_types,
+                  oacl_token_endpoint_auth_method,
+                  oacl_is_active
+                ) VALUES (
+                  'labbook-FE',
+                  :secret,
+                  'LabBook Front-End',
+                  0,
+                  '/oauth/callback /sigl/oauth/callback',
+                  '',
+                  'authorization_code',
+                  'code',
+                  'client_secret_post',
+                  'Y'
+                )
+            """), {"secret": fe_secret})
+        # else: keep existing row and secret as-is
     except Exception as err:
         print("ERROR insert oauth2_client (FE),\n\terr=" + str(err))
+
+    # --- access LabBook swagger ---
+    try:
+        conn.execute(text("""
+            INSERT INTO oauth2_client 
+            (
+            oacl_client_id,  oacl_client_secret, oacl_client_name, oacl_user_id, oacl_redirect_uris,
+            oacl_scope, oacl_grant_types, oacl_response_types, oacl_token_endpoint_auth_method, oacl_is_active
+            )
+            VALUES
+            (
+            'labbook-API', '', 'Swagger UI', 0,
+            '/static/vendor/swagger-ui/oauth2-redirect.html /sigl/static/vendor/swagger-ui/oauth2-redirect.html',
+            'external/analysis external/patient external/record external/result external/user',
+            'authorization_code', 'code', 'none',
+            'Y')
+        """))
+    except Exception as err:
+        print("ERROR insert oauth2_client (swagger),\n\terr=" + str(err))
 
     print(str(datetime.today()) + " : END of migration v3_6_1_part_01 revision=ed09fb3dd670")
 

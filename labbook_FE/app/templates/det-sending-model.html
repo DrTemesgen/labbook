@@ -175,7 +175,7 @@ function save_item()
     const url = `${SERVER}/services/setting/sending/model/det/${TYPE}/${IDITEM || 0}`;
     fetch(url, {
         method: 'POST',
-        headers: {
+        headers: { "Authorization": "Bearer {{ session.get('be_access_token','') }}",
             'Content-Type': 'application/json',
             'Accept': 'application/json',
             'X-CSRF-Token': "{{ session.get('csrf_token','') }}"

@@ -117,6 +117,7 @@ $("#search_supplier").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_supplier").text(),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
         data: function (params) {
 
             return JSON.stringify({
@@ -197,6 +198,7 @@ var param = '{ "id_owner":' + id_owner + ', ' +
        dataType: 'json',
        contentType: "application/json; charset=utf-8",
        data: param,
+       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
        success: function(data)
            {
                if ('referrer' in document) 

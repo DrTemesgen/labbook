@@ -35,7 +35,7 @@
 | reportlab               | 3.6.13    | BSD          |           |         | x       |
 | unoserver               | 2.2.1     | MIT          |           |         | x       |
 | bcrypt                  | 5.0.0     | Apache 2.0   |           |         | x       |
-| authlib                 | 1.6.4     | BSD          |           |         | x       |
+| authlib                 | 1.6.5     | BSD          |           |         | x       |
 | Flask-Cors              | 6.0.1     | MIT          |           |         | x       |
 | mailjet-rest            | 1.5.1     | MIT          |           |         | x       |
 
