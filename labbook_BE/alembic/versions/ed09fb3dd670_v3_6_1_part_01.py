@@ -39,6 +39,16 @@ def upgrade():
     except Exception as err:
         print("ERROR create index idx_equipement_eqp_status,\n\terr=" + str(err))
 
+    # Fix typo in sigl_07_data: libelle "Autres cellules" (id_data=673)
+    try:
+        result = conn.execute(text("""
+            UPDATE sigl_07_data
+            SET libelle = :new_label
+            WHERE id_data = 673
+        """), {"new_label": "Autres cellules"})
+    except Exception as err:
+        print("ERROR update libelle for sigl_07_data id=673,\n\terr=" + str(err))
+
     # insert equipment status dictionary
     try:
         conn.execute(text("""

@@ -84,6 +84,14 @@ if config_envvar in os.environ:
 else:
     print(("No local configuration available: {} is undefined in the environment".format(config_envvar)))
 
+# --- Session cookie configuration ---
+# These settings ensure the session persists across OAuth redirects,
+# works under both HTTP and HTTPS, and covers all subpaths like /sigl/.
+app.config['SESSION_COOKIE_NAME'] = 'labbook_fe_sess'   # explicit cookie name
+app.config['SESSION_COOKIE_PATH'] = '/'                 # cookie valid everywhere
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'           # required for OAuth redirect (Strict, None needs HTTPS)
+app.config['SESSION_COOKIE_SECURE'] = False             # must stay False because some sites still use HTTP
+
 app.config.setdefault('OAUTH_CLIENT_ID', 'labbook-FE')
 
 # Prefer LOCAL_SETTINGS; fallback to env LABBOOK_OAUTH_FE_SECRET; never log the value.
@@ -149,14 +157,17 @@ def be_auth_headers():
 
 def ensure_be_token():
     """
-    Guard before calling the BE: if no token in session, remember the current URL
-    and redirect to the OAuth entry point. Returns None when the token already exists.
+    Guard before calling the BE: if the session has NO access token,
+    remember the current URL and redirect to the OAuth entry point.
+    Return None when the token already exists.
+    NOTE: use the SAME session key everywhere: 'be_access_token'.
     """
-    # If no token, remember current URL and start OAuth bounce
-    if session.get('be_access_token'):
-        return None
-    session['next'] = request.url
-    return redirect(url_for('oauth_bounce'))
+    tok = session.get('be_access_token')  # exact same key used by templates/headers
+    if not tok:                           # handles None and ""
+        session['next'] = request.url     # remember where to come back
+        session.modified = True
+        return redirect(url_for('oauth_bounce'))
+    return None
 
 
 def be_check_or_bounce(resp):
@@ -169,6 +180,7 @@ def be_check_or_bounce(resp):
     if resp.status_code == 401:
         session.pop('be_access_token', None)
         session['next'] = request.url
+        session.modified = True
         return redirect(url_for('oauth_bounce'))
     return None
 
@@ -254,7 +266,7 @@ def get_init_var(be_headers=None):
 
         if be_headers is not None:
             redir = be_check_or_bounce(req)
-            if redir: 
+            if redir:
                 return redir
 
         if req.status_code == 200:
@@ -586,6 +598,7 @@ def confirm_access():
     if id_user is None:
         return jsonify({'error': 'id_user missing'}), 400
 
+    session.permanent = True
     session['login_ok'] = login
     session['user_id'] = int(id_user)
     session.modified = True
@@ -662,6 +675,7 @@ def oauth_callback():
     clean PKCE/state, then send the user back to the original page
     (or a safe homepage fallback).
     """
+    log.info("CALLBACK host=%s cookie_in=%s", request.host, request.cookies.get(app.config['SESSION_COOKIE_NAME'], '')[:16])
 
     ensure_base_urls_in_session()
 
@@ -691,12 +705,6 @@ def oauth_callback():
         log.error(Logs.fileline() + f" : OAUTH token POST raised exception: {e}")
         req = type('R', (), {'status_code': 500, 'json': lambda: {}})()
 
-    sec_len = len(app.config.get('OAUTH_CLIENT_SECRET') or '')
-    log.info(Logs.fileline() + f" : OAUTH DEBUG FE token call url={token_url} redirect_uri={redirect_uri!r} "
-                               f"client_id=labbook-FE client_secret_len={sec_len} status={req.status_code}")
-    if hasattr(req, 'text'):
-        log.info(Logs.fileline() + f" : OAUTH DEBUG FE token resp body={req.text[:400]}")
-
     if req.status_code != 200:
         # Reset PKCE/state on failure and disconnect
         session.pop('oauth_pkce_verifier', None)
@@ -705,10 +713,11 @@ def oauth_callback():
 
     # Persist access token for BE calls
     tok = req.json()
+    session.permanent = True
     session['be_access_token'] = tok.get('access_token')
+    session.modified = True
     session.pop('oauth_pkce_verifier', None)
     session.pop('oauth_state', None)
-    session.modified = True
 
     # Return user to originally requested page
     next_url = session.pop('next', None)
@@ -4515,7 +4524,7 @@ def det_req_ext(entry='Y', ref=0):
         return resp
     headers = be_auth_headers()
 
-    get_software_settings()
+    get_software_settings(headers)
 
     json_ihm  = {}
     json_data = {}
@@ -4653,7 +4662,7 @@ def det_req_int(entry='Y', ref=0):
         session.clear()
         return index()
 
-    session['current_page'] = 'det-req-int/' + str(entry) + '/' + str(ref)
+    session['current_page'] = f'det-req-int/{entry}/{ref}'
     session.modified = True
 
     resp = ensure_be_token()
@@ -4661,7 +4670,7 @@ def det_req_int(entry='Y', ref=0):
         return resp
     headers = be_auth_headers()
 
-    get_software_settings()
+    get_software_settings(headers)
 
     json_ihm  = {}
     json_data = {}

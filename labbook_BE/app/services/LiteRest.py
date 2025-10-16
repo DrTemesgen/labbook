@@ -252,7 +252,7 @@ class LiteSetupLoad(Resource):
             ]
         }
 
-        var_ids = list({l["variable_id"] for l in setup["ana_link"]})
+        var_ids = list({sub_list["variable_id"] for sub_list in setup["ana_link"]})
         setup["ana_var"] = Lite.getLiteVAnalysisVarByIds(var_ids)
 
         # 3 - recover dictionary sigl_dico_data

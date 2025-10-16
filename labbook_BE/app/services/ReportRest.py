@@ -70,11 +70,11 @@ class ReportEpidemio(Resource):
                 y = str(r + 1)
                 details = {}
 
-                details['res_label'] = config.get('DISEASE_' + x, 'res_label_' + y)
+                details['res_label'] = config.get('DISEASE_' + x, 'res_label_' + y).strip()
 
                 # self.log.error(Logs.fileline() + ' : DEBUG-TRACE res_label=' + details['res_label'])
 
-                formula = config.get('DISEASE_' + x, 'formula_' + y)
+                formula = (config.get('DISEASE_' + x, 'formula_' + y) or '').strip()
 
                 # self.log.error(Logs.fileline() + ' : DEBUG-TRACE formula=' + formula)
 
@@ -94,14 +94,22 @@ class ReportEpidemio(Resource):
 
                     req_part = Report.ParseFormula(formula, id_prod)
 
-                    # self.log.error(Logs.fileline() + ' : DEBUG-TRACE req_part=' + str(req_part))
-                    result = Report.getResultEpidemio(inner_req=req_part['inner'],
-                                                      end_req=req_part['end'],
-                                                      date_beg=args['date_beg'],
-                                                      date_end=args['date_end'])
+                    # treatment for label for epidemio report
+                    inner_req = req_part.get('inner') if req_part else None
+                    end_req   = req_part.get('end') if req_part else None
 
-                    if result:
-                        details['res_value'] = result['value']
+                    # self.log.error(Logs.fileline() + ' : DEBUG-TRACE req_part=' + str(req_part))
+                    if inner_req and end_req:
+                        result = Report.getResultEpidemio(inner_req=req_part['inner'],
+                                                          end_req=req_part['end'],
+                                                          date_beg=args['date_beg'],
+                                                          date_end=args['date_end'])
+
+                        if result:
+                            details['res_value'] = result['value']
+
+                    else:
+                        details['res_value'] = 0
 
                     # Parse id_var for NbResult request
                     id_var = 0

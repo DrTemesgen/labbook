@@ -3,6 +3,8 @@ import logging
 import gettext
 import random
 import string
+import csv
+import os
 
 from datetime import datetime
 from flask import request
@@ -747,7 +749,14 @@ class UserConnExport(Resource):
             self.log.error(Logs.fileline() + ' : UserConnExport ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
-        dict_data = User.getUserConnections(args['date_beg'] + ' 00:00', args['date_end'] + ' 23:59')
+        try:
+            date_beg = datetime.strptime(args['date_beg'], Constants.cst_isodate).date()
+            date_end = datetime.strptime(args['date_end'], Constants.cst_isodate).date()
+        except (ValueError, TypeError):
+            self.log.error(Logs.fileline() + ' : UserConnExport ERROR invalid date format')
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        dict_data = User.getUserConnections(str(date_beg) + ' 00:00', str(date_end) + ' 23:59')
 
         if dict_data:
             for d in dict_data:
@@ -772,18 +781,20 @@ class UserConnExport(Resource):
 
         # write csv file
         try:
-            import csv
+            base_path = Constants.cst_path_tmp
+            os.makedirs(base_path, exist_ok=True)
 
-            filename = 'user-conn_' + args['date_beg'] + '_' + args['date_end'] + '.csv'
+            filename = 'user-conn_' + str(date_beg) + '_' + str(date_end) + '.csv'
+            fullpath = os.path.join(base_path, filename)
 
-            with open('tmp/' + filename, mode='w', encoding='utf-8') as file:
+            with open(fullpath, mode='w', encoding='utf-8') as file:
                 writer = csv.writer(file, delimiter=';')
                 for line in l_data:
                     writer.writerow(line)
 
         except Exception as err:
             self.log.error(Logs.fileline() + ' : post UserConnExport failed, err=%s', err)
-            return False
+            return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserConnExport')
         return compose_ret('', Constants.cst_content_type_json)
@@ -964,8 +975,6 @@ class UserExport(Resource):
 
         # write csv file
         try:
-            import csv
-
             today = datetime.now().strftime("%Y%m%d")
 
             filename = 'users_' + str(today) + '.csv'
@@ -994,14 +1003,10 @@ class UserImport(Resource):
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Read CSV user
-        import os
-
-        from csv import reader
-
         path = Constants.cst_path_tmp
 
         with open(os.path.join(path, filename), 'r', encoding='utf-8') as csv_file:
-            csv_reader = reader(csv_file, delimiter=';', quotechar='"')
+            csv_reader = csv.reader(csv_file, delimiter=';', quotechar='"')
             l_rows = list(csv_reader)
 
         # clean double quotes

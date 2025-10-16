@@ -27,6 +27,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - forwarding a message from the message list
 - export DHIS2 fix interpretation of {var1,var2}, of $_var IN (...) and $_var NOT IN (...)
 - export DHIS2 format of period
+- report epidemio, the new parser was causing problems with empty formulas. 
 
 ## [3.6.0] - 2025-09-24
 ### Added

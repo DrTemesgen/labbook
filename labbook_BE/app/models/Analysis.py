@@ -4,7 +4,7 @@ import mysql.connector
 
 from flask import session
 
-from app.models.Constants import *
+from app.models.Constants import Constants
 from app.models.DB import DB
 from app.models.Logs import Logs
 

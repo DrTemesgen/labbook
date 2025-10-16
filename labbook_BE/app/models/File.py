@@ -8,7 +8,7 @@ from pikepdf import Page
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 
-from app.models.Constants import *
+from app.models.Constants import Constants
 from app.models.DB import DB
 from app.models.Logs import Logs
 from app.models.Various import Various

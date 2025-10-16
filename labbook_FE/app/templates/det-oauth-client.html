@@ -26,12 +26,14 @@
                     </div>
                 </div>
 
+                {% if args.item.get('oacl_client_id') != 'labbook-FE' %}
                 <div class="form-group d-lg-flex align-items-start mt-3">
                     <label for="client_secret" class="form-label col-3 text-end mt-2 me-1">{{ _("Secret") }}</label>
                     <div>
                         <input type="text" name="client_secret" id="client_secret" value="{{ args['item'].get('oacl_client_secret','') }}" class="form-control form-lbk">
                     </div>
                 </div>
+                {% endif %}
 
                 <div class="form-group d-lg-flex align-items-start mt-3">
                     <label for="redirect_uris" class="form-label col-3 text-end mt-2 me-1">{{ _("Redirect URIs") }}</label>
