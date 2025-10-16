@@ -119,7 +119,7 @@ read_shared_secret() {
   python3 - <<'PY'
 ns={}
 try:
-    with open('/home/apps/shared/oauth_client_secret.py','r') as f:
+    with open('/storage/key/oauth_client_secret.py','r') as f:
         exec(f.read(), ns)
     v = ns.get('OAUTH_CLIENT_SECRET','').strip()
     print(v)
