@@ -67,7 +67,7 @@ LOGS_DIR=/home/apps/logs
 GUNICORN_DIR=${HOME_APP}/gunicorn
 GUNICORN_TIMEOUT=120
 
-SHARED_SECRET=/home/apps/shared/secret_key.py
+SHARED_SECRET=/storage/key/secret_key.py
 OAUTH_SHARED="$(dirname "$SHARED_SECRET")/oauth_client_secret.py"
 
 # shellcheck disable=SC1091

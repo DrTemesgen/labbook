@@ -68,7 +68,7 @@ LOGS_PERM=/storage/log
 GUNICORN_DIR=${HOME_APP}/gunicorn
 GUNICORN_TIMEOUT=0  # Because restore and backup scripts that run synchronously
 
-SHARED_SECRET=/home/apps/shared/secret_key.py
+SHARED_SECRET=/storage/key/secret_key.py
 
 # shellcheck disable=SC1091
 source ${VENV_DIR}/bin/activate
