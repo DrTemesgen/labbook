@@ -206,6 +206,18 @@ Enter password:
 mysql>
 ~~~
 
+#### Oauth and http(s)
+
+From version 3.6, the following environment variable is required for https access:
+
+~~~
+AUTHLIB_INSECURE_TRANSPORT=0
+~~~
+
+Otherwise by default the application will automatically add `AUTHLIB_INSECURE_TRANSPORT=1` to the environment.
+
+This is required for backward compatibility reasons and may be modified in a future version.
+
 # Documentation
 
 Documentation provided here is exclusively technical, and in a very partial and early state.
