@@ -112,23 +112,58 @@ if [ ! -f "$LOCAL_SETTINGS" ]; then
 fi
 
 # --- start OAuth FE client secret block ---
-# If shared secret file exists, read it; otherwise generate a new one
-if [ -f "$OAUTH_SHARED" ]; then
-    OAUTH_SECRET=$(python3 - <<'PY'
+PLACEHOLDER="replace-me-with-random-secret-key"
+OAUTH_SECRET=""
+
+read_shared_secret() {
+  python3 - <<'PY'
 ns={}
-with open('/home/apps/shared/oauth_client_secret.py','r') as f: exec(f.read(), ns)
-print(ns.get('OAUTH_CLIENT_SECRET',''))
+try:
+    with open('/home/apps/shared/oauth_client_secret.py','r') as f:
+        exec(f.read(), ns)
+    v = ns.get('OAUTH_CLIENT_SECRET','').strip()
+    print(v)
+except Exception:
+    print('')
 PY
-)
-else
+}
+
+read_local_secret() {
+  python3 - <<PY
+ns={}
+try:
+    with open("${LOCAL_SETTINGS}","r") as f:
+        exec(f.read(), ns)
+    v = ns.get('OAUTH_CLIENT_SECRET','').strip()
+    print(v)
+except Exception:
+    print('')
+PY
+}
+
+# 1) Try shared secret first
+if [ -f "$OAUTH_SHARED" ]; then
+    OAUTH_SECRET="$(read_shared_secret)"
+fi
+
+# 2) Fallback to local_settings.py if present and not placeholder
+if [ -z "$OAUTH_SECRET" ]; then
+    EXISTING_LOCAL="$(read_local_secret)"
+    if [ -n "$EXISTING_LOCAL" ] && [ "$EXISTING_LOCAL" != "$PLACEHOLDER" ]; then
+        echo "Reusing OAUTH_CLIENT_SECRET from local_settings.py"
+        OAUTH_SECRET="$EXISTING_LOCAL"
+        echo "OAUTH_CLIENT_SECRET = '${OAUTH_SECRET}'" > "$OAUTH_SHARED"
+    fi
+fi
+
+# 3) Generate if still empty
+if [ -z "$OAUTH_SECRET" ]; then
     echo "Generating FE OAuth client secret..."
     OAUTH_SECRET=$(python3 -c "import secrets; print(secrets.token_urlsafe(48))")
     echo "OAUTH_CLIENT_SECRET = '$OAUTH_SECRET'" > "$OAUTH_SHARED"
 fi
 
-# Ensure constants exist in local_settings.py
-#  - If key exists: replace value
-#  - If missing: append
+# 4) Ensure local_settings.py has the chosen secret and client_id
 if grep -qE "^[[:space:]]*OAUTH_CLIENT_SECRET[[:space:]]*=" "$LOCAL_SETTINGS"; then
     sed -i "s|^[[:space:]]*OAUTH_CLIENT_SECRET[[:space:]]*=.*|OAUTH_CLIENT_SECRET = '${OAUTH_SECRET}'|" "$LOCAL_SETTINGS"
 else
@@ -141,7 +176,6 @@ else
     printf "OAUTH_CLIENT_ID = 'labbook-FE'\n" >> "$LOCAL_SETTINGS"
 fi
 
-# Export for later bootstrap steps (BE/Alembic may reuse it)
 export LABBOOK_OAUTH_FE_SECRET="${OAUTH_SECRET}"
 # --- end OAuth FE client secret block ---
 
