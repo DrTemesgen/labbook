@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.2] - 2025-10-20
+### Added
+- adds Portuguese to the languages in the repository
+
 ## [3.6.1] - 2025-10-16
 ### Added
 - upgrade python, almalinux, reportlab, pikepdf ...
@@ -45,6 +49,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - restricted CORS to /services/external/
 - new calculation of range of date fo DHIS2 export
 - DHIS2 formula parser rewritten for robustness and performance (backward-compatible)
+
+## [3.5.18] - 2025-10-20
+### Added
+- adds Portuguese to the languages in the repository
 
 ## [3.5.17] - 2025-09-16
 ### Added

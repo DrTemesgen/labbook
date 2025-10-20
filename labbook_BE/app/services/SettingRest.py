@@ -7,7 +7,7 @@ import csv
 import re
 
 from datetime import datetime
-from flask import request, session
+from flask import request
 from flask_restful import Resource
 
 from app.models.General import compose_ret
@@ -383,17 +383,10 @@ class SettingPref(Resource):
             self.log.error(Logs.fileline() + ' : SettingPref ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
+        # Persist all preferences to DB only; runtime language is driven by FE headers
+        # (X-Lang-DB / X-Lang-PDF) on subsequent requests.
         for key, value in list(args.items()):
-            if key == 'db_language':
-                session['lang_db'] = value
-                session.modified = True
-
-            if key == 'default_language':
-                session['lang_pdf'] = value
-                session.modified = True
-
             ret = Setting.updatePref(id_owner, key, value)
-
             if ret is False:
                 self.log.error(Logs.alert() + ' : SettingPref ERROR update')
                 return compose_ret('', Constants.cst_content_type_json, 500)

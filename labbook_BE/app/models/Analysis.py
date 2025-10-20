@@ -2,11 +2,10 @@
 import logging
 import mysql.connector
 
-from flask import session
-
 from app.models.Constants import Constants
 from app.models.DB import DB
 from app.models.Logs import Logs
+from app.models.Various import get_lang_db_default
 
 
 class Analysis:
@@ -45,7 +44,8 @@ class Analysis:
         # Search conditions
         conditions = []
 
-        if session.get('lang_db') == 'fr_FR':
+        lang = get_lang_db_default()
+        if lang == 'fr_FR':
             for word in l_words:
                 conditions.append(
                     f'(ana.code LIKE "{word}%" OR '
@@ -55,7 +55,7 @@ class Analysis:
                 )
         else:
             trans = (
-                f'LEFT JOIN translations AS tr ON tr.tra_lang="{session["lang_db"]}" '
+                f'LEFT JOIN translations AS tr ON tr.tra_lang="{lang}" '
                 'AND tr.tra_type="ana_name" AND tr.tra_ref=ana.id_data '
             )
 
@@ -85,7 +85,7 @@ class Analysis:
             'ana.nom AS name, COALESCE(dict.label, "") AS label '
             'FROM sigl_05_data AS ana '
             'LEFT JOIN sigl_dico_data AS dict ON dict.id_data = ana.famille '
-            f'{trans if session.get("lang_db") != "fr_FR" else ""} '
+            f'{trans} '
             f'WHERE {cond} '
             'ORDER BY ana.nom ASC LIMIT 1000'
         )
@@ -117,11 +117,11 @@ class Analysis:
         cond  = 'var.libelle is not NULL '
         trans = ''
 
-        if session['lang_db'] == 'fr_FR':
+        if get_lang_db_default() == 'fr_FR':
             for word in l_words:
                 cond = (cond + ' and (var.libelle like "%' + word + '%") ')
         else:
-            trans = ('left join translations as tr on tr.tra_lang="' + str(session['lang_db']) + '" and '
+            trans = ('left join translations as tr on tr.tra_lang="' + str(get_lang_db_default()) + '" and '
                      'tr.tra_type="var_name" and tr.tra_ref=var.id_data ')
 
             for word in l_words:
@@ -714,13 +714,13 @@ class Analysis:
             else:
                 filter_cond += ' ana.actif=4 '  # keep only activated analyzes by default
 
-            if session and session['lang_db'] == 'fr_FR':
+            if get_lang_db_default() == 'fr_FR':
                 if 'name' in args and args['name']:
                     filter_cond += (' and (ana.nom LIKE "%' + args['name'] + '%" or ana.code LIKE "%' + args['name'] +
                                     '%" or ana.ana_loinc LIKE "%' + args['name'] + '%" or ana.abbr LIKE "%' + args['name'] + '%") ')
             else:
                 if 'name' in args and args['name']:
-                    trans = ('left join translations as tr on tr.tra_lang="' + str(session['lang_db']) + '" and '
+                    trans = ('left join translations as tr on tr.tra_lang="' + str(get_lang_db_default()) + '" and '
                              'tr.tra_type="ana_name" and tr.tra_ref=ana.id_data ')
 
                     filter_cond += (' and (tr.tra_text LIKE "%' + args['name'] + '%" or ana.code LIKE "%' + args['name'] +

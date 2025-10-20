@@ -2,10 +2,9 @@
 import logging
 import mysql.connector
 
-from flask import session
-
 from app.models.DB import DB
 from app.models.Logs import Logs
+from app.models.Various import get_lang_db_default
 
 
 class Dict:
@@ -165,26 +164,28 @@ class Dict:
 
             filter_cond += ' id_data > 0 '  # remove deleted dicts by default
 
-            if session['lang_db'] == 'fr_FR':
+            if get_lang_db_default() == 'fr_FR':
                 if 'name' in args and args['name']:
                     filter_cond += ' and dico_name LIKE "%' + str(args['name']) + '%" '
 
                 if 'label' in args and args['label']:
                     filter_cond += ' and label LIKE "%' + str(args['label']) + '%" '
             else:
-                if 'name' in args and args['name']:
-                    trans = ('left join translations as tr on tr.tra_lang="' + str(session['lang_db']) + '" and '
-                             'tr.tra_type="dict_name" and tr.tra_ref=id_data ')
+               # Single JOIN that can serve both name and label conditions
+               trans = ('left join translations as tr on tr.tra_lang="' + str(get_lang_db_default()) + '" '
+                        'and tr.tra_ref=id_data ')
 
-                    filter_cond += (' and (tr.tra_text LIKE "%' + str(args['name']) + '%" or '
-                                    ' dico_name LIKE "%' + str(args['name']) + '%") ')
+               if 'name' in args and args['name']:
+                   filter_cond += (
+                       ' and ( (tr.tra_type="dict_name" and tr.tra_text LIKE "%' + str(args['name']) + '%") '
+                       'or dico_name LIKE "%' + str(args['name']) + '%") '
+                   )
 
-                if 'label' in args and args['label']:
-                    trans = ('left join translations as tr on tr.tra_lang="' + str(session['lang_db']) + '" and '
-                             'tr.tra_type="dict_label" and tr.tra_ref=id_data ')
-
-                    filter_cond += (' and tr.tra_text LIKE "%' + str(args['label']) + '%" or '
-                                    ' label LIKE "%' + str(args['name']) + '%") ')
+               if 'label' in args and args['label']:
+                   filter_cond += (
+                       ' and ( (tr.tra_type="dict_label" and tr.tra_text LIKE "%' + str(args['label']) + '%") '
+                       'or label LIKE "%' + str(args['label']) + '%") '
+                   )
 
             if 'code' in args and args['code']:
                 filter_cond += ' and code LIKE "%' + str(args['code']) + '%" '
