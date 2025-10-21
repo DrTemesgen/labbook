@@ -41,7 +41,7 @@ def upgrade():
 
     # Fix typo in sigl_07_data: libelle "Autres cellules" (id_data=673)
     try:
-        result = conn.execute(text("""
+        conn.execute(text("""
             UPDATE sigl_07_data
             SET libelle = :new_label
             WHERE id_data = 673
@@ -89,7 +89,7 @@ def upgrade():
         """))
     except Exception as err:
         print("ERROR create table oauth2_client,\n\terr=" + str(err))
-    
+
     # --- OAUTH2 TOKENS ---
     try:
         conn.execute(text("""
@@ -111,7 +111,7 @@ def upgrade():
         """))
     except Exception as err:
         print("ERROR create table oauth2_token,\n\terr=" + str(err))
-    
+
     # --- OAUTH2 AUTHORIZATION CODES (PKCE) ---
     try:
         conn.execute(text("""
@@ -133,7 +133,7 @@ def upgrade():
         """))
     except Exception as err:
         print("ERROR create table oauth2_code,\n\terr=" + str(err))
-    
+
     # --- access LabBook FE (idempotent insert; secret from env) ---
     try:
         # STEP 1: check if client already exists
@@ -142,12 +142,26 @@ def upgrade():
         )).scalar()
 
         if not exists:
-            # STEP 2: read secret from env (exported by BE gunicorn)
+            # STEP 2 : read secret from env (exported by BE gunicorn)
             fe_secret = os.environ.get("LABBOOK_OAUTH_FE_SECRET", "").strip()
-            if not fe_secret:
-                raise RuntimeError("LABBOOK_OAUTH_FE_SECRET not set for first-time FE OAuth client insert")
 
-            # STEP 3: insert client once (confidential + PKCE)
+            # STEP 3 : read file /storage/key/oauth_client_secret.py
+            if not fe_secret:
+                key_path = "/storage/key/oauth_client_secret.py"
+                try:
+                    key_globals = {}
+                    with open(key_path, "r", encoding="utf-8") as f:
+                        exec(f.read(), key_globals)
+                    fe_secret = key_globals.get("OAUTH_CLIENT_SECRET", "").strip()
+                    if not fe_secret:
+                        raise RuntimeError(f"OAUTH_CLIENT_SECRET empty in {key_path}")
+                    print(f"INFO: FE OAuth secret read from {key_path}")
+                except FileNotFoundError:
+                    raise RuntimeError(f"File {key_path} not found (no key)")
+                except Exception as suberr:
+                    raise RuntimeError(f"Read from {key_path} failed : {suberr}")
+
+            # STEP 4 : insert client
             conn.execute(text("""
                 INSERT INTO oauth2_client (
                   oacl_client_id,
@@ -173,26 +187,31 @@ def upgrade():
                   'Y'
                 )
             """), {"secret": fe_secret})
-        # else: keep existing row and secret as-is
+
     except Exception as err:
         print("ERROR insert oauth2_client (FE),\n\terr=" + str(err))
 
     # --- access LabBook swagger ---
     try:
-        conn.execute(text("""
-            INSERT INTO oauth2_client 
-            (
-            oacl_client_id,  oacl_client_secret, oacl_client_name, oacl_user_id, oacl_redirect_uris,
-            oacl_scope, oacl_grant_types, oacl_response_types, oacl_token_endpoint_auth_method, oacl_is_active
-            )
-            VALUES
-            (
-            'labbook-API', '', 'Swagger UI', 0,
-            '/static/vendor/swagger-ui/oauth2-redirect.html /sigl/static/vendor/swagger-ui/oauth2-redirect.html',
-            'external/analysis external/patient external/record external/result external/user',
-            'authorization_code', 'code', 'none',
-            'Y')
-        """))
+        exists_api = conn.execute(text(
+            "SELECT 1 FROM oauth2_client WHERE oacl_client_id='labbook-API' LIMIT 1"
+        )).scalar()
+
+        if not exists_api:
+            conn.execute(text("""
+                INSERT INTO oauth2_client
+                (
+                  oacl_client_id, oacl_client_secret, oacl_client_name, oacl_user_id, oacl_redirect_uris,
+                  oacl_scope, oacl_grant_types, oacl_response_types, oacl_token_endpoint_auth_method, oacl_is_active
+                )
+                VALUES
+                (
+                  'labbook-API', '', 'Swagger UI', 0,
+                  '/static/vendor/swagger-ui/oauth2-redirect.html /sigl/static/vendor/swagger-ui/oauth2-redirect.html',
+                  'external/analysis external/patient external/record external/result external/user',
+                  'authorization_code', 'code', 'none', 'Y'
+                )
+            """))
     except Exception as err:
         print("ERROR insert oauth2_client (swagger),\n\terr=" + str(err))
 

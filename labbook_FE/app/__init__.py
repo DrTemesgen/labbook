@@ -153,7 +153,7 @@ def be_auth_headers():
     # Build Authorization header from session token
     token = session.get('be_access_token')
     headers = {'Authorization': f'Bearer {token}'} if token else {}
-    
+
     # Also pass DB language to BE (fallback: UI lang -> default locale)
     lang_db = session.get('lang_db') or session.get('lang') or current_app.config.get('BABEL_DEFAULT_LOCALE', 'fr_FR')
     headers['X-Lang-DB'] = lang_db

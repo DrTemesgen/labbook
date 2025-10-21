@@ -27,8 +27,7 @@ class Dict:
         try:
             cursor = DB.cursor()
 
-            cursor.execute('delete from sigl_dico_data '
-                           'where id_data=%s', (id_value,))
+            cursor.execute('delete from sigl_dico_data where id_data=%s', (id_value,))
 
             Dict.log.info(Logs.fileline())
 
@@ -103,8 +102,7 @@ class Dict:
         try:
             cursor = DB.cursor()
 
-            cursor.execute('delete from sigl_dico_data '
-                           'where dico_name=%s', (dict_name,))
+            cursor.execute('delete from sigl_dico_data where dico_name=%s', (dict_name,))
 
             Dict.log.info(Logs.fileline())
 
@@ -171,24 +169,20 @@ class Dict:
                 if 'label' in args and args['label']:
                     filter_cond += ' and label LIKE "%' + str(args['label']) + '%" '
             else:
-               # Single JOIN that can serve both name and label conditions
-               trans = ('left join translations as tr on tr.tra_lang="' + str(get_lang_db_default()) + '" '
-                        'and tr.tra_ref=id_data ')
+                # Single JOIN that can serve both name and label conditions
+                trans = ('left join translations as tr on tr.tra_lang="' + str(get_lang_db_default()) + '" '
+                         'and tr.tra_ref=id_data ')
 
-               if 'name' in args and args['name']:
-                   filter_cond += (
-                       ' and ( (tr.tra_type="dict_name" and tr.tra_text LIKE "%' + str(args['name']) + '%") '
-                       'or dico_name LIKE "%' + str(args['name']) + '%") '
-                   )
+                if 'name' in args and args['name']:
+                    filter_cond += (' and ( (tr.tra_type="dict_name" and tr.tra_text LIKE "%' + str(args['name']) + '%") '
+                                    'or dico_name LIKE "%' + str(args['name']) + '%") ')
 
-               if 'label' in args and args['label']:
-                   filter_cond += (
-                       ' and ( (tr.tra_type="dict_label" and tr.tra_text LIKE "%' + str(args['label']) + '%") '
-                       'or label LIKE "%' + str(args['label']) + '%") '
-                   )
+                    if 'label' in args and args['label']:
+                        filter_cond += (' and ( (tr.tra_type="dict_label" and tr.tra_text LIKE "%' + str(args['label']) + '%") '
+                                        'or label LIKE "%' + str(args['label']) + '%") ')
 
-            if 'code' in args and args['code']:
-                filter_cond += ' and code LIKE "%' + str(args['code']) + '%" '
+                        if 'code' in args and args['code']:
+                            filter_cond += ' and code LIKE "%' + str(args['code']) + '%" '
 
         req = ('select id_data, dico_name as name, dico_descr '
                'from sigl_dico_data ' + trans +

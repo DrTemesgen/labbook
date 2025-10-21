@@ -23,19 +23,20 @@ def get_lang_db_default():
     hdr = (request.headers.get('X-Lang-DB') or '').strip()
     cur = (session.get('lang_db') or '').strip()
     default = current_app.config.get('BABEL_DEFAULT_LOCALE', 'fr_FR')
- 
+
     # FE sent an explicit language -> make it the source of truth
     if hdr:
         if hdr != cur:
             session['lang_db'] = hdr  # update session so next calls are consistent
         return hdr
- 
+
     # No header: use session if set, else default (and cache it)
     if cur:
         return cur
     session['lang_db'] = default
     return default
- 
+
+
 def get_lang_pdf_default():
     """
     Same policy as get_lang_db_default() but for PDF language.
@@ -44,12 +45,12 @@ def get_lang_pdf_default():
     hdr = (request.headers.get('X-Lang-PDF') or '').strip()
     cur = (session.get('lang_pdf') or '').strip()
     default = current_app.config.get('BABEL_DEFAULT_LOCALE', 'fr_FR')
- 
+
     if hdr:
         if hdr != cur:
             session['lang_pdf'] = hdr
         return hdr
- 
+
     if cur:
         return cur
     session['lang_pdf'] = default
