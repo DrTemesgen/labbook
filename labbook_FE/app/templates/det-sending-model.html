@@ -11,6 +11,78 @@
         <div id="main">
             <h2 class="page-title page-title-color"><span>{{ _("Détails modèle d'envoi") }}</span></h2>
 
+            {# List Meta languages #}
+            {% set meta_langs = [
+            ('Afrikaans','af'),
+            ('Albanais','sq'),
+            ('Arabe','ar'),
+            ('Azerbaïdjanais','az'),
+            ('Bengali','bn'),
+            ('Bulgare','bg'),
+            ('Catalan','ca'),
+            ('Chinois (CHN)','zh_CN'),
+            ('Chinois (HKG)','zh_HK'),
+            ('Chinois (TAI)','zh_TW'),
+            ('Croate','hr'),
+            ('Tchèque','cs'),
+            ('Danois','da'),
+            ('Néerlandais','nl'),
+            ('Anglais','en'),
+            ('Anglais (RU)','en_GB'),
+            ('Anglais (États-Unis)','en_US'),
+            ('Estonien','et'),
+            ('Philippin','fil'),
+            ('Finnois','fi'),
+            ('Français','fr'),
+            ('Allemand','de'),
+            ('Grec','el'),
+            ('Gujarati','gu'),
+            ('Hausa','ha'),
+            ('Hébreu','he'),
+            ('Hindi','hi'),
+            ('Hongrois','hu'),
+            ('Indonésien','id'),
+            ('Irlandais','ga'),
+            ('Italien','it'),
+            ('Japonais','ja'),
+            ('Kannada','kn'),
+            ('Kazakh','kk'),
+            ('Coréen','ko'),
+            ('Lao','lo'),
+            ('Letton','lv'),
+            ('Lituanien','lt'),
+            ('Macédonien','mk'),
+            ('Malais','ms'),
+            ('Malayalam','ml'),
+            ('Marathi','mr'),
+            ('Norvégien','nb'),
+            ('Perse','fa'),
+            ('Polonais','pl'),
+            ('Portugais (BR)','pt_BR'),
+            ('Portugais (POR)','pt_PT'),
+            ('Pendjabi','pa'),
+            ('Roumain','ro'),
+            ('Russe','ru'),
+            ('Serbe','sr'),
+            ('Slovaque','sk'),
+            ('Slovène','sl'),
+            ('Espagnol','es'),
+            ('Espagnol (ARG)','es_AR'),
+            ('Espagnol (ESP)','es_ES'),
+            ('Espagnol (MEX)','es_MX'),
+            ('Swahili','sw'),
+            ('Suédois','sv'),
+            ('Tamoul','ta'),
+            ('Télougou','te'),
+            ('Thaïlandais','th'),
+            ('Turc','tr'),
+            ('Ukrainien','uk'),
+            ('Ourdou','ur'),
+            ('Ouzbek','uz'),
+            ('Vietnamien','vi'),
+            ('Zoulou','zu')
+            ] %}
+
             <form id="frm_model" autocomplete="off">
                 {# Hidden context #}
                 <input type="hidden" id="mdl_ser"  value="{{ args['item'].get('mdl_ser', 0) }}">
@@ -66,20 +138,40 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="mdl_lang" class="form-label col-3 text-end mt-2 me-1">{{ _("Langue du modèle") }} *</label>
+                    <div class="col">
+                        <select id="mdl_lang" class="form-select form-lbk" required>
+                            {# valeur par défaut côté vue: args['item'].mdl_lang sinon 'en' #}
+                            {% set current_lang = args['item'].get('mdl_lang','en') %}
+                            {% for label, code in meta_langs %}
+                            <option value="{{ code }}" {% if code == current_lang %}selected{% endif %}>
+                            {{ _(label) }} – {{ code }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">
+                            {{ _("Sélectionnez le code de langue tel que déclaré dans Meta/WhatsApp Business (ex. fr, en_US, pt_BR).") }}
+                        </div>
+                    </div>
+                </div>
+
+
                 {# Attachment option (no upload) #}
                 <div class="form-group d-lg-flex align-items-start mt-3">
                     <label class="form-label col-3 text-end me-1">{{ _("Pièce jointe") }}</label>
                     <div class="col">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="mdl_has_attachment"
-                                   {% if args['item'].get('mdl_has_attachment','N') == 'Y' %}checked{% endif %}>
+                                                                            {% if args['item'].get('mdl_has_attachment','N') == 'Y' %}checked{% endif %}>
                             <label class="form-check-label" for="mdl_has_attachment">
                                 {{ _("Inclure une pièce jointe") }}
                             </label>
                         </div>
                     </div>
                 </div>
-                
+
                 {% endif %}
 
                 {# SMTP / Mailjet #}
@@ -117,7 +209,7 @@
 
 {% block add_script %}
 <script type="text/javascript" nonce="{{ session['nonce'] }}">
-const SERVER = "{{ session['server_ext'] }}" ;
+    const SERVER = "{{ session['server_ext'] }}" ;
 const TYPE   = "{{ args['type_item'] }}" ;
 const IDITEM = "{{ args['id_item'] }}" ;
 const ID_USER = {{ session['user_id']|default(0)|int }} ;
@@ -148,18 +240,19 @@ function save_item()
     if (IDITEM > 0) payload.mdl_ser = IDITEM;
 
     // Type-specific fields
-    if (TYPE === 'W') 
-    {
+    if (TYPE === 'W') {
         const mdl_name = document.getElementById('mdl_name').value.trim();
-        if (!mdl_name) 
-        {
+        if (!mdl_name) {
             alert("{{ _('Nom du modèle WhatsApp obligatoire.') }}");
             return;
         }
         payload.mdl_name = mdl_name;
-        // Attachment flag only (no upload, no path)
+
         const attFlagEl = document.getElementById('mdl_has_attachment');
         payload.mdl_has_attachment = attFlagEl && attFlagEl.checked ? 'Y' : 'N';
+
+        const langEl = document.getElementById('mdl_lang');
+        payload.mdl_lang = (langEl && langEl.value) ? langEl.value : 'en';
     }
     else 
     {

@@ -29,8 +29,8 @@ class Setting:
         cursor = DB.cursor()
 
         req = ('select id_data, id_owner, identifiant, label, value '
-                'from sigl_06_data '
-                'order by id_data')
+               'from sigl_06_data '
+               'order by id_data')
 
         cursor.execute(req,)
 
@@ -1530,11 +1530,10 @@ class Setting:
             to_phone = Setting.normalize_fr_e164(to_phone)
 
             used_tpl = (template_name or Constants.cst_model_test_whatsapp)
-            used_lang = (lang or "fr_FR")
 
             # Determine if template expects an attachment (from sending_model)
             cursor.execute(
-                "SELECT mdl_has_attachment "
+                "SELECT mdl_has_attachment, mdl_lang "
                 "FROM sending_model "
                 "WHERE mdl_type='W' AND mdl_name=%s "
                 "LIMIT 1",
@@ -1542,6 +1541,7 @@ class Setting:
             )
             mdl_row = cursor.fetchone()
             has_attachment = (mdl_row and (mdl_row.get('mdl_has_attachment') or 'N') == 'Y')
+            used_lang = (lang or (mdl_row.get('mdl_lang') if mdl_row else None) or "en")
 
             msg_url   = Constants.cst_msg_whatsapp.format(pnid=phone_number_id)
             media_url = Constants.cst_media_whatsapp.format(pnid=phone_number_id)
@@ -1714,7 +1714,7 @@ class Setting:
     def getSendingModelList():
         cursor = DB.cursor()
 
-        req = ('SELECT mdl_ser, mdl_type, mdl_displayname, mdl_name, mdl_default, mdl_date, mdl_user '
+        req = ('SELECT mdl_ser, mdl_type, mdl_displayname, mdl_name, mdl_lang, mdl_default, mdl_date, mdl_user '
                'FROM sending_model '
                'ORDER BY mdl_type, mdl_displayname')
 
@@ -1726,7 +1726,7 @@ class Setting:
     def getSendingModelDet(type, id_item):
         cursor = DB.cursor()
 
-        req = ('SELECT mdl_ser, mdl_type, mdl_displayname, mdl_name, mdl_text, '
+        req = ('SELECT mdl_ser, mdl_type, mdl_displayname, mdl_name, mdl_lang, mdl_text, '
                '       mdl_default, mdl_date, mdl_user, mdl_has_attachment '
                'FROM sending_model '
                'WHERE mdl_ser = %s AND mdl_type = %s')
@@ -1746,6 +1746,7 @@ class Setting:
             mdl_name = params.get('mdl_name')
             mdl_text = params.get('mdl_text')
             mdl_displayname = params.get('mdl_displayname')
+            mdl_lang        = params.get('mdl_lang')
 
             mdl_has_attachment = (params.get('mdl_has_attachment') or 'N')
             if mdl_type != 'W':
@@ -1753,10 +1754,10 @@ class Setting:
 
             req = (
                 "INSERT INTO sending_model "
-                "(mdl_type, mdl_displayname, mdl_name, mdl_text, mdl_has_attachment, mdl_default, mdl_date, mdl_user) "
-                "VALUES (%s, %s, %s, %s, %s, %s, NOW(), %s)"
+                "(mdl_type, mdl_displayname, mdl_name, mdl_lang, mdl_text, mdl_has_attachment, mdl_default, mdl_date, mdl_user) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, NOW(), %s)"
             )
-            cursor.execute(req, (mdl_type, mdl_displayname, mdl_name, mdl_text, mdl_has_attachment, mdl_default, mdl_user))
+            cursor.execute(req, (mdl_type, mdl_displayname, mdl_name, mdl_lang, mdl_text, mdl_has_attachment, mdl_default, mdl_user))
 
             mdl_ser = cursor.lastrowid
 
@@ -1784,17 +1785,18 @@ class Setting:
             mdl_text        = params.get('mdl_text')
             mdl_default     = params.get('mdl_default', 'N')
             mdl_user        = params.get('mdl_user')
+            mdl_lang        = params.get('mdl_lang')
 
             mdl_has_attachment = (params.get('mdl_has_attachment') or 'N')
             if mdl_type != 'W':
                 mdl_has_attachment = 'N'
 
             req = ("UPDATE sending_model "
-                   "SET mdl_type=%s, mdl_displayname=%s, mdl_name=%s, mdl_text=%s, "
-                   "    mdl_has_attachment=%s, mdl_default=%s, mdl_user=%s "
+                   "SET mdl_type=%s, mdl_displayname=%s, mdl_name=%s, mdl_lang=%s, mdl_text=%s, "
+                   "    mdl_has_attachment=%s, mdl_default=%s, mdl_user=%s, mdl_date=NOW() "
                    "WHERE mdl_ser=%s")
 
-            cursor.execute(req, (mdl_type, mdl_displayname, mdl_name, mdl_text,
+            cursor.execute(req, (mdl_type, mdl_displayname, mdl_name, mdl_lang, mdl_text,
                                  mdl_has_attachment, mdl_default, mdl_user, mdl_ser))
 
             if mdl_default == 'Y':
@@ -1899,7 +1901,8 @@ class Setting:
             tpl = model.get('mdl_name') or ''
             if not tpl:
                 return (False, "WhatsApp template name missing in model")
-            ok = Setting.send_test_whatsapp(method_id, to, tpl, lang or 'fr')
+            lang_eff = lang or (model.get('mdl_lang') or 'fr')
+            ok = Setting.send_test_whatsapp(method_id, to, tpl, lang_eff)
             return (ok, "WhatsApp test sent" if ok else "WhatsApp send failed")
 
         return (False, "Invalid type")
@@ -1910,18 +1913,29 @@ class Setting:
 
         method = Setting.getSendingMethodDet(params['method_type'], params['method_id'])
         if not method:
-            return (False, "sending method not found")
+            return (False, _("méthode d’envoi introuvable"))
 
         model = Setting.getSendingModelDet(params['method_type'], params['template_id'])
         if not model:
-            return (False, "sending model not found")
+            return (False, _("modèle d’envoi introuvable"))
 
         pat_code = params.get('pat_code') or ''
+        raw_name = (params.get('filename') or params.get('rec_num') or pat_code).strip()
+        if not raw_name:
+            return (False, _("nom de fichier/numéro/ID patient manquant pour le PDF"))
+
+        safe_name = raw_name.replace(' ', '_')
+        if not safe_name.lower().endswith('.pdf'):
+            safe_name += '.pdf'
+
+        pdf_filename = safe_name
+        pdf_title = os.path.splitext(pdf_filename)[0]
 
         ok, tmp_path, info = Setting.make_pdf_copy_protected(
-            generated_name=params.get('filename'),
+            generated_name=pdf_filename,
             rec_num=params.get('rec_num'),
-            pat_code=pat_code
+            pat_code=pat_code,
+            pdf_title=pdf_title
         )
         if not ok:
             return (False, info)
@@ -1929,11 +1943,9 @@ class Setting:
         # get details of patient
         pat = Patient.getPatientByCode(pat_code, '')
         if not pat:
-            return (False, "patient not found")
+            return (False, _("patient introuvable"))
 
-        info_pat = {}
-        info_pat['pat_lname'] = pat['nom']
-        info_pat['pat_fname'] = pat['prenom']
+        info_pat = {'pat_lname': pat['nom'], 'pat_fname': pat['prenom']}
 
         # Trace the sending event: insert with state Q (queued)
         sde_ser = None
@@ -1942,7 +1954,6 @@ class Setting:
         except Exception as err:
             # If insertion fails, we continue sending but without DB trace
             Setting.log.error(Logs.fileline() + f" : ERROR insert_sending_event = {err}")
-            sde_ser = None
 
         try:
             mtype = params['method_type']
@@ -1951,81 +1962,62 @@ class Setting:
 
             # SMTP MESSAGE
             if mtype == 'S':
-                subject_tpl  = f"{model.get('mdl_displayname') or 'Compte rendu'} – dossier"
-                body_txt_tpl = (model.get('mdl_text') or "Veuillez trouver le compte rendu en pièce jointe.") + "\n"
-
-                subject  = Setting.render_vars(subject_tpl, info_pat)
-                body_txt = Setting.render_vars(body_txt_tpl, info_pat) + "\n"
+                subject = Setting.render_vars(model.get('mdl_displayname') or '', info_pat).strip()
+                body_txt = (Setting.render_vars(model.get('mdl_text') or '', info_pat) or '').strip()
 
                 ok, msg = Setting.sendSmtpWithAttachment(
                     method,
-                    params['recipient'],
+                    recipient,
                     subject,
                     body_txt,
-                    tmp_path
+                    tmp_path,
+                    filename=pdf_filename
                 )
-
-                # Update sending_event
-                if sde_ser:
-                    if ok:
-                        Setting.update_sending_event_success(cursor, sde_ser, id_user)
-                    else:
-                        Setting.update_sending_event_fail(cursor, sde_ser, msg or "Échec de l’envoi SMTP", id_user)
-                return (ok, msg if msg else ("E-mail envoyé" if ok else "Échec de l’envoi"))
 
             # MAILJET MESSAGE
             elif mtype == 'M':
-                subject_tpl   = f"{model.get('mdl_displayname') or 'Compte rendu'} – dossier"
-                html_body_tpl = (model.get('mdl_text') or "<p>Veuillez trouver le compte rendu en pièce jointe.</p>")
-                text_body_tpl = "Veuillez trouver le compte rendu en pièce jointe."
-
-                subject   = Setting.render_vars(subject_tpl, info_pat)
-                html_body = Setting.render_vars(html_body_tpl, info_pat)
-                text_body = Setting.render_vars(text_body_tpl, info_pat)
+                subject   = Setting.render_vars(model.get('mdl_displayname') or '', info_pat).strip()
+                html_body = Setting.render_vars(model.get('mdl_text') or '', info_pat)
+                text_body = (html_body or '')
 
                 ok, msg = Setting.sendMailjetWithAttachment(
-                    method, params['recipient'], subject, html_body, text_body, tmp_path
+                    method, recipient, subject, html_body, text_body, tmp_path, filename=pdf_filename
                 )
-
-                # Update sending_event
-                if sde_ser:
-                    if ok:
-                        Setting.update_sending_event_success(cursor, sde_ser, id_user)
-                    else:
-                        Setting.update_sending_event_fail(cursor, sde_ser, msg or "Échec de l’envoi Mailjet", id_user)
-                return (ok, msg if msg else ("E-mail envoyé" if ok else "Échec de l’envoi"))
 
             # WHATSAPP MESSSAGE
             elif mtype == 'W':
                 tpl_name = model.get('mdl_name') or ''
 
                 if not tpl_name:
-                    return (False, "Nom de modèle WhatsApp manquant dans le modèle d’envoi")
+                    return (False, _("nom de modèle WhatsApp manquant dans le modèle d’envoi"))
 
                 has_att  = (model.get('mdl_has_attachment') == 'Y')
+                tpl_lang = (model.get('mdl_lang') or 'fr')
 
                 ok, msg = Setting.sendWhatsappTemplate(
                     method,
                     recipient,
                     tpl_name,
                     attach_path=(tmp_path if has_att else None),
-                    lang='fr',
-                    template_vars=info_pat
+                    lang=tpl_lang,
+                    template_vars=info_pat,
+                    filename=pdf_filename
                 )
-
-                # Update sending_event
-                if sde_ser:
-                    if ok:
-                        Setting.update_sending_event_success(cursor, sde_ser, id_user)
-                    else:
-                        Setting.update_sending_event_fail(cursor, sde_ser, msg or "Échec de l’envoi WhatsApp", id_user)
-                return (ok, msg if msg else ("Message WhatsApp envoyé" if ok else "Échec de l’envoi"))
 
             else:
                 # Unknown type
                 if sde_ser:
-                    Setting.update_sending_event_fail(cursor, sde_ser, "Type de méthode invalide", id_user)
-                return (False, "Type de méthode invalide")
+                    Setting.update_sending_event_fail(cursor, sde_ser, _("type de méthode invalide"), id_user)
+                return (False, _("type de méthode invalide"))
+
+            # Update sending_event according to result
+            if sde_ser:
+                if ok:
+                    Setting.update_sending_event_success(cursor, sde_ser, id_user)
+                else:
+                    Setting.update_sending_event_fail(cursor, sde_ser, msg or _("échec d’envoi"), id_user)
+
+            return (ok, msg if msg else (_("envoyé") if ok else _("échec d’envoi")))
 
         except Exception as err:
             # Update as failed on exception
@@ -2042,18 +2034,18 @@ class Setting:
                 pass
 
     @staticmethod
-    def make_pdf_copy_protected(generated_name: str, rec_num, pat_code: str):
+    def make_pdf_copy_protected(generated_name: str, rec_num, pat_code: str, pdf_title: str = None):
         """Create a tmp copy of report as 'cr_<rec_num>.pdf' and protect it with pat_code."""
         if not generated_name:
-            return (False, None, "missing source filename")
+            return (False, None, _("nom de fichier source manquant"))
 
         if not pat_code:
-            return (False, None, "missing patient code for PDF password")
+            return (False, None, _("code patient manquant pour le mot de passe PDF"))
 
         src_path = os.path.join(Constants.cst_report, generated_name)
 
         if not os.path.isfile(src_path):
-            return (False, None, f"source not found: {generated_name}")
+            return (False, None, f"fichier source introuvable : {generated_name}")
 
         dst_name = f"cr_{rec_num or 0}.pdf"
         dst_path = os.path.join(Constants.cst_path_tmp, dst_name)
@@ -2061,6 +2053,10 @@ class Setting:
         try:
             # Open source and save encrypted copy (no unprotected copy is written)
             with pikepdf.open(src_path) as pdf:
+                title = (pdf_title or os.path.splitext(os.path.basename(generated_name))[0] or '').strip()
+                if title:
+                    pdf.docinfo['/Title'] = title
+
                 pdf.save(
                     dst_path,
                     encryption=pikepdf.Encryption(
@@ -2071,14 +2067,14 @@ class Setting:
                 )
             return (True, dst_path, "")
         except pikepdf.PasswordError as e:
-            return (False, None, f"password error: {e}")
+            return (False, None, f"erreur de mot de passe PDF: {e}")
         except pikepdf.PdfError as e:
-            return (False, None, f"pdf error: {e}")
+            return (False, None, f"erreur pdf : {e}")
         except Exception as e:
-            return (False, None, f"pdf protection error: {e}")
+            return (False, None, f"erreur de protection PDF : {e}")
 
     @staticmethod
-    def sendSmtpWithAttachment(method_row, to_addr, subject, body_text, attach_path):
+    def sendSmtpWithAttachment(method_row, to_addr, subject, body_text, attach_path, filename):
         """Send a mail via SMTP using an already-fetched DB row (no extra query)."""
         try:
             host         = method_row.get('sds_host')
@@ -2114,7 +2110,7 @@ class Setting:
 
             with open(attach_path, 'rb') as fh:
                 msg.add_attachment(fh.read(), maintype='application', subtype='pdf',
-                                   filename=os.path.basename(attach_path))
+                                   filename=(filename or os.path.basename(attach_path)))
 
             timeout = 20
             context = ssl.create_default_context()
@@ -2154,7 +2150,7 @@ class Setting:
             return (False, f"Erreur d’envoi SMTP : {e}")
 
     @staticmethod
-    def sendMailjetWithAttachment(method_row, to_addr, subject, html_body, text_body, attach_path):
+    def sendMailjetWithAttachment(method_row, to_addr, subject, html_body, text_body, attach_path, filename):
         """Send via Mailjet v3.1 using method_row (already fetched)."""
         try:
             # Decode secrets (VARBINARY -> str)
@@ -2188,7 +2184,7 @@ class Setting:
                     "HTMLPart": html_body or "",
                     "Attachments": [{
                         "ContentType": "application/pdf",
-                        "Filename": os.path.basename(attach_path),
+                        "Filename": (filename or os.path.basename(attach_path)),
                         "Base64Content": b64
                     }]
                 }]
@@ -2214,7 +2210,7 @@ class Setting:
             return (False, f"Erreur Mailjet : {e}")
 
     @staticmethod
-    def sendWhatsappTemplate(method_row, to_phone, template_name, attach_path=None, lang='fr', template_vars=None):
+    def sendWhatsappTemplate(method_row, to_phone, template_name, attach_path=None, lang='fr', template_vars=None, filename=None):
         """Send a WhatsApp template message; if attach_path is set, attach as header document."""
         try:
             token_raw = method_row.get('sdw_api_token') or b''
@@ -2254,7 +2250,7 @@ class Setting:
 
             template_name = (template_name or "").strip()
             if not template_name:
-                return (False, "Nom de modèle WhatsApp manquant")
+                return (False, _("Nom de modèle WhatsApp manquant"))
 
             components = []
 
@@ -2264,27 +2260,26 @@ class Setting:
                     "type": "header",
                     "parameters": [{
                         "type": "document",
-                        "document": {"id": media_id}
+                        "document": {"id": media_id, **({"filename": filename} if filename else {})}
                     }]
                 })
 
             body_params = []
-            if template_vars:
-                if isinstance(template_vars, dict):
-                    for k, v in template_vars.items():
-                        name = (k or "").strip()
-                        body_params.append({
-                            "type": "text",
-                            "parameter_name": name,
-                            "text": "" if v is None else str(v)
-                        })
+            if template_vars is not None:
+                if not isinstance(template_vars, dict):
+                    return (False, "template_vars must be a dict with named keys")
+                for _key, value in template_vars.items():
+                    body_params.append({
+                        "type": "text",
+                        "text": "" if value is None else str(value)
+                    })
 
             if body_params:
                 components.append({"type": "body", "parameters": body_params})
 
             template = {
                 "name": template_name,
-                "language": {"code": lang}
+                "language": {"code": (lang or "fr")}
             }
             if components:
                 template["components"] = components
@@ -2498,7 +2493,7 @@ class Setting:
                     subject  = Setting.render_vars(subject_tpl, info_pat)
                     body_txt = Setting.render_vars(body_txt_tpl, info_pat) + "\n"
 
-                    ok, msg  = Setting.sendSmtpWithAttachment(method, recipient, subject, body_txt, tmp_path)
+                    ok, msg  = Setting.sendSmtpWithAttachment(method, recipient, subject, body_txt, tmp_path, filename)
 
                 elif method_type == 'M':
                     subject_tpl   = f"{model.get('mdl_displayname') or 'Report'} – dossier"
@@ -2509,21 +2504,22 @@ class Setting:
                     html_body = Setting.render_vars(html_body_tpl, info_pat)
                     text_body = Setting.render_vars(text_body_tpl, info_pat)
 
-                    ok, msg   = Setting.sendMailjetWithAttachment(method, recipient, subject, html_body, text_body, tmp_path)
+                    ok, msg   = Setting.sendMailjetWithAttachment(method, recipient, subject, html_body, text_body, tmp_path, filename=filename)
 
                 else:  # 'W'
                     tpl_name = model.get('mdl_name') or ''
+                    tpl_lang = (model.get('mdl_lang') or 'fr')
                     ok, msg  = Setting.sendWhatsappTemplate(method, recipient, tpl_name,
                                                             attach_path=(tmp_path if need_pdf else None),
-                                                            lang='fr', template_vars=info_pat)
+                                                            lang=tpl_lang, template_vars=info_pat, filename=filename)
 
                 # Update same event with result
                 if ok:
                     Setting.update_sending_event_success(cursor, sde_ser, id_user)
                 else:
-                    Setting.update_sending_event_fail(cursor, sde_ser, msg or "Send failed", id_user)
+                    Setting.update_sending_event_fail(cursor, sde_ser, msg or _("Echec envoi"), id_user)
 
-                return (ok, msg if msg else ("Resent" if ok else "Resend failed"))
+                return (ok, msg if msg else (_("Réenvoyer") if ok else _("Echec réenvoi")))
 
             except Exception as e:
                 cursor = DB.cursor()

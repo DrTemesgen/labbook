@@ -1607,7 +1607,6 @@ class SettingSendModelTest(Resource):
         try:
             payload = request.get_json(force=True) or {}
             to   = (payload.get('to') or '').strip()
-            lang = (payload.get('lang') or 'fr').strip()
             override_method_id = payload.get('method_id')  # optional
 
             if not to:
@@ -1641,7 +1640,8 @@ class SettingSendModelTest(Resource):
             elif type_up == 'W':
                 # WhatsApp: template name
                 template_name = model.get('mdl_name') or ''
-                ok = Setting.send_test_whatsapp(method_id, to, template_name, lang)
+                template_lang = (payload.get('lang') or model.get('mdl_lang') or 'en').strip()
+                ok = Setting.send_test_whatsapp(method_id, to, template_name, template_lang)
 
             else:
                 return compose_ret({'error': 'invalid type'}, Constants.cst_content_type_json, 400)

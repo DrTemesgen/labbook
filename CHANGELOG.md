@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.3] - 2025-10-23
+### Added
+- background automation scheduler initialization in gunicorn.sh
+- language settings to the WhatsApp template
+
+### Fixed
+- missing headers in the setting-sending-method.html template
+- email and WhatsApp attachments now use the correct filename and title instead of “Sans titre” or “null”
+
 ## [3.6.2] - 2025-10-20
 ### Added
 - adds Portuguese to the languages in the repository

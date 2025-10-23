@@ -99,7 +99,14 @@ function loadMethodTable()
     }
 
     methodTable = $('#methodTable').DataTable({
-        ajax: { url: "{{ session['server_ext'] }}/services/setting/sending/method/list", type: 'GET', dataSrc: '' },
+        ajax: { 
+            url: "{{ session['server_ext'] }}/services/setting/sending/method/list", 
+            type: 'GET',
+            headers: {
+                'Authorization': 'Bearer {{ session.get("be_access_token","") }}'
+            },
+            dataSrc: '' 
+        },
         pageLength: 25,
         order: [[2, 'asc'], [3, 'asc']], // Type, then Name
         "language": {
@@ -123,6 +130,17 @@ function loadMethodTable()
                 searchable: false,
                 render: function (_data, _type, row) {
                     const editUrl = "{{ session['server_ext'] }}/det-sending-method/" + row.sdi_type + "/" + row.sdi_ser;
+
+                    // Disable method-level test for WhatsApp to avoid implicit template dependency
+                    const isWA = (row.sdi_type === 'W');
+
+                    // Build "Tester" item only if not WhatsApp
+                    const testerItem = isWA ? '' : `
+                        <a class="dropdown-item menu-act-item" href="#"
+                           onclick="test_method('${row.sdi_type}', ${row.sdi_ser}); return false;">
+                           {{ _('Tester') }}
+                        </a>`;
+
                     return `
                         <nav>
                         <ul class="navbar-nav">
@@ -130,7 +148,7 @@ function loadMethodTable()
                         <a class="dropdown-toggle menu-act" data-bs-toggle="dropdown" aria-expanded="false"></a>
                         <div class="dropdown-menu menu-act-drop nav-style">
                         <a class="dropdown-item menu-act-item" href="${editUrl}">{{ _("Éditer") }}</a>
-                        <a class="dropdown-item menu-act-item" href="#" onclick="test_method('${row.sdi_type}', ${row.sdi_ser}); return false;">{{ _("Tester") }}</a>
+                        ${testerItem}
                         <a class="dropdown-item menu-act-item text-danger" href="#" onclick="delete_method('${row.sdi_type}', ${row.sdi_ser}); return false;">{{ _("Supprimer") }}</a>
                         </div>
                         </li>
@@ -165,11 +183,8 @@ function renderType(code)
 
 function test_method(type, id) 
 {
-    const isWhatsApp = (type === 'W');
-    const label = isWhatsApp
-        ? "{{ _('Numéro destinataire (format E.164)') }}"
-        : "{{ _('Email destinataire') }}";
-    const placeholder = isWhatsApp ? "+33600110022" : "test-labbook@yopmail.com";
+    const label = "{{ _('Email destinataire') }}";
+    const placeholder = "test-labbook@yopmail.com";
 
     const to = prompt(label, placeholder);
     if (!to) return;

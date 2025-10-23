@@ -30,7 +30,9 @@ class Analysis:
 
         cursor = DB.cursor()
 
+        trans = ''
         l_words = text.split(' ')
+        link_fam = link_fam or []
 
         # Base condition
         cond = 'ana.actif = 4' if status == 4 else 'ana.actif = 5'
