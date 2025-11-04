@@ -1,6 +1,7 @@
 # app/security/oauth_routes.py
 import logging
 import time
+import os
 
 from urllib.parse import urlparse
 from flask import Blueprint, request, jsonify, session, current_app
@@ -80,6 +81,10 @@ def query_client(client_id):
     debug_uris = [p.strip() for p in (row.get('oacl_redirect_uris') or '').replace('\r', '\n').split('\n') if p.strip()]
     log.debug(Logs.fileline() + f" : OAUTH load-client id={client_id!r} allowed_uris_count={len(debug_uris)}")
 
+    # Prefer environment-provided secret (shared with FE) over DB value
+    env_secret = (os.environ.get('LABBOOK_OAUTH_FE_SECRET') or '').strip()
+    
+
     class Client:
         # Static attributes read by Authlib
         client_id = row['oacl_client_id']
@@ -89,7 +94,9 @@ def query_client(client_id):
         response_types = (row.get('oacl_response_types') or 'code').split()
         scope = row.get('oacl_scope') or ''
         redirect_uris = [p.strip() for p in (row['oacl_redirect_uris'] or '').replace('\r', '\n').split('\n') if p.strip()]
-        client_secret = row['oacl_client_secret'] or None
+        # client_secret = row['oacl_client_secret'] or None
+        # Priority: env secret > DB secret; never log this value.
+        client_secret = env_secret or (row.get('oacl_client_secret') or None)
 
         def check_redirect_uri(self, redirect_uri):
             """Accept if the URI path matches one of the configured paths."""
@@ -104,7 +111,7 @@ def query_client(client_id):
             return grant_type in self.grant_types
 
         def check_client_secret(self, client_secret):
-            """Constant-time compare is not provided here; DB holds hashed/None."""
+            """Simple equality; secret comes from env override or DB. Do not log."""
             return self.client_secret == client_secret
 
         def get_default_redirect_uri(self):

@@ -142,26 +142,7 @@ def upgrade():
         )).scalar()
 
         if not exists:
-            # STEP 2 : read secret from env (exported by BE gunicorn)
-            fe_secret = os.environ.get("LABBOOK_OAUTH_FE_SECRET", "").strip()
-
-            # STEP 3 : read file /storage/key/oauth_client_secret.py
-            if not fe_secret:
-                key_path = "/storage/key/oauth_client_secret.py"
-                try:
-                    key_globals = {}
-                    with open(key_path, "r", encoding="utf-8") as f:
-                        exec(f.read(), key_globals)
-                    fe_secret = key_globals.get("OAUTH_CLIENT_SECRET", "").strip()
-                    if not fe_secret:
-                        raise RuntimeError(f"OAUTH_CLIENT_SECRET empty in {key_path}")
-                    print(f"INFO: FE OAuth secret read from {key_path}")
-                except FileNotFoundError:
-                    raise RuntimeError(f"File {key_path} not found (no key)")
-                except Exception as suberr:
-                    raise RuntimeError(f"Read from {key_path} failed : {suberr}")
-
-            # STEP 4 : insert client
+            # STEP 2 : insert client
             conn.execute(text("""
                 INSERT INTO oauth2_client (
                   oacl_client_id,
@@ -176,7 +157,7 @@ def upgrade():
                   oacl_is_active
                 ) VALUES (
                   'labbook-FE',
-                  :secret,
+                  '',
                   'LabBook Front-End',
                   0,
                   '/oauth/callback /sigl/oauth/callback',
@@ -186,7 +167,7 @@ def upgrade():
                   'client_secret_post',
                   'Y'
                 )
-            """), {"secret": fe_secret})
+            """))
 
     except Exception as err:
         print("ERROR insert oauth2_client (FE),\n\terr=" + str(err))

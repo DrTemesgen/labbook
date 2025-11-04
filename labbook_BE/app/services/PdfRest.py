@@ -23,7 +23,7 @@ class PdfBillList(Resource):
     def post(self):
         args = request.get_json()
 
-        if 'date_beg' not in args or 'date_end' not in args:
+        if 'date_beg' not in args or 'date_end' not in args or 'tpl_file' not in args or 'filename' not in args:
             self.log.error(Logs.fileline() + ' : PdfBillList ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
@@ -38,7 +38,7 @@ class PdfBillList(Resource):
                 if data[key] is None:
                     data[key] = ''
 
-        ret = Pdf.getPdfBillList(l_datas, args['date_beg'], args['date_end'])
+        ret = Pdf.getPdfBillList(l_datas, args['date_beg'], args['date_end'], args['tpl_file'], args['filename'])
 
         if not ret:
             self.log.error(Logs.fileline() + ' : PdfBillList failed')

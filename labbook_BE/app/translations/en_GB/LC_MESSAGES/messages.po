@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Labbook_BE\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-16 15:55+0200\n"
+"POT-Creation-Date: 2025-11-04 12:54+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,294 +18,349 @@ msgstr ""
 msgid "DUPLICATA"
 msgstr "DUPLICATE"
 
-#: models/Pdf.py:64
-msgid "ETAT DE LA FACTURATION DU"
-msgstr "STATUS OF INVOICING FROM"
-
-#: models/Pdf.py:64
-msgid "AU"
-msgstr "TO"
-
-#: models/Pdf.py:69 models/Pdf.py:228
-msgid "N° dossier"
-msgstr "Record number"
-
-#: models/Pdf.py:70
-msgid "N° quittance"
-msgstr "Receipt number"
-
-#: models/Pdf.py:71
-msgid "N° facture"
-msgstr "Invoice no."
-
-#: models/Pdf.py:72
-msgid "Prix"
-msgstr "Price"
-
-#: models/Pdf.py:73
-msgid "A payer"
-msgstr "To pay"
-
-#: models/Pdf.py:101 models/Pdf.py:2911
-msgid "Total"
-msgstr "Total"
-
-#: models/Pdf.py:115
-msgid "Etat de la facturation, édité le"
-msgstr "Billing status, edited on"
-
-#: models/Pdf.py:117
-msgid "Page"
-msgstr "Page"
-
-#: models/Pdf.py:227
-msgid "Date"
-msgstr "Date"
-
-#: models/Pdf.py:229
-msgid "Famille"
-msgstr "Family"
-
-#: models/Pdf.py:230 translations/messages_pybabel.py:305
-msgid "Analyse"
-msgstr "Analysis"
-
-#: models/Pdf.py:231
-msgid "Validation"
-msgstr "Validation"
-
-#: models/Pdf.py:590 models/Pdf.py:1103 models/Pdf.py:2313 models/Pdf.py:2892
+#: models/Pdf.py:65 models/Pdf.py:595 models/Pdf.py:1108 models/Pdf.py:2320
+#: models/Pdf.py:2899
 msgid "Tél"
 msgstr "Phone"
 
-#: models/Pdf.py:595 models/Pdf.py:1104 models/Pdf.py:2314 models/Pdf.py:2893
+#: models/Pdf.py:66 models/Pdf.py:600 models/Pdf.py:1109 models/Pdf.py:2321
+#: models/Pdf.py:2900
 msgid "Fax"
 msgstr "Fax"
 
-#: models/Pdf.py:600 models/Pdf.py:1105 models/Pdf.py:2315 models/Pdf.py:2894
+#: models/Pdf.py:67 models/Pdf.py:605 models/Pdf.py:1110 models/Pdf.py:2322
+#: models/Pdf.py:2901
 msgid "Email"
 msgstr "Email"
 
-#: models/Pdf.py:823 models/Pdf.py:1344 models/Pdf.py:2508 models/Pdf.py:3118
+#: models/Pdf.py:68 models/Pdf.py:1120 models/Pdf.py:2332 models/Pdf.py:2911
+msgid "édité le"
+msgstr "edited on"
+
+#: models/Pdf.py:69 models/Pdf.py:2918
+msgid "Total"
+msgstr "Total"
+
+#: models/Pdf.py:70 models/Pdf.py:2919
+msgid "Total à payer"
+msgstr "Total to pay"
+
+#: models/Pdf.py:71 models/Pdf.py:111
+msgid "État de la facturation"
+msgstr ""
+
+#: models/Pdf.py:72
+msgid "du"
+msgstr ""
+
+#: models/Pdf.py:73
+msgid "au"
+msgstr ""
+
+#: models/Pdf.py:74 models/Pdf.py:233
+msgid "N° dossier"
+msgstr "Record number"
+
+#: models/Pdf.py:75
+msgid "N° quittance"
+msgstr "Receipt number"
+
+#: models/Pdf.py:76
+msgid "N° facture"
+msgstr "Invoice no."
+
+#: models/Pdf.py:77
+msgid "Prix"
+msgstr "Price"
+
+#: models/Pdf.py:78
+msgid "A payer"
+msgstr "To pay"
+
+#: models/Pdf.py:232
+msgid "Date"
+msgstr "Date"
+
+#: models/Pdf.py:234
+msgid "Famille"
+msgstr "Family"
+
+#: models/Pdf.py:235 translations/messages_pybabel.py:305
+msgid "Analyse"
+msgstr "Analysis"
+
+#: models/Pdf.py:236
+msgid "Validation"
+msgstr "Validation"
+
+#: models/Pdf.py:828 models/Pdf.py:1349 models/Pdf.py:2515 models/Pdf.py:3125
 #: translations/messages_pybabel.py:597
 msgid "Inconnu"
 msgstr "Unknown"
 
-#: models/Pdf.py:870 models/Pdf.py:882 models/Pdf.py:1015 models/Pdf.py:1391
-#: models/Pdf.py:1403 models/Pdf.py:2555 models/Pdf.py:2567 models/Pdf.py:3165
-#: models/Pdf.py:3177
+#: models/Pdf.py:875 models/Pdf.py:887 models/Pdf.py:1020 models/Pdf.py:1396
+#: models/Pdf.py:1408 models/Pdf.py:2562 models/Pdf.py:2574 models/Pdf.py:3172
+#: models/Pdf.py:3184
 msgid "ans"
 msgstr "years"
 
-#: models/Pdf.py:873 models/Pdf.py:894 models/Pdf.py:1394 models/Pdf.py:1415
-#: models/Pdf.py:2558 models/Pdf.py:2579 models/Pdf.py:3168 models/Pdf.py:3189
+#: models/Pdf.py:878 models/Pdf.py:899 models/Pdf.py:1399 models/Pdf.py:1420
+#: models/Pdf.py:2565 models/Pdf.py:2586 models/Pdf.py:3175 models/Pdf.py:3196
 msgid "jours"
 msgstr "days"
 
-#: models/Pdf.py:877 models/Pdf.py:886 models/Pdf.py:1398 models/Pdf.py:1407
-#: models/Pdf.py:2562 models/Pdf.py:2571 models/Pdf.py:3172 models/Pdf.py:3181
+#: models/Pdf.py:882 models/Pdf.py:891 models/Pdf.py:1403 models/Pdf.py:1412
+#: models/Pdf.py:2569 models/Pdf.py:2578 models/Pdf.py:3179 models/Pdf.py:3188
 msgid "mois"
 msgstr "months"
 
-#: models/Pdf.py:890 models/Pdf.py:1411 models/Pdf.py:2575 models/Pdf.py:3185
+#: models/Pdf.py:895 models/Pdf.py:1416 models/Pdf.py:2582 models/Pdf.py:3192
 msgid "semaines"
 msgstr "weeks"
 
-#: models/Pdf.py:898 models/Pdf.py:1018 models/Pdf.py:1419 models/Pdf.py:2583
-#: models/Pdf.py:3193 translations/messages_pybabel.py:598
+#: models/Pdf.py:903 models/Pdf.py:1023 models/Pdf.py:1424 models/Pdf.py:2590
+#: models/Pdf.py:3200 translations/messages_pybabel.py:598
 msgid "Masculin"
 msgstr "Male"
 
-#: models/Pdf.py:900 models/Pdf.py:1421 models/Pdf.py:2585 models/Pdf.py:3195
+#: models/Pdf.py:905 models/Pdf.py:1426 models/Pdf.py:2592 models/Pdf.py:3202
 msgid "Feminin"
 msgstr "Female"
 
-#: models/Pdf.py:1106 models/Pdf.py:2316 models/Pdf.py:2895
+#: models/Pdf.py:1111 models/Pdf.py:2323 models/Pdf.py:2902
 msgid "Dossier"
 msgstr "Record"
 
-#: models/Pdf.py:1107 models/Pdf.py:2317 models/Pdf.py:2896
+#: models/Pdf.py:1112 models/Pdf.py:2324 models/Pdf.py:2903
 msgid "Code"
 msgstr "Code"
 
-#: models/Pdf.py:1108 models/Pdf.py:2318 models/Pdf.py:2897
+#: models/Pdf.py:1113 models/Pdf.py:2325 models/Pdf.py:2904
 msgid "Né(e) le"
 msgstr "Born on"
 
-#: models/Pdf.py:1109 models/Pdf.py:2319 models/Pdf.py:2898
+#: models/Pdf.py:1114 models/Pdf.py:2326 models/Pdf.py:2905
 msgid "Admis le"
 msgstr "Admitted on"
 
-#: models/Pdf.py:1110 models/Pdf.py:2320 models/Pdf.py:2899
+#: models/Pdf.py:1115 models/Pdf.py:2327 models/Pdf.py:2906
 msgid "en"
 msgstr "in"
 
-#: models/Pdf.py:1111 models/Pdf.py:2321 models/Pdf.py:2900
+#: models/Pdf.py:1116 models/Pdf.py:2328 models/Pdf.py:2907
 msgid "Lit"
 msgstr "Bed"
 
-#: models/Pdf.py:1112 models/Pdf.py:2322 models/Pdf.py:2901
+#: models/Pdf.py:1117 models/Pdf.py:2329 models/Pdf.py:2908
 msgid "par"
 msgstr "by"
 
-#: models/Pdf.py:1113 models/Pdf.py:2323 models/Pdf.py:2902
+#: models/Pdf.py:1118 models/Pdf.py:2330 models/Pdf.py:2909
 msgid "Examen prescrit le"
 msgstr "Analysis prescribed on"
 
-#: models/Pdf.py:1114 models/Pdf.py:2324 models/Pdf.py:2903
+#: models/Pdf.py:1119 models/Pdf.py:2331 models/Pdf.py:2910
 msgid "Enregistré le"
 msgstr "Registered on"
 
-#: models/Pdf.py:1115 models/Pdf.py:2325 models/Pdf.py:2904
-msgid "édité le"
-msgstr "edited on"
-
-#: models/Pdf.py:1116 models/Pdf.py:2326 models/Pdf.py:2905
+#: models/Pdf.py:1121 models/Pdf.py:2333 models/Pdf.py:2912
 msgid "ANALYSE"
 msgstr "ANALYSIS"
 
-#: models/Pdf.py:1117 models/Pdf.py:2327 models/Pdf.py:2906
+#: models/Pdf.py:1122 models/Pdf.py:2334 models/Pdf.py:2913
 msgid "RESULTAT"
 msgstr "RESULT"
 
-#: models/Pdf.py:1118 models/Pdf.py:2328 models/Pdf.py:2907
+#: models/Pdf.py:1123 models/Pdf.py:2335 models/Pdf.py:2914
 msgid "Références"
 msgstr "References"
 
-#: models/Pdf.py:1119 models/Pdf.py:2329 models/Pdf.py:2908
+#: models/Pdf.py:1124 models/Pdf.py:2336 models/Pdf.py:2915
 msgid "Antériorités"
 msgstr "Priorities"
 
-#: models/Pdf.py:1120 models/Pdf.py:2330 models/Pdf.py:2909
+#: models/Pdf.py:1125 models/Pdf.py:2337 models/Pdf.py:2916
 msgid "Commentaire"
 msgstr "Comment"
 
-#: models/Pdf.py:1121 models/Pdf.py:2331 models/Pdf.py:2910
+#: models/Pdf.py:1126 models/Pdf.py:2338 models/Pdf.py:2917
 msgid "validé par"
 msgstr "validated by"
 
-#: models/Pdf.py:1122
+#: models/Pdf.py:1127
 msgid "technicien"
 msgstr ""
 
-#: models/Pdf.py:1155 translations/messages_pybabel.py:292
+#: models/Pdf.py:1160 translations/messages_pybabel.py:292
 msgid "Compte rendu"
 msgstr "Report"
 
-#: models/Pdf.py:1173
+#: models/Pdf.py:1178
 msgid "COMPLET"
 msgstr "COMPLETE"
 
-#: models/Pdf.py:1182 models/Pdf.py:1715
+#: models/Pdf.py:1187 models/Pdf.py:1720
 msgid "PARTIEL"
 msgstr "PARTIAL"
 
-#: models/Pdf.py:1188
+#: models/Pdf.py:1193
 msgid "Annule et remplace le précédent"
 msgstr "Cancel and replace the previous"
 
-#: models/Pdf.py:1226 models/Pdf.py:2396 models/Pdf.py:2970
+#: models/Pdf.py:1231 models/Pdf.py:2403 models/Pdf.py:2977
 #: translations/messages_pybabel.py:593
 msgid "Microbiologie"
 msgstr "Microbiology"
 
-#: models/Pdf.py:1285 models/Pdf.py:2449
+#: models/Pdf.py:1290 models/Pdf.py:2456
 msgid "Renseignements cliniques"
 msgstr "Clinical information"
 
-#: models/Pdf.py:1650 models/Pdf.py:2702 models/Pdf.py:2716 models/Pdf.py:3276
-#: models/Pdf.py:3292
+#: models/Pdf.py:1655 models/Pdf.py:2709 models/Pdf.py:2723 models/Pdf.py:3283
+#: models/Pdf.py:3299
 msgid "Sous-traitée"
 msgstr "Subcontract"
 
-#: models/Pdf.py:1735 models/Pdf.py:1745 models/Pdf.py:1755 models/Pdf.py:1765
+#: models/Pdf.py:1740 models/Pdf.py:1750 models/Pdf.py:1760 models/Pdf.py:1770
 msgid "Annulée"
 msgstr "Cancelled"
 
-#: models/Pdf.py:1953 translations/messages_pybabel.py:1478
+#: models/Pdf.py:1958 translations/messages_pybabel.py:1478
 #: translations/messages_pybabel.py:1479 translations/messages_pybabel.py:1480
 #: translations/messages_pybabel.py:1481
 msgid "Albumine"
 msgstr "Albumin"
 
-#: models/Pdf.py:1954 translations/messages_pybabel.py:91
+#: models/Pdf.py:1959 translations/messages_pybabel.py:91
 msgid "Absent"
 msgstr "Absent"
 
-#: models/Pdf.py:1958 translations/messages_pybabel.py:92
+#: models/Pdf.py:1963 translations/messages_pybabel.py:92
 msgid "Présent"
 msgstr "Present"
 
-#: models/Pdf.py:1967 models/Pdf.py:2713 translations/messages_pybabel.py:314
+#: models/Pdf.py:1972 models/Pdf.py:2720 translations/messages_pybabel.py:314
 msgid "Biochimie urinaire"
 msgstr "Urinary biochemistry"
 
-#: models/Pdf.py:1968 models/Pdf.py:2714 translations/messages_pybabel.py:1349
+#: models/Pdf.py:1973 models/Pdf.py:2721 translations/messages_pybabel.py:1349
 msgid "Bandelettes urinaires"
 msgstr "Urine Dipstick Test"
 
-#: models/Pdf.py:2076 models/Pdf.py:2791 translations/messages_pybabel.py:690
+#: models/Pdf.py:2081 models/Pdf.py:2798 translations/messages_pybabel.py:690
 msgid "Sang"
 msgstr "Blood"
 
-#: models/Pdf.py:2078 models/Pdf.py:2793 translations/messages_pybabel.py:545
+#: models/Pdf.py:2083 models/Pdf.py:2800 translations/messages_pybabel.py:545
 msgid "Fait"
 msgstr "Done"
 
-#: models/Pdf.py:2083 models/Pdf.py:2798 translations/messages_pybabel.py:483
+#: models/Pdf.py:2088 models/Pdf.py:2805 translations/messages_pybabel.py:483
 msgid "Interne au labo"
 msgstr "Lab Internal"
 
-#: models/Pdf.py:2364
+#: models/Pdf.py:2371
 msgid "Bon de transfert"
 msgstr "Transfer voucher"
 
-#: models/Pdf.py:2912
-msgid "Total à payer"
-msgstr "Total to pay"
-
-#: models/Pdf.py:2913
+#: models/Pdf.py:2920
 msgid "Analyses demandées"
 msgstr "Requested analyzes"
 
-#: models/Pdf.py:2914
+#: models/Pdf.py:2921
 msgid "Remise sur la facturation"
 msgstr "Discount on billing"
 
-#: models/Pdf.py:2915
+#: models/Pdf.py:2922
 msgid "Pourcentage de la remise"
 msgstr "Discount percentage"
 
-#: models/Pdf.py:2916
+#: models/Pdf.py:2923
 msgid "Pourcentage assurance maladie / mutuelle"
 msgstr "Health insurance / mutual percentage"
 
-#: models/Pdf.py:2949 translations/messages_pybabel.py:293
+#: models/Pdf.py:2956 translations/messages_pybabel.py:293
 msgid "Facture"
 msgstr "Invoice"
 
-#: models/Pdf.py:2982 translations/messages_pybabel.py:577
+#: models/Pdf.py:2989 translations/messages_pybabel.py:577
 msgid "Personnel hospitalier"
 msgstr "Hospital staff"
 
-#: models/Pdf.py:3289 translations/messages_pybabel.py:1078
+#: models/Pdf.py:3296 translations/messages_pybabel.py:1078
 msgid "Détermination du groupe sanguin ABO et Rhésus standard (D)"
 msgstr "ABO Blood grouping and Rhesus (D) typing"
 
-#: services/ExportRest.py:997 translations/messages_pybabel.py:528
+#: models/Setting.py:1916
+msgid "méthode d’envoi introuvable"
+msgstr ""
+
+#: models/Setting.py:1920
+msgid "modèle d’envoi introuvable"
+msgstr ""
+
+#: models/Setting.py:1925
+msgid "nom de fichier/numéro/ID patient manquant pour le PDF"
+msgstr ""
+
+#: models/Setting.py:1944
+msgid "patient introuvable"
+msgstr ""
+
+#: models/Setting.py:1990
+msgid "nom de modèle WhatsApp manquant dans le modèle d’envoi"
+msgstr ""
+
+#: models/Setting.py:2008 models/Setting.py:2009
+msgid "type de méthode invalide"
+msgstr ""
+
+#: models/Setting.py:2016 models/Setting.py:2018
+msgid "échec d’envoi"
+msgstr ""
+
+#: models/Setting.py:2018
+msgid "envoyé"
+msgstr ""
+
+#: models/Setting.py:2038
+msgid "nom de fichier source manquant"
+msgstr ""
+
+#: models/Setting.py:2041
+msgid "code patient manquant pour le mot de passe PDF"
+msgstr ""
+
+#: models/Setting.py:2259
+msgid "Nom de modèle WhatsApp manquant"
+msgstr ""
+
+#: models/Setting.py:2526
+msgid "Echec envoi"
+msgstr ""
+
+#: models/Setting.py:2528
+msgid "Réenvoyer"
+msgstr ""
+
+#: models/Setting.py:2528
+msgid "Echec réenvoi"
+msgstr ""
+
+#: services/ExportRest.py:998 translations/messages_pybabel.py:528
 msgid "Années"
 msgstr "Years"
 
-#: services/ExportRest.py:999 translations/messages_pybabel.py:522
+#: services/ExportRest.py:1000 translations/messages_pybabel.py:522
 #: translations/messages_pybabel.py:530
 msgid "Mois"
 msgstr "Month"
 
-#: services/ExportRest.py:1001 translations/messages_pybabel.py:531
+#: services/ExportRest.py:1002 translations/messages_pybabel.py:531
 msgid "Semaines"
 msgstr "Weeks"
 
-#: services/ExportRest.py:1003 translations/messages_pybabel.py:529
+#: services/ExportRest.py:1004 translations/messages_pybabel.py:529
 msgid "Jours"
 msgstr "Days"
 
@@ -884,6 +939,7 @@ msgid "Klebsiella sp"
 msgstr "Klebsiella"
 
 #: translations/messages_pybabel.py:155 translations/messages_pybabel.py:356
+#: translations/messages_pybabel.py:417
 msgid "Mobilincus sp"
 msgstr "Mobilincus sp"
 
@@ -1714,10 +1770,6 @@ msgstr "rare Gram-positive cocci"
 #: translations/messages_pybabel.py:416
 msgid "rares cocci à Gram positif, lévures"
 msgstr "rare Gram-positive cocci, yeasts"
-
-#: translations/messages_pybabel.py:417
-msgid " Mobilincus sp"
-msgstr " Mobilincus sp"
 
 #: translations/messages_pybabel.py:418
 msgid "Absence de germe"
@@ -3273,7 +3325,7 @@ msgid ""
 msgstr "Full Ionogram (includes at least Na, K, Cl, Bicarbonates, Proteins)"
 
 #: translations/messages_pybabel.py:937
-msgid "Ionogramme étendu (complet   Ca   Phosphates)"
+msgid "Ionogramme étendu (complet Ca Phosphates)"
 msgstr "Extended Ionogram (Complete Ca Phosphates)"
 
 #: translations/messages_pybabel.py:938
@@ -3322,7 +3374,7 @@ msgid "Cholestérol LDL"
 msgstr "LDL cholesterol"
 
 #: translations/messages_pybabel.py:949
-msgid "Cholestérol total  HDL (Indice d'athérogénicité)"
+msgid "Cholestérol total HDL (Indice d'athérogénicité)"
 msgstr "Total HDL Cholesterol (Atherogenicity Index)"
 
 #: translations/messages_pybabel.py:950
@@ -3338,7 +3390,7 @@ msgid "Lipoprotéine B par immunologie"
 msgstr "Lipoprotein B by immunology"
 
 #: translations/messages_pybabel.py:953
-msgid "Lipoprotéines A1   B par immunologie"
+msgid "Lipoprotéines A1 B par immunologie"
 msgstr "Lipoproteins A1 B by immunology"
 
 #: translations/messages_pybabel.py:954 translations/messages_pybabel.py:2224
@@ -3412,7 +3464,7 @@ msgid "Protéine C Réactive quantitative par spectrophotométrie"
 msgstr "Protein C Quantitative Reactive by Spectrophotometry"
 
 #: translations/messages_pybabel.py:971
-msgid "Troponine  semi-quantitative par test rapide"
+msgid "Troponine semi-quantitative par test rapide"
 msgstr "Troponin Rapid Test: Semi-quantitative"
 
 #: translations/messages_pybabel.py:972
@@ -3581,7 +3633,7 @@ msgid "Sels et pigments biliaires (recherche)"
 msgstr "Bile salts and pigments (research)"
 
 #: translations/messages_pybabel.py:1013
-msgid "Glucose   Protéines (recherche)"
+msgid "Glucose Protéines (recherche)"
 msgstr "Glucose protein (research)"
 
 #: translations/messages_pybabel.py:1014
@@ -3751,7 +3803,7 @@ msgid "Hémogramme (Numération Formule Sanguine)"
 msgstr "Full Blood Count (Complete Blood Count)"
 
 #: translations/messages_pybabel.py:1056
-msgid "NFS   VS"
+msgid "NFS VS"
 msgstr "Blood Count Sedimentation Rate"
 
 #: translations/messages_pybabel.py:1057
@@ -3827,7 +3879,7 @@ msgid "Temps de saignement (test d'Ivy 3 points)"
 msgstr "Bleeding time (Ivy 3-point test)"
 
 #: translations/messages_pybabel.py:1075
-msgid "Temps de Céphaline   Activateurs (TCA / TCK)"
+msgid "Temps de Céphaline Activateurs (TCA / TCK)"
 msgstr "activated partial thromboplastin time (aPTT or APTT)"
 
 #: translations/messages_pybabel.py:1076 translations/messages_pybabel.py:2178
@@ -3836,7 +3888,7 @@ msgstr "Thrombin Time (TT)"
 
 #: translations/messages_pybabel.py:1077 translations/messages_pybabel.py:2213
 msgid ""
-"Titrage des Produits de Dégradation de la Fibrine  et/ ou du "
+"Titrage des Produits de Dégradation de la Fibrine et/ ou du "
 "Fibrinogène(PDF)"
 msgstr "Titration of Fibrin and/or Fibrinogen Degradation Products (FDP)"
 
@@ -3915,7 +3967,7 @@ msgid "RPR / VDRL qualitatif (Syphilis)"
 msgstr "RPR/VDRL (Qualitative test for Syphilis)"
 
 #: translations/messages_pybabel.py:1097 translations/messages_pybabel.py:2219
-msgid "TPHA  (Syphilis)"
+msgid "TPHA (Syphilis)"
 msgstr "TPHA (Syphilis)"
 
 #: translations/messages_pybabel.py:1098 translations/messages_pybabel.py:1826
@@ -3950,7 +4002,7 @@ msgstr "Cryptococcosis (detection of soluble antigens of Cryptococcus neoformans
 
 #: translations/messages_pybabel.py:1105 translations/messages_pybabel.py:1723
 #: translations/messages_pybabel.py:1724
-msgid "Dépistage Cysticercose  (EIA ou IFI)"
+msgid "Dépistage Cysticercose (EIA ou IFI)"
 msgstr "Cysticercosis screening (EIA or IFI)"
 
 #: translations/messages_pybabel.py:1106 translations/messages_pybabel.py:2187
@@ -3988,7 +4040,7 @@ msgstr "HBsAg RDT (Rapid test for HBsAg)"
 #: translations/messages_pybabel.py:1114 translations/messages_pybabel.py:2070
 msgid "Recherche Ac anti HBs (Hépatite B par test rapide)"
 msgstr ""
-"Detection of HBV-surface antigen antibody (anti-HBsAb)  (Hepatitis B by "
+"Detection of HBV-surface antigen antibody (anti-HBsAb) (Hepatitis B by "
 "Rapid Test)"
 
 #: translations/messages_pybabel.py:1115 translations/messages_pybabel.py:2072
@@ -4132,7 +4184,7 @@ msgstr "Detection and titration of Prostatic Specific Antigen (PSA)"
 
 #: translations/messages_pybabel.py:1146 translations/messages_pybabel.py:2123
 msgid ""
-"Recherche et titrage de l'Antigène Prostatique Spécifique  libre (PSA "
+"Recherche et titrage de l'Antigène Prostatique Spécifique libre (PSA "
 "libre)"
 msgstr "Detection and titration of the Free Prostatic Specific Antigen (Free PSA)"
 
@@ -4196,7 +4248,7 @@ msgid "Culture des levures"
 msgstr "Yeast culture"
 
 #: translations/messages_pybabel.py:1161
-msgid "Culot urinaire : examen direct (état frais, cytologie   coloration)"
+msgid "Culot urinaire : examen direct (état frais, cytologie coloration)"
 msgstr ""
 "Urine analysis: microscopy, culture and sensitivity (fresh state, "
 "coloring cytology)"
@@ -4411,8 +4463,8 @@ msgstr "HBsAg research (hepatitis B by Immunoanalysis Automata)"
 msgid "Acide fusidique"
 msgstr "Fusidic acid"
 
-#: translations/messages_pybabel.py:1210 translations/messages_pybabel.py:1464
-#: translations/messages_pybabel.py:1465
+#: translations/messages_pybabel.py:1210 translations/messages_pybabel.py:1461
+#: translations/messages_pybabel.py:1464 translations/messages_pybabel.py:1465
 msgid "Acide nalidixique"
 msgstr "Nalidixic Acid"
 
@@ -5209,8 +5261,8 @@ msgid ""
 "Recherche par prélèvement buccal de l'ADN viral de la maladie à virus "
 "Ebola par RT-PCR"
 msgstr ""
-"Oral sampling for detection of Ebola Viral DNA using RT-PCR  (Ebola Virus"
-" Disease diagnosis)"
+"Oral sampling for detection of Ebola Viral DNA using RT-PCR (Ebola Virus "
+"Disease diagnosis)"
 
 #: translations/messages_pybabel.py:1398
 msgid ""
@@ -5297,7 +5349,7 @@ msgid "Prélèvement médullaire"
 msgstr "Medullary sampling"
 
 #: translations/messages_pybabel.py:1416
-msgid "Prélèvements  multiples de sang veineux (au moins 3)"
+msgid "Prélèvements multiples de sang veineux (au moins 3)"
 msgstr "Multiple samples of venous blood (at least 3)"
 
 #: translations/messages_pybabel.py:1417
@@ -5400,7 +5452,7 @@ msgstr "Rating for each factor."
 
 #: translations/messages_pybabel.py:1441
 msgid ""
-"En cas de réaction positive au RPR  et au TPHA, un titrage doit être "
+"En cas de réaction positive au RPR et au TPHA, un titrage doit être "
 "pratiqué. - Recherche et titrage éventuel des anticorps, préciser la ou "
 "les techniques utilisées avec leur seuil de sensibilité."
 msgstr ""
@@ -5513,10 +5565,6 @@ msgstr ""
 #: translations/messages_pybabel.py:1460
 msgid "Acetone"
 msgstr "Acetone"
-
-#: translations/messages_pybabel.py:1461
-msgid "Acide  nalidixique"
-msgstr "Nalidixic acid"
 
 #: translations/messages_pybabel.py:1473 translations/messages_pybabel.py:1474
 msgid "Acide urique"
@@ -5967,7 +6015,7 @@ msgid "Cryptococcose"
 msgstr "Cryptococcosis"
 
 #: translations/messages_pybabel.py:1712
-msgid "Culture (  + / -)"
+msgid "Culture ( + / -)"
 msgstr "Culture (+/-)"
 
 #: translations/messages_pybabel.py:1714
@@ -6844,7 +6892,7 @@ msgid "Troponine"
 msgstr "Troponin"
 
 #: translations/messages_pybabel.py:2232
-msgid "Troponine  semi-quantitative"
+msgid "Troponine semi-quantitative"
 msgstr "Semi-quantitative troponin"
 
 #: translations/messages_pybabel.py:2235
@@ -6929,8 +6977,8 @@ msgstr "Normal: Child: 0.5 - 3.5/Adults: 1.5 - 5.5"
 
 #: translations/messages_pybabel.py:2264
 msgid ""
-"0 - 4 jours: 28 -44   4j - 14 ans: 38 - 54   14 - 18 ans: 32 - 45   18 - "
-"60 ans: 34 - 48"
+"0 - 4 jours: 28 -44 4j - 14 ans: 38 - 54 14 - 18 ans: 32 - 45 18 - 60 "
+"ans: 34 - 48"
 msgstr ""
 "0 - 4 days: 28 -44 4d - 14 years: 38 - 54 14 - 18 years: 32 - 45 18 - 60 "
 "years: 34 - 48"
@@ -6945,15 +6993,15 @@ msgstr "0 CFU/100 ml"
 
 #: translations/messages_pybabel.py:2267
 msgid ""
-"1 - 4 ans : 18 - 35   4 - 13 ans : 31 - 68   13 - 17 ans : 37 - 88   "
-"femme : 45 - 103   homme : 55 - 120"
+"1 - 4 ans : 18 - 35 4 - 13 ans : 31 - 68 13 - 17 ans : 37 - 88 femme : 45"
+" - 103 homme : 55 - 120"
 msgstr ""
 "1 - 4 years: 18 - 35 4 - 13 years: 31 - 68 13 - 17 years: 37 - 88 female:"
 " 45 - 103 male: 55 - 120"
 
 #: translations/messages_pybabel.py:2269
 msgid ""
-"DO > COV  : Positif DO < COV  : Négatif COV -0.010 < DO < COV + 0.010: "
+"DO > COV : Positif DO < COV : Négatif COV -0.010 < DO < COV + 0.010: "
 "Indeterminé"
 msgstr ""
 "DO > VOC: Positive DO < VOC: VOC negative -0.010 < DO < VOC + 0.010: "
@@ -6989,8 +7037,8 @@ msgstr "Electrometric method"
 
 #: translations/messages_pybabel.py:2277
 msgid ""
-"Normales : 3 à 10 ans : 12.0 - 14.5 /  Femme : 12.5 - 15.5 / Homme : 14.0"
-" - 17.0"
+"Normales : 3 à 10 ans : 12.0 - 14.5 / Femme : 12.5 - 15.5 / Homme : 14.0 "
+"- 17.0"
 msgstr "Normal: 3 to 10 years: 12.0 - 14.5/Female: 12.5 - 15.5/Male: 14.0 - 17.0"
 
 #: translations/messages_pybabel.py:2278
@@ -7002,11 +7050,11 @@ msgid "Normales : 3 à 10 ans : 28 - 33 / Femme : 30 - 35 / Homme : 30 - 35"
 msgstr "Normal: 3 to 10 years: 28 - 33/Female: 30 - 35/Male: 30 - 35"
 
 #: translations/messages_pybabel.py:2280
-msgid "Normales : 3 à 10 ans : 3.5 - 5 /  Femme : 4.0 - 5.3 / Homme : 4.2 - 5.7"
+msgid "Normales : 3 à 10 ans : 3.5 - 5 / Femme : 4.0 - 5.3 / Homme : 4.2 - 5.7"
 msgstr "Normal: 3 to 10 years: 3.5 - 5/Female: 4.0 - 5.3/Male: 4.2 - 5.7"
 
 #: translations/messages_pybabel.py:2281
-msgid "Normales : 3 à 10 ans : 36 - 45 /  Femme : 37 - 46 / Homme : 40 - 52"
+msgid "Normales : 3 à 10 ans : 36 - 45 / Femme : 37 - 46 / Homme : 40 - 52"
 msgstr "Normal: 3 to 10 years: 36 - 45/Female: 37 - 46/Male: 40 - 52"
 
 #: translations/messages_pybabel.py:2282
@@ -7034,13 +7082,13 @@ msgid "Par test rapide"
 msgstr "Through quick testing"
 
 #: translations/messages_pybabel.py:2288
-msgid "prématuré : 1.10 - 8.90   < 1 an : 1.40 - 6.80   enfant: 1.80 - 6.40"
+msgid "prématuré : 1.10 - 8.90 < 1 an : 1.40 - 6.80 enfant: 1.80 - 6.40"
 msgstr "premature: 1.10 - 8.90 < 1 year: 1.40 - 6.80 child: 1.80 - 6.40"
 
 #: translations/messages_pybabel.py:2289
 msgid ""
-"prématuré: 1.55 - 2.75   J0 - 10j: 1.90 - 2.60   10 j - 24 mois: 2.25 - "
-"2.75   24 mois - 12 ans: 2.20 - 2.70   12 ans - 18 ans : 2.10 - 2.55"
+"prématuré: 1.55 - 2.75 J0 - 10j: 1.90 - 2.60 10 j - 24 mois: 2.25 - 2.75 "
+"24 mois - 12 ans: 2.20 - 2.70 12 ans - 18 ans : 2.10 - 2.55"
 msgstr ""
 "premature: 1.55 - 2.75 days - 10 days: 1.90 - 2.60 10 d - 24 months: 2.25"
 " - 2.75 24 months - 12 years: 2.20 - 2.70 12 years - 18 years: 2.10 - "
@@ -7052,8 +7100,8 @@ msgstr "DNA research for bacillus anthracis by PCR"
 
 #: translations/messages_pybabel.py:2291
 msgid ""
-"Score 0-3: Flore normale   Score 4-6: Flore intermediaire   Score >= 7: "
-"Flore de vaginose bacterienne"
+"Score 0-3: Flore normale Score 4-6: Flore intermediaire Score >= 7: Flore"
+" de vaginose bacterienne"
 msgstr ""
 "Score 0-3: Normal flora Score 4-6: Intermediate flora Score >= 7: "
 "Bacterial vaginosis flora"
@@ -7079,8 +7127,8 @@ msgid "Test de solubilité"
 msgstr "Solubility test"
 
 #: translations/messages_pybabel.py:2297
-msgid "Transudat : < 30g/l   Exsudat: > 30g/l"
-msgstr "Transudate: < 30g/l    Exudate: > 30g/l"
+msgid "Transudat : < 30g/l Exsudat: > 30g/l"
+msgstr "Transudate: < 30g/l Exudate: > 30g/l"
 
 #: translations/messages_pybabel.py:2298
 msgid "Zone thérapeutique : 0.5 à 1.5"
@@ -8376,4 +8424,19 @@ msgstr "Technical validation"
 
 #~ msgid "Autres cellulles"
 #~ msgstr "Other cells"
+
+#~ msgid "ETAT DE LA FACTURATION DU"
+#~ msgstr "STATUS OF INVOICING FROM"
+
+#~ msgid "AU"
+#~ msgstr "TO"
+
+#~ msgid "Etat de la facturation, édité le"
+#~ msgstr "Billing status, edited on"
+
+#~ msgid "Page"
+#~ msgstr "Page"
+
+#~ msgid " Mobilincus sp"
+#~ msgstr " Mobilincus sp"
 

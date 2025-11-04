@@ -120,18 +120,15 @@ fi
 cd ${APP_DIR} || exit 1
 
 # --- FE OAuth client secret for Alembic (export to env) ---
+# Wait for the FE-generated shared secret file; do not generate anything here.
 OAUTH_SHARED="$(dirname "$SHARED_SECRET")/oauth_client_secret.py"
 
-# Wait until FE has generated the OAuth secret once
 echo "Waiting FE OAuth client secret..."
 while [ ! -s "$OAUTH_SHARED" ]; do sleep 1; done
 
-# Read the Python constant and export to env for the migration
-export LABBOOK_OAUTH_FE_SECRET="$(python3 - <<'PY'
-ns={}
-with open('/home/apps/shared/oauth_client_secret.py','r') as f: exec(f.read(), ns)
-print(ns.get('OAUTH_CLIENT_SECRET',''))
-PY
+# Read the Python constant into an env var for the BE app (and migrations if needed).
+export LABBOOK_OAUTH_FE_SECRET="$(
+  python3 -c "ns={}; exec(open('$OAUTH_SHARED').read(), ns); print(ns.get('OAUTH_CLIENT_SECRET',''))"
 )"
 # --- end FE OAuth secret block ---
 

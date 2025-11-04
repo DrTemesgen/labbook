@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Labbook_FE\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-10-16 15:27+0200\n"
+"POT-Creation-Date: 2025-11-04 12:53+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: pt\n"
@@ -24,11 +24,12 @@ msgstr "Registro administrativo"
 
 #: templates/administrative-record.html:20
 #: templates/biological-validation.html:21
-#: templates/biological-validation.html:832 templates/det-req-ext.html:21
-#: templates/det-req-int.html:21 templates/det-sample.html:18
-#: templates/enter-result.html:21 templates/list-aliquot.html:30
-#: templates/list-sending.html:25 templates/pivot-table.html:31
-#: templates/report-dhis2.html:63 templates/technical-validation.html:21
+#: templates/biological-validation.html:832 templates/det-job.html:203
+#: templates/det-req-ext.html:21 templates/det-req-int.html:21
+#: templates/det-sample.html:18 templates/enter-result.html:21
+#: templates/list-aliquot.html:30 templates/list-sending.html:25
+#: templates/pivot-table.html:31 templates/report-dhis2.html:63
+#: templates/technical-validation.html:21
 msgid "Dossier"
 msgstr "Registro"
 
@@ -129,12 +130,13 @@ msgstr "Feminino"
 
 #: templates/administrative-record.html:62
 #: templates/biological-validation.html:60 templates/det-hist-patient.html:41
-#: templates/det-req-ext.html:68 templates/det-req-int.html:71
-#: templates/det-sample.html:48 templates/elem/pat_sex.html:9
-#: templates/enter-result.html:58 templates/hist-analyzes.html:232
-#: templates/hist-patients.html:244 templates/list-messages.html:138
-#: templates/list-msg-analyzer.html:128 templates/macros.html:51
-#: templates/macros.html:58 templates/macros.html:65
+#: templates/det-job.html:40 templates/det-req-ext.html:68
+#: templates/det-req-int.html:71 templates/det-sample.html:48
+#: templates/elem/pat_sex.html:9 templates/enter-result.html:58
+#: templates/hist-analyzes.html:232 templates/hist-patients.html:244
+#: templates/list-jobs.html:83 templates/list-jobs.html:252
+#: templates/list-messages.html:138 templates/list-msg-analyzer.html:128
+#: templates/macros.html:51 templates/macros.html:58 templates/macros.html:65
 #: templates/manage-pat-records.html:171 templates/manage-pat-records.html:198
 #: templates/manage-pat-records.html:210 templates/manage-pat-records.html:219
 #: templates/manage-pat-records.html:425 templates/manage-pat-records.html:452
@@ -177,7 +179,7 @@ msgstr "Pedido durante o plantão"
 #: templates/det-req-int.html:134 templates/det-req-int.html:157
 #: templates/det-req-int.html:419 templates/det-req-int.html:646
 #: templates/det-req-int.html:651 templates/det-req-int.html:656
-#: templates/det-template.html:36 templates/elem/pat_ano.html:3
+#: templates/det-template.html:38 templates/elem/pat_ano.html:3
 #: templates/elem/pat_birth_approx.html:3 templates/elem/pat_resident.html:3
 #: templates/list-nonconformities.html:225 templates/list-storage-box.html:135
 #: templates/manage-pat-records.html:52 templates/manage-pat-records.html:132
@@ -191,7 +193,7 @@ msgstr "Pedido durante o plantão"
 #: templates/setting-det-analysis.html:258
 #: templates/setting-det-analysis.html:267 templates/setting-det-dict.html:78
 #: templates/setting-form.html:61 templates/setting-report.html:26
-#: templates/table-rights.html:42
+#: templates/table-rights.html:43
 msgid "Oui"
 msgstr "Sim"
 
@@ -206,7 +208,7 @@ msgstr "Sim"
 #: templates/det-req-int.html:160 templates/det-req-int.html:168
 #: templates/det-req-int.html:419 templates/det-req-int.html:648
 #: templates/det-req-int.html:653 templates/det-req-int.html:658
-#: templates/det-template.html:39 templates/elem/pat_ano.html:6
+#: templates/det-template.html:41 templates/elem/pat_ano.html:6
 #: templates/elem/pat_birth_approx.html:6 templates/elem/pat_resident.html:6
 #: templates/list-nonconformities.html:227 templates/list-storage-box.html:135
 #: templates/manage-pat-records.html:55 templates/manage-pat-records.html:135
@@ -220,7 +222,7 @@ msgstr "Sim"
 #: templates/setting-det-analysis.html:261
 #: templates/setting-det-analysis.html:270 templates/setting-det-dict.html:78
 #: templates/setting-form.html:64 templates/setting-report.html:29
-#: templates/table-rights.html:49
+#: templates/table-rights.html:50
 msgid "Non"
 msgstr "Não"
 
@@ -279,9 +281,9 @@ msgid "Analyses et actes de prélèvement"
 msgstr "Análise e coleta"
 
 #: templates/administrative-record.html:197 templates/det-req-ext.html:205
-#: templates/det-req-int.html:252 templates/report-activity.html:81
-#: templates/report-activity.html:147 templates/report-activity.html:385
-#: templates/report-activity.html:584
+#: templates/det-req-int.html:252 templates/report-activity.html:88
+#: templates/report-activity.html:154 templates/report-activity.html:392
+#: templates/report-activity.html:591
 msgid "Analyses"
 msgstr "Análises"
 
@@ -306,7 +308,7 @@ msgstr "Código"
 #: templates/det-lite.html:16 templates/det-oauth-client.html:16
 #: templates/det-printer.html:16 templates/det-req-ext.html:216
 #: templates/det-req-ext.html:239 templates/det-req-int.html:263
-#: templates/det-sending-method.html:15 templates/det-sending-model.html:20
+#: templates/det-sending-method.html:15 templates/det-sending-model.html:92
 #: templates/det-staff.html:16 templates/det-supplier.html:25
 #: templates/elem/pat_name.html:2 templates/hist-analyzes.html:40
 #: templates/hist-analyzes.html:72 templates/hist-patients.html:35
@@ -397,7 +399,7 @@ msgstr "Relatório"
 #: templates/det-req-int.html:350 templates/det-staff.html:97
 #: templates/det-staff.html:122 templates/det-staff.html:147
 #: templates/det-staff.html:181 templates/det-staff.html:202
-#: templates/det-template.html:50 templates/eqp-document.html:29
+#: templates/det-template.html:52 templates/eqp-document.html:29
 #: templates/eqp-document.html:52 templates/eqp-failure.html:55
 #: templates/eqp-maintenance-contract.html:38
 #: templates/eqp-maintenance-preventive.html:38 templates/eqp-metrology.html:38
@@ -407,15 +409,15 @@ msgstr "Relatório"
 #: templates/list-ctrl-int.html:31 templates/list-doctors.html:80
 #: templates/list-eqp-failure.html:31 templates/list-eqp-maintenance.html:33
 #: templates/list-eqp-maintenance.html:84 templates/list-eqp-metrology.html:31
-#: templates/list-equipment.html:31 templates/list-laboratory.html:49
-#: templates/list-laboratory.html:71 templates/list-manuals.html:58
-#: templates/list-meeting.html:31 templates/list-messages.html:30
-#: templates/list-msg-analyzer.html:16 templates/list-nonconformities.html:56
-#: templates/list-printer.html:33 templates/list-procedure.html:31
-#: templates/list-products.html:31 templates/list-records.html:135
-#: templates/list-sending.html:18 templates/list-staff.html:31
-#: templates/list-stock.html:78 templates/list-storage-box.html:17
-#: templates/list-storage-chamber.html:17
+#: templates/list-equipment.html:31 templates/list-jobs.html:19
+#: templates/list-laboratory.html:49 templates/list-laboratory.html:71
+#: templates/list-manuals.html:58 templates/list-meeting.html:31
+#: templates/list-messages.html:30 templates/list-msg-analyzer.html:16
+#: templates/list-nonconformities.html:56 templates/list-printer.html:33
+#: templates/list-procedure.html:31 templates/list-products.html:31
+#: templates/list-records.html:135 templates/list-sending.html:18
+#: templates/list-staff.html:31 templates/list-stock.html:78
+#: templates/list-storage-box.html:17 templates/list-storage-chamber.html:17
 #: templates/list-storage-compartment.html:17
 #: templates/list-storage-room.html:17 templates/list-suppliers.html:31
 #: templates/list-template.html:31 templates/list-works.html:99
@@ -497,16 +499,16 @@ msgstr "Informações  / observações adicionais"
 #: templates/det-analyzer.html:72 templates/det-control-ext.html:41
 #: templates/det-control-int.html:41 templates/det-dhis2-api.html:63
 #: templates/det-doctor.html:142 templates/det-equipment.html:177
-#: templates/det-lite.html:95 templates/det-manual.html:107
-#: templates/det-meeting.html:70 templates/det-new-product.html:95
-#: templates/det-oauth-client.html:88 templates/det-patient.html:43
-#: templates/det-printer.html:51 templates/det-procedure.html:99
-#: templates/det-sample.html:145 templates/det-sending-method.html:160
-#: templates/det-sending-model.html:110 templates/det-staff.html:223
-#: templates/det-stock-product.html:96 templates/det-storage-box.html:73
-#: templates/det-storage-chamber.html:51
+#: templates/det-job.html:434 templates/det-lite.html:95
+#: templates/det-manual.html:107 templates/det-meeting.html:70
+#: templates/det-new-product.html:95 templates/det-oauth-client.html:88
+#: templates/det-patient.html:43 templates/det-printer.html:51
+#: templates/det-procedure.html:99 templates/det-sample.html:145
+#: templates/det-sending-method.html:160 templates/det-sending-model.html:202
+#: templates/det-staff.html:223 templates/det-stock-product.html:96
+#: templates/det-storage-box.html:73 templates/det-storage-chamber.html:51
 #: templates/det-storage-compartment.html:72 templates/det-storage-room.html:41
-#: templates/det-supplier.html:92 templates/det-template.html:74
+#: templates/det-supplier.html:92 templates/det-template.html:76
 #: templates/enter-result.html:203 templates/enter-result.html:558
 #: templates/enter-result.html:905 templates/eqp-document.html:77
 #: templates/eqp-failure.html:76 templates/eqp-maintenance-contract.html:66
@@ -520,7 +522,7 @@ msgstr "Informações  / observações adicionais"
 #: templates/setting-functionnal-units.html:45
 #: templates/setting-link-unit-fam.html:33
 #: templates/setting-link-unit-user.html:36 templates/setting-logo.html:30
-#: templates/setting-manual.html:43 templates/setting-pref.html:117
+#: templates/setting-manual.html:43 templates/setting-pref.html:118
 #: templates/setting-pwd-user.html:36 templates/setting-rec-num.html:75
 #: templates/setting-report.html:54
 #: templates/setting-requesting-services.html:43
@@ -538,7 +540,7 @@ msgstr "Anexos ao registro"
 #: templates/det-procedure.html:85 templates/det-staff.html:97
 #: templates/det-staff.html:122 templates/det-staff.html:147
 #: templates/det-staff.html:181 templates/det-staff.html:202
-#: templates/det-template.html:50 templates/eqp-failure.html:55
+#: templates/det-template.html:52 templates/eqp-failure.html:55
 #: templates/eqp-maintenance-contract.html:38
 #: templates/eqp-maintenance-preventive.html:38 templates/eqp-metrology.html:38
 #: templates/list-laboratory.html:49 templates/list-printer.html:18
@@ -560,7 +562,7 @@ msgstr "Salvar o documento"
 #: templates/hist-patients.html:114 templates/manage-pat-records.html:548
 #: templates/new-req-ext.html:31 templates/new-req-int.html:30
 #: templates/no-rights.html:3 templates/report-today.html:104
-#: templates/setting-pref.html:114
+#: templates/setting-pref.html:115
 msgid "Quitter"
 msgstr "Sair"
 
@@ -592,13 +594,13 @@ msgstr "Código de barras"
 #: templates/list-eqp-failure.html:120 templates/list-eqp-maintenance.html:176
 #: templates/list-eqp-maintenance.html:241
 #: templates/list-eqp-metrology.html:118 templates/list-equipment.html:143
-#: templates/list-laboratory.html:131 templates/list-laboratory.html:327
-#: templates/list-manuals.html:195 templates/list-meeting.html:123
-#: templates/list-messages.html:110 templates/list-msg-analyzer.html:74
-#: templates/list-nonconformities.html:192 templates/list-printer.html:119
-#: templates/list-procedure.html:132 templates/list-records.html:314
-#: templates/list-results.html:1166 templates/list-storage-box.html:85
-#: templates/list-storage-chamber.html:84
+#: templates/list-jobs.html:213 templates/list-laboratory.html:131
+#: templates/list-laboratory.html:327 templates/list-manuals.html:195
+#: templates/list-meeting.html:123 templates/list-messages.html:110
+#: templates/list-msg-analyzer.html:74 templates/list-nonconformities.html:192
+#: templates/list-printer.html:119 templates/list-procedure.html:132
+#: templates/list-records.html:314 templates/list-results.html:1166
+#: templates/list-storage-box.html:85 templates/list-storage-chamber.html:84
 #: templates/list-storage-compartment.html:85
 #: templates/list-storage-room.html:82 templates/list-suppliers.html:127
 #: templates/list-template.html:125 templates/list-works.html:286
@@ -612,8 +614,8 @@ msgstr "Código de barras"
 #: templates/setting-manual.html:79 templates/setting-oauth-list.html:100
 #: templates/setting-requesting-services.html:79
 #: templates/setting-roles-and-rights.html:125
-#: templates/setting-sending-method.html:134
-#: templates/setting-sending-method.html:270 templates/setting-stock.html:90
+#: templates/setting-sending-method.html:152
+#: templates/setting-sending-method.html:285 templates/setting-stock.html:90
 msgid "Supprimer"
 msgstr "Excluir"
 
@@ -646,7 +648,7 @@ msgstr "Erro ao excluir os dados"
 #: templates/administrative-record.html:897 templates/det-equipment.html:406
 #: templates/det-manual.html:339 templates/det-meeting.html:209
 #: templates/det-message.html:201 templates/det-procedure.html:329
-#: templates/det-staff.html:367 templates/det-template.html:58
+#: templates/det-staff.html:367 templates/det-template.html:60
 #: templates/eqp-failure.html:257 templates/eqp-maintenance-contract.html:192
 #: templates/eqp-maintenance-preventive.html:183
 #: templates/eqp-metrology.html:183 templates/list-laboratory.html:325
@@ -666,8 +668,9 @@ msgid "Ré-éditer"
 msgstr "Reeditar"
 
 #: templates/administrative-record.html:615
-#: templates/biological-validation.html:844 templates/det-message.html:18
-#: templates/list-sending.html:24
+#: templates/biological-validation.html:844 templates/det-job.html:262
+#: templates/det-job.html:333 templates/det-job.html:379
+#: templates/det-message.html:18 templates/list-sending.html:24
 msgid "Destinataire"
 msgstr "Destinatário"
 
@@ -732,7 +735,7 @@ msgstr ""
 #: templates/list-stock.html:216 templates/list-suppliers.html:106
 #: templates/list-template.html:99 templates/list-trace-download.html:155
 #: templates/list-vars.html:90 templates/move-stock-product.html:162
-#: templates/pivot-table.html:158 templates/report-billing.html:233
+#: templates/pivot-table.html:158 templates/report-billing.html:240
 #: templates/report-tat.html:255 templates/report-today.html:193
 #: templates/setting-analyzes.html:254 templates/setting-dhis2.html:93
 #: templates/setting-dicts.html:165 templates/setting-roles-and-rights.html:98
@@ -768,13 +771,13 @@ msgstr "Ocorreu um erro durante o processamento"
 #: templates/det-new-product.html:216 templates/det-oauth-client.html:164
 #: templates/det-printer.html:115 templates/det-procedure.html:304
 #: templates/det-sample.html:216 templates/det-sending-method.html:246
-#: templates/det-sending-method.html:249 templates/det-sending-model.html:190
-#: templates/det-sending-model.html:193 templates/det-staff.html:319
+#: templates/det-sending-method.html:249 templates/det-sending-model.html:283
+#: templates/det-sending-model.html:286 templates/det-staff.html:319
 #: templates/det-stock-product.html:255 templates/det-storage-box.html:131
 #: templates/det-storage-chamber.html:96
 #: templates/det-storage-compartment.html:129
 #: templates/det-storage-room.html:77 templates/det-supplier.html:161
-#: templates/det-template.html:163 templates/enter-result.html:1305
+#: templates/det-template.html:165 templates/enter-result.html:1305
 #: templates/enter-result.html:1318 templates/eqp-document.html:251
 #: templates/eqp-document.html:261 templates/eqp-failure.html:229
 #: templates/eqp-maintenance-contract.html:176
@@ -792,7 +795,7 @@ msgstr "Ocorreu um erro durante o processamento"
 #: templates/setting-form.html:113 templates/setting-functionnal-units.html:259
 #: templates/setting-link-unit-fam.html:157
 #: templates/setting-link-unit-user.html:163 templates/setting-manual.html:220
-#: templates/setting-pref.html:193 templates/setting-pwd-user.html:86
+#: templates/setting-pref.html:194 templates/setting-pwd-user.html:86
 #: templates/setting-rec-num.html:123 templates/setting-report.html:91
 #: templates/setting-requesting-services.html:218
 #: templates/setting-stock.html:238 templates/setting-user-rights.html:83
@@ -873,13 +876,14 @@ msgstr "Adiciona novas análises (código não existente na base de dados)"
 #: templates/list-ctrl-int.html:52 templates/list-doctors.html:111
 #: templates/list-eqp-failure.html:55 templates/list-eqp-maintenance.html:107
 #: templates/list-eqp-metrology.html:53 templates/list-equipment.html:57
-#: templates/list-laboratory.html:84 templates/list-manuals.html:86
-#: templates/list-meeting.html:53 templates/list-messages.html:52
-#: templates/list-msg-analyzer.html:29 templates/list-nonconformities.html:81
-#: templates/list-printer.html:45 templates/list-procedure.html:59
-#: templates/list-products.html:56 templates/list-sending.html:32
-#: templates/list-staff.html:67 templates/list-stock.html:105
-#: templates/list-storage-box.html:32 templates/list-storage-chamber.html:30
+#: templates/list-jobs.html:35 templates/list-laboratory.html:84
+#: templates/list-manuals.html:86 templates/list-meeting.html:53
+#: templates/list-messages.html:52 templates/list-msg-analyzer.html:29
+#: templates/list-nonconformities.html:81 templates/list-printer.html:45
+#: templates/list-procedure.html:59 templates/list-products.html:56
+#: templates/list-sending.html:32 templates/list-staff.html:67
+#: templates/list-stock.html:105 templates/list-storage-box.html:32
+#: templates/list-storage-chamber.html:30
 #: templates/list-storage-compartment.html:31
 #: templates/list-storage-room.html:29 templates/list-suppliers.html:57
 #: templates/list-template.html:53 templates/list-trace-download.html:79
@@ -913,7 +917,7 @@ msgid "Importer des analyses"
 msgstr "Importar as análises"
 
 #: templates/analysis-import.html:91 templates/connect-management.html:85
-#: templates/det-template.html:145 templates/det-template.html:185
+#: templates/det-template.html:147 templates/det-template.html:187
 #: templates/dict-import.html:81 templates/report-dhis2.html:250
 #: templates/setting-dhis2.html:188 templates/setting-epidemio.html:68
 #: templates/setting-form.html:135 templates/setting-indicator.html:68
@@ -1057,16 +1061,16 @@ msgstr "Adicionar"
 #: templates/biological-validation.html:205 templates/det-aliquot.html:101
 #: templates/det-analyzer.html:68 templates/det-dhis2-api.html:59
 #: templates/det-doctor.html:138 templates/det-equipment.html:173
-#: templates/det-list-stock.html:84 templates/det-lite.html:92
-#: templates/det-manual.html:103 templates/det-meeting.html:66
-#: templates/det-message.html:61 templates/det-new-product.html:91
-#: templates/det-oauth-client.html:85 templates/det-printer.html:48
-#: templates/det-procedure.html:95 templates/det-sending-method.html:157
-#: templates/det-sending-model.html:107 templates/det-staff.html:219
-#: templates/det-stock-product.html:93 templates/det-storage-box.html:70
-#: templates/det-storage-chamber.html:48
+#: templates/det-job.html:426 templates/det-list-stock.html:84
+#: templates/det-lite.html:92 templates/det-manual.html:103
+#: templates/det-meeting.html:66 templates/det-message.html:61
+#: templates/det-new-product.html:91 templates/det-oauth-client.html:85
+#: templates/det-printer.html:48 templates/det-procedure.html:95
+#: templates/det-sending-method.html:157 templates/det-sending-model.html:199
+#: templates/det-staff.html:219 templates/det-stock-product.html:93
+#: templates/det-storage-box.html:70 templates/det-storage-chamber.html:48
 #: templates/det-storage-compartment.html:69 templates/det-storage-room.html:38
-#: templates/det-supplier.html:88 templates/det-template.html:71
+#: templates/det-supplier.html:88 templates/det-template.html:73
 #: templates/enter-result.html:201 templates/eqp-document.html:73
 #: templates/eqp-failure.html:72 templates/eqp-maintenance-contract.html:62
 #: templates/eqp-maintenance-preventive.html:55 templates/eqp-metrology.html:55
@@ -1154,23 +1158,24 @@ msgstr ""
 #: templates/biological-validation.html:1130 templates/det-aliquot.html:129
 #: templates/det-control-ext.html:291 templates/det-control-int.html:278
 #: templates/det-equipment.html:197 templates/det-equipment.html:241
-#: templates/det-manual.html:122 templates/det-manual.html:166
-#: templates/det-manual.html:204 templates/det-meeting.html:85
-#: templates/det-message.html:80 templates/det-new-product.html:109
-#: templates/det-procedure.html:114 templates/det-procedure.html:158
-#: templates/det-procedure.html:196 templates/det-req-ext.html:409
-#: templates/det-req-ext.html:442 templates/det-req-int.html:434
-#: templates/det-req-int.html:467 templates/det-stock-product.html:110
-#: templates/enter-result.html:1061 templates/eqp-document.html:99
-#: templates/eqp-document.html:145 templates/eqp-failure.html:89
-#: templates/eqp-failure.html:133 templates/eqp-maintenance-contract.html:79
+#: templates/det-job.html:705 templates/det-manual.html:122
+#: templates/det-manual.html:166 templates/det-manual.html:204
+#: templates/det-meeting.html:85 templates/det-message.html:80
+#: templates/det-new-product.html:109 templates/det-procedure.html:114
+#: templates/det-procedure.html:158 templates/det-procedure.html:196
+#: templates/det-req-ext.html:409 templates/det-req-ext.html:442
+#: templates/det-req-int.html:434 templates/det-req-int.html:467
+#: templates/det-stock-product.html:110 templates/enter-result.html:1061
+#: templates/eqp-document.html:99 templates/eqp-document.html:145
+#: templates/eqp-failure.html:89 templates/eqp-failure.html:133
+#: templates/eqp-maintenance-contract.html:79
 #: templates/eqp-maintenance-preventive.html:72 templates/eqp-metrology.html:72
 #: templates/list-results.html:162 templates/manage-pat-records.html:568
 #: templates/manage-pat-records.html:597 templates/new-req-ext.html:48
 #: templates/new-req-int.html:47 templates/non-conformity.html:790
 #: templates/non-conformity.html:834 templates/non-conformity.html:872
 #: templates/non-conformity.html:910 templates/non-conformity.html:948
-#: templates/non-conformity.html:986 templates/report-billing.html:118
+#: templates/non-conformity.html:986 templates/report-billing.html:125
 #: templates/report-tat.html:102 templates/setting-det-analysis.html:359
 #: templates/setting-det-analysis.html:475
 #: templates/setting-det-analysis.html:544 templates/setting-det-user.html:240
@@ -1221,8 +1226,8 @@ msgstr "URL do servidor LabBook Connect"
 
 #: templates/connect-management.html:31 templates/det-analyzer.html:38
 #: templates/list-template.html:121 templates/report-dhis2.html:97
-#: templates/setting-sending-method.html:133
-#: templates/setting-sending-method.html:269
+#: templates/setting-sending-method.html:141
+#: templates/setting-sending-method.html:284
 msgid "Tester"
 msgstr "Testar"
 
@@ -1438,7 +1443,7 @@ msgstr "Lista de analisadores"
 msgid "Identifiant"
 msgstr "Identificador do usuário"
 
-#: templates/det-analyzer.html:44
+#: templates/det-analyzer.html:44 templates/det-job.html:175
 msgid "Mode"
 msgstr ""
 
@@ -1495,11 +1500,12 @@ msgid "Contrôle externe"
 msgstr "Controle externo"
 
 #: templates/det-control-ext.html:17 templates/det-control-int.html:17
-#: templates/det-meeting.html:25 templates/det-sending-model.html:29
-#: templates/eqp-failure.html:25 templates/hist-analyzes.html:33
-#: templates/hist-analyzes.html:71 templates/list-aliquot.html:27
-#: templates/list-ctrl-ext.html:34 templates/list-ctrl-int.html:34
-#: templates/list-eqp-failure.html:33 templates/list-meeting.html:33
+#: templates/det-job.html:30 templates/det-meeting.html:25
+#: templates/det-sending-model.html:101 templates/eqp-failure.html:25
+#: templates/hist-analyzes.html:33 templates/hist-analyzes.html:71
+#: templates/list-aliquot.html:27 templates/list-ctrl-ext.html:34
+#: templates/list-ctrl-int.html:34 templates/list-eqp-failure.html:33
+#: templates/list-jobs.html:22 templates/list-meeting.html:33
 #: templates/list-products.html:33 templates/list-records.html:88
 #: templates/list-results.html:38 templates/list-sending.html:22
 #: templates/list-stock.html:24 templates/list-stock.html:84
@@ -1569,11 +1575,11 @@ msgstr "Número total de linhas"
 #: templates/list-eqp-maintenance.html:72
 #: templates/list-eqp-maintenance.html:98 templates/list-eqp-metrology.html:19
 #: templates/list-eqp-metrology.html:44 templates/list-equipment.html:19
-#: templates/list-equipment.html:48 templates/list-manuals.html:46
-#: templates/list-manuals.html:77 templates/list-meeting.html:19
-#: templates/list-meeting.html:44 templates/list-messages.html:18
-#: templates/list-messages.html:43 templates/list-msg-analyzer.html:53
-#: templates/list-nonconformities.html:44
+#: templates/list-equipment.html:48 templates/list-jobs.html:173
+#: templates/list-manuals.html:46 templates/list-manuals.html:77
+#: templates/list-meeting.html:19 templates/list-meeting.html:44
+#: templates/list-messages.html:18 templates/list-messages.html:43
+#: templates/list-msg-analyzer.html:53 templates/list-nonconformities.html:44
 #: templates/list-nonconformities.html:72 templates/list-printer.html:91
 #: templates/list-procedure.html:19 templates/list-procedure.html:50
 #: templates/list-products.html:19 templates/list-products.html:47
@@ -1598,8 +1604,8 @@ msgstr "Número total de linhas"
 #: templates/setting-oauth-list.html:64
 #: templates/setting-roles-and-rights.html:20
 #: templates/setting-roles-and-rights.html:43
-#: templates/setting-sending-method.html:113
-#: templates/setting-sending-method.html:253 templates/setting-users.html:75
+#: templates/setting-sending-method.html:120
+#: templates/setting-sending-method.html:268 templates/setting-users.html:75
 #: templates/setting-users.html:104 templates/setting-zipcity.html:25
 #: templates/setting-zipcity.html:47
 msgid "Premier"
@@ -1623,11 +1629,11 @@ msgstr "Primeiro"
 #: templates/list-eqp-maintenance.html:73
 #: templates/list-eqp-maintenance.html:99 templates/list-eqp-metrology.html:20
 #: templates/list-eqp-metrology.html:45 templates/list-equipment.html:20
-#: templates/list-equipment.html:49 templates/list-manuals.html:47
-#: templates/list-manuals.html:78 templates/list-meeting.html:20
-#: templates/list-meeting.html:45 templates/list-messages.html:19
-#: templates/list-messages.html:44 templates/list-msg-analyzer.html:56
-#: templates/list-nonconformities.html:45
+#: templates/list-equipment.html:49 templates/list-jobs.html:176
+#: templates/list-manuals.html:47 templates/list-manuals.html:78
+#: templates/list-meeting.html:20 templates/list-meeting.html:45
+#: templates/list-messages.html:19 templates/list-messages.html:44
+#: templates/list-msg-analyzer.html:56 templates/list-nonconformities.html:45
 #: templates/list-nonconformities.html:73 templates/list-printer.html:94
 #: templates/list-procedure.html:20 templates/list-procedure.html:51
 #: templates/list-products.html:20 templates/list-products.html:48
@@ -1652,8 +1658,8 @@ msgstr "Primeiro"
 #: templates/setting-oauth-list.html:67
 #: templates/setting-roles-and-rights.html:21
 #: templates/setting-roles-and-rights.html:44
-#: templates/setting-sending-method.html:116
-#: templates/setting-sending-method.html:256 templates/setting-users.html:76
+#: templates/setting-sending-method.html:123
+#: templates/setting-sending-method.html:271 templates/setting-users.html:76
 #: templates/setting-users.html:105 templates/setting-zipcity.html:26
 #: templates/setting-zipcity.html:48
 msgid "Précédent"
@@ -1677,11 +1683,11 @@ msgstr "Precedente"
 #: templates/list-eqp-maintenance.html:75
 #: templates/list-eqp-maintenance.html:101 templates/list-eqp-metrology.html:22
 #: templates/list-eqp-metrology.html:47 templates/list-equipment.html:22
-#: templates/list-equipment.html:51 templates/list-manuals.html:49
-#: templates/list-manuals.html:80 templates/list-meeting.html:22
-#: templates/list-meeting.html:47 templates/list-messages.html:21
-#: templates/list-messages.html:46 templates/list-msg-analyzer.html:55
-#: templates/list-nonconformities.html:47
+#: templates/list-equipment.html:51 templates/list-jobs.html:175
+#: templates/list-manuals.html:49 templates/list-manuals.html:80
+#: templates/list-meeting.html:22 templates/list-meeting.html:47
+#: templates/list-messages.html:21 templates/list-messages.html:46
+#: templates/list-msg-analyzer.html:55 templates/list-nonconformities.html:47
 #: templates/list-nonconformities.html:75 templates/list-printer.html:93
 #: templates/list-procedure.html:22 templates/list-procedure.html:53
 #: templates/list-products.html:22 templates/list-products.html:50
@@ -1706,8 +1712,8 @@ msgstr "Precedente"
 #: templates/setting-oauth-list.html:66
 #: templates/setting-roles-and-rights.html:23
 #: templates/setting-roles-and-rights.html:46
-#: templates/setting-sending-method.html:115
-#: templates/setting-sending-method.html:255 templates/setting-users.html:78
+#: templates/setting-sending-method.html:122
+#: templates/setting-sending-method.html:270 templates/setting-users.html:78
 #: templates/setting-users.html:107 templates/setting-zipcity.html:28
 #: templates/setting-zipcity.html:50
 msgid "Suivant"
@@ -1731,11 +1737,11 @@ msgstr "Próximo"
 #: templates/list-eqp-maintenance.html:76
 #: templates/list-eqp-maintenance.html:102 templates/list-eqp-metrology.html:23
 #: templates/list-eqp-metrology.html:48 templates/list-equipment.html:23
-#: templates/list-equipment.html:52 templates/list-manuals.html:50
-#: templates/list-manuals.html:81 templates/list-meeting.html:23
-#: templates/list-meeting.html:48 templates/list-messages.html:22
-#: templates/list-messages.html:47 templates/list-msg-analyzer.html:54
-#: templates/list-nonconformities.html:48
+#: templates/list-equipment.html:52 templates/list-jobs.html:174
+#: templates/list-manuals.html:50 templates/list-manuals.html:81
+#: templates/list-meeting.html:23 templates/list-meeting.html:48
+#: templates/list-messages.html:22 templates/list-messages.html:47
+#: templates/list-msg-analyzer.html:54 templates/list-nonconformities.html:48
 #: templates/list-nonconformities.html:76 templates/list-printer.html:92
 #: templates/list-procedure.html:23 templates/list-procedure.html:54
 #: templates/list-products.html:23 templates/list-products.html:51
@@ -1760,8 +1766,8 @@ msgstr "Próximo"
 #: templates/setting-oauth-list.html:65
 #: templates/setting-roles-and-rights.html:24
 #: templates/setting-roles-and-rights.html:47
-#: templates/setting-sending-method.html:114
-#: templates/setting-sending-method.html:254 templates/setting-users.html:79
+#: templates/setting-sending-method.html:121
+#: templates/setting-sending-method.html:269 templates/setting-users.html:79
 #: templates/setting-users.html:108 templates/setting-zipcity.html:29
 #: templates/setting-zipcity.html:51
 msgid "Dernier"
@@ -1866,7 +1872,7 @@ msgstr "Por favor, selecione um equipamento."
 #: templates/setting-form.html:108 templates/setting-functionnal-units.html:253
 #: templates/setting-link-unit-fam.html:143
 #: templates/setting-link-unit-user.html:149 templates/setting-manual.html:212
-#: templates/setting-pref.html:188 templates/setting-rec-num.html:118
+#: templates/setting-pref.html:189 templates/setting-rec-num.html:118
 #: templates/setting-report.html:86
 #: templates/setting-requesting-services.html:212
 #: templates/setting-stock.html:230
@@ -1901,9 +1907,9 @@ msgstr "Sem resultados para exportar!"
 #: templates/list-results.html:1068 templates/list-staff.html:212
 #: templates/list-stock.html:431 templates/list-stock.html:474
 #: templates/list-stock.html:517 templates/list-stock.html:560
-#: templates/list-suppliers.html:243 templates/report-activity.html:627
-#: templates/report-activity.html:680 templates/report-activity.html:729
-#: templates/report-billing.html:306 templates/report-dhis2.html:183
+#: templates/list-suppliers.html:243 templates/report-activity.html:634
+#: templates/report-activity.html:687 templates/report-activity.html:739
+#: templates/report-billing.html:303 templates/report-dhis2.html:183
 #: templates/report-epidemio.html:143 templates/report-indicator.html:143
 #: templates/report-statistic.html:603 templates/report-tat.html:432
 #: templates/report-tat.html:492 templates/report-today.html:283
@@ -1938,14 +1944,14 @@ msgstr "Endereço da plataforma dhis2"
 
 #: templates/det-dhis2-api.html:47 templates/det-printer.html:30
 #: templates/det-sending-method.html:27 templates/list-printer.html:37
-#: templates/setting-sending-method.html:153
-#: templates/setting-sending-method.html:280
+#: templates/setting-sending-method.html:171
+#: templates/setting-sending-method.html:295
 msgid "Par défaut"
 msgstr "Por defeito"
 
 #: templates/det-dhis2-api.html:91 templates/det-doctor.html:181
 #: templates/det-lite.html:122 templates/det-oauth-client.html:118
-#: templates/det-printer.html:76 templates/det-template.html:96
+#: templates/det-printer.html:76 templates/det-template.html:98
 #: templates/setting-det-role.html:115
 msgid "Veuillez saisir un nom."
 msgstr "Por favor, digitar um nome"
@@ -2181,7 +2187,7 @@ msgid "Retour à la liste analyses"
 msgstr "Voltar à lista de análises"
 
 #: templates/det-hist-patient.html:5 templates/det-hist-patient.html:12
-#: templates/menu.html:111 templates/menu.html:439
+#: templates/menu.html:114 templates/menu.html:457
 msgid "Historique patient"
 msgstr "Histórico do paciente"
 
@@ -2220,6 +2226,302 @@ msgstr "Análise"
 #: templates/det-hist-patient.html:91
 msgid "Retour à la liste patients"
 msgstr "Voltar à lista de pacientes"
+
+#: templates/det-job.html:5
+msgid "Détails automatisme"
+msgstr ""
+
+#: templates/det-job.html:19
+msgid "Modifier l'automatisme"
+msgstr ""
+
+#: templates/det-job.html:21
+msgid "Nouvel automatisme"
+msgstr ""
+
+#: templates/det-job.html:37 templates/det-job.html:47
+msgid "DHIS2"
+msgstr ""
+
+#: templates/det-job.html:38 templates/det-job.html:48
+#: templates/det-template.html:30
+msgid "Rapport d'activité"
+msgstr ""
+
+#: templates/det-job.html:39 templates/det-job.html:49
+msgid "État de la facturation"
+msgstr ""
+
+#: templates/det-job.html:46 templates/det-job.html:189
+msgid "Sélectionner"
+msgstr ""
+
+#: templates/det-job.html:57 templates/list-jobs.html:21
+#: templates/list-laboratory.html:72 templates/list-vars.html:30
+#: templates/setting-det-analysis.html:139 templates/setting-det-dict.html:46
+#: templates/setting-dicts.html:26 templates/setting-pref.html:17
+msgid "Libellé"
+msgstr "Etiqueta"
+
+#: templates/det-job.html:71 templates/det-sending-method.html:23
+#: templates/det-sending-model.html:114
+msgid "Options"
+msgstr ""
+
+#: templates/det-job.html:79
+msgid "Activer cet automatisme"
+msgstr ""
+
+#: templates/det-job.html:86
+msgid "Planification"
+msgstr ""
+
+#: templates/det-job.html:89 templates/list-jobs.html:24
+msgid "Fréquence"
+msgstr ""
+
+#: templates/det-job.html:92
+msgid "Quotidien"
+msgstr ""
+
+#: templates/det-job.html:93 templates/report-dhis2.html:29
+msgid "Hebdomadaire"
+msgstr "Semanalmente"
+
+#: templates/det-job.html:94 templates/report-dhis2.html:30
+msgid "Mensuel"
+msgstr ""
+
+#: templates/det-job.html:95 templates/report-dhis2.html:31
+msgid "Bimestriel"
+msgstr ""
+
+#: templates/det-job.html:96 templates/report-dhis2.html:32
+msgid "Trimestriel"
+msgstr ""
+
+#: templates/det-job.html:97 templates/report-dhis2.html:33
+msgid "Quadrimestriel"
+msgstr ""
+
+#: templates/det-job.html:98 templates/report-dhis2.html:34
+msgid "Semestriel"
+msgstr ""
+
+#: templates/det-job.html:99 templates/report-dhis2.html:35
+msgid "Annuel"
+msgstr ""
+
+#: templates/det-job.html:105
+msgid "Heure d'exécution"
+msgstr ""
+
+#: templates/det-job.html:117
+msgid "Jour de la semaine"
+msgstr ""
+
+#: templates/det-job.html:120
+msgid "Lundi"
+msgstr ""
+
+#: templates/det-job.html:121
+msgid "Mardi"
+msgstr ""
+
+#: templates/det-job.html:122
+msgid "Mercredi"
+msgstr ""
+
+#: templates/det-job.html:123
+msgid "Jeudi"
+msgstr ""
+
+#: templates/det-job.html:124
+msgid "Vendredi"
+msgstr ""
+
+#: templates/det-job.html:125
+msgid "Samedi"
+msgstr ""
+
+#: templates/det-job.html:126
+msgid "Dimanche"
+msgstr ""
+
+#: templates/det-job.html:132
+msgid "Jour du mois"
+msgstr ""
+
+#: templates/det-job.html:142
+msgid "1 à 31"
+msgstr ""
+
+#: templates/det-job.html:151
+msgid "Dernier jour du mois"
+msgstr ""
+
+#: templates/det-job.html:157
+msgid "Date de démarrage"
+msgstr ""
+
+#: templates/det-job.html:171
+msgid "Paramètres DHIS2"
+msgstr ""
+
+#: templates/det-job.html:178
+msgid "Créer un fichier"
+msgstr ""
+
+#: templates/det-job.html:179
+msgid "Envoyer vers DHIS2 (API)"
+msgstr ""
+
+#: templates/det-job.html:186 templates/report-dhis2.html:51
+msgid "Feuille de calcul"
+msgstr "Planilha"
+
+#: templates/det-job.html:190 templates/report-dhis2.html:54
+msgid "EEQ"
+msgstr ""
+
+#: templates/det-job.html:191 templates/report-dhis2.html:55
+msgid "Pannes d'équipment"
+msgstr ""
+
+#: templates/det-job.html:192 templates/det-template.html:27
+#: templates/non-conformity.html:575 templates/report-dhis2.html:56
+msgid "Sous-traitance"
+msgstr "Sub-contratação"
+
+#: templates/det-job.html:193 templates/report-dhis2.html:57
+msgid "Statut du stock"
+msgstr ""
+
+#: templates/det-job.html:206 templates/report-dhis2.html:65
+msgid "Tous"
+msgstr ""
+
+#: templates/det-job.html:207 templates/macros.html:87
+#: templates/report-dhis2.html:66 templates/report-statistic.html:284
+msgid "Externe"
+msgstr "Externo"
+
+#: templates/det-job.html:208 templates/macros.html:88
+#: templates/report-dhis2.html:67 templates/report-statistic.html:283
+msgid "Interne"
+msgstr "Interno"
+
+#: templates/det-job.html:215 templates/report-dhis2.html:71
+#: templates/setting-det-analysis.html:115
+msgid "LabBook Lite"
+msgstr "LabBook Lite"
+
+#: templates/det-job.html:218 templates/report-dhis2.html:73
+msgid "Inclure LabBook Lite"
+msgstr ""
+
+#: templates/det-job.html:219 templates/report-dhis2.html:74
+msgid "Exclure LabBook Lite"
+msgstr ""
+
+#: templates/det-job.html:220 templates/report-dhis2.html:75
+msgid "Uniquement LabBook Lite"
+msgstr ""
+
+#: templates/det-job.html:228
+msgid "Configuration API DHIS2"
+msgstr ""
+
+#: templates/det-job.html:242 templates/det-job.html:319
+#: templates/det-job.html:365
+msgid "Messagerie interne"
+msgstr ""
+
+#: templates/det-job.html:255 templates/det-job.html:329
+#: templates/det-job.html:375
+msgid "Envoyer vers la messagerie interne"
+msgstr ""
+
+#: templates/det-job.html:281
+msgid "Paramètres du rapport d'activité"
+msgstr ""
+
+#: templates/det-job.html:284 templates/report-activity.html:27
+#: templates/setting-analyzes.html:25 templates/setting-det-analysis.html:44
+msgid "Famille d'analyse"
+msgstr "Família de análise"
+
+#: templates/det-job.html:287
+msgid "Toutes"
+msgstr ""
+
+#: templates/det-job.html:288
+msgid "Microbiologie"
+msgstr ""
+
+#: templates/det-job.html:289
+msgid "Séro"
+msgstr ""
+
+#: templates/det-job.html:290
+msgid "Virologie"
+msgstr ""
+
+#: templates/det-job.html:296
+msgid "Format de sortie"
+msgstr ""
+
+#: templates/det-job.html:299
+msgid "Export CSV par type"
+msgstr ""
+
+#: templates/det-job.html:300
+msgid "Export CSV par âge"
+msgstr ""
+
+#: templates/det-job.html:301
+msgid "Rapport PDF"
+msgstr ""
+
+#: templates/det-job.html:308 templates/det-job.html:354
+msgid "Modèle de rapport"
+msgstr ""
+
+#: templates/det-job.html:350
+msgid "Paramètres de l'état de la facturation journalière"
+msgstr ""
+
+#: templates/det-job.html:396
+msgid "Statut d'exécution"
+msgstr ""
+
+#: templates/det-job.html:399 templates/list-jobs.html:23
+msgid "Prochaine exécution"
+msgstr ""
+
+#: templates/det-job.html:408
+msgid "Dernière exécution"
+msgstr ""
+
+#: templates/det-job.html:660
+msgid "Le type est obligatoire."
+msgstr ""
+
+#: templates/det-job.html:661
+msgid "Le libellé est obligatoire."
+msgstr ""
+
+#: templates/det-job.html:662
+msgid "La fréquence est obligatoire."
+msgstr ""
+
+#: templates/det-job.html:663
+msgid "L'heure d'exécution est obligatoire."
+msgstr ""
+
+#: templates/det-job.html:685 templates/det-job.html:693
+msgid "Une erreur est survenue lors de l'enregistrement."
+msgstr ""
 
 #: templates/det-list-stock.html:5 templates/det-list-stock.html:12
 msgid "Liste détaillée du stock pour ce produit"
@@ -2479,7 +2781,8 @@ msgstr ""
 msgid "Auth method"
 msgstr ""
 
-#: templates/det-oauth-client.html:75 templates/setting-oauth-list.html:23
+#: templates/det-oauth-client.html:75 templates/list-jobs.html:79
+#: templates/list-jobs.html:250 templates/setting-oauth-list.html:23
 msgid "Actif"
 msgstr ""
 
@@ -2598,11 +2901,12 @@ msgid "Date réception"
 msgstr "Data de recepção"
 
 #: templates/det-req-ext.html:332 templates/det-req-int.html:359
-#: templates/det-sample.html:56 templates/list-msg-analyzer.html:20
-#: templates/list-records.html:71 templates/list-records.html:138
-#: templates/list-sending.html:23 templates/list-works.html:102
-#: templates/setting-analyzes.html:84 templates/setting-det-user.html:86
-#: templates/setting-users.html:52 templates/setting-users.html:92
+#: templates/det-sample.html:56 templates/list-jobs.html:25
+#: templates/list-msg-analyzer.html:20 templates/list-records.html:71
+#: templates/list-records.html:138 templates/list-sending.html:23
+#: templates/list-works.html:102 templates/setting-analyzes.html:84
+#: templates/setting-det-user.html:86 templates/setting-users.html:52
+#: templates/setting-users.html:92
 msgid "Statut"
 msgstr "Status"
 
@@ -2762,10 +3066,6 @@ msgstr "Por favor, escolha um produto patológico."
 msgid "Détails méthode d'envoi"
 msgstr ""
 
-#: templates/det-sending-method.html:23 templates/det-sending-model.html:42
-msgid "Options"
-msgstr ""
-
 #: templates/det-sending-method.html:34
 msgid "Paramètres SMTP"
 msgstr ""
@@ -2831,7 +3131,7 @@ msgstr ""
 msgid "Jeton d'API"
 msgstr ""
 
-#: templates/det-sending-method.html:191 templates/det-sending-model.html:137
+#: templates/det-sending-method.html:191 templates/det-sending-model.html:229
 msgid "Le nom est obligatoire."
 msgstr ""
 
@@ -2851,68 +3151,78 @@ msgstr ""
 msgid "Détails modèle d'envoi"
 msgstr ""
 
-#: templates/det-sending-model.html:32 templates/list-sending.html:66
+#: templates/det-sending-model.html:104 templates/list-sending.html:66
 #: templates/setting-sending-method.html:84
 msgid "SMTP"
 msgstr ""
 
-#: templates/det-sending-model.html:34 templates/list-sending.html:67
+#: templates/det-sending-model.html:106 templates/list-sending.html:67
 #: templates/setting-sending-method.html:85
 msgid "Mailjet"
 msgstr ""
 
-#: templates/det-sending-model.html:36 templates/list-sending.html:68
+#: templates/det-sending-model.html:108 templates/list-sending.html:68
 #: templates/setting-sending-method.html:86
 msgid "WhatsApp"
 msgstr ""
 
-#: templates/det-sending-model.html:47 templates/det-template.html:34
+#: templates/det-sending-model.html:119 templates/det-template.html:36
 msgid "Par défaut pour ce type"
 msgstr "Padrão para este tipo"
 
-#: templates/det-sending-model.html:55
+#: templates/det-sending-model.html:127
 msgid "Contenu du modèle WhatsApp"
 msgstr ""
 
-#: templates/det-sending-model.html:58
+#: templates/det-sending-model.html:130
 msgid "Nom du modèle WhatsApp"
 msgstr ""
 
-#: templates/det-sending-model.html:65
+#: templates/det-sending-model.html:137
 msgid "Nom du template tel que défini dans Meta/WhatsApp Business."
 msgstr ""
 
-#: templates/det-sending-model.html:71
+#: templates/det-sending-model.html:143
+msgid "Langue du modèle"
+msgstr ""
+
+#: templates/det-sending-model.html:155
+msgid ""
+"Sélectionnez le code de langue tel que déclaré dans Meta/WhatsApp "
+"Business (ex. fr, en_US, pt_BR)."
+msgstr ""
+
+#: templates/det-sending-model.html:163
 msgid "Pièce jointe"
 msgstr ""
 
-#: templates/det-sending-model.html:77
+#: templates/det-sending-model.html:169
 msgid "Inclure une pièce jointe"
 msgstr ""
 
-#: templates/det-sending-model.html:88
+#: templates/det-sending-model.html:180
 msgid "Contenu du modèle SMTP"
 msgstr ""
 
-#: templates/det-sending-model.html:89
+#: templates/det-sending-model.html:181
 msgid "Contenu du modèle Mailjet"
 msgstr ""
 
-#: templates/det-sending-model.html:93
+#: templates/det-sending-model.html:185
 msgid "Texte"
 msgstr ""
 
-#: templates/det-sending-model.html:97
+#: templates/det-sending-model.html:189
 msgid ""
 "Corps du message. HTML autorisé pour Mailjet; texte brut conseillé pour "
 "SMTP."
 msgstr ""
 
-#: templates/det-sending-model.html:156
+#: templates/det-sending-model.html:246
 msgid "Nom du modèle WhatsApp obligatoire."
 msgstr ""
 
-#: templates/det-sending-model.html:169
+#: templates/det-sending-model.html:262
 msgid "Le texte du modèle est obligatoire."
 msgstr ""
 
@@ -3107,16 +3417,15 @@ msgstr "Etiqueta"
 msgid "Code QR"
 msgstr "Código QR"
 
-#: templates/det-template.html:27 templates/non-conformity.html:575
-#: templates/report-dhis2.html:56
-msgid "Sous-traitance"
-msgstr "Sub-contratação"
+#: templates/det-template.html:29
+msgid "Etat facturation"
+msgstr ""
 
-#: templates/det-template.html:99 templates/setting-zipcity.html:163
+#: templates/det-template.html:101 templates/setting-zipcity.html:163
 msgid "Veuillez choisir un fichier."
 msgstr "Por favor, escolher um arquivo."
 
-#: templates/det-template.html:151 templates/det-template.html:193
+#: templates/det-template.html:153 templates/det-template.html:195
 #: templates/report-dhis2.html:269 templates/setting-dhis2.html:195
 #: templates/setting-epidemio.html:75 templates/setting-form.html:142
 #: templates/setting-indicator.html:75
@@ -3215,7 +3524,7 @@ msgid "Métrologie et étalonnage"
 msgstr "Metrologia e calibração"
 
 #: templates/global-report.html:5 templates/global-report.html:13
-#: templates/menu.html:32 templates/menu.html:382
+#: templates/menu.html:52 templates/menu.html:411
 msgid "Rapport global"
 msgstr "Relatório geral"
 
@@ -3259,9 +3568,9 @@ msgstr "Lista de análises"
 #: templates/hist-patients.html:16 templates/hist-patients.html:67
 #: templates/hist-stock-product.html:17 templates/hist-stock-product.html:30
 #: templates/list-aliquot.html:166 templates/list-doctors.html:16
-#: templates/list-doctors.html:57 templates/list-manuals.html:16
-#: templates/list-manuals.html:35 templates/list-msg-analyzer.html:51
-#: templates/list-nonconformities.html:16
+#: templates/list-doctors.html:57 templates/list-jobs.html:171
+#: templates/list-manuals.html:16 templates/list-manuals.html:35
+#: templates/list-msg-analyzer.html:51 templates/list-nonconformities.html:16
 #: templates/list-nonconformities.html:33 templates/list-printer.html:89
 #: templates/list-records.html:18 templates/list-records.html:104
 #: templates/list-results.html:21 templates/list-results.html:65
@@ -3283,8 +3592,8 @@ msgstr "Lista de análises"
 #: templates/setting-analyzes.html:57 templates/setting-dicts.html:15
 #: templates/setting-dicts.html:40 templates/setting-lite.html:61
 #: templates/setting-oauth-list.html:62
-#: templates/setting-sending-method.html:111
-#: templates/setting-sending-method.html:251 templates/setting-users.html:16
+#: templates/setting-sending-method.html:118
+#: templates/setting-sending-method.html:266 templates/setting-users.html:16
 #: templates/setting-users.html:64
 msgid "Rechercher"
 msgstr "Pesquisa"
@@ -3299,8 +3608,8 @@ msgstr "Nb. durante o período"
 #: templates/list-manuals.html:148 templates/list-nonconformities.html:145
 #: templates/list-stock.html:190 templates/list-trace-download.html:129
 #: templates/manage-pat-records.html:816 templates/manage-pat-records.html:840
-#: templates/move-stock-product.html:136 templates/report-activity.html:123
-#: templates/report-billing.html:205 templates/report-statistic.html:153
+#: templates/move-stock-product.html:136 templates/report-activity.html:130
+#: templates/report-billing.html:212 templates/report-statistic.html:153
 #: templates/report-tat.html:239 templates/report-today.html:165
 #: templates/setting-analyzes.html:174 templates/setting-backup.html:668
 #: templates/setting-backup.html:680 templates/setting-det-role.html:234
@@ -3364,7 +3673,7 @@ msgstr "Erro ao verificar o uso deste estoque"
 msgid "Accueil"
 msgstr "Página inicial"
 
-#: templates/homepage.html:20 templates/menu.html:138 templates/menu.html:464
+#: templates/homepage.html:20 templates/menu.html:158 templates/menu.html:501
 msgid "Préférences"
 msgstr "Preferências"
 
@@ -3372,16 +3681,16 @@ msgstr "Preferências"
 msgid "Gestion des rôles"
 msgstr "Gestão de funções"
 
-#: templates/homepage.html:26 templates/menu.html:148 templates/menu.html:470
+#: templates/homepage.html:26 templates/menu.html:173 templates/menu.html:510
 msgid "Gestion des utilisateurs"
 msgstr "Gestão de usuários"
 
-#: templates/homepage.html:29 templates/menu.html:154 templates/menu.html:474
+#: templates/homepage.html:29 templates/menu.html:141 templates/menu.html:482
 #: templates/setting-analyzes.html:5 templates/setting-analyzes.html:12
 msgid "Référentiel des analyses"
 msgstr "Repositório de análises"
 
-#: templates/homepage.html:32 templates/menu.html:165 templates/menu.html:481
+#: templates/homepage.html:32 templates/menu.html:146 templates/menu.html:485
 msgid "Dictionnaires"
 msgstr "Dicionários"
 
@@ -3389,7 +3698,7 @@ msgstr "Dicionários"
 msgid "Gestion des sauvegardes"
 msgstr "Gestão de Backups"
 
-#: templates/homepage.html:38 templates/menu.html:159 templates/menu.html:477
+#: templates/homepage.html:38 templates/menu.html:277 templates/menu.html:590
 msgid "Configuration des analyseurs"
 msgstr "Configuração dos analisadores"
 
@@ -3421,33 +3730,33 @@ msgstr "Emergências"
 
 #: templates/homepage.html:64 templates/list-records.html:5
 #: templates/list-records.html:13 templates/list-records.html:112
-#: templates/list-works.html:75 templates/menu.html:17 templates/menu.html:373
+#: templates/list-works.html:75 templates/menu.html:17 templates/menu.html:390
 msgid "Liste des dossiers"
 msgstr "Lista de registros"
 
-#: templates/homepage.html:67 templates/menu.html:22 templates/menu.html:376
+#: templates/homepage.html:67 templates/menu.html:22 templates/menu.html:393
 msgid "Liste de travail biologiste"
 msgstr "Lista de trabalho dos biólogos"
 
-#: templates/homepage.html:70 templates/menu.html:27 templates/menu.html:379
+#: templates/homepage.html:70 templates/menu.html:27 templates/menu.html:396
 msgid "Liste de travail technicien"
 msgstr "Lista de trabalho dos técnicos"
 
 #: templates/homepage.html:73 templates/list-samples.html:5
-#: templates/list-samples.html:12 templates/menu.html:54
-#: templates/menu.html:396
+#: templates/list-samples.html:12 templates/menu.html:42
+#: templates/menu.html:405
 msgid "Etat des prélèvements en cours"
 msgstr "Estado das coletas em curso"
 
-#: templates/homepage.html:76 templates/menu.html:59 templates/menu.html:399
+#: templates/homepage.html:76 templates/menu.html:47 templates/menu.html:408
 msgid "Saisie des résultats"
 msgstr "Entrada de resultados"
 
-#: templates/homepage.html:79 templates/menu.html:43 templates/menu.html:389
+#: templates/homepage.html:79 templates/menu.html:32 templates/menu.html:399
 msgid "Nouvelle demande externe"
 msgstr "Novo pedido externo"
 
-#: templates/homepage.html:82 templates/menu.html:48 templates/menu.html:392
+#: templates/homepage.html:82 templates/menu.html:37 templates/menu.html:402
 #: templates/new-req-int.html:5
 msgid "Nouvelle demande hospitalisé"
 msgstr "Novo pedido hospitalizado"
@@ -3489,7 +3798,7 @@ msgid "Une alerte est présente dans la gestion de stock"
 msgstr "Existe um alerta na gestão de estoque"
 
 #: templates/list-aliquot.html:5 templates/list-aliquot.html:12
-#: templates/menu.html:325 templates/menu.html:587
+#: templates/menu.html:344 templates/menu.html:639
 #: templates/table-rights.html:24
 msgid "Gestion des échantillons"
 msgstr "Gerenciamento das amostras"
@@ -3498,9 +3807,9 @@ msgstr "Gerenciamento das amostras"
 msgid "Déstockés"
 msgstr "Retirados"
 
-#: templates/list-aliquot.html:26 templates/list-printer.html:34
-#: templates/list-sending.html:19 templates/setting-lite.html:19
-#: templates/setting-oauth-list.html:19
+#: templates/list-aliquot.html:26 templates/list-jobs.html:20
+#: templates/list-printer.html:34 templates/list-sending.html:19
+#: templates/setting-lite.html:19 templates/setting-oauth-list.html:19
 #: templates/setting-sending-method.html:21
 #: templates/setting-sending-method.html:51
 msgid "ID"
@@ -3559,7 +3868,8 @@ msgstr "Confirmar"
 msgid "Choisir une imprimante"
 msgstr "Escolhendo uma impressora"
 
-#: templates/list-aliquot.html:107 templates/list-sending.html:49
+#: templates/list-aliquot.html:107 templates/list-jobs.html:59
+#: templates/list-sending.html:49
 msgid "Fermer"
 msgstr "Fechar"
 
@@ -3571,58 +3881,63 @@ msgstr "Imprimir"
 msgid "Impression lancée."
 msgstr "A impressão começou."
 
-#: templates/list-aliquot.html:161 templates/list-msg-analyzer.html:46
-#: templates/list-printer.html:84 templates/list-sending.html:122
-#: templates/list-storage-box.html:59 templates/list-storage-chamber.html:58
+#: templates/list-aliquot.html:161 templates/list-jobs.html:166
+#: templates/list-msg-analyzer.html:46 templates/list-printer.html:84
+#: templates/list-sending.html:122 templates/list-storage-box.html:59
+#: templates/list-storage-chamber.html:58
 #: templates/list-storage-compartment.html:59
 #: templates/list-storage-room.html:56 templates/setting-lite.html:56
 #: templates/setting-oauth-list.html:57
-#: templates/setting-sending-method.html:106
-#: templates/setting-sending-method.html:246
+#: templates/setting-sending-method.html:113
+#: templates/setting-sending-method.html:261
 msgid "Afficher _MENU_ entrées"
 msgstr "Exibir_MENU_entradas"
 
-#: templates/list-aliquot.html:162 templates/list-msg-analyzer.html:47
-#: templates/list-printer.html:85 templates/list-sending.html:123
-#: templates/list-storage-box.html:60 templates/list-storage-chamber.html:59
+#: templates/list-aliquot.html:162 templates/list-jobs.html:167
+#: templates/list-msg-analyzer.html:47 templates/list-printer.html:85
+#: templates/list-sending.html:123 templates/list-storage-box.html:60
+#: templates/list-storage-chamber.html:59
 #: templates/list-storage-compartment.html:60
 #: templates/list-storage-room.html:57 templates/setting-lite.html:57
 #: templates/setting-oauth-list.html:58
-#: templates/setting-sending-method.html:107
-#: templates/setting-sending-method.html:247
+#: templates/setting-sending-method.html:114
+#: templates/setting-sending-method.html:262
 msgid "Aucun enregistrement trouvé"
 msgstr "Nenhum registro encontrado"
 
-#: templates/list-aliquot.html:163 templates/list-msg-analyzer.html:48
-#: templates/list-printer.html:86 templates/list-sending.html:124
-#: templates/list-storage-box.html:61 templates/list-storage-chamber.html:60
+#: templates/list-aliquot.html:163 templates/list-jobs.html:168
+#: templates/list-msg-analyzer.html:48 templates/list-printer.html:86
+#: templates/list-sending.html:124 templates/list-storage-box.html:61
+#: templates/list-storage-chamber.html:60
 #: templates/list-storage-compartment.html:61
 #: templates/list-storage-room.html:58 templates/setting-lite.html:58
 #: templates/setting-oauth-list.html:59
-#: templates/setting-sending-method.html:108
-#: templates/setting-sending-method.html:248
+#: templates/setting-sending-method.html:115
+#: templates/setting-sending-method.html:263
 msgid "Affichage de _START_ à _END_ sur _TOTAL_ entrées"
 msgstr "Exibir de _START_ a _END_ em _TOTAL_ entradas"
 
-#: templates/list-aliquot.html:164 templates/list-msg-analyzer.html:49
-#: templates/list-printer.html:87 templates/list-sending.html:125
-#: templates/list-storage-box.html:62 templates/list-storage-chamber.html:61
+#: templates/list-aliquot.html:164 templates/list-jobs.html:169
+#: templates/list-msg-analyzer.html:49 templates/list-printer.html:87
+#: templates/list-sending.html:125 templates/list-storage-box.html:62
+#: templates/list-storage-chamber.html:61
 #: templates/list-storage-compartment.html:62
 #: templates/list-storage-room.html:59 templates/setting-lite.html:59
 #: templates/setting-oauth-list.html:60
-#: templates/setting-sending-method.html:109
-#: templates/setting-sending-method.html:249
+#: templates/setting-sending-method.html:116
+#: templates/setting-sending-method.html:264
 msgid "Aucune entrée disponible"
 msgstr "Nenhuma entrada disponível"
 
-#: templates/list-aliquot.html:165 templates/list-msg-analyzer.html:50
-#: templates/list-printer.html:88 templates/list-sending.html:126
-#: templates/list-storage-box.html:63 templates/list-storage-chamber.html:62
+#: templates/list-aliquot.html:165 templates/list-jobs.html:170
+#: templates/list-msg-analyzer.html:50 templates/list-printer.html:88
+#: templates/list-sending.html:126 templates/list-storage-box.html:63
+#: templates/list-storage-chamber.html:62
 #: templates/list-storage-compartment.html:63
 #: templates/list-storage-room.html:60 templates/setting-lite.html:60
 #: templates/setting-oauth-list.html:61
-#: templates/setting-sending-method.html:110
-#: templates/setting-sending-method.html:250
+#: templates/setting-sending-method.html:117
+#: templates/setting-sending-method.html:265
 msgid "(filtré de _MAX_ entrées au total)"
 msgstr "(filtrado de _MAX_ entradas totais)"
 
@@ -3634,13 +3949,14 @@ msgstr "Retirar"
 msgid "Restocker"
 msgstr "Reabastecer"
 
-#: templates/list-aliquot.html:209 templates/list-printer.html:115
-#: templates/list-storage-box.html:83 templates/list-storage-chamber.html:82
+#: templates/list-aliquot.html:209 templates/list-jobs.html:210
+#: templates/list-printer.html:115 templates/list-storage-box.html:83
+#: templates/list-storage-chamber.html:82
 #: templates/list-storage-compartment.html:83
 #: templates/list-storage-room.html:80 templates/setting-lite.html:87
 #: templates/setting-oauth-list.html:94
-#: templates/setting-sending-method.html:132
-#: templates/setting-sending-method.html:268
+#: templates/setting-sending-method.html:150
+#: templates/setting-sending-method.html:283
 msgid "Éditer"
 msgstr "Editar"
 
@@ -3818,8 +4134,42 @@ msgstr "Panes e consertos"
 msgid "Métrologie"
 msgstr "Metrologia"
 
+#: templates/list-jobs.html:5 templates/list-jobs.html:12
+#: templates/menu.html:282 templates/menu.html:593
+#: templates/table-rights.html:27
+msgid "Configuration des automatismes"
+msgstr ""
+
+#: templates/list-jobs.html:45
+msgid "Ajouter une tâche"
+msgstr ""
+
+#: templates/list-jobs.html:57
+msgid "Action effectuée."
+msgstr ""
+
+#: templates/list-jobs.html:81 templates/list-jobs.html:251
+msgid "Inactif"
+msgstr ""
+
+#: templates/list-jobs.html:105
+msgid "Êtes-vous sûr de vouloir supprimer cette tâche ?"
+msgstr ""
+
+#: templates/list-jobs.html:120
+msgid "Tâche supprimée."
+msgstr ""
+
+#: templates/list-jobs.html:124 templates/list-jobs.html:129
+msgid "Erreur lors de la suppression."
+msgstr ""
+
+#: templates/list-jobs.html:227
+msgid "Sans libellé"
+msgstr ""
+
 #: templates/list-laboratory.html:5 templates/list-laboratory.html:12
-#: templates/menu.html:284 templates/menu.html:562
+#: templates/menu.html:304 templates/menu.html:615
 #: templates/table-rights.html:13
 msgid "Laboratoire"
 msgstr "Laboratório"
@@ -3839,12 +4189,6 @@ msgstr "Organograma"
 #: templates/list-laboratory.html:65 templates/setting-det-dict.html:36
 msgid "Valeurs"
 msgstr "Valores"
-
-#: templates/list-laboratory.html:72 templates/list-vars.html:30
-#: templates/setting-det-analysis.html:139 templates/setting-det-dict.html:46
-#: templates/setting-dicts.html:26 templates/setting-pref.html:17
-msgid "Libellé"
-msgstr "Etiqueta"
 
 #: templates/list-laboratory.html:74 templates/setting-det-dict.html:48
 msgid "Libellé court"
@@ -4026,7 +4370,7 @@ msgid "Une erreur est survenue lors du dépôt du fichier"
 msgstr "Ocorreu um erro ao carregar o arquivo"
 
 #: templates/list-procedure.html:5 templates/list-procedure.html:12
-#: templates/menu.html:315 templates/menu.html:581
+#: templates/menu.html:334 templates/menu.html:633
 #: templates/table-rights.html:17
 msgid "Procédures"
 msgstr "Procedimentos"
@@ -4161,7 +4505,7 @@ msgid "Prélèvement"
 msgstr "Amostra"
 
 #: templates/list-sending.html:5 templates/list-sending.html:12
-#: templates/menu.html:37 templates/menu.html:385
+#: templates/menu.html:57 templates/menu.html:414
 msgid "Liste des envois"
 msgstr ""
 
@@ -4449,22 +4793,12 @@ msgstr "Identificador do usuário ou senha incorretos."
 msgid "Ouverture de session"
 msgstr "Iniciar sessão"
 
-#: templates/macros.html:87 templates/report-dhis2.html:66
-#: templates/report-statistic.html:284
-msgid "Externe"
-msgstr "Externo"
-
-#: templates/macros.html:88 templates/report-dhis2.html:67
-#: templates/report-statistic.html:283
-msgid "Interne"
-msgstr "Interno"
-
 #: templates/macros.html:89
 msgid "Garde"
 msgstr "Plantão"
 
 #: templates/manage-pat-records.html:5 templates/manage-pat-records.html:14
-#: templates/menu.html:241 templates/menu.html:527
+#: templates/menu.html:62 templates/menu.html:417
 msgid "Gestion dossier patient"
 msgstr "Gestão dos registros dos pacientes"
 
@@ -4656,221 +4990,237 @@ msgstr "Malgaxe (MG)"
 msgid "Portugais (PT)"
 msgstr "Português (PT)"
 
-#: templates/menu.html:13 templates/menu.html:403
+#: templates/menu.html:13 templates/menu.html:421
 msgid "Administratif"
 msgstr "Administrativo"
 
-#: templates/menu.html:67 templates/menu.html:452
+#: templates/menu.html:70 templates/menu.html:470
 #: templates/table-rights.html:19
 msgid "Rapports"
 msgstr "Relatórios"
 
-#: templates/menu.html:71 templates/menu.html:415
+#: templates/menu.html:74 templates/menu.html:433
 #: templates/report-activity.html:5 templates/report-activity.html:13
 msgid "Rapport activité"
 msgstr "Relatório de atividades"
 
-#: templates/menu.html:76 templates/menu.html:418
+#: templates/menu.html:79 templates/menu.html:436
 #: templates/report-epidemio.html:5 templates/report-epidemio.html:13
 msgid "Rapport épidémiologique"
 msgstr "Relatório epidemiológico"
 
-#: templates/menu.html:81 templates/menu.html:421
+#: templates/menu.html:84 templates/menu.html:439
 #: templates/report-indicator.html:5 templates/report-indicator.html:13
 msgid "Rapport indicateurs"
 msgstr "Relatório de indicadores"
 
-#: templates/menu.html:86 templates/menu.html:424
+#: templates/menu.html:89 templates/menu.html:442
 #: templates/report-statistic.html:5 templates/report-statistic.html:13
 msgid "Rapport statistique"
 msgstr "Relatório estatístico"
 
-#: templates/menu.html:91 templates/report-tat.html:5
+#: templates/menu.html:94 templates/report-tat.html:5
 #: templates/report-tat.html:15
 msgid "Rapport sur le délai de rendu du résultat"
 msgstr "Relatório sobre o prazo de entrega do resultado"
 
-#: templates/menu.html:96 templates/menu.html:430 templates/pivot-table.html:5
+#: templates/menu.html:99 templates/menu.html:448 templates/pivot-table.html:5
 #: templates/pivot-table.html:18
 msgid "Tableau croisé dynamique"
 msgstr "Tabela Dinâmica"
 
-#: templates/menu.html:101 templates/menu.html:433
+#: templates/menu.html:104 templates/menu.html:451
 #: templates/report-dhis2.html:5 templates/report-dhis2.html:12
 msgid "Export DHIS2"
 msgstr "Exportação DHIS2"
 
-#: templates/menu.html:106 templates/menu.html:436
+#: templates/menu.html:109 templates/menu.html:454
 #: templates/whonet-export.html:5 templates/whonet-export.html:13
 msgid "Export WHONET"
 msgstr "Exportação WHONET"
 
-#: templates/menu.html:116 templates/menu.html:442
+#: templates/menu.html:119 templates/menu.html:460
 msgid "Historique d'analyse"
 msgstr "Histórico da análise"
 
-#: templates/menu.html:121 templates/menu.html:445
+#: templates/menu.html:124 templates/menu.html:463
 #: templates/report-today.html:5 templates/report-today.html:13
 msgid "Rapport de fin de journée"
 msgstr "Relatório de fim de dia"
 
-#: templates/menu.html:126 templates/menu.html:448
+#: templates/menu.html:129 templates/menu.html:466
 msgid "Etat de la facturation journalière"
 msgstr "Status da facturação diária"
 
-#: templates/menu.html:134 templates/menu.html:546
-#: templates/table-rights.html:20
-msgid "Paramétrages"
-msgstr "Configurações"
+#: templates/menu.html:137 templates/menu.html:489
+msgid "Référentiels"
+msgstr ""
 
-#: templates/menu.html:143 templates/menu.html:467
-msgid "Gestion des rôles et droits"
-msgstr "Gestão de tarefas e direitos"
+#: templates/menu.html:154 templates/menu.html:535
+msgid "Paramètres"
+msgstr ""
 
-#: templates/menu.html:170 templates/menu.html:484
+#: templates/menu.html:163 templates/menu.html:504
 msgid "Configuration des sauvegardes"
 msgstr "Configuração de backup"
 
-#: templates/menu.html:175 templates/menu.html:487
+#: templates/menu.html:168 templates/menu.html:507
+msgid "Gestion des rôles et droits"
+msgstr "Gestão de tarefas e direitos"
+
+#: templates/menu.html:178 templates/menu.html:513
+msgid "Configuration du logo"
+msgstr "Configuração do logotipo"
+
+#: templates/menu.html:183 templates/menu.html:516
 #: templates/table-rights.html:25
 msgid "Configuration des imprimantes"
 msgstr "Configuração da impressora"
 
-#: templates/menu.html:181 templates/menu.html:491
-msgid "Configuration du logo"
-msgstr "Configuração do logotipo"
-
-#: templates/menu.html:186 templates/menu.html:494
-msgid "Configuration des intervalles d'âge"
-msgstr "Configuração de faixas etárias"
-
-#: templates/menu.html:191 templates/menu.html:497
-msgid "Configuration des services demandeurs"
-msgstr "Configuração os serviços solicitantes"
-
-#: templates/menu.html:196 templates/menu.html:500
-msgid "Configuration des unités fonctionnelles"
-msgstr "Configuração das unidades funcionais"
-
-#: templates/menu.html:201 templates/menu.html:503
+#: templates/menu.html:188 templates/menu.html:519
 msgid "Configuration des modèles de documents"
 msgstr "Configuração do modelo de documento"
 
-#: templates/menu.html:206 templates/menu.html:506
-msgid "Configuration des comptes rendus"
-msgstr "Configuração dos relatórios"
-
-#: templates/menu.html:211 templates/menu.html:509
-msgid "Configuration des méthodes d'envoi"
-msgstr ""
-
-#: templates/menu.html:216 templates/menu.html:512
-msgid "Configuration des dossiers"
-msgstr ""
-
-#: templates/menu.html:221 templates/menu.html:515
+#: templates/menu.html:193 templates/menu.html:522
 msgid "Configuration des manuels"
 msgstr "Configuração dos manuais"
 
-#: templates/menu.html:226 templates/menu.html:518
-msgid "Configuration des codes postaux"
-msgstr "Configuração de códigos postais"
-
-#: templates/menu.html:231 templates/menu.html:521
+#: templates/menu.html:198 templates/menu.html:525
 msgid "Configuration du stockage"
 msgstr "Configuração de armazenamento"
 
-#: templates/menu.html:236 templates/menu.html:524
-msgid "Configuration de formulaires"
-msgstr "Configuração do formulário"
-
-#: templates/menu.html:246 templates/menu.html:530
-msgid "Configuration DHIS2"
-msgstr "Configuração do DHIS2"
-
-#: templates/menu.html:251 templates/menu.html:533
+#: templates/menu.html:203 templates/menu.html:528
 msgid "Configuration Epidemio"
 msgstr "Configuração Epidemio"
 
-#: templates/menu.html:256 templates/menu.html:536
+#: templates/menu.html:208 templates/menu.html:531
 msgid "Configuration du rapport d'indicateurs"
 msgstr "Configuração do relatório de Indicadores"
 
-#: templates/menu.html:261 templates/menu.html:539
+#: templates/menu.html:216 templates/menu.html:569
+msgid "Structure"
+msgstr ""
+
+#: templates/menu.html:220 templates/menu.html:547
+msgid "Configuration des intervalles d'âge"
+msgstr "Configuração de faixas etárias"
+
+#: templates/menu.html:225 templates/menu.html:550
+msgid "Configuration des services demandeurs"
+msgstr "Configuração os serviços solicitantes"
+
+#: templates/menu.html:230 templates/menu.html:553
+msgid "Configuration des unités fonctionnelles"
+msgstr "Configuração das unidades funcionais"
+
+#: templates/menu.html:235 templates/menu.html:556
+msgid "Configuration des dossiers"
+msgstr ""
+
+#: templates/menu.html:240 templates/menu.html:559
+msgid "Configuration de formulaires"
+msgstr "Configuração do formulário"
+
+#: templates/menu.html:245 templates/menu.html:562
+msgid "Configuration des codes postaux"
+msgstr "Configuração de códigos postais"
+
+#: templates/menu.html:250 templates/menu.html:565
+msgid "Configuration des comptes rendus"
+msgstr "Configuração dos relatórios"
+
+#: templates/menu.html:258 templates/menu.html:600
+msgid "Intégrations"
+msgstr ""
+
+#: templates/menu.html:262 templates/menu.html:581
+msgid "Configuration DHIS2"
+msgstr "Configuração do DHIS2"
+
+#: templates/menu.html:267 templates/menu.html:584
 #: templates/table-rights.html:26
 msgid "Configuration LabBook Lite"
 msgstr "Configuração do LabBook Lite"
 
-#: templates/menu.html:266 templates/menu.html:542
+#: templates/menu.html:272 templates/menu.html:587
+msgid "Configuration des méthodes d'envoi"
+msgstr ""
+
+#: templates/menu.html:287 templates/menu.html:596
 msgid "Configuration OAuth Client"
 msgstr ""
 
-#: templates/menu.html:274 templates/menu.html:605
+#: templates/menu.html:295 templates/menu.html:655
 msgid "Qualité"
 msgstr "Qualidade"
 
-#: templates/menu.html:278 templates/menu.html:558
+#: templates/menu.html:299 templates/menu.html:612
 #: templates/quality-general.html:5 templates/quality-general.html:12
 #: templates/table-rights.html:12
 msgid "Général"
 msgstr "Geral"
 
-#: templates/menu.html:289 templates/menu.html:565
+#: templates/menu.html:309 templates/menu.html:618
 #: templates/table-rights.html:21
 msgid "Personnels"
 msgstr "Colaboradores"
 
-#: templates/menu.html:294 templates/menu.html:568
+#: templates/menu.html:314 templates/menu.html:621
 #: templates/report-statistic.html:54 templates/table-rights.html:10
 msgid "Prescripteurs"
 msgstr "Prescriptores"
 
-#: templates/menu.html:300 templates/menu.html:572
+#: templates/menu.html:319 templates/menu.html:624
 #: templates/non-conformity.html:377 templates/table-rights.html:11
 msgid "Equipements"
 msgstr "Equipamentos"
 
-#: templates/menu.html:305 templates/menu.html:575
+#: templates/menu.html:324 templates/menu.html:627
 #: templates/table-rights.html:23
 msgid "Fournisseurs"
 msgstr "Fornecedores"
 
-#: templates/menu.html:310 templates/menu.html:578
+#: templates/menu.html:329 templates/menu.html:630
 #: templates/table-rights.html:14
 msgid "Manuels"
 msgstr "Manuais"
 
-#: templates/menu.html:320 templates/menu.html:584
+#: templates/menu.html:339 templates/menu.html:636
 #: templates/table-rights.html:22
 msgid "Gestion des stocks"
 msgstr "Gestão de estoque"
 
-#: templates/menu.html:331 templates/menu.html:591
+#: templates/menu.html:349 templates/menu.html:642
 msgid "Module des non-conformités"
 msgstr "Módulo de não-conformidades"
 
-#: templates/menu.html:336 templates/menu.html:594
+#: templates/menu.html:354 templates/menu.html:645
 #: templates/non-conformity.html:171 templates/table-rights.html:9
 msgid "Contrôle qualité interne"
 msgstr "Controle de qualidade interno"
 
-#: templates/menu.html:341 templates/menu.html:597
+#: templates/menu.html:359 templates/menu.html:648
 #: templates/non-conformity.html:177 templates/table-rights.html:8
 msgid "Contrôle qualité externe"
 msgstr "Controle de qualidade externo"
 
-#: templates/menu.html:347 templates/menu.html:601
+#: templates/menu.html:364 templates/menu.html:651
 #: templates/table-rights.html:15
 msgid "Réunion du laboratoire"
 msgstr "Reunião de laboratório"
 
-#: templates/menu.html:355 templates/menu.html:615
+#: templates/menu.html:372
 msgid "Non conformité"
 msgstr "Não conformidade"
 
-#: templates/menu.html:427
+#: templates/menu.html:445
 msgid "Rapport sur le temps de rendu du résultat"
 msgstr "Relatório sobre o tempo para entregar o resultado"
+
+#: templates/menu.html:665 templates/non-conformity.html:5
+#: templates/non-conformity.html:15
+msgid "Non-conformité"
+msgstr "Não-conformidade"
 
 #: templates/move-stock-product.html:60
 msgid "Nombre de paquet"
@@ -4899,10 +5249,6 @@ msgstr "Novo paciente"
 #: templates/no-rights.html:1
 msgid "Vous n'avez pas les droits pour accéder à cette page"
 msgstr "Você não tem autorização de acessar esta página"
-
-#: templates/non-conformity.html:5 templates/non-conformity.html:15
-msgid "Non-conformité"
-msgstr "Não-conformidade"
 
 #: templates/non-conformity.html:18
 msgid "Nom de la non-conformité"
@@ -5297,11 +5643,6 @@ msgstr "Número de não-conformidades em andamento"
 msgid "Nombre de non-conformités depuis un mois"
 msgstr "Número de não-conformidades no último mês"
 
-#: templates/report-activity.html:27 templates/setting-analyzes.html:25
-#: templates/setting-det-analysis.html:44
-msgid "Famille d'analyse"
-msgstr "Família de análise"
-
 #: templates/report-activity.html:44
 msgid "Analyses par type de demande"
 msgstr "Análises por tipo de solicitação"
@@ -5322,26 +5663,26 @@ msgstr "Exportação por tipo"
 msgid "Export par âge"
 msgstr "Exportação por idade"
 
-#: templates/report-activity.html:66 templates/report-billing.html:101
+#: templates/report-activity.html:73 templates/report-billing.html:108
 #: templates/report-epidemio.html:70 templates/report-indicator.html:70
 #: templates/report-statistic.html:100 templates/report-tat.html:88
 #: templates/report-today.html:108
 msgid "Télécharger le rapport"
 msgstr "Baixar o relatório"
 
-#: templates/report-activity.html:147
+#: templates/report-activity.html:154
 msgid "Externes"
 msgstr "Paciente ambulatorial"
 
-#: templates/report-activity.html:148
+#: templates/report-activity.html:155
 msgid "Hospitalisés"
 msgstr "Paciente internado"
 
-#: templates/report-activity.html:149
+#: templates/report-activity.html:156
 msgid "Gardes"
 msgstr "Plantões"
 
-#: templates/report-activity.html:150 templates/report-activity.html:519
+#: templates/report-activity.html:157 templates/report-activity.html:526
 #: templates/report-statistic.html:81 templates/report-statistic.html:92
 #: templates/report-statistic.html:285 templates/report-statistic.html:310
 #: templates/report-statistic.html:351 templates/report-statistic.html:379
@@ -5349,38 +5690,38 @@ msgstr "Plantões"
 msgid "Total"
 msgstr "Total"
 
-#: templates/report-activity.html:151 templates/report-activity.html:153
-#: templates/report-activity.html:155 templates/report-activity.html:156
-#: templates/report-activity.html:387 templates/report-statistic.html:78
+#: templates/report-activity.html:158 templates/report-activity.html:160
+#: templates/report-activity.html:162 templates/report-activity.html:163
+#: templates/report-activity.html:394 templates/report-statistic.html:78
 #: templates/report-statistic.html:89
 msgid "H"
 msgstr "M"
 
-#: templates/report-activity.html:152 templates/report-activity.html:154
-#: templates/report-activity.html:155 templates/report-activity.html:157
-#: templates/report-activity.html:387 templates/report-statistic.html:79
+#: templates/report-activity.html:159 templates/report-activity.html:161
+#: templates/report-activity.html:162 templates/report-activity.html:164
+#: templates/report-activity.html:394 templates/report-statistic.html:79
 #: templates/report-statistic.html:90
 msgid "F"
 msgstr "F"
 
-#: templates/report-activity.html:153 templates/report-activity.html:154
-#: templates/report-activity.html:156 templates/report-activity.html:157
-#: templates/report-activity.html:387 templates/report-statistic.html:80
+#: templates/report-activity.html:160 templates/report-activity.html:161
+#: templates/report-activity.html:163 templates/report-activity.html:164
+#: templates/report-activity.html:394 templates/report-statistic.html:80
 #: templates/report-statistic.html:91
 msgid "I"
 msgstr "D"
 
-#: templates/report-activity.html:491 templates/report-activity.html:499
-#: templates/report-activity.html:507 templates/report-statistic.html:293
+#: templates/report-activity.html:498 templates/report-activity.html:506
+#: templates/report-activity.html:514 templates/report-statistic.html:293
 #: templates/report-statistic.html:295 templates/report-statistic.html:297
 msgid "ans"
 msgstr "anos"
 
-#: templates/report-activity.html:499 templates/report-statistic.html:295
+#: templates/report-activity.html:506 templates/report-statistic.html:295
 msgid "Plus de"
 msgstr "Mais de que"
 
-#: templates/report-activity.html:507 templates/report-statistic.html:297
+#: templates/report-activity.html:514 templates/report-statistic.html:297
 msgid "à"
 msgstr "para"
 
@@ -5412,34 +5753,6 @@ msgstr ""
 msgid "Type période"
 msgstr "Tipo de período"
 
-#: templates/report-dhis2.html:29
-msgid "Hebdomadaire"
-msgstr "Semanalmente"
-
-#: templates/report-dhis2.html:30
-msgid "Mensuel"
-msgstr ""
-
-#: templates/report-dhis2.html:31
-msgid "Bimensuel"
-msgstr ""
-
-#: templates/report-dhis2.html:32
-msgid "Trimestriel"
-msgstr ""
-
-#: templates/report-dhis2.html:33
-msgid "Quadrimestriel"
-msgstr ""
-
-#: templates/report-dhis2.html:34
-msgid "Semestriel"
-msgstr ""
-
-#: templates/report-dhis2.html:35
-msgid "Annuel"
-msgstr ""
-
 #: templates/report-dhis2.html:42
 msgid "Calculer la période"
 msgstr ""
@@ -5448,42 +5761,6 @@ msgstr ""
 msgid ""
 "Les jours et la période sélectionnés permettront de calculer la date de "
 "début, de fin et séquence affichés ci-dessus"
-msgstr ""
-
-#: templates/report-dhis2.html:51
-msgid "Feuille de calcul"
-msgstr "Planilha"
-
-#: templates/report-dhis2.html:54
-msgid "EEQ"
-msgstr ""
-
-#: templates/report-dhis2.html:55
-msgid "Pannes d'équipment"
-msgstr ""
-
-#: templates/report-dhis2.html:57
-msgid "Statut du stock"
-msgstr ""
-
-#: templates/report-dhis2.html:65
-msgid "Tous"
-msgstr ""
-
-#: templates/report-dhis2.html:71 templates/setting-det-analysis.html:115
-msgid "LabBook Lite"
-msgstr "LabBook Lite"
-
-#: templates/report-dhis2.html:73
-msgid "Inclure LabBook Lite"
-msgstr ""
-
-#: templates/report-dhis2.html:74
-msgid "Exclure LabBook Lite"
-msgstr ""
-
-#: templates/report-dhis2.html:75
-msgid "Uniquement LabBook Lite"
 msgstr ""
 
 #: templates/report-dhis2.html:96
@@ -6516,7 +6793,7 @@ msgstr "Laosiano"
 msgid "Malagasy"
 msgstr "Malgaxe"
 
-#: templates/setting-pref.html:95
+#: templates/setting-pref.html:95 templates/setting-pref.html:105
 msgid "Portugais"
 msgstr "Português"
 
@@ -6665,39 +6942,38 @@ msgstr ""
 msgid "Modèles"
 msgstr ""
 
-#: templates/setting-sending-method.html:170
-#: templates/setting-sending-method.html:294
-msgid "Numéro destinataire (format E.164)"
-msgstr ""
-
-#: templates/setting-sending-method.html:171
-#: templates/setting-sending-method.html:295
+#: templates/setting-sending-method.html:186
+#: templates/setting-sending-method.html:310
 msgid "Email destinataire"
 msgstr ""
 
-#: templates/setting-sending-method.html:191
-#: templates/setting-sending-method.html:313
+#: templates/setting-sending-method.html:206
+#: templates/setting-sending-method.html:328
 msgid "Test réussi."
 msgstr ""
 
-#: templates/setting-sending-method.html:193
-#: templates/setting-sending-method.html:314
+#: templates/setting-sending-method.html:208
+#: templates/setting-sending-method.html:329
 msgid "Échec du test."
 msgstr ""
 
-#: templates/setting-sending-method.html:196
-#: templates/setting-sending-method.html:315
+#: templates/setting-sending-method.html:211
+#: templates/setting-sending-method.html:330
 msgid "Erreur réseau lors du test."
 msgstr ""
 
-#: templates/setting-sending-method.html:201
-#: templates/setting-sending-method.html:319
+#: templates/setting-sending-method.html:216
+#: templates/setting-sending-method.html:334
 msgid "Confirmer la suppression ?"
 msgstr ""
 
-#: templates/setting-sending-method.html:220
-#: templates/setting-sending-method.html:330
+#: templates/setting-sending-method.html:235
+#: templates/setting-sending-method.html:345
 msgid "Échec de la suppression."
+msgstr ""
+
+#: templates/setting-sending-method.html:309
+msgid "Numéro destinataire (format E.164)"
 msgstr ""
 
 #: templates/setting-stock.html:5 templates/setting-stock.html:12
@@ -6812,6 +7088,10 @@ msgstr "Módulos de não conformidade"
 msgid "Dossiers"
 msgstr "Registros"
 
+#: templates/table-rights.html:20
+msgid "Paramétrages"
+msgstr "Configurações"
+
 #: templates/technical-validation.html:658
 msgid "Non rempli"
 msgstr "Não preenchido"
@@ -6907,4 +7187,7 @@ msgstr "Por favor, aguarde"
 
 #~ msgid "Paramétrage des numéros de dossier"
 #~ msgstr "Configuração do número de registro"
+
+#~ msgid "Bimensuel"
+#~ msgstr ""
 

@@ -109,11 +109,10 @@ def before_request_func():
     nonce = uuid.uuid1()
 
     session['nonce'] = str(nonce)
-    session.modified = True
 
     user_agent = request.headers.get('User-Agent')
-
     session['user_agent'] = user_agent
+
     session.modified = True
 
 
@@ -148,17 +147,12 @@ def locale():
 def be_auth_headers():
     """
     Build Authorization header from the session access token.
-    Returns an empty dict if no token is present. Never log the token.
+    Returns {} if no token (caller should already have ensured OAuth).
     """
-    # Build Authorization header from session token
     token = session.get('be_access_token')
-    headers = {'Authorization': f'Bearer {token}'} if token else {}
-
-    # Also pass DB language to BE (fallback: UI lang -> default locale)
-    lang_db = session.get('lang_db') or session.get('lang') or current_app.config.get('BABEL_DEFAULT_LOCALE', 'fr_FR')
-    headers['X-Lang-DB'] = lang_db
-
-    return headers
+    if token:
+        return {'Authorization': f'Bearer {token}'}
+    return {}
 
 
 def ensure_be_token():
@@ -4967,7 +4961,7 @@ def administrative_record(type_req='E', id_rec=0):
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests list template RES failed, err=%s , url=%s', err, url)
 
-    # Load list template TRA
+    # Load list template OUT
     try:
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/template/list/OUT'
         req = requests.get(url, timeout=10, headers=headers)
@@ -5423,7 +5417,7 @@ def biological_validation(mode='', id_rec=0):
     try:
         payload = {'link_fam': session['user_link_fam']}
 
-        url = session['server_int'] + '/' + session['redirect_name'] + '/services/result/record/' + str(id_rec)
+        url = f"{session['server_int']}/{session['redirect_name']}/services/result/record/{id_rec}"
         req = requests.post(url, timeout=10, json=payload, headers=headers)
 
         redir = be_check_or_bounce(req)
@@ -5681,6 +5675,8 @@ def biological_validation(mode='', id_rec=0):
 
     log.info(Logs.fileline() + ' : TRACE biological-validation processing time = ' + str(dt_time_req))
 
+    log.info(Logs.fileline() + ' : TRACE DEBUG json_data = ' + str(json_data))
+
     return render_template('biological-validation.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
 
 
@@ -5708,6 +5704,21 @@ def report_activity():
 
     json_ihm  = {}
     json_data = {}
+
+    # Load list template ACT
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/template/list/ACT'
+        req = requests.get(url, timeout=10, headers=headers)
+
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
+        if req.status_code == 200:
+            json_ihm['tpl_activity'] = req.json()
+
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests list template ACT failed, err=%s , url=%s', err, url)
 
     # Load analysis type
     try:
@@ -6383,6 +6394,21 @@ def report_billing():
 
     json_ihm  = {}
     json_data = {}
+
+    # Load list template BIL
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/template/list/BIL'
+        req = requests.get(url, timeout=10, headers=headers)
+
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
+        if req.status_code == 200:
+            json_ihm['tpl_billing_status'] = req.json()
+
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests list template BIL failed, err=%s , url=%s', err, url)
 
     try:
         date_end = date.today()
@@ -8920,6 +8946,164 @@ def list_sending():
     json_data = {}
 
     return render_template('list-sending.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+
+# Page : list-jobs
+@app.route('/list-jobs')
+def list_jobs():
+    log.info(Logs.fileline() + ' : TRACE setting list-jobs')
+
+    if not test_session():
+        log.info(Logs.fileline() + ' : TRACE Labbook list-jobs => disconnect')
+        session.clear()
+        return index()
+
+    session['current_page'] = 'list-jobs'
+    session.modified = True
+
+    resp = ensure_be_token()
+    if resp:
+        return resp
+    # headers = be_auth_headers()
+
+    json_ihm  = {}
+    json_data = {}
+
+    return render_template('list-jobs.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+
+# Page : details sending method
+@app.route('/det-job/<int:id_item>')
+def det_job(id_item=0):
+    log.info(Logs.fileline() + ' : TRACE details job ' + str(id_item))
+
+    if not test_session():
+        log.info(Logs.fileline() + ' : TRACE Labbook details job => disconnect')
+        session.clear()
+        return index()
+
+    session['current_page'] = 'det-job/' + str(id_item)
+    session.modified = True
+
+    resp = ensure_be_token()
+    if resp:
+        return resp
+    headers = be_auth_headers()
+
+    json_ihm  = {"dhs": [], "tpl_activity": [], "tpl_billing": []}
+    json_data = {"data_dhis2": [], "item": {}}
+
+    # Load DHIS2 CSV filenames
+    try:
+        path = Constants.cst_dhis2
+        for filename in os.listdir(path):
+            if not os.path.isdir(os.path.join(path, filename)) and filename.endswith('.csv'):
+                json_data['data_dhis2'].append(filename)
+    except Exception as err:
+        log.error(Logs.fileline() + ' : load dhis2 files failed, err=%s', err)
+
+    # Load DHIS2 API configs
+    try:
+        url = f"{session['server_int']}/{session['redirect_name']}/services/setting/dhis2/api/list"
+        req = requests.get(url, timeout=10, headers=headers)
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+        if req.status_code == 200:
+            json_ihm['dhs'] = req.json()
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests list dhis2 setting failed, err=%s , url=%s', err, url)
+
+    # Load templates ACT
+    try:
+        url = f"{session['server_int']}/{session['redirect_name']}/services/setting/template/list/ACT"
+        req = requests.get(url, timeout=10, headers=headers)
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+        if req.status_code == 200:
+            json_ihm['tpl_activity'] = req.json()
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests list template ACT failed, err=%s , url=%s', err, url)
+
+    # Load templates DBS
+    try:
+        url = f"{session['server_int']}/{session['redirect_name']}/services/setting/template/list/DBS"
+        req = requests.get(url, timeout=10, headers=headers)
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+        if req.status_code == 200:
+            json_ihm['tpl_billing'] = req.json()
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests list template DBS failed, err=%s , url=%s', err, url)
+
+    # Load job details when editing
+    if id_item > 0:
+        try:
+            url = f"{session['server_int']}/{session['redirect_name']}/services/automation/job/det/{id_item}"
+            req = requests.get(url, timeout=10, headers=headers)
+            redir = be_check_or_bounce(req)
+            if redir:
+                return redir
+
+            item_raw = None
+            if req.status_code == 200:
+                # BE may return dict, list, or a JSON-encoded string; normalize to dict
+                try:
+                    item_raw = req.json()
+                except Exception:
+                    item_raw = req.text
+
+                import json as pyjson
+                if isinstance(item_raw, dict):
+                    item = item_raw
+                elif isinstance(item_raw, list):
+                    item = item_raw[0] if item_raw else {}
+                elif isinstance(item_raw, str):
+                    try:
+                        item = pyjson.loads(item_raw) if item_raw.strip() else {}
+                    except Exception:
+                        item = {}
+                else:
+                    item = {}
+
+                # Normalize a few fields for the form
+                # - time must be HH:MM or HH:MM:SS; pad single-digit hour
+                t = item.get('ajb_schedule_time_utc')
+                if isinstance(t, str) and len(t) >= 7 and t[1] == ':':
+                    item['ajb_schedule_time_utc'] = '0' + t  # e.g. "9:00:00" -> "09:00:00"
+
+                # - ensure DOW integer if present
+                if 'ajb_schedule_dow' in item and item['ajb_schedule_dow'] is not None:
+                    try:
+                        item['ajb_schedule_dow'] = int(item['ajb_schedule_dow'])
+                    except Exception:
+                        pass
+
+                json_data['item'] = item
+
+        except requests.exceptions.RequestException as err:
+            log.error(Logs.fileline() + ' : requests job det failed, err=%s , url=%s', err, url)
+    else:
+        json_data['item'] = {}
+
+    json_data['id_item'] = id_item
+
+    # Derive type for the template:
+    # - when editing, take it from the item (ajb_type)
+    # - when creating, accept ?type= in querystring (optional)
+    try:
+        from flask import request
+        json_data['type_item'] = (json_data['item'].get('ajb_type')
+                                  if isinstance(json_data['item'], dict) else None) \
+                                 or request.args.get('type', '') \
+                                 or ''
+    except Exception:
+        json_data['type_item'] = (json_data['item'].get('ajb_type')
+                                  if isinstance(json_data['item'], dict) else '')
+
+    return render_template('det-job.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
 
 
 # Page : list nonconformities

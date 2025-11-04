@@ -1578,7 +1578,7 @@ class Setting:
             else:
                 base_tmp = Constants.cst_path_tmp.rstrip('/')
                 filename = f"whatsapp_dummy_{int(time.time())}.pdf"
-                tmp_path = os.path.join(base_tmp, filename)
+                tmp_path = os.path.join(base_tmp, filename).strip()
 
                 # Create a minimal dummy PDF (no external dependency)
                 # Note: This is a very small, valid-enough PDF for testing uploads.
@@ -1929,13 +1929,11 @@ class Setting:
             safe_name += '.pdf'
 
         pdf_filename = safe_name
-        pdf_title = os.path.splitext(pdf_filename)[0]
 
         ok, tmp_path, info = Setting.make_pdf_copy_protected(
             generated_name=pdf_filename,
             rec_num=params.get('rec_num'),
-            pat_code=pat_code,
-            pdf_title=pdf_title
+            pat_code=pat_code
         )
         if not ok:
             return (False, info)
@@ -2034,7 +2032,7 @@ class Setting:
                 pass
 
     @staticmethod
-    def make_pdf_copy_protected(generated_name: str, rec_num, pat_code: str, pdf_title: str = None):
+    def make_pdf_copy_protected(generated_name: str, rec_num, pat_code: str):
         """Create a tmp copy of report as 'cr_<rec_num>.pdf' and protect it with pat_code."""
         if not generated_name:
             return (False, None, _("nom de fichier source manquant"))
@@ -2042,18 +2040,26 @@ class Setting:
         if not pat_code:
             return (False, None, _("code patient manquant pour le mot de passe PDF"))
 
-        src_path = os.path.join(Constants.cst_report, generated_name)
+        base_dir = getattr(Constants, "cst_report", "/storage/report")
+        src_path = os.path.join(base_dir, generated_name).strip()
+
+        # hashed reports may be stored without ".pdf" on disk
+        if not os.path.isfile(src_path) and generated_name.lower().endswith(".pdf"):
+            alt_name = generated_name[:-4]  # remove ".pdf"
+            alt_path = os.path.join(base_dir, alt_name).strip()
+            if os.path.isfile(alt_path):
+                src_path = alt_path
 
         if not os.path.isfile(src_path):
             return (False, None, f"fichier source introuvable : {generated_name}")
 
         dst_name = f"cr_{rec_num or 0}.pdf"
-        dst_path = os.path.join(Constants.cst_path_tmp, dst_name)
+        dst_path = os.path.join(Constants.cst_path_tmp, dst_name).strip()
 
         try:
             # Open source and save encrypted copy (no unprotected copy is written)
             with pikepdf.open(src_path) as pdf:
-                title = (pdf_title or os.path.splitext(os.path.basename(generated_name))[0] or '').strip()
+                title = os.path.splitext(dst_name)[0]
                 if title:
                     pdf.docinfo['/Title'] = title
 

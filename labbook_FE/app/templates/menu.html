@@ -9,7 +9,7 @@
                 <li class="nav-item dropdown">
 
                     <!-- Dropdown Administrative -->
-                    {% if has_permission_by_ser([3,5,8,10,11,12,13,14]) %}
+                    {% if has_permission_by_ser([3,5,8,11,12,13,14,10,177,70]) %}
                     <a class="nav-link dropdown-toggle" href="#" id="navbarAdministrative" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ _("Administratif") }}</a>
                     <ul class="dropdown-menu" aria-labelledby="navbarAdministrative">
                         {% if has_permission("RECORD_3") %}
@@ -27,6 +27,26 @@
                             <a class="dropdown-item" href="{{ session['server_ext'] }}/list-works/T">{{ _("Liste de travail technicien") }}</a>
                         </li>
                         {% endif %}
+                        {% if has_permission("RECORD_11") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/new-req-ext">{{ _("Nouvelle demande externe") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("RECORD_12") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/new-req-int">{{ _("Nouvelle demande hospitalisé") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("RECORD_13") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/list-samples">{{ _("Etat des prélèvements en cours") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("RECORD_14") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/list-results">{{ _("Saisie des résultats") }}</a>
+                        </li>
+                        {% endif %}
                         {% if has_permission("RECORD_10") %}
                         <li>
                             <a class="dropdown-item" href="{{ session['server_ext'] }}/global-report">{{ _("Rapport global") }}</a>
@@ -37,26 +57,9 @@
                             <a class="dropdown-item" href="{{ session['server_ext'] }}/list-sending">{{ _("Liste des envois") }}</a>
                         </li>
                         {% endif %}
-                        {% if has_permission("RECORD_11") %}
-                        <li><hr class="dropdown-divider"></li>
+                        {% if has_permission("SETTING_70") %}
                         <li>
-                            <a class="dropdown-item" href="{{ session['server_ext'] }}/new-req-ext">{{ _("Nouvelle demande externe") }}</a>
-                        </li>
-                        {% endif %}
-                        {% if has_permission("RECORD_12") %}
-                        <li>
-                            <a class="dropdown-item" href="{{ session['server_ext'] }}/new-req-int">{{ _("Nouvelle demande hospitalisé") }}</a>
-                        </li>
-                        {% endif %}
-                        <li><hr class="dropdown-divider"></li>
-                        {% if has_permission("RECORD_13") %}
-                        <li>
-                            <a class="dropdown-item" href="{{ session['server_ext'] }}/list-samples">{{ _("Etat des prélèvements en cours") }}</a>
-                        </li>
-                        {% endif %}
-                        {% if has_permission("RECORD_14") %}
-                        <li>
-                            <a class="dropdown-item" href="{{ session['server_ext'] }}/list-results">{{ _("Saisie des résultats") }}</a>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/manage-pat-records">{{ _("Gestion dossier patient") }}</a>
                         </li>
                         {% endif %}
                     </ul>
@@ -129,155 +132,172 @@
                     </ul>
                     {% endif %}
 
+                    <!-- Dropdown Repository -->
+                    {% if has_permission_by_ser([42,52]) %}
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarRepositoy" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ _("Référentiels") }}</a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarRepository">
+                        {% if has_permission("SETTING_42") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-analyzes">{{ _("Référentiel des analyses") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_52") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-dicts">{{ _("Dictionnaires") }}</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    {% endif %}
+
                     <!-- Dropdown Setting -->
-                    {% if has_permission_by_ser([38,1,39,42,48,52,54,55,56,57,58,59,64,65,66,67,68,69,70,71,75,76,174,175]) %}
-                    <a class="nav-link dropdown-toggle" href="#" id="navbarSetting" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ _("Paramétrages") }}</a>
+                    {% if has_permission_by_ser([38,54,1,39,55,174,59,66,68,75,76]) %}
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarSetting" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ _("Paramètres") }}</a>
                     <ul class="dropdown-menu" aria-labelledby="navbarSetting">
-                            {% if has_permission("SETTING_38") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-pref">{{ _("Préférences") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("ADMIN_1") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-roles-and-rights">{{ _("Gestion des rôles et droits") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_39") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-users">{{ _("Gestion des utilisateurs") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_42") %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-analyzes">{{ _("Référentiel des analyses") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_48") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/list-analyzers">{{ _("Configuration des analyseurs") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_52") %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-dicts">{{ _("Dictionnaires") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_54") %}
-                            <li>
-                                 <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-backup">{{ _("Configuration des sauvegardes") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("PRINT_174") %}
-                            <li>
-                                 <a class="dropdown-item" href="{{ session['server_ext'] }}/list-printer">{{ _("Configuration des imprimantes") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_55") %}
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-logo">{{ _("Configuration du logo") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_56") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-age-interval">{{ _("Configuration des intervalles d'âge") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_57") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-requesting-services">{{ _("Configuration des services demandeurs") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_58") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-functionnal-units">{{ _("Configuration des unités fonctionnelles") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_59") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/list-template">{{ _("Configuration des modèles de documents") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_64") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-report">{{ _("Configuration des comptes rendus") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_178") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-sending-method">{{ _("Configuration des méthodes d'envoi") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_65") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-rec-num">{{ _("Configuration des dossiers") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_66") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-manual">{{ _("Configuration des manuels") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_67") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-zipcity">{{ _("Configuration des codes postaux") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_68") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-stock">{{ _("Configuration du stockage") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_69") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-form">{{ _("Configuration de formulaires") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_70") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/manage-pat-records">{{ _("Gestion dossier patient") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_71") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-dhis2">{{ _("Configuration DHIS2") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_75") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-epidemio">{{ _("Configuration Epidemio") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("SETTING_76") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-indicator">{{ _("Configuration du rapport d'indicateurs") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if has_permission("LITE_175") %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-lite">{{ _("Configuration LabBook Lite") }}</a>
-                            </li>
-                            {% endif %}
-                            {% if session['user_role'] in ('A') %}
-                            <li>
-                                <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-oauth-list">{{ _("Configuration OAuth Client") }}</a>
-                            </li>
-                            {% endif %}
+                        {% if has_permission("SETTING_38") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-pref">{{ _("Préférences") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_54") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-backup">{{ _("Configuration des sauvegardes") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("ADMIN_1") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-roles-and-rights">{{ _("Gestion des rôles et droits") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_39") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-users">{{ _("Gestion des utilisateurs") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_55") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-logo">{{ _("Configuration du logo") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("PRINT_174") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/list-printer">{{ _("Configuration des imprimantes") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_59") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/list-template">{{ _("Configuration des modèles de documents") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_66") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-manual">{{ _("Configuration des manuels") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_68") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-stock">{{ _("Configuration du stockage") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_75") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-epidemio">{{ _("Configuration Epidemio") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_76") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-indicator">{{ _("Configuration du rapport d'indicateurs") }}</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    {% endif %}
+
+                    <!-- Dropdown Structure -->
+                    {% if has_permission_by_ser([56,57,58,65,69,67,64]) %}
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarStructure" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ _("Structure") }}</a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarStructure">
+                        {% if has_permission("SETTING_56") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-age-interval">{{ _("Configuration des intervalles d'âge") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_57") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-requesting-services">{{ _("Configuration des services demandeurs") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_58") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-functionnal-units">{{ _("Configuration des unités fonctionnelles") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_65") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-rec-num">{{ _("Configuration des dossiers") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_69") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-form">{{ _("Configuration de formulaires") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_67") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-zipcity">{{ _("Configuration des codes postaux") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_64") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-report">{{ _("Configuration des comptes rendus") }}</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                    {% endif %}
+
+                    <!-- Dropdown Integrations -->
+                    {% if has_permission_by_ser([71,175,178,48,179]) or session['user_role'] in ('A') %}
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarIntegration" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ _("Intégrations") }}</a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarIntegration">
+                        {% if has_permission("SETTING_71") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-dhis2">{{ _("Configuration DHIS2") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("LITE_175") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-lite">{{ _("Configuration LabBook Lite") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_178") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-sending-method">{{ _("Configuration des méthodes d'envoi") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("SETTING_48") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/list-analyzers">{{ _("Configuration des analyseurs") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if has_permission("AUTO_179") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/list-jobs">{{ _("Configuration des automatismes") }}</a>
+                        </li>
+                        {% endif %}
+                        {% if session['user_role'] in ('A') %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-oauth-list">{{ _("Configuration OAuth Client") }}</a>
+                        </li>
+                        {% endif %}
                     </ul>
                     {% endif %}
 
                     <!-- Dropdown Quality -->
-                    {% if session['pref_quality'] == 1 and has_permission_by_ser([77,78,82,86,91,96,120,126,133,143,151,157,163,169]) %}    
+                    {% if session['pref_quality'] == 1 and has_permission_by_ser([77,78,82,86,96,91,120,126,133,169,143,151,157,163]) %}    
                     <a class="nav-link dropdown-toggle" href="#" id="navbarQuality" role="button" data-bs-toggle="dropdown" aria-expanded="false">{{ _("Qualité") }}</a>
                     <ul class="dropdown-menu" aria-labelledby="navbarQuality">
                         {% if has_permission("GEN_77") %}
                         <li>
                             <a class="dropdown-item" href="{{ session['server_ext'] }}/quality-general">{{ _("Général") }}</a>
                         </li>
-                        <li><hr class="dropdown-divider"></li>
                         {% endif %}
                         {% if has_permission("LAB_78") %}
                         <li>
@@ -295,7 +315,6 @@
                         </li>
                         {% endif %}
                         {% if has_permission("EQP_96") %}
-                        <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="{{ session['server_ext'] }}/list-equipment">{{ _("Equipements") }}</a>
                         </li>
@@ -326,7 +345,6 @@
                         </li>
                         {% endif %}
                         {% if has_permission("NONCONF_143") %}
-                        <li><hr class="dropdown-divider"></li> 
                         <li>
                             <a class="dropdown-item" href="{{ session['server_ext'] }}/list-nonconformities">{{ _("Module des non-conformités") }}</a>
                         </li>
@@ -342,7 +360,6 @@
                         </li>
                         {% endif %}
                         {% if has_permission("MEETING_163") %}
-                        <li><hr class="dropdown-divider"></li>
                         <li>
                             <a class="dropdown-item" href="{{ session['server_ext'] }}/list-meeting">{{ _("Réunion du laboratoire") }}</a>
                         </li>
@@ -363,42 +380,43 @@
     <div class="container-fluid nav-cust-cont" id="menu-desktop">
         <ul class="navbar-nav">
             <!-- Dropdown Admin -->
-            {% if has_permission_by_ser([3,5,8,10,11,12,13,14]) %}
+            {% if has_permission_by_ser([3,5,8,11,12,13,14,10,177,70]) %}
             <span class="nav-cust-btn">
                 <li class="nav-item dropdown btn-admin">
-                  <a class="nav-link dropdown-toggle admin" href="#" id="navbarsetting" data-bs-toggle="dropdown">
-                  </a>
-                  <div class="dropdown-menu admin-content nav-style menu-choice-desktop" style="padding:0;">
-                    {% if has_permission("RECORD_3") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-records">{{ _("Liste des dossiers") }}</a>
-                    {% endif %}
-                    {% if has_permission("RECORD_5") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-works/B">{{ _("Liste de travail biologiste") }}</a>
-                    {% endif %}
-                    {% if has_permission("RECORD_8") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-works/T">{{ _("Liste de travail technicien") }}</a>
-                    {% endif %}
-                    {% if has_permission("RECORD_10") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/global-report">{{ _("Rapport global") }}</a>
-                    {% endif %}
-                    {% if has_permission("RECORD_177") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-sending">{{ _("Liste des envois") }}</a>
-                    {% endif %}
-                    {% if has_permission("RECORD_11") %}
-                    <div class="dropdown-divider nav-cust-divider"></div>
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/new-req-ext">{{ _("Nouvelle demande externe") }}</a>
-                    {% endif %}
-                    {% if has_permission("RECORD_12") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/new-req-int">{{ _("Nouvelle demande hospitalisé") }}</a>
-                    {% endif %}
-                    <div class="dropdown-divider nav-cust-divider"></div>
-                    {% if has_permission("RECORD_13") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-samples">{{ _("Etat des prélèvements en cours") }}</a>
-                    {% endif %}
-                    {% if has_permission("RECORD_14") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-results">{{ _("Saisie des résultats") }}</a>
-                    {% endif %}
-                  </div>
+                    <a class="nav-link dropdown-toggle admin" href="#" id="navbarsetting" data-bs-toggle="dropdown">
+                    </a>
+                    <div class="dropdown-menu admin-content nav-style menu-choice-desktop" style="padding:0;">
+                        {% if has_permission("RECORD_3") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-records">{{ _("Liste des dossiers") }}</a>
+                        {% endif %}
+                        {% if has_permission("RECORD_5") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-works/B">{{ _("Liste de travail biologiste") }}</a>
+                        {% endif %}
+                        {% if has_permission("RECORD_8") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-works/T">{{ _("Liste de travail technicien") }}</a>
+                        {% endif %}
+                        {% if has_permission("RECORD_11") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/new-req-ext">{{ _("Nouvelle demande externe") }}</a>
+                        {% endif %}
+                        {% if has_permission("RECORD_12") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/new-req-int">{{ _("Nouvelle demande hospitalisé") }}</a>
+                        {% endif %}
+                        {% if has_permission("RECORD_13") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-samples">{{ _("Etat des prélèvements en cours") }}</a>
+                        {% endif %}
+                        {% if has_permission("RECORD_14") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-results">{{ _("Saisie des résultats") }}</a>
+                        {% endif %}
+                        {% if has_permission("RECORD_10") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/global-report">{{ _("Rapport global") }}</a>
+                        {% endif %}
+                        {% if has_permission("RECORD_177") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-sending">{{ _("Liste des envois") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_70") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/manage-pat-records">{{ _("Gestion dossier patient") }}</a>
+                        {% endif %}
+                    </div>
                 </li>
                 <span class="nav-btn-txt">{{ _("Administratif") }}</span>
             </span>
@@ -408,142 +426,178 @@
             {% if has_permission_by_ser([26,27,28,29,30,31,32,33,34,35,36,37]) %}
             <span class="nav-cust-btn">
                 <li class="nav-item dropdown btn-report">
-                  <a class="nav-link dropdown-toggle report" href="#" id="navbarreport" data-bs-toggle="dropdown">
-                  </a>
-                  <div class="dropdown-menu report-content nav-style menu-choice-desktop" style="padding:0;">
-                    {% if has_permission("REPORT_26") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/report-activity">{{ _("Rapport activité") }}</a>
-                    {% endif %}
-                    {% if has_permission("REPORT_27") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/report-epidemio">{{ _("Rapport épidémiologique") }}</a>
-                    {% endif %}
-                    {% if has_permission("REPORT_28") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/report-indicator">{{ _("Rapport indicateurs") }}</a>
-                    {% endif %}
-                    {% if has_permission("REPORT_29") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/report-statistic">{{ _("Rapport statistique") }}</a>
-                    {% endif %}
-                    {% if has_permission("REPORT_30") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/report-tat">{{ _("Rapport sur le temps de rendu du résultat") }}</a>
-                    {% endif %}
-                    {% if has_permission("REPORT_31") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/pivot-table">{{ _("Tableau croisé dynamique") }}</a>
-                    {% endif %}
-                    {% if has_permission("REPORT_32") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/report-dhis2">{{ _("Export DHIS2") }}</a>
-                    {% endif %}
-                    {% if has_permission("REPORT_33") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/whonet-export">{{ _("Export WHONET") }}</a>
-                    {% endif %}
-                    {% if has_permission("REPORT_34") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/hist-patients">{{ _("Historique patient") }}</a>
-                    {% endif %}
-                    {% if has_permission("REPORT_35") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/hist-analyzes">{{ _("Historique d'analyse") }}</a>
-                    {% endif %}
-                    {% if has_permission("REPORT_36") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/report-today">{{ _("Rapport de fin de journée") }}</a>
-                    {% endif %}
-                    {% if session['pref_bill'] == '1' and has_permission("REPORT_37") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/report-billing">{{ _("Etat de la facturation journalière") }}</a>
-                    {% endif %}
-                  </div>
+                    <a class="nav-link dropdown-toggle report" href="#" id="navbarreport" data-bs-toggle="dropdown">
+                    </a>
+                    <div class="dropdown-menu report-content nav-style menu-choice-desktop" style="padding:0;">
+                        {% if has_permission("REPORT_26") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/report-activity">{{ _("Rapport activité") }}</a>
+                        {% endif %}
+                        {% if has_permission("REPORT_27") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/report-epidemio">{{ _("Rapport épidémiologique") }}</a>
+                        {% endif %}
+                        {% if has_permission("REPORT_28") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/report-indicator">{{ _("Rapport indicateurs") }}</a>
+                        {% endif %}
+                        {% if has_permission("REPORT_29") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/report-statistic">{{ _("Rapport statistique") }}</a>
+                        {% endif %}
+                        {% if has_permission("REPORT_30") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/report-tat">{{ _("Rapport sur le temps de rendu du résultat") }}</a>
+                        {% endif %}
+                        {% if has_permission("REPORT_31") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/pivot-table">{{ _("Tableau croisé dynamique") }}</a>
+                        {% endif %}
+                        {% if has_permission("REPORT_32") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/report-dhis2">{{ _("Export DHIS2") }}</a>
+                        {% endif %}
+                        {% if has_permission("REPORT_33") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/whonet-export">{{ _("Export WHONET") }}</a>
+                        {% endif %}
+                        {% if has_permission("REPORT_34") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/hist-patients">{{ _("Historique patient") }}</a>
+                        {% endif %}
+                        {% if has_permission("REPORT_35") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/hist-analyzes">{{ _("Historique d'analyse") }}</a>
+                        {% endif %}
+                        {% if has_permission("REPORT_36") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/report-today">{{ _("Rapport de fin de journée") }}</a>
+                        {% endif %}
+                        {% if session['pref_bill'] == '1' and has_permission("REPORT_37") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/report-billing">{{ _("Etat de la facturation journalière") }}</a>
+                        {% endif %}
+                    </div>
                 </li>
                 <span class="nav-btn-txt">{{ _("Rapports") }}</span>
             </span>
             {% endif %}
 
+            <!-- Dropdown Repository -->
+            {% if has_permission_by_ser([42,52]) %}
+            <span class="nav-cust-btn">
+                <li class="nav-item dropdown btn-repository">
+                    <a class="nav-link dropdown-toggle repository" href="#" id="navbarrepository" data-bs-toggle="dropdown">
+                    </a>
+                    <div class="dropdown-menu repository-content nav-style menu-choice-desktop" style="padding:0;">
+                        {% if has_permission("SETTING_42") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-analyzes">{{ _("Référentiel des analyses") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_52") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-dicts">{{ _("Dictionnaires") }}</a>
+                        {% endif %}
+                    </div>
+                </li>
+                <span class="nav-btn-txt">{{ _("Référentiels") }}</span>
+            </span>
+            {% endif %}
+
             <!-- Dropdown Setting -->
-            {% if has_permission_by_ser([38,1,39,42,48,52,54,55,56,57,58,59,64,65,66,67,68,69,70,71,75,76,174,175]) %}
+            {% if has_permission_by_ser([38,54,1,39,55,174,59,66,68,75,76]) %}
             <span class="nav-cust-btn">
                 <li class="nav-item dropdown btn-setting">
-                  <a class="nav-link dropdown-toggle setting" href="#" id="navbarsetting" data-bs-toggle="dropdown">
-                  </a>
-                  <div class="dropdown-menu setting-content nav-style menu-choice-desktop" style="padding:0;">
-                    {% if has_permission("SETTING_38") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-pref">{{ _("Préférences") }}</a>
-                    {% endif %}
-                    {% if has_permission("ADMIN_1") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-roles-and-rights">{{ _("Gestion des rôles et droits") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_39") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-users">{{ _("Gestion des utilisateurs") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_42") %}
-                    <div class="dropdown-divider nav-cust-divider"></div>
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-analyzes">{{ _("Référentiel des analyses") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_48") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-analyzers">{{ _("Configuration des analyseurs") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_52") %}
-                    <div class="dropdown-divider nav-cust-divider"></div>
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-dicts">{{ _("Dictionnaires") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_54") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-backup">{{ _("Configuration des sauvegardes") }}</a>
-                    {% endif %}
-                    {% if has_permission("PRINT_174") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-printer">{{ _("Configuration des imprimantes") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_55") %}
-                    <div class="dropdown-divider nav-cust-divider"></div>
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-logo">{{ _("Configuration du logo") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_56") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-age-interval">{{ _("Configuration des intervalles d'âge") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_57") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-requesting-services">{{ _("Configuration des services demandeurs") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_58") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-functionnal-units">{{ _("Configuration des unités fonctionnelles") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_59") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-template">{{ _("Configuration des modèles de documents") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_64") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-report">{{ _("Configuration des comptes rendus") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_178") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-sending-method">{{ _("Configuration des méthodes d'envoi") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_65") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-rec-num">{{ _("Configuration des dossiers") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_66") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-manual">{{ _("Configuration des manuels") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_67") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-zipcity">{{ _("Configuration des codes postaux") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_68") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-stock">{{ _("Configuration du stockage") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_69") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-form">{{ _("Configuration de formulaires") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_70") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/manage-pat-records">{{ _("Gestion dossier patient") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_71") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-dhis2">{{ _("Configuration DHIS2") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_75") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-epidemio">{{ _("Configuration Epidemio") }}</a>
-                    {% endif %}
-                    {% if has_permission("SETTING_76") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-indicator">{{ _("Configuration du rapport d'indicateurs") }}</a>
-                    {% endif %}
-                    {% if has_permission("LITE_175") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-lite">{{ _("Configuration LabBook Lite") }}</a>
-                    {% endif %}
-                    {% if session['user_role'] in ('A') %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-oauth-list">{{ _("Configuration OAuth Client") }}</a>
-                    {% endif %}
-                  </div>
+                    <a class="nav-link dropdown-toggle setting" href="#" id="navbarsetting" data-bs-toggle="dropdown">
+                    </a>
+                    <div class="dropdown-menu setting-content nav-style menu-choice-desktop" style="padding:0;">
+                        {% if has_permission("SETTING_38") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-pref">{{ _("Préférences") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_54") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-backup">{{ _("Configuration des sauvegardes") }}</a>
+                        {% endif %}
+                        {% if has_permission("ADMIN_1") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-roles-and-rights">{{ _("Gestion des rôles et droits") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_39") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-users">{{ _("Gestion des utilisateurs") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_55") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-logo">{{ _("Configuration du logo") }}</a>
+                        {% endif %}                    
+                        {% if has_permission("PRINT_174") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-printer">{{ _("Configuration des imprimantes") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_59") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-template">{{ _("Configuration des modèles de documents") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_66") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-manual">{{ _("Configuration des manuels") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_68") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-stock">{{ _("Configuration du stockage") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_75") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-epidemio">{{ _("Configuration Epidemio") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_76") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-indicator">{{ _("Configuration du rapport d'indicateurs") }}</a>
+                        {% endif %}
+                    </div>
                 </li>
-                <span class="nav-btn-txt">{{ _("Paramétrages") }}</span>
+                <span class="nav-btn-txt">{{ _("Paramètres") }}</span>
+            </span>
+            {% endif %}
+
+            <!-- Dropdown Structure -->
+            {% if has_permission_by_ser([56,57,58,65,69,67,64]) %}
+            <span class="nav-cust-btn">
+                <li class="nav-item dropdown btn-structure">
+                    <a class="nav-link dropdown-toggle structure" href="#" id="navbarstructure" data-bs-toggle="dropdown">
+                    </a>
+                    <div class="dropdown-menu structure-content nav-style menu-choice-desktop" style="padding:0;">
+                        {% if has_permission("SETTING_56") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-age-interval">{{ _("Configuration des intervalles d'âge") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_57") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-requesting-services">{{ _("Configuration des services demandeurs") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_58") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-functionnal-units">{{ _("Configuration des unités fonctionnelles") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_65") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-rec-num">{{ _("Configuration des dossiers") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_69") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-form">{{ _("Configuration de formulaires") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_67") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-zipcity">{{ _("Configuration des codes postaux") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_64") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-report">{{ _("Configuration des comptes rendus") }}</a>
+                        {% endif %}
+                    </div>   
+                </li>
+                <span class="nav-btn-txt">{{ _("Structure") }}</span>
+            </span>
+            {% endif %}
+
+            <!-- Dropdown Integration -->
+            {% if has_permission_by_ser([71,175,178,48,179]) or session['user_role'] in ('A') %}
+            <span class="nav-cust-btn">
+                <li class="nav-item dropdown btn-integration">
+                    <a class="nav-link dropdown-toggle integration" href="#" id="navbarintegration" data-bs-toggle="dropdown">
+                    </a>
+                    <div class="dropdown-menu integration-content nav-style menu-choice-desktop" style="padding:0;">
+                        {% if has_permission("SETTING_71") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-dhis2">{{ _("Configuration DHIS2") }}</a>
+                        {% endif %}
+                        {% if has_permission("LITE_175") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-lite">{{ _("Configuration LabBook Lite") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_178") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-sending-method">{{ _("Configuration des méthodes d'envoi") }}</a>
+                        {% endif %}
+                        {% if has_permission("SETTING_48") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-analyzers">{{ _("Configuration des analyseurs") }}</a>
+                        {% endif %}
+                        {% if has_permission("AUTO_179") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-jobs">{{ _("Configuration des automatismes") }}</a>
+                        {% endif %}
+                        {% if session['user_role'] in ('A') %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/setting-oauth-list">{{ _("Configuration OAuth Client") }}</a>
+                        {% endif %}
+                    </div>
+                </li>
+                <span class="nav-btn-txt">{{ _("Intégrations") }}</span>
             </span>
             {% endif %}
 
@@ -551,56 +605,52 @@
             {% if session['pref_quality'] == 1 and has_permission_by_ser([77,78,82,86,91,96,120,126,133,143,151,157,163]) %} 
             <span class="nav-cust-btn">
                 <li class="nav-item dropdown btn-qualite">
-                  <a class="nav-link dropdown-toggle qualite" href="#" id="navbarquality" data-bs-toggle="dropdown">
-                  </a>
-                  <div class="dropdown-menu qualite-content nav-style menu-choice-desktop" style="padding:0;">
-                    {% if has_permission("GEN_77") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/quality-general">{{ _("Général") }}</a>
-                    <div class="dropdown-divider nav-cust-divider"></div>
-                    {% endif %}
-                    {% if has_permission("LAB_78") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-laboratory">{{ _("Laboratoire") }}</a>
-                    {% endif %}
-                    {% if has_permission("STAFF_82") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-staff">{{ _("Personnels") }}</a>
-                    {% endif %}
-                    {% if has_permission("DOCTOR_86") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-doctors">{{ _("Prescripteurs") }}</a>
-                    {% endif %}
-                    {% if has_permission("EQP_96") %}
-                    <div class="dropdown-divider nav-cust-divider"></div>
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-equipment">{{ _("Equipements") }}</a>
-                    {% endif %}
-                    {% if has_permission("SUPPLIER_91") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-suppliers">{{ _("Fournisseurs") }}</a>
-                    {% endif %}
-                    {% if has_permission("MANUAL_120") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-manuals">{{ _("Manuels") }}</a>
-                    {% endif %}
-                    {% if has_permission("PROCEDURE_126") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-procedure">{{ _("Procédures") }}</a>
-                    {% endif %}
-                    {% if has_permission("STOCK_133") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-stock">{{ _("Gestion des stocks") }}</a>
-                    {% endif %}
-                    {% if has_permission("ALIQUOT_169") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-aliquot">{{ _("Gestion des échantillons") }}</a>
-                    {% endif %}
-                    {% if has_permission("NONCONF_143") %}
-                    <div class="dropdown-divider nav-cust-divider"></div>
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-nonconformities">{{ _("Module des non-conformités") }}</a>
-                    {% endif %}
-                    {% if has_permission("CTRLINT_151") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-ctrl-int">{{ _("Contrôle qualité interne") }}</a>
-                    {% endif %}
-                    {% if has_permission("CTRLEXT_157") %}
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-ctrl-ext">{{ _("Contrôle qualité externe") }}</a>
-                    {% endif %}
-                    {% if has_permission("MEETING_163") %}
-                    <div class="dropdown-divider nav-cust-divider"></div>
-                    <a class="dropdown-item" href="{{ session['server_ext'] }}/list-meeting">{{ _("Réunion du laboratoire") }}</a>
-                    {% endif %}
-                  </div>
+                    <a class="nav-link dropdown-toggle qualite" href="#" id="navbarquality" data-bs-toggle="dropdown">
+                    </a>
+                    <div class="dropdown-menu qualite-content nav-style menu-choice-desktop" style="padding:0;">
+                        {% if has_permission("GEN_77") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/quality-general">{{ _("Général") }}</a>
+                        {% endif %}
+                        {% if has_permission("LAB_78") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-laboratory">{{ _("Laboratoire") }}</a>
+                        {% endif %}
+                        {% if has_permission("STAFF_82") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-staff">{{ _("Personnels") }}</a>
+                        {% endif %}
+                        {% if has_permission("DOCTOR_86") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-doctors">{{ _("Prescripteurs") }}</a>
+                        {% endif %}
+                        {% if has_permission("EQP_96") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-equipment">{{ _("Equipements") }}</a>
+                        {% endif %}
+                        {% if has_permission("SUPPLIER_91") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-suppliers">{{ _("Fournisseurs") }}</a>
+                        {% endif %}
+                        {% if has_permission("MANUAL_120") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-manuals">{{ _("Manuels") }}</a>
+                        {% endif %}
+                        {% if has_permission("PROCEDURE_126") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-procedure">{{ _("Procédures") }}</a>
+                        {% endif %}
+                        {% if has_permission("STOCK_133") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-stock">{{ _("Gestion des stocks") }}</a>
+                        {% endif %}
+                        {% if has_permission("ALIQUOT_169") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-aliquot">{{ _("Gestion des échantillons") }}</a>
+                        {% endif %}
+                        {% if has_permission("NONCONF_143") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-nonconformities">{{ _("Module des non-conformités") }}</a>
+                        {% endif %}
+                        {% if has_permission("CTRLINT_151") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-ctrl-int">{{ _("Contrôle qualité interne") }}</a>
+                        {% endif %}
+                        {% if has_permission("CTRLEXT_157") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-ctrl-ext">{{ _("Contrôle qualité externe") }}</a>
+                        {% endif %}
+                        {% if has_permission("MEETING_163") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-meeting">{{ _("Réunion du laboratoire") }}</a>
+                        {% endif %}
+                    </div>
                 </li>
                 <span class="nav-btn-txt">{{ _("Qualité") }}</span>
             </span>
@@ -610,9 +660,9 @@
             {% if session['pref_quality'] == 1 and has_permission("NONCONF_144") %}
             <span class="nav-cust-btn">
                 <li class="nav-item">
-                  <a class="nav-link non-conformite" href="{{ session['server_ext'] }}/non-conformity/0"></a>
+                    <a class="nav-link non-conformite" href="{{ session['server_ext'] }}/non-conformity/0"></a>
                 </li>
-                <span class="nav-btn-txt">{{ _("Non conformité") }}</span>
+                <span class="nav-btn-txt">{{ _("Non-conformité") }}</span>
             </span>
             {% endif %}
         </ul>

@@ -59,6 +59,7 @@ class Constants:
     cst_filedata_sticker    = 'data_template_sticker'
     cst_filedata_outsourced = 'data_template_outsourced'
     cst_filedata_invoice    = 'data_template_invoice'
+    cst_filedata_billing_status = 'data_template_billing_status'
 
     # Type or validation
     cst_tech_vld = 251

@@ -63,6 +63,13 @@
             <div class="float-end mt-3 mb-5">
                 <input type="button" onclick="export_by_type();" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Export par type") }}">
                 <input type="button" onclick="export_by_age();" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Export par âge") }}">
+                {% if ihm['tpl_activity'] %}
+                <select id="tpl_activity" class="form-select form-lbk me-3 w-auto" {% if ihm['tpl_activity'] and ihm['tpl_activity']|length < 2 %}hidden{% endif %}>
+                    {% for tpl in ihm['tpl_activity'] %}
+                    <option value="{{ tpl["tpl_file"] }}" {% if tpl["tpl_default"] ==  "Y" %}selected{% endif %}>{{ tpl["tpl_name"] }}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
                 <input type="button" onclick="download_report();" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Télécharger le rapport") }}">
             </div>
 
@@ -684,6 +691,9 @@ var param = '{ "filename":"' + filename + '", ' +
 
 function download_report()
 {
+// TODO A FINIR let template = $("#tpl_activity").val() ;
+// TODO A FINIR let filename = "activity_report_" + date_beg + "_" + date_end ;
+
 var html_report = JSON.stringify($("#html_report")[0].outerHTML) ;
 html_report = html_report.replaceAll("border:0", "border:1px solid #000") ;
 

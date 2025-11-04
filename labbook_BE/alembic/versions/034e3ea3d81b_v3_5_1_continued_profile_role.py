@@ -156,7 +156,7 @@ def upgrade():
                           "(tpl_date, tpl_name, tpl_file, tpl_default, tpl_type) "
                           "values (NOW(), 'Modèle facturation', 'tpl_invoice.odt', 'Y', 'INV')"))
     except Exception as err:
-        print("ERROR insert invoice template for template_setting,\n\terr=" + str(err))
+        print("ERROR insert billing status template for template_setting,\n\terr=" + str(err))
 
     # ADD NEW USER ROLE
     try:

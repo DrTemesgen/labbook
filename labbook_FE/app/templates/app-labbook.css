@@ -33,7 +33,7 @@ cursor      : pointer;
 margin-top  : -1rem ; 
 }
 
-a, a:visited, a:link, a:active, a:focus, a:focus, a:hover
+a, a:visited, a:active, a:focus, a:hover
 {
 color           : #5F9629;
 outline         : none;
@@ -64,7 +64,6 @@ display         : flex;
 align-items     : center;
 padding         : 0;
 background      : #f7f7f7;
-position        : relative;
 z-index         : 10;
 }
 
@@ -168,7 +167,7 @@ margin-top  : auto;
 {
 z-index     : 3;
 position    : relative;
-//margin-left : auto;
+/*margin-left : auto;*/
 width       : auto;
 display     : block;
 }
@@ -176,7 +175,7 @@ display     : block;
 html[dir="rtl"] #country-sel 
 {
 margin-left  : 0;
-//margin-right : auto;
+/*margin-right : auto;*/
 width        : auto;
 }
 
@@ -809,7 +808,7 @@ border-top : 1px solid #e5e5e5;
 .nav-cust-btn
 {
 height         : 70px;
-width          : 120px;
+width          : 105px;
 vertical-align : top;
 text-align     : center;
 justify-content : center;
@@ -833,111 +832,109 @@ text-align      : center;
 word-wrap       : normal;
 }
 
-nav .admin
-{
-background      : url({{ url_for('static', filename='img/admin.png') }}) center center no-repeat;
-background-size : 100% 100%;
-display         : inline-block;
-width           : 3.0em;
-height          : 3.0em;
-vertical-align  : middle;
-content         : "";
-padding         : 0;
+/* make every top-nav icon link a square tile */
+#menu-desktop .nav-item > .nav-link{
+  position: relative;            /* needed for overlay */
+  display: inline-flex;          /* center icon */
+  align-items: center;
+  justify-content: center;
+  width: 3em;                    /* same size for all tiles */
+  height: 3em;
+  padding: 0 !important;         /* avoid vertical drift */
+  line-height: 1;
+  border-radius: 6px;            /* soft corners */
+  background-position: center;   /* existing bg icons stay centered */
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
 }
 
-nav .admin:hover
-{
-background : url({{ url_for('static', filename='img/admin-active.png') }}) center center no-repeat;
+/* light gray veil on hover/focus for all tiles */
+#menu-desktop .nav-item > .nav-link::before{
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.08);   /* light gray veil */
+  opacity: 0;
+  transition: opacity .15s ease;
+  pointer-events: none;          /* keep link clickable */
+}
+#menu-desktop .nav-item > .nav-link:hover::before,
+#menu-desktop .nav-item > .nav-link:focus-visible::before{
+  opacity: 1;
 }
 
-nav .btn-admin:hover .admin-content
-{
-display : block;
-margin  : 0;
+/* remove Bootstrap caret on every dropdown icon */
+#menu-desktop .nav-item > .nav-link.dropdown-toggle::after{
+  display: none !important;
 }
 
-nav .report
-{
-background      : url({{ url_for('static', filename='img/report.png') }}) center center no-repeat;
-background-size : 100% 100%;
-display         : inline-block;
-width           : 3.0em;
-height          : 3.0em;
-vertical-align  : middle;
-content         : "";
-padding         : 0;
+/* safety — if some icons had no explicit bg-size */
+#menu-desktop .nav-item > .nav-link[class]{
+  background-size: 100% 100%;
 }
 
-nav .report:hover
-{
-background : url({{ url_for('static', filename='img/report-active.png') }}) center center no-repeat;
+/* Nav dropdowns: show on hover and sit above the page title */
+/* ensure dropdown opens on hover for all nav items */
+#menu-desktop .nav-item.dropdown:hover > .dropdown-menu{
+  display: block;
 }
 
-nav .btn-report:hover .report-content
-{
-display : block;
-margin  : 0;
+/* position + stacking so menu is visible above .page-title (z=9) */
+#menu-desktop .dropdown-menu{
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  z-index: 20;          /* above .page-title (9) */
+  margin: 0;
+  min-width: 220px;     /* keep your existing width if you prefer */
+  padding-top:4px;
 }
 
-nav .setting
-{
-background      : url({{ url_for('static', filename='img/param.png') }}) center center no-repeat;
-background-size : 100% 100%;
-display         : inline-block;
-width           : 3.0em;
-height          : 3.0em;
-vertical-align  : middle;
-content         : "";
-padding         : 0;
+#menu-desktop .nav-item.dropdown{
+  position: relative;
+  overflow: visible; /* in-code comment: ensure menu can overflow horizontally */
 }
 
-nav .setting:hover
-{
-background : url({{ url_for('static', filename='img/param-active.png') }}) center center no-repeat;
+nav .repository{
+  background: url({{ url_for('static', filename='img/repository.png') }}) center center no-repeat;
+  background-size: 100% 100%;
 }
 
-nav .btn-setting:hover .setting-content
-{
-display : block;
-margin  : 0;
+nav .structure{
+  background: url({{ url_for('static', filename='img/structure.png') }}) center center no-repeat;
+  background-size: 100% 100%;
 }
 
-nav .qualite
-{
-background      : url({{ url_for('static', filename='img/qualite.png') }}) center center no-repeat;
-background-size : 100% 100%;
-display         : inline-block;
-width           : 3.0em;
-height          : 3.0em;
-vertical-align  : middle;
-content         : "";
+nav .integration{
+  background: url({{ url_for('static', filename='img/integration.png') }}) center center no-repeat;
+  background-size: 100% 100%;
 }
 
-nav .qualite:hover
-{
-background : url({{ url_for('static', filename='img/qualite-active.png') }}) center center no-repeat;
+nav .report{
+  background: url({{ url_for('static', filename='img/report.png') }}) center center no-repeat;
+  background-size: 100% 100%;
 }
 
-nav .btn-qualite:hover .qualite-content
-{
-display : block;
-margin  : 0;
+nav .setting{
+  background: url({{ url_for('static', filename='img/param.png') }}) center center no-repeat;
+  background-size: 100% 100%;
 }
 
-nav .non-conformite
-{
-background      : url({{ url_for('static', filename='img/non-conformite.png') }}) center center no-repeat;
-background-size : 100% 100%;
-display         : inline-block;
-width           : 3.0em;
-height          : 3.0em;
-vertical-align  : middle;
-content         : "";
+nav .qualite{
+  background: url({{ url_for('static', filename='img/qualite.png') }}) center center no-repeat;
+  background-size: 100% 100%;
 }
 
-nav .non-conformite:hover
-{
-background : url({{ url_for('static', filename='img/non-conformite-over.png') }}) center center no-repeat;
+nav .non-conformite{
+  background: url({{ url_for('static', filename='img/non-conformite.png') }}) center center no-repeat;
+  background-size: 100% 100%;
+}
+
+nav .admin{
+  background: url({{ url_for('static', filename='img/admin.png') }}) center center no-repeat;
+  background-size: 100% 100%;
 }
 
 .module 
@@ -1516,19 +1513,59 @@ font-size: 15px;
     width       : 100%;
     padding     : 0;
     margin      : 0;
+    background  : #fff;
+    border      : 1px solid #e5e5e5;
     }
 
     .dropdown-item 
     {
     padding     : 10px;
-    color       : #fff;
+    color       : #333;
     text-align  : center;
     }
 
-    .dropdown-item:hover 
-    {
-    background  : #436B1C;
-    color       : #fff;
+    /* Visible feedback for touch: apply same style as :hover */
+    .dropdown-item:hover,
+    .dropdown-item:focus,
+    .dropdown-item:active,
+    .dropdown-item:focus-visible {
+        background: #436B1C; /* keep consistent with desktop hover color */
+        color: #fff;         /* readable text on green background */
+        outline: none;       /* remove default focus outline */
+    }
+
+    /* Smooth feedback for state changes */
+    .dropdown-item {
+        transition: background-color .15s ease, color .15s ease; /* quick visual response */
+        cursor: pointer; /* make it obvious items are tappable */
+    }
+
+    /* Optional: subtle elevation so dropdown stands over content */
+    .dropdown-menu {
+        box-shadow: 0 4px 12px rgba(0,0,0,.12); /* lightweight shadow for depth */
+    }
+
+    /* scope to mobile navbar to avoid side effects on desktop */
+    #menu-mobile .dropdown-menu .dropdown-item {
+      background: #fff;
+      color: #333;
+      transition: background-color .15s ease, color .15s ease; /* in-code comment: quick visual response */
+      cursor: pointer;
+    }
+
+    /* force visible state on tap/focus; override generic a:hover */
+    #menu-mobile .dropdown-menu .dropdown-item:hover,
+    #menu-mobile .dropdown-menu .dropdown-item:focus,
+    #menu-mobile .dropdown-menu .dropdown-item:active,
+    #menu-mobile .dropdown-menu .dropdown-item:focus-visible {
+      background-color: #436B1C !important;
+      color: #fff !important;
+      outline: none;
+    }
+
+    /* small elevation so the list stands out on mobile */
+    #menu-mobile .dropdown-menu {
+      box-shadow: 0 4px 12px rgba(0,0,0,.12);
     }
 
     .role 
@@ -1580,11 +1617,6 @@ font-size: 15px;
     }
 
     nav .qualite:hover
-    {
-    background : none;
-    }
-
-    nav .non-conformite:hover
     {
     background : none;
     }
@@ -1751,12 +1783,8 @@ font-size: 15px;
     {
     margin-top    : 0.5rem;
     margin-left   : 0.5rem;
-    margin-right  : 0.5rem
+    margin-right  : 0.5rem;
     margin-bottom : 0rem;
-    }
-
-    .icon-messaging a 
-    {
     display: inline-block;
     font-size: 2.0rem;
     color: gray;
@@ -1876,19 +1904,59 @@ font-size: 15px;
     width       : 100%;
     padding     : 0;
     margin      : 0;
+    background  : #fff;
+    border      : 1px solid #e5e5e5;
     }
 
     .dropdown-item 
     {
     padding     : 10px;
-    color       : #fff;
+    color       : #333;
     text-align  : center;
     }
 
-    .dropdown-item:hover 
-    {
-    background  : #436B1C;
-    color       : #fff;
+    /* Visible feedback for touch: apply same style as :hover */
+    .dropdown-item:hover,
+    .dropdown-item:focus,
+    .dropdown-item:active,
+    .dropdown-item:focus-visible {
+        background: #436B1C; /* keep consistent with desktop hover color */
+        color: #fff;         /* readable text on green background */
+        outline: none;       /* remove default focus outline */
+    }
+
+    /* Smooth feedback for state changes */
+    .dropdown-item {
+        transition: background-color .15s ease, color .15s ease; /* quick visual response */
+        cursor: pointer; /* make it obvious items are tappable */
+    }
+
+    /* Optional: subtle elevation so dropdown stands over content */
+    .dropdown-menu {
+        box-shadow: 0 4px 12px rgba(0,0,0,.12); /* lightweight shadow for depth */
+    }
+
+    /* scope to mobile navbar to avoid side effects on desktop */
+    #menu-mobile .dropdown-menu .dropdown-item {
+      background: #fff;
+      color: #333;
+      transition: background-color .15s ease, color .15s ease; /* in-code comment: quick visual response */
+      cursor: pointer;
+    }
+
+    /* force visible state on tap/focus; override generic a:hover */
+    #menu-mobile .dropdown-menu .dropdown-item:hover,
+    #menu-mobile .dropdown-menu .dropdown-item:focus,
+    #menu-mobile .dropdown-menu .dropdown-item:active,
+    #menu-mobile .dropdown-menu .dropdown-item:focus-visible {
+      background-color: #436B1C !important;
+      color: #fff !important;
+      outline: none;
+    }
+
+    /* small elevation so the list stands out on mobile */
+    #menu-mobile .dropdown-menu {
+      box-shadow: 0 4px 12px rgba(0,0,0,.12);
     }
 
     .role
@@ -1939,11 +2007,6 @@ font-size: 15px;
     }
 
     nav .qualite:hover
-    {
-    background : none;
-    }
-
-    nav .non-conformite:hover
     {
     background : none;
     }

@@ -26,6 +26,8 @@
                             <option value="QRC" {% if args['template']['tpl_type'] == 'QRC' %}selected{% endif %}>{{ _("Code QR") }}</option>
                             <option value="OUT" {% if args['template']['tpl_type'] == 'OUT' %}selected{% endif %}>{{ _("Sous-traitance") }}</option>
                             <option value="INV" {% if args['template']['tpl_type'] == 'INV' %}selected{% endif %}>{{ _("Facture") }}</option>
+                            <option value="BIL" {% if args['template']['tpl_type'] == 'BIL' %}selected{% endif %}>{{ _("Etat facturation") }}</option>
+                            <option value="ACT" {% if args['template']['tpl_type'] == 'ACT' %}selected{% endif %}>{{ _("Rapport d'activité") }}</option>
                         </select>			
                     </div>
                 </div>

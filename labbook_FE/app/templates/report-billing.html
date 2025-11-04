@@ -98,6 +98,13 @@
             </form>
 
             <div class="float-end mt-3 mb-5">
+                {% if ihm['tpl_billing_status'] %}
+                <select id="tpl_billing_status" class="form-select form-lbk me-3 w-auto" {% if ihm['tpl_billing_status'] and ihm['tpl_billing_status']|length < 2 %}hidden{% endif %}>
+                    {% for tpl in ihm['tpl_billing_status'] %}
+                    <option value="{{ tpl["tpl_file"] }}" {% if tpl["tpl_default"] ==  "Y" %}selected{% endif %}>{{ tpl["tpl_name"] }}</option>
+                    {% endfor %}
+                </select>
+                {% endif %}
                 <input type="button" onclick="download_report();" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _('Télécharger le rapport') }}">
             </div> 
 
@@ -262,9 +269,13 @@ function download_report()
 {
 let date_beg = $("#date_beg").val()  ;
 let date_end = $("#date_end").val()  ;
+let template = $("#tpl_billing_status").val() ;
+let filename = "billing_status_" + date_beg + "_" + date_end ;
 
 let param = '{ "date_beg":"' + date_beg  + ' 00:00", ' +
               '"date_end":"' + date_end  + ' 23:59", ' +
+              '"tpl_file":"' + template + '", ' +
+              '"filename":"' + filename + '", ' +
               '"id_user":0}' ;
 
     // popup wait
@@ -283,21 +294,7 @@ let param = '{ "date_beg":"' + date_beg  + ' 00:00", ' +
         {
             $("#dial-wait").modal("hide") ;
         
-        let today = new Date();
-        
-        let month = today.getMonth() + 1 ;
-
-        if (month < 10) month = '0' + month ;
-
-        let day = today.getDate() ;
-
-        if (day < 10) day = '0' + day ;
-
-        today = today.getFullYear() + '' + month + '' + day ;
-
-        let filename = "list_bill_" + today + ".pdf" ;
-
-        download_file( "PY", filename, "GEN", 0 ) ;
+        download_file( "PY", filename + ".pdf", "GEN", 0 ) ;
         },
         error: function(ret)
         {

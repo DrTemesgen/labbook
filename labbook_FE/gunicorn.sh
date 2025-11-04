@@ -112,70 +112,36 @@ if [ ! -f "$LOCAL_SETTINGS" ]; then
 fi
 
 # --- start OAuth FE client secret block ---
+# Always regenerate a new OAuth client secret at every FE startup.
+# We write it to /storage/key/oauth_client_secret.py and also force
+# the same value into local_settings.py so the FE uses it immediately.
+
+OAUTH_SECRET=$(python3 -c "import secrets; print(secrets.token_urlsafe(48))")
+# Informational only (not used in logic)
 PLACEHOLDER="replace-me-with-random-secret-key"
-OAUTH_SECRET=""
 
-read_shared_secret() {
-  python3 - <<'PY'
-ns={}
-try:
-    with open('/storage/key/oauth_client_secret.py','r') as f:
-        exec(f.read(), ns)
-    v = ns.get('OAUTH_CLIENT_SECRET','').strip()
-    print(v)
-except Exception:
-    print('')
-PY
-}
+# Shared file consumed by BE as well
+OAUTH_SHARED="$(dirname "$SHARED_SECRET")/oauth_client_secret.py"
+mkdir -p "$(dirname "$OAUTH_SHARED")"
 
-read_local_secret() {
-  python3 - <<PY
-ns={}
-try:
-    with open("${LOCAL_SETTINGS}","r") as f:
-        exec(f.read(), ns)
-    v = ns.get('OAUTH_CLIENT_SECRET','').strip()
-    print(v)
-except Exception:
-    print('')
-PY
-}
+# 1) Overwrite the shared python file with the new secret
+printf "OAUTH_CLIENT_SECRET = '%s'\n" "$OAUTH_SECRET" > "$OAUTH_SHARED"
 
-# 1) Try shared secret first
-if [ -f "$OAUTH_SHARED" ]; then
-    OAUTH_SECRET="$(read_shared_secret)"
-fi
-
-# 2) Fallback to local_settings.py if present and not placeholder
-if [ -z "$OAUTH_SECRET" ]; then
-    EXISTING_LOCAL="$(read_local_secret)"
-    if [ -n "$EXISTING_LOCAL" ] && [ "$EXISTING_LOCAL" != "$PLACEHOLDER" ]; then
-        echo "Reusing OAUTH_CLIENT_SECRET from local_settings.py"
-        OAUTH_SECRET="$EXISTING_LOCAL"
-        echo "OAUTH_CLIENT_SECRET = '${OAUTH_SECRET}'" > "$OAUTH_SHARED"
-    fi
-fi
-
-# 3) Generate if still empty
-if [ -z "$OAUTH_SECRET" ]; then
-    echo "Generating FE OAuth client secret..."
-    OAUTH_SECRET=$(python3 -c "import secrets; print(secrets.token_urlsafe(48))")
-    echo "OAUTH_CLIENT_SECRET = '$OAUTH_SECRET'" > "$OAUTH_SHARED"
-fi
-
-# 4) Ensure local_settings.py has the chosen secret and client_id
+# 2) Force the same value into FE local_settings.py
 if grep -qE "^[[:space:]]*OAUTH_CLIENT_SECRET[[:space:]]*=" "$LOCAL_SETTINGS"; then
-    sed -i "s|^[[:space:]]*OAUTH_CLIENT_SECRET[[:space:]]*=.*|OAUTH_CLIENT_SECRET = '${OAUTH_SECRET}'|" "$LOCAL_SETTINGS"
+  sed -i "s|^[[:space:]]*OAUTH_CLIENT_SECRET[[:space:]]*=.*|OAUTH_CLIENT_SECRET = '${OAUTH_SECRET}'|" "$LOCAL_SETTINGS"
 else
-    printf "\nOAUTH_CLIENT_SECRET = '%s'\n" "$OAUTH_SECRET" >> "$LOCAL_SETTINGS"
+  printf "\nOAUTH_CLIENT_SECRET = '%s'\n" "$OAUTH_SECRET" >> "$LOCAL_SETTINGS"
 fi
 
+# 3) Keep a stable client_id (no rename, no change)
 if grep -qE "^[[:space:]]*OAUTH_CLIENT_ID[[:space:]]*=" "$LOCAL_SETTINGS"; then
-    sed -i "s|^[[:space:]]*OAUTH_CLIENT_ID[[:space:]]*=.*|OAUTH_CLIENT_ID = 'labbook-FE'|" "$LOCAL_SETTINGS"
+  sed -i "s|^[[:space:]]*OAUTH_CLIENT_ID[[:space:]]*=.*|OAUTH_CLIENT_ID = 'labbook-FE'|" "$LOCAL_SETTINGS"
 else
-    printf "OAUTH_CLIENT_ID = 'labbook-FE'\n" >> "$LOCAL_SETTINGS"
+  printf "OAUTH_CLIENT_ID = 'labbook-FE'\n" >> "$LOCAL_SETTINGS"
 fi
 
+# 4) Also expose to the FE process if needed
 export LABBOOK_OAUTH_FE_SECRET="${OAUTH_SECRET}"
 # --- end OAuth FE client secret block ---
 

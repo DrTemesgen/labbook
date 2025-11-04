@@ -3,87 +3,41 @@ import logging
 import mysql.connector
 import gettext
 
-from flask import session, current_app, request
-
 from app.models.Constants import Constants
 from app.models.DB import DB
 from app.models.Logs import Logs
 
 
-# --- Language helpers (FE header overrides existing session) ---
-def get_lang_db_default():
-    """
-    Decide DB language with the following priority:
-      1) X-Lang-DB request header (FE explicit choice)  -> overrides session
-      2) Existing session['lang_db']                    -> keep if present
-      3) App default (BABEL_DEFAULT_LOCALE)             -> fallback
-    Any non-empty header value replaces the session value to keep it fresh
-    when the user changes language in the FE.
-    """
-    hdr = (request.headers.get('X-Lang-DB') or '').strip()
-    cur = (session.get('lang_db') or '').strip()
-    default = current_app.config.get('BABEL_DEFAULT_LOCALE', 'fr_FR')
-
-    # FE sent an explicit language -> make it the source of truth
-    if hdr:
-        if hdr != cur:
-            session['lang_db'] = hdr  # update session so next calls are consistent
-        return hdr
-
-    # No header: use session if set, else default (and cache it)
-    if cur:
-        return cur
-    session['lang_db'] = default
-    return default
-
-
+# --- Language helpers ---
 def get_lang_pdf_default():
-    """
-    Same policy as get_lang_db_default() but for PDF language.
-    Header name: X-Lang-PDF.
-    """
-    hdr = (request.headers.get('X-Lang-PDF') or '').strip()
-    cur = (session.get('lang_pdf') or '').strip()
-    default = current_app.config.get('BABEL_DEFAULT_LOCALE', 'fr_FR')
+    # lang_pdf
+    db_val = Various.getDefaultValue('default_language')
+    Various.log.info(Logs.fileline() + ' : lang_pdf in database = ' + db_val['value'])
+    return db_val['value']
 
-    if hdr:
-        if hdr != cur:
-            session['lang_pdf'] = hdr
-        return hdr
 
-    if cur:
-        return cur
-    session['lang_pdf'] = default
-    return default
+def get_lang_db_default():
+    # lang_db
+    db_val = Various.getDefaultValue('db_language')
+    Various.log.info(Logs.fileline() + ' : lang_db in database = ' + db_val['value'])
+    return db_val['value']
 
 
 class Various:
     log = logging.getLogger('log_db')
 
     @staticmethod
-    def initSessionLang():
-        if not session or 'lang_pdf' not in session or 'lang_db' not in session:
-            pdf_val = Various.getDefaultValue('default_language')
-            session['lang_pdf'] = pdf_val['value']
-
-            db_val = Various.getDefaultValue('db_language')
-            session['lang_db'] = db_val['value']
-            session.modified = True
-            Various.log.info(Logs.fileline() + ' : lang_pdf in database = ' + session['lang_pdf'])
-            Various.log.info(Logs.fileline() + ' : lang_db in database  = ' + session['lang_db'])
-
-    @staticmethod
     def useLangPDF():
-        Various.initSessionLang()
+        lang_code = get_lang_pdf_default()
 
-        langPDF = gettext.translation('messages', Constants.cst_path_lang, get_lang_pdf_default().split())
+        langPDF = gettext.translation('messages', Constants.cst_path_lang, [lang_code], fallback=False)
         langPDF.install()
 
     @staticmethod
     def useLangDB():
-        Various.initSessionLang()
+        lang_code = get_lang_db_default()
 
-        langDB = gettext.translation('messages', Constants.cst_path_lang, get_lang_db_default().split())
+        langDB = gettext.translation('messages', Constants.cst_path_lang, [lang_code], fallback=False)
         langDB.install()
 
     @staticmethod
@@ -188,9 +142,6 @@ class Various:
     @staticmethod
     def updateTranslationsTable(lang):
         try:
-            # init lang
-            Various.initSessionLang()
-
             # use lang en_GB for DB
             langDB = gettext.translation('messages', Constants.cst_path_lang, lang.split())
             langDB.install()

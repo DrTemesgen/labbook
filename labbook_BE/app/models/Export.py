@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import logging
 
+from datetime import datetime
 from app.models.DB import DB
 from app.models.Logs import Logs
 from app.models.Various import Various
@@ -103,6 +104,7 @@ class Export:
 
         # get products details with list of analyzes
         id_rec_p = 0
+        l_products = []
 
         for res in l_res:
             if id_rec_p != res['id_rec']:
@@ -701,7 +703,6 @@ class Export:
         rows = cursor.fetchall()
 
         # Build one row per product with combined statuses
-        from datetime import datetime
         now = datetime.now()
 
         out = []

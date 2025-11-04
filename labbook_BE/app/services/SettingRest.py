@@ -606,7 +606,7 @@ class ScriptListarchive(Resource):
         if ret == 0:
             try:
                 # No encoding forced because script return list from system so its depend of encoding of operating system
-                f = open(os.path.join(Constants.cst_io, 'listarchive'), 'r')
+                f = open(os.path.join(Constants.cst_io, 'listarchive').strip(), 'r')
                 for archive in f:
                     l_archive['archive'].append(archive[:-1])
             except Exception:
@@ -651,7 +651,7 @@ class ScriptListmedia(Resource):
         if ret == 0:
             try:
                 # No encoding forced because script return list from system so its depend of encoding of operating system
-                f = open(os.path.join(Constants.cst_io, 'listmedia'), 'r')
+                f = open(os.path.join(Constants.cst_io, 'listmedia').strip(), 'r')
                 for media in f:
                     l_media['media'].append(media[:-1])
             except Exception:
@@ -682,7 +682,7 @@ class ScriptProgbackup(Resource):
             return compose_ret('1', Constants.cst_content_type_json, 400)
 
         # Build absolute script path without string concatenation in the shell
-        script_path = os.path.join(Constants.cst_path_script, Constants.cst_script_backup)
+        script_path = os.path.join(Constants.cst_path_script, Constants.cst_script_backup).strip()
 
         if not os.path.isfile(script_path):
             self.log.error(Logs.fileline() + f" : ScriptProgbackup ERROR script not found path={script_path}")
@@ -797,13 +797,13 @@ class ScriptStatus(Resource):
 
         try:
             if mode == 'R':
-                path = os.path.join(Constants.cst_io, Constants.cst_io_restore)
+                path = os.path.join(Constants.cst_io, Constants.cst_io_restore).strip()
             elif mode == 'B':
-                path = os.path.join(Constants.cst_io, Constants.cst_io_backup)
+                path = os.path.join(Constants.cst_io, Constants.cst_io_backup).strip()
             elif mode == 'M':
-                path = os.path.join(Constants.cst_io, Constants.cst_io_listmedia)
+                path = os.path.join(Constants.cst_io, Constants.cst_io_listmedia).strip()
             elif mode == 'A':
-                path = os.path.join(Constants.cst_io, Constants.cst_io_listarchive)
+                path = os.path.join(Constants.cst_io, Constants.cst_io_listarchive).strip()
             else:
                 self.log.info(Logs.fileline() + ' : ERROR ScriptStatus wrong mode : ' + str(mode))
                 ret = "ERR;" + str(date_now) + ";Wrong mode"
@@ -839,7 +839,7 @@ class ScriptStatus(Resource):
 
                 try:
                     # No encoding forced because script return list from system so its depend of encoding of operating system
-                    f = open(os.path.join(Constants.cst_io, 'listmedia'), 'r')
+                    f = open(os.path.join(Constants.cst_io, 'listmedia').strip(), 'r')
                     for media in f:
                         l_media['media'].append(media[:-1])
 
@@ -863,7 +863,7 @@ class ScriptStatus(Resource):
                 # read listarchive file
                 try:
                     # No encoding forced because script return list from system so its depend of encoding of operating system
-                    f = open(os.path.join(Constants.cst_io, 'listarchive'), 'r')
+                    f = open(os.path.join(Constants.cst_io, 'listarchive').strip(), 'r')
                     for archive in f:
                         l_archive['archive'].append(archive[:-1])
 
@@ -990,7 +990,7 @@ class ZipCityAdd(Resource):
         # Read CSV zipcity
         path = Constants.cst_path_tmp
 
-        with open(os.path.join(path, filename), 'r', encoding='utf-8') as csv_file:
+        with open(os.path.join(path, filename).strip(), 'r', encoding='utf-8') as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=';')
             l_rows = list(csv_reader)
 

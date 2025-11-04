@@ -9,6 +9,7 @@ import qrcode
 from barcode.writer import ImageWriter
 from datetime import datetime
 from relatorio.templates.opendocument import Template
+from decimal import Decimal
 
 from app.models.Analysis import Analysis
 from app.models.DB import DB
@@ -29,7 +30,7 @@ class Pdf:
     log = logging.getLogger('log_db')
 
     @staticmethod
-    def getPdfBillList(l_datas, date_beg, date_end):
+    def getPdfBillList(l_datas, date_beg, date_end, tpl_file, filename):
         """Build a PDF bill list
 
         This function is call by report billing template
@@ -38,107 +39,111 @@ class Pdf:
             l_datas       (json): Billing datas.
             date_beg  (datetime): Start date of the period.
             date_end  (datetime): End date of the period.
+            tpl_file    (string): name of template file.
+            filename    (string): name of file to build.
 
         Returns:
             bool: True for success, False otherwise.
 
         """
 
-        path = Constants.cst_path_tmp
+        Pdf.log.info(Logs.fileline() + ' : DEBUG-TRACE billing status datas : ' + str(l_datas))
 
         Various.useLangPDF()
 
-        # Get format header
-        pdfpref = Pdf.getPdfPref()
+        # convert l_datas to data for template
+        data = {}  # dictionnary of data for build Billing status document
 
-        full_header = True
+        # === Logo details ===
+        filepath = os.path.join(Constants.cst_resource, 'logo.png')
 
-        if pdfpref and pdfpref['entete'] == 1069:
-            full_header = False
+        data['logo'] = (open(filepath, 'rb'), 'image/png')
 
-        bill_div = ''
+        # === Label details ===
+        data['label'] = {}
 
-        total_price  = 0
-        total_remain = 0
+        data['label']['phone']   = str(_("Tél"))
+        data['label']['fax']     = str(_("Fax"))
+        data['label']['email']   = str(_("Email"))
+        data['label']['edit']    = str(_("édité le"))
+        data['label']['total']   = str(_("Total"))
+        data['label']['total_remain'] = str(_("Total à payer"))
+        data['label']['billing_status'] = str(_("État de la facturation"))
+        data['label']['from_']    = str(_("du"))
+        data['label']['to_']      = str(_("au"))
+        data['label']['rec_num'] = str(_("N° dossier"))
+        data['label']['receipt_num'] = str(_("N° quittance"))
+        data['label']['bill_num'] = str(_("N° facture"))
+        data['label']['price'] = str(_("Prix"))
+        data['label']['remain'] = str(_("A payer"))
 
-        bill_div += ('<span>' + _("ETAT DE LA FACTURATION DU") + ' ' + str(date_beg) + ' ' + _("AU") + ' ' +
-                     str(date_end) + '</span>'
-                     '<div style="width:980px;height:1200px;border:2px solid dimgrey;border-radius:10px;padding:10px;'
-                     'margin-top:20px;background-color:#FFF;">'
-                     '<table style="width:100%"><thead>'
-                     '<th style="text-align:left;">' + _("N° dossier") + '</th>'
-                     '<th style="text-align:left;">' + _("N° quittance") + '</th>'
-                     '<th style="text-align:left;">' + _("N° facture") + '</th>'
-                     '<th>' + _("Prix") + '</th>'
-                     '<th>' + _("A payer") + '</th></thead>'
-                     '<tr><td colspan="5"></td></tr>')
+        # === Laboratory details ===
+        data['lab'] = {}
 
-        # start to 8 for the first page with headers
-        idx_line = 8
+        name  = Various.getDefaultValue('entete_1')
+        line2 = Various.getDefaultValue('entete_2')
+        line3 = Various.getDefaultValue('entete_3')
+        addr  = Various.getDefaultValue('entete_adr')
+        phone = Various.getDefaultValue('entete_tel')
+        fax   = Various.getDefaultValue('entete_fax')
+        email = Various.getDefaultValue('entete_email')
 
-        for data in l_datas:
-            idx_line += 1
+        data['lab']['name']  = str(name['value'])
+        data['lab']['head2'] = str(line2['value'])
+        data['lab']['head3'] = str(line3['value'])
+        data['lab']['addr']  = str(addr['value'])
+        data['lab']['phone'] = ''
+        data['lab']['fax']   = ''
+        data['lab']['email'] = ''
 
-            # Next page
-            if idx_line > 58:
-                bill_div += ('<tr><td colspan="5">&nbsp;</td></tr>'
-                             '<tr><td colspan="5">&nbsp;</td></tr>'
-                             '<tr><td colspan="5">&nbsp;</td></tr>'
-                             '<tr><td colspan="5">&nbsp;</td></tr>')
-                idx_line = 0
+        if phone['value']:
+            data['lab']['phone'] = str(phone['value'])
 
-            bill_div += ('<tr><td style="text-align:left;">' + data['rec_num'] + '</td>'
-                         '<td style="text-align:left;">' + data['receipt_num'] + '</td>'
-                         '<td style="text-align:left;">' + data['bill_num'] + '</td>'
-                         '<td style="text-align:right;">' + str(data['bill_price']) + '</td>'
-                         '<td style="text-align:right;">' + str(data['bill_remain']) + '</td></tr>')
+        if fax['value']:
+            data['lab']['fax'] = str(fax['value'])
 
-            total_price  += data['bill_price']
-            total_remain += data['bill_remain']
+        if email['value']:
+            data['lab']['email'] = str(email['value'])
 
-        # bill_price and bill_remain
-        bill_div += ('<tr><td colspan="5"></td></tr>'
-                     '<tr><td class="ft_bill_det_tit" style="text-align:left;">' + _("Total") + '</td>'
-                     '<td colspan="3" class="ft_bill_det_tot" style="text-align:right;"">' + str(total_price) + '</td>'
-                     '<td class="ft_bill_det_tot" style="text-align:right;">' + str(total_remain) + '</td></tr>')
+        # === Billing status details ===
+        data['bill'] = {}
 
-        bill_div += '</table></div>'
+        data['bill']['title']    = str(_("État de la facturation"))
+        data['bill']['date_now'] = datetime.strftime(datetime.now(), Constants.cst_date_eu)
+        data['bill']['time_now'] = datetime.strftime(datetime.now(), Constants.cst_time_HM)
+        data['bill']['date_beg'] = str(date_beg).split('T', 1)[0].split(' ', 1)[0]
+        data['bill']['date_end'] = str(date_end).split('T', 1)[0].split(' ', 1)[0]
 
-        page_header = Pdf.getPdfHeader(full_header)
+        # === Data billing status ===
+        total_price  = Decimal('0.00')
+        total_remain = Decimal('0.00')
 
-        page_body = bill_div
+        data['l_data'] = []
 
-        date_now = datetime.strftime(datetime.now(), Constants.cst_dt_HM)
+        for bill in l_datas:
+            price_dec  = Decimal(str(bill.get('bill_price') or 0))
+            remain_dec = Decimal(str(bill.get('bill_remain') or 0))
 
-        page_footer = ('<div style="width:1000px;margin-top:5px;background-color:#FFF;">'
-                       '<div><span class="ft_footer" style="width:900px;display:inline-block;text-align:left;">' +
-                       _("Etat de la facturation, édité le") + ' ' + str(date_now) + '</span>'
-                       '<span class="ft_footer" style="width:90px;display:inline-block;text-align:right;">' +
-                       _("Page") + ' 1/1</span></div></div></div>')
+            tmp_bill = {
+                "rec_num":     bill.get('rec_num', '') or '',
+                "receipt_num": bill.get('receipt_num', '') or '',
+                "bill_num":    bill.get('bill_num', '') or '',
+                "bill_price":  f"{price_dec:.2f}",
+                "bill_remain": f"{remain_dec:.2f}",
+            }
 
-        date_now = datetime.now()
-        today    = date_now.strftime(Constants.cst_date_ymd)
+            total_price  += price_dec
+            total_remain += remain_dec
 
-        filename = 'list_bill_' + today + '.pdf'
+            data['l_data'].append(tmp_bill)
 
-        form_cont = page_header + page_body + page_footer
+        data['bill']['bill_total']  = f"{total_price:.2f}"
+        data['bill']['bill_remain'] = f"{total_remain:.2f}"
 
-        options = {'--encoding': 'utf-8',
-                   'page-size': 'A4',
-                   'margin-top': '12.00mm',
-                   'margin-right': '0.00mm',
-                   'margin-bottom': '0.00mm',
-                   'margin-left': '0.00mm',
-                   'no-outline': None,
-                   'enable-local-file-access': None,
-                   'load-error-handling': 'ignore',
-                   'load-media-error-handling': 'ignore',
-                   'disable-javascript': None}
+        ret = Pdf.buildPdf('BIL', tpl_file, filename, data)
 
-        try:
-            pdfkit.from_string(form_cont, path + filename, options=options)
-        except Exception:
-            Pdf.log.exception("ERROR PDF pdfkit.from_string failed")
+        if not ret:
+            Pdf.log.error(Logs.fileline() + ' : getPdfBillList ERROR buildPdf')
             return False
 
         return True
@@ -2196,7 +2201,7 @@ class Pdf:
     def buildPdf(type, template, filename, data):
         """Build a PDF from a template with data
 
-        This function is call by getPdfSticker(), getPdfOutsourced() and getPdfInvoice()
+        This function is call by getPdfSticker(), getPdfOutsourced(), getPdfInvoice() and getPdfBillList()
 
         Args:
             type     (string): type of template.
@@ -2219,6 +2224,8 @@ class Pdf:
             debug_filename_data = Constants.cst_filedata_outsourced
         elif type == 'INV':
             debug_filename_data = Constants.cst_filedata_invoice
+        elif type == 'BIL':
+            debug_filename_data = Constants.cst_filedata_billing_status
 
         # write odt with data and template
         try:
@@ -2852,7 +2859,7 @@ class Pdf:
 
         # 2 - run data with template
         # 3 - convert odt to PDF
-        Pdf.log.error(Logs.fileline() + ' : DEBUG-TRACE Invoice datas : ' + str(datas))
+        Pdf.log.debug(Logs.fileline() + ' : DEBUG-TRACE Invoice datas : ' + str(datas))
 
         ret = Pdf.buildPdf('INV', template, filename, datas)
 
@@ -2860,7 +2867,7 @@ class Pdf:
             Pdf.log.error(Logs.fileline() + ' : getPdfInvoice ERROR buildPdf')
             return False
 
-        Pdf.log.error(Logs.fileline() + ' : getPdfInvoice')
+        Pdf.log.info(Logs.fileline() + ' : getPdfInvoice')
         return True
 
     @staticmethod
