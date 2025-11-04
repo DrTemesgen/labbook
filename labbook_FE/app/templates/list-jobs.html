@@ -1,0 +1,302 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+    <title>{{ _("Configuration des automatismes") }}</title>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+            <h2 class="page-title page-title-color"><span>{{ _("Configuration des automatismes") }}</span></h2>
+
+            {% if has_permission("AUTO_179") %}
+
+            <table id="jobTable" class="display table table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>{{ _("Action") }}</th>
+                        <th hidden>{{ _("ID") }}</th>
+                        <th>{{ _("Libellé") }}</th>
+                        <th>{{ _("Type") }}</th>
+                        <th>{{ _("Prochaine exécution") }}</th>
+                        <th>{{ _("Fréquence") }}</th>
+                        <th>{{ _("Statut") }}</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <div class="clearfix mt-4 mb-5">
+                <div class="float-start ms-0">
+                    <input type="button"
+                           onclick="return_home();"
+                           id="btn_return"
+                           value="{{ _('Retour') }}"
+                           class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                </div>
+
+                <div class="float-end d-lg-flex align-items-end">
+                    <div>
+                        {% if has_permission("AUTO_180") %}
+                        <input type="button"
+                               onclick="add_job();"
+                               id="add_job"
+                               value="{{ _('Ajouter une tâche') }}"
+                               class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toast -->
+            <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+              <div id="jobToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="polite" aria-atomic="true">
+                <div class="d-flex">
+                  <div class="toast-body" id="jobToastBody">
+                    {{ _("Action effectuée.") }}
+                  </div>
+                  <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="{{ _('Fermer') }}"></button>
+                </div>
+              </div>
+            </div>
+
+            {% else %}
+            {% include 'no-rights.html' %}
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+
+// status badge safe rendering (still assumes is_enabled = "Y"/"N")
+function renderStatusBadge(row) {
+    if (row.is_enabled === "Y") {
+        return '<span class="badge bg-success">{{ _("Actif") }}</span>';
+    } else if (row.is_enabled === "N") {
+        return '<span class="badge bg-secondary">{{ _("Inactif") }}</span>';
+    } else {
+        return '<span class="badge bg-secondary">{{ _("Inconnu") }}</span>';
+    }
+}
+
+// Toast helper
+function showJobToast(message, type = "success")
+{
+    const toastEl = document.getElementById("jobToast");
+    const toastBody = document.getElementById("jobToastBody");
+
+    toastBody.innerText = message;
+
+    toastEl.classList.remove("bg-success", "bg-danger", "bg-warning");
+    toastEl.classList.add("bg-" + type);
+
+    const toast = new bootstrap.Toast(toastEl);
+    toast.show();
+}
+
+// Actions
+function delete_job(id_val)
+{
+    if (confirm("{{ _('Êtes-vous sûr de vouloir supprimer cette tâche ?') }}"))
+    {
+        fetch(`{{ session['server_ext'] }}/services/automation/job/${id_val}`,
+        {
+            method: 'DELETE',
+            headers: { 
+                "Authorization": "Bearer {{ session.get('be_access_token','') }}",
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => 
+        {
+            if (response.status === 200 || response.status === 204)
+            {
+                $('#jobTable').DataTable().ajax.reload(null, false);
+                showJobToast("{{ _('Tâche supprimée.') }}", "success");
+            }
+            else
+            {
+                showJobToast("{{ _('Erreur lors de la suppression.') }}", "danger");
+            }
+        })
+        .catch(error => {
+            console.error("Erreur :", error);
+            showJobToast("{{ _('Erreur lors de la suppression.') }}", "danger");
+        });
+    }
+}
+
+function edit_job(id_val)
+{
+    window.location.href = "{{ session['server_ext'] }}/det-job/" + id_val;
+}
+
+function add_job()
+{
+    window.location.href = "{{ session['server_ext'] }}/det-job/0";
+}
+
+function return_home()
+{
+    window.location.href = "{{ url_for('homepage') }}";
+}
+
+// Table init
+function loadJobTable() {
+  if ($.fn.DataTable.isDataTable('#jobTable')) {
+    $('#jobTable').DataTable().destroy();
+  }
+
+  $('#jobTable').DataTable({
+    pageLength: 25,
+    order: [[1, "desc"]],       // sort by hidden ID
+    deferRender: true,
+    processing: true,
+
+    columnDefs: [
+      { targets: 1, visible: false, searchable: false } // hide ID col
+    ],
+
+    language: {
+      lengthMenu: "{{ _('Afficher _MENU_ entrées') }}",
+      zeroRecords: "{{ _('Aucun enregistrement trouvé') }}",
+      info: "{{ _('Affichage de _START_ à _END_ sur _TOTAL_ entrées') }}",
+      infoEmpty: "{{ _('Aucune entrée disponible') }}",
+      infoFiltered: "{{ _('(filtré de _MAX_ entrées au total)') }}",
+      search: "{{ _('Rechercher') }}:",
+      paginate: {
+        first: "{{ _('Premier') }}",
+        last: "{{ _('Dernier') }}",
+        next: "{{ _('Suivant') }}",
+        previous: "{{ _('Précédent') }}"
+      }
+    },
+
+    ajax: {
+      url: "{{ session['server_ext'] }}/services/automation/job/list",
+      type: "POST",
+      contentType: "application/json",
+      data: () => JSON.stringify({}),
+      beforeSend: function (xhr) {
+        xhr.setRequestHeader('Authorization', 'Bearer {{ session.get('be_access_token','') }}');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+      },
+      dataSrc: function (json) {
+        try { if (typeof json === 'string') json = JSON.parse(json); } catch { return []; }
+        if (Array.isArray(json)) return json;
+        if (json && Array.isArray(json.data)) return json.data;
+        return [];
+      }
+    },
+
+    // Columns: Action | ID(hidden) | Libellé | Type | Prochaine exécution | Fréquence | Statut
+    columns: [
+      // 0) Action
+      {
+        data: null,
+        orderable: false,
+        render: function (row) {
+          const id = row.ajb_ser;
+          return `
+            <nav class="nav-item dropdown">
+              <a class="dropdown-toggle menu-act" data-bs-toggle="dropdown" aria-expanded="false"></a>
+              <div class="dropdown-menu nav-style menu-act-drop">
+                {% if has_permission("AUTO_181") %}
+                <a class="dropdown-item menu-act-item" href="#" onclick="edit_job(${id}); return false;">{{ _('Éditer') }}</a>
+                {% endif %}
+                {% if has_permission("AUTO_182") %}
+                <a class="dropdown-item menu-act-item text-danger" href="#" onclick="delete_job(${id}); return false;">{{ _('Supprimer') }}</a>
+                {% endif %}
+              </div>
+            </nav>`;
+        }
+      },
+
+      // 1) ID (hidden)
+      { data: "ajb_ser", defaultContent: "" },
+
+      // 2) Libellé (no ID appended anymore)
+      {
+        data: "ajb_label",
+        render: function (data) {
+          return data || "{{ _('Sans libellé') }}";
+        }
+      },
+
+      // 3) Type (new column after label)
+      {
+        data: "ajb_type",
+        render: function (val) { return typeLabel(val); }
+      },
+
+      // 4) Prochaine exécution
+      { data: "ajb_next_run_at", render: v => (v || "-") },
+
+      // 5) Fréquence (human-readable)
+      {
+        data: null,
+        render: function (row) { return formatFrequency(row); }
+      },
+
+      // 6) Statut
+      {
+        data: "ajb_is_active",
+        render: function (val) {
+          if (val === "Y") return '<span class="badge bg-success">{{ _("Actif") }}</span>';
+          if (val === "N") return '<span class="badge bg-secondary">{{ _("Inactif") }}</span>';
+          return '<span class="badge bg-secondary">{{ _("Inconnu") }}</span>';
+        }
+      }
+    ]
+  });
+}
+
+// Map backend type to human label (FR UI)
+function typeLabel(t) {
+  if (t === 'dhis2') return 'DHIS2';
+  if (t === 'activity') return "Rapport d'activité";
+  if (t === 'billing') return "État de la facturation";
+  return 'Inconnu';
+}
+
+// Map schedule kind to human label (FR UI)
+function kindLabel(k) {
+  switch (k) {
+    case 'D': return 'Quotidien';
+    case 'W': return 'Hebdomadaire';
+    case 'M': return 'Mensuel';
+    case 'B': return 'Bimestriel';
+    case 'T': return 'Trimestriel';
+    case 'Q': return 'Quadrimestriel';
+    case 'S': return 'Semestriel';
+    case 'A': return 'Annuel';
+    default:  return '—';
+  }
+}
+
+// Format frequency as "<Kind label> <HH:MM>"
+function formatFrequency(row) {
+  const kind = kindLabel(row.ajb_schedule_kind);
+  let t = row.ajb_schedule_time || '';
+  // normalize "H:MM:SS" to "HH:MM"
+  if (t.length >= 4) {
+    const parts = t.split(':');
+    if (parts.length >= 2) t = parts[0].padStart(2,'0') + ':' + parts[1].padStart(2,'0');
+  }
+  return t ? `${kind} ${t}` : kind;
+}
+
+{% if has_permission("AUTO_179") %}
+$(document).ready(function() 
+{
+    loadJobTable();
+});
+{% endif %}
+
+</script>
+{% endblock %}

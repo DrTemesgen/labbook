@@ -1,0 +1,791 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+    <title>{{ _("Détails automatisme") }}</title>
+    <link href="{{ url_for('static', filename='vendor/css/select2.min.css') }}" rel="stylesheet" />
+    <script type="text/javascript" src="{{ url_for('static', filename='vendor/js/select2.min.js') }}" nonce="{{ session['nonce'] }}"></script>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+
+            {% if (has_permission("AUTO_180") and args['id_item'] == 0) or (has_permission("AUTO_181") and args['id_item'] > 0) %}
+            <h2 class="page-title page-title-color">
+                <span>
+                    {% if args['id_item']|int > 0 %}
+                        {{ _("Modifier l'automatisme") }}
+                    {% else %}
+                        {{ _("Nouvel automatisme") }}
+                    {% endif %}
+                </span>
+            </h2>
+
+            <form id="jobForm" autocomplete="off">
+
+                <!-- Automation type -->
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Type") }} *</label>
+                    <div class="col">
+                        {% if args['id_item']|int > 0 %}
+                            <input
+                                type="text"
+                                class="form-control form-lbk"
+                                id="ajb_type_label"
+                                value="{% if args['type_item']=='dhis2' %}{{ _('DHIS2') }}
+                                       {% elif args['type_item']=='activity' %}{{ _('Rapport d\'activité') }}
+                                       {% elif args['type_item']=='billing' %}{{ _('État de la facturation') }}
+                                       {% else %}{{ _('Inconnu') }}{% endif %}"
+                                disabled>
+
+                            <input type="hidden" id="ajb_type" value="{{ args['type_item'] }}">
+                        {% else %}
+                            <select id="ajb_type" class="form-select form-lbk" onchange="onTypeChange();" required>
+                                <option value="">-- {{ _('Sélectionner') }} --</option>
+                                <option value="dhis2"   {% if args['type_item']=='dhis2' %}selected{% endif %}>{{ _("DHIS2") }}</option>
+                                <option value="activity"{% if args['type_item']=='activity' %}selected{% endif %}>{{ _("Rapport d'activité") }}</option>
+                                <option value="billing" {% if args['type_item']=='billing' %}selected{% endif %}>{{ _("État de la facturation") }}</option>
+                            </select>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Label -->
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label for="ajb_label" class="form-label col-3 text-end mt-2 me-1">{{ _("Libellé") }} *</label>
+                    <div class="col">
+                        <input
+                            id="ajb_label"
+                            type="text"
+                            maxlength="120"
+                            class="form-control form-lbk"
+                            required
+                            value="{{ args['item'].get('ajb_label','') }}">
+                    </div>
+                </div>
+
+                <!-- Activation -->
+                <div class="form-group d-lg-flex align-items-start mt-3">
+                    <label class="form-label col-3 text-end me-1">{{ _("Options") }}</label>
+                    <div class="col d-flex gap-4 align-items-center">
+                        <div class="form-check">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="ajb_is_active"
+                                {% if args['item'].get('ajb_is_active','Y') == 'Y' %}checked{% endif %}>
+                            <label class="form-check-label" for="ajb_is_active">{{ _("Activer cet automatisme") }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scheduling -->
+                <hr class="my-3">
+                <h5 class="mb-3">{{ _("Planification") }}</h5>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="ajb_schedule_kind" class="form-label col-3 text-end mt-2 me-1">{{ _("Fréquence") }} *</label>
+                    <div class="col">
+                        <select id="ajb_schedule_kind" class="form-select form-lbk" onchange="onScheduleKindChange();" required>
+                            <option value="D" {% if args['item'].get('ajb_schedule_kind')=='D' %}selected{% endif %}>{{ _("Quotidien") }}</option>
+                            <option value="W" {% if args['item'].get('ajb_schedule_kind')=='W' %}selected{% endif %}>{{ _("Hebdomadaire") }}</option>
+                            <option value="M" {% if args['item'].get('ajb_schedule_kind')=='M' %}selected{% endif %}>{{ _("Mensuel") }}</option>
+                            <option value="B" {% if args['item'].get('ajb_schedule_kind')=='B' %}selected{% endif %}>{{ _("Bimestriel") }}</option>
+                            <option value="T" {% if args['item'].get('ajb_schedule_kind')=='T' %}selected{% endif %}>{{ _("Trimestriel") }}</option>
+                            <option value="Q" {% if args['item'].get('ajb_schedule_kind')=='Q' %}selected{% endif %}>{{ _("Quadrimestriel") }}</option>
+                            <option value="S" {% if args['item'].get('ajb_schedule_kind')=='S' %}selected{% endif %}>{{ _("Semestriel") }}</option>
+                            <option value="A" {% if args['item'].get('ajb_schedule_kind')=='A' %}selected{% endif %}>{{ _("Annuel") }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="ajb_schedule_time" class="form-label col-3 text-end mt-2 me-1">{{ _("Heure d'exécution") }} *</label>
+                    <div class="col">
+                        <input
+                            id="ajb_schedule_time"
+                            type="time"
+                            class="form-control form-lbk"
+                            required
+                            value="{{ args['item'].get('ajb_schedule_time','02:00:00') }}">
+                    </div>
+                </div>
+
+                <div id="row_dow" class="form-group align-items-start mt-2 d-none">
+                    <label for="ajb_schedule_dow" class="form-label col-3 text-end mt-2 me-1">{{ _("Jour de la semaine") }}</label>
+                    <div class="col">
+                        <select id="ajb_schedule_dow" class="form-select form-lbk">
+                            <option value="1" {% if args['item'].get('ajb_schedule_dow')==1 %}selected{% endif %}>{{ _("Lundi") }}</option>
+                            <option value="2" {% if args['item'].get('ajb_schedule_dow')==2 %}selected{% endif %}>{{ _("Mardi") }}</option>
+                            <option value="3" {% if args['item'].get('ajb_schedule_dow')==3 %}selected{% endif %}>{{ _("Mercredi") }}</option>
+                            <option value="4" {% if args['item'].get('ajb_schedule_dow')==4 %}selected{% endif %}>{{ _("Jeudi") }}</option>
+                            <option value="5" {% if args['item'].get('ajb_schedule_dow')==5 %}selected{% endif %}>{{ _("Vendredi") }}</option>
+                            <option value="6" {% if args['item'].get('ajb_schedule_dow')==6 %}selected{% endif %}>{{ _("Samedi") }}</option>
+                            <option value="7" {% if args['item'].get('ajb_schedule_dow')==7 %}selected{% endif %}>{{ _("Dimanche") }}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="row_dom" class="form-group align-items-start mt-2 d-none">
+                    <label for="ajb_schedule_dom" class="form-label col-3 text-end mt-2 me-1">{{ _("Jour du mois") }}</label>
+                    <div class="col d-flex flex-wrap gap-3 align-items-start">
+                        <div style="min-width: 120px;">
+                            <input
+                                id="ajb_schedule_dom"
+                                type="number"
+                                min="1"
+                                max="31"
+                                class="form-control form-lbk"
+                                value="{{ args['item'].get('ajb_schedule_dom','') }}">
+                            <small class="text-muted">{{ _("1 à 31") }}</small>
+                        </div>
+
+                        <div class="form-check mt-2">
+                            <input
+                                class="form-check-input"
+                                type="checkbox"
+                                id="ajb_schedule_last_dom"
+                                {% if args['item'].get('ajb_schedule_last_dom','N') == 'Y' %}checked{% endif %}>
+                            <label class="form-check-label" for="ajb_schedule_last_dom">{{ _("Dernier jour du mois") }}</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label for="ajb_schedule_start_on" class="form-label col-3 text-end mt-2 me-1">{{ _("Date de démarrage") }}</label>
+                    <div class="col">
+                        <input
+                            id="ajb_schedule_start_on"
+                            type="date"
+                            class="form-control form-lbk"
+                            value="{{ args['item'].get('ajb_schedule_start_on','') }}">
+                    </div>
+                </div>
+
+                <hr class="my-3">
+
+                <!-- DHIS2 parameters -->
+                <div id="block_dhis2" class="job-block mt-3 d-none">
+                    <h5 class="mb-3">{{ _("Paramètres DHIS2") }}</h5>
+
+                    <!-- Mode selection -->
+                    <div class="form-group d-lg-flex align-items-start mt-2">
+                        <label for="dhis2_mode" class="form-label col-3 text-end mt-2 me-1">{{ _("Mode") }} *</label>
+                        <div class="col">
+                            <select id="dhis2_mode" class="form-select form-lbk" onchange="onDhis2ModeChange();">
+                                <option value="create" {% if args['item'].get('ajb_params', {}).get('dhis2_mode')=='create' %}selected{% endif %}>{{ _("Créer un fichier") }}</option>
+                                <option value="send"   {% if args['item'].get('ajb_params', {}).get('dhis2_mode')=='send' %}selected{% endif %}>{{ _("Envoyer vers DHIS2 (API)") }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Spreadsheet -->
+                    <div class="form-group d-lg-flex align-items-start mt-2">
+                        <label for="dhis2_sheet" class="form-label col-3 text-end mt-2 me-1">{{ _("Feuille de calcul") }} *</label>
+                        <div class="col">
+                            <select id="dhis2_sheet" class="form-select form-lbk">
+                                <option value="" selected="selected">-- {{ _("Sélectionner") }} --</option>
+                                <option value="LIST_EEQ.csv" {% if args['item'].get('ajb_params', {}).get('dhis2_sheet') == 'LIST_EEQ.csv' %}selected{% endif %}>{{ _("EEQ") }}</option>
+                                <option value="LIST_EQUIPMENT_FAILURE.csv" {% if args['item'].get('ajb_params', {}).get('dhis2_sheet') == 'LIST_EQUIPMENT_FAILURE.csv' %}selected{% endif %}>{{ _("Pannes d'équipment") }}</option>
+                                <option value="LIST_OUTSOURCING.csv" {% if args['item'].get('ajb_params', {}).get('dhis2_sheet') == 'LIST_OUTSOURCING.csv' %}selected{% endif %}>{{ _("Sous-traitance") }}</option>
+                                <option value="LIST_STOCK_STATUS.csv" {% if args['item'].get('ajb_params', {}).get('dhis2_sheet') == 'LIST_STOCK_STATUS.csv' %}selected{% endif %}>{{ _("Statut du stock") }}</option>
+                                {% for filename in args['data_dhis2'] %}
+                                <option value="{{ filename }}" {% if args['item'].get('ajb_params', {}).get('dhis2_sheet') == filename %}selected{% endif %}>{{ filename }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Folder / scope -->
+                    <div class="form-group d-lg-flex align-items-start mt-2">
+                        <label for="dhis2_folder_scope" class="form-label col-3 text-end mt-2 me-1">{{ _("Dossier") }}</label>
+                        <div class="col">
+                            <select id="dhis2_folder_scope" class="form-select form-lbk">
+                                <option value="A"      {% if args['item'].get('ajb_params', {}).get('dhis2_folder_scope')=='all' %}selected{% endif %}>{{ _("Tous") }}</option>
+                                <option value="E" {% if args['item'].get('ajb_params', {}).get('dhis2_folder_scope')=='external' %}selected{% endif %}>{{ _("Externe") }}</option>
+                                <option value="I" {% if args['item'].get('ajb_params', {}).get('dhis2_folder_scope')=='internal' %}selected{% endif %}>{{ _("Interne") }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- LabBook Lite -->
+                    <div class="form-group d-lg-flex align-items-start mt-2">
+                        <label for="dhis2_lblite_mode" class="form-label col-3 text-end mt-2 me-1">{{ _("LabBook Lite") }}</label>
+                        <div class="col">
+                            <select id="dhis2_lblite_mode" class="form-select form-lbk">
+                                <option value="A"    {% if args['item'].get('ajb_params', {}).get('dhis2_lblite_mode')=='include' %}selected{% endif %}>{{ _("Inclure LabBook Lite") }}</option>
+                                <option value="N"    {% if args['item'].get('ajb_params', {}).get('dhis2_lblite_mode')=='exclude' %}selected{% endif %}>{{ _("Exclure LabBook Lite") }}</option>
+                                <option value="Y"  {% if args['item'].get('ajb_params', {}).get('dhis2_lblite_mode')=='only_lite' %}selected{% endif %}>{{ _("Uniquement LabBook Lite") }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- DHIS2 API block (visible when mode = send) -->
+                    <div id="dhis2_api_block" class="form-group d-flex align-items-start mt-2 d-none">
+                        <label for="dhis2_api_config" class="form-label col-3 text-end mt-2 me-1">
+                            {{ _("Configuration API DHIS2") }}
+                        </label>
+                        <div class="col">
+                            <select id="dhis2_api_config" class="form-select form-lbk">
+                                {% for dhs in ihm['dhs'] %}
+                                <option value="{{ dhs["dhs_ser"] }}" {% if dhs["dhs_default"] == "Y" %}selected{% endif %}>{{ dhs["dhs_name"] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Internal messaging (visible when mode = create) -->
+                    <div id="dhis2_internal_block" class="form-group d-flex align-items-start mt-2 d-none">
+                        <label class="form-label col-3 text-end mt-2 me-1">
+                            {{ _("Messagerie interne") }}
+                        </label>
+                        <div class="col">
+
+                            <!-- "Send" checkbox -->
+                            <div class="form-check mb-2">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    id="dhis2_internal_msg"
+                                    onchange="onInternalMsgToggle('dhis2');"
+                                    {% if args['item'].get('ajb_params', {}).get('dhis2_internal_msg','N') == 'Y' %}checked{% endif %}>
+                                <label class="form-check-label" for="dhis2_internal_msg">
+                                    {{ _("Envoyer vers la messagerie interne") }}
+                                </label>
+                            </div>
+
+                            <!-- Recipient block (visible only when checkbox is checked) -->
+                            <div id="dhis2_internal_recipient_block" class="mt-2 d-none">
+                                <label for="dhis2_internal_recipient" class="form-label">
+                                    {{ _("Destinataire") }}
+                                </label>
+
+                                <!-- IMPORTANT: this select is empty, it will be dynamically populated by Select2 -->
+                                <select id="dhis2_internal_recipient" class="form-select form-lbk form-search" style="width:100%;">
+                                    {% if args['item'].get('ajb_params', {}).get('dhis2_internal_recipient') %}
+                                        <option value="{{ args['item']['ajb_params']['dhis2_internal_recipient'] }}" selected="selected">
+                                            {{ args['item']['ajb_params']['dhis2_internal_recipient_label'] or args['item']['ajb_params']['dhis2_internal_recipient'] }}
+                                        </option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+                <!-- Activity report parameters -->
+                <div id="block_activity" class="job-block mt-3 d-none">
+                    <h5 class="mb-3">{{ _("Paramètres du rapport d'activité") }}</h5>
+
+                    <div class="form-group d-lg-flex align-items-start mt-2">
+                        <label for="activity_family" class="form-label col-3 text-end mt-2 me-1">{{ _("Famille d'analyse") }}</label>
+                        <div class="col">
+                            <select id="activity_family" class="form-select form-lbk">
+                                <option value="all"    {% if args['item'].get('ajb_params', {}).get('activity_family')=='all' %}selected{% endif %}>{{ _("Toutes") }}</option>
+                                <option value="micro"  {% if args['item'].get('ajb_params', {}).get('activity_family')=='micro' %}selected{% endif %}>{{ _("Microbiologie") }}</option>
+                                <option value="sero"   {% if args['item'].get('ajb_params', {}).get('activity_family')=='sero' %}selected{% endif %}>{{ _("Séro") }}</option>
+                                <option value="virol"  {% if args['item'].get('ajb_params', {}).get('activity_family')=='virol' %}selected{% endif %}>{{ _("Virologie") }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group d-lg-flex align-items-start mt-2">
+                        <label for="activity_output" class="form-label col-3 text-end mt-2 me-1">{{ _("Format de sortie") }}</label>
+                        <div class="col">
+                            <select id="activity_output" class="form-select form-lbk">
+                                <option value="csv_type" {% if args['item'].get('ajb_params', {}).get('activity_output')=='csv_type' %}selected{% endif %}>{{ _("Export CSV par type") }}</option>
+                                <option value="csv_age"  {% if args['item'].get('ajb_params', {}).get('activity_output')=='csv_age' %}selected{% endif %}>{{ _("Export CSV par âge") }}</option>
+                                <option value="pdf"      {% if args['item'].get('ajb_params', {}).get('activity_output')=='pdf' %}selected{% endif %}>{{ _("Rapport PDF") }}</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- New: report template -->
+                    <div class="form-group d-lg-flex align-items-start mt-2">
+                        <label for="activity_template" class="form-label col-3 text-end mt-2 me-1">{{ _("Modèle de rapport") }}</label>
+                        <div class="col">
+                            <select id="activity_template" class="form-select form-lbk">
+                                {% for tpl in ihm['tpl_activity'] %}
+                                <option value="{{ tpl["tpl_file"] }}" {% if tpl["tpl_default"] == "Y" %}selected{% endif %}>{{ tpl["tpl_name"] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group d-lg-flex align-items-start mt-2">
+                        <label class="form-label col-3 text-end mt-2 me-1">{{ _("Messagerie interne") }}</label>
+                        <div class="col">
+
+                            <div class="form-check mb-2">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    id="activity_internal_msg"
+                                    onchange="onInternalMsgToggle('activity');"
+                                    {% if args['item'].get('ajb_params', {}).get('activity_internal_msg','N') == 'Y' %}checked{% endif %}>
+                                <label class="form-check-label" for="activity_internal_msg">{{ _("Envoyer vers la messagerie interne") }}</label>
+                            </div>
+
+                            <div id="activity_internal_recipient_block" class="mt-2 d-none">
+                                <label for="activity_internal_recipient" class="form-label">{{ _("Destinataire") }}</label>
+
+                                <select id="activity_internal_recipient" class="form-select form-lbk form-search" style="width:100%;">
+                                    {% if args['item'].get('ajb_params', {}).get('activity_internal_recipient') %}
+                                        <option value="{{ args['item']['ajb_params']['activity_internal_recipient'] }}" selected="selected">
+                                            {{ args['item']['ajb_params']['activity_internal_recipient_label'] or args['item']['ajb_params']['activity_internal_recipient'] }}
+                                        </option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+
+                <!-- Billing status parameters -->
+                <div id="block_billing" class="job-block mt-3 d-none">
+                    <h5 class="mb-3">{{ _("Paramètres de l'état de la facturation journalière") }}</h5>
+
+                    <!-- New: billing report template -->
+                    <div class="form-group d-lg-flex align-items-start mt-2">
+                        <label for="billing_template" class="form-label col-3 text-end mt-2 me-1">{{ _("Modèle de rapport") }}</label>
+                        <div class="col">
+                            <select id="billing_template" class="form-select form-lbk">
+                                {% for tpl in ihm['tpl_billing'] %}
+                                <option value="{{ tpl["tpl_file"] }}" {% if tpl["tpl_default"] == "Y" %}selected{% endif %}>{{ tpl["tpl_name"] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group d-lg-flex align-items-start mt-2">
+                        <label class="form-label col-3 text-end mt-2 me-1">{{ _("Messagerie interne") }}</label>
+                        <div class="col">
+
+                            <div class="form-check mb-2">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    id="billing_internal_msg"
+                                    onchange="onInternalMsgToggle('billing');"
+                                    {% if args['item'].get('ajb_params', {}).get('billing_internal_msg','N') == 'Y' %}checked{% endif %}>
+                                <label class="form-check-label" for="billing_internal_msg">{{ _("Envoyer vers la messagerie interne") }}</label>
+                            </div>
+
+                            <div id="billing_internal_recipient_block" class="mt-2 d-none">
+                                <label for="billing_internal_recipient" class="form-label">{{ _("Destinataire") }}</label>
+
+                                <select id="billing_internal_recipient" class="form-select form-lbk form-search" style="width:100%;">
+                                    {% if args['item'].get('ajb_params', {}).get('billing_internal_recipient') %}
+                                        <option value="{{ args['item']['ajb_params']['billing_internal_recipient'] }}" selected="selected">
+                                            {{ args['item']['ajb_params']['billing_internal_recipient_label'] or args['item']['ajb_params']['billing_internal_recipient'] }}
+                                        </option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                {% if args['id_item']|int > 0 %}
+                <hr class="my-4">
+                <h5 class="mb-3">{{ _("Statut d'exécution") }}</h5>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Prochaine exécution") }}</label>
+                    <div class="col">
+                        <div class="form-control-plaintext">
+                            {{ args['item'].get('ajb_next_run_at','-') }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group d-lg-flex align-items-start mt-2">
+                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Dernière exécution") }}</label>
+                    <div class="col">
+                        <div class="form-control-plaintext">
+                            {{ args['item'].get('ajb_last_run_at','-') }}
+                            <span class="text-muted">[ {{ args['item'].get('ajb_last_status','never') }} ]</span>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </form>
+
+            <div class="my-4 clearfix">
+                <div class="float-start ms-0">
+                    <input
+                        type="button"
+                        onclick="cancel();"
+                        id="btn_cancel"
+                        value="{{ _('Annuler') }}"
+                        class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                </div>
+                <div class="float-end">
+                    <input
+                        type="button"
+                        onclick="save_job();"
+                        id="btn_save"
+                        value="{{ _('Enregistrer') }}"
+                        class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
+                </div>
+            </div>
+
+            {% else %}
+            {% include 'no-rights.html' %}
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+/* in-code comment: constants provided by server/session */
+const SERVER   = "{{ session['server_ext'] }}";
+const IDITEM   = {{ args['id_item']|default(0)|int }};
+const TYPEINIT = "{{ args['type_item'] }}";  /* 'dhis2', 'activity', 'billing' when editing */
+
+/* in-code comment: show only the block that matches jobType, using Bootstrap d-none */
+function applyTypeVisibility(jobType)
+{
+    const bDhis2    = document.getElementById('block_dhis2');
+    const bActivity = document.getElementById('block_activity');
+    const bBilling  = document.getElementById('block_billing');
+
+    // hide all blocks first
+    bDhis2.classList.add('d-none');
+    bActivity.classList.add('d-none');
+    bBilling.classList.add('d-none');
+
+    // then show the selected block
+    if (jobType === 'dhis2') {
+        bDhis2.classList.remove('d-none');
+    } else if (jobType === 'activity') {
+        bActivity.classList.remove('d-none');
+    } else if (jobType === 'billing') {
+        bBilling.classList.remove('d-none');
+    }
+}
+
+/* in-code comment: show DOW row only for weekly, DOM row for monthly-like, else hide both */
+function applyScheduleVisibility(kind)
+{
+    const rowDow = document.getElementById('row_dow');
+    const rowDom = document.getElementById('row_dom');
+
+    // hide both row first
+    rowDow.classList.add('d-none');
+    rowDom.classList.add('d-none');
+
+    // W => show day of week row
+    if (kind === 'W') {
+        rowDow.classList.remove('d-none');
+        // ensure Bootstrap flex layout for row_dow
+        rowDow.classList.add('d-lg-flex');
+
+    // M / B / T / Q / S / A => show day-of-month row
+    } else if (
+        kind === 'M' ||
+        kind === 'B' ||
+        kind === 'T' ||
+        kind === 'Q' ||
+        kind === 'S' ||
+        kind === 'A'
+    ) {
+        rowDom.classList.remove('d-none');
+        rowDom.classList.add('d-lg-flex');
+    }
+}
+
+/* in-code comment: show the correct DHIS2 sub-block:
+   - if mode = create  -> show internal messaging block only
+   - if mode = send    -> show API config block only
+   Both blocks start hidden (d-none) every time. */
+function applyDhis2ModeVisibility()
+{
+    const modeSel       = document.getElementById('dhis2_mode');
+    const internalBlock = document.getElementById('dhis2_internal_block');
+    const apiBlock      = document.getElementById('dhis2_api_block');
+
+    if (!modeSel) {
+        // not DHIS2, nothing to do
+        return;
+    }
+
+    // always hide both first
+    if (internalBlock) internalBlock.classList.add('d-none');
+    if (apiBlock)      apiBlock.classList.add('d-none');
+
+    // now show only what matches the current mode
+    if (modeSel.value === 'create') {
+        if (internalBlock) {
+            internalBlock.classList.remove('d-none');
+        }
+        // refresh the sub-recipient visibility in that block
+        onInternalMsgToggle('dhis2');
+    }
+
+    if (modeSel.value === 'send') {
+        if (apiBlock) {
+            apiBlock.classList.remove('d-none');
+        }
+    }
+}
+
+/* in-code comment: show/hide recipient select when checkbox 'Envoyer vers la messagerie interne' is toggled */
+function onInternalMsgToggle(context)
+{
+    // context is 'dhis2' | 'activity' | 'billing'
+    let checkboxEl;
+    let recipientBlockEl;
+
+    if (context === 'dhis2') {
+        checkboxEl        = document.getElementById('dhis2_internal_msg');
+        recipientBlockEl  = document.getElementById('dhis2_internal_recipient_block');
+    } else if (context === 'activity') {
+        checkboxEl        = document.getElementById('activity_internal_msg');
+        recipientBlockEl  = document.getElementById('activity_internal_recipient_block');
+    } else if (context === 'billing') {
+        checkboxEl        = document.getElementById('billing_internal_msg');
+        recipientBlockEl  = document.getElementById('billing_internal_recipient_block');
+    }
+
+    if (!checkboxEl || !recipientBlockEl) return;
+
+    if (checkboxEl.checked) {
+        recipientBlockEl.classList.remove('d-none');
+    } else {
+        recipientBlockEl.classList.add('d-none');
+    }
+}
+
+function onTypeChange()
+{
+    const t = document.getElementById('ajb_type').value;
+
+    // show the correct main block (dhis2 / activity / billing)
+    applyTypeVisibility(t);
+
+    // if the selected type is dhis2, also update DHIS2 sub-block visibility
+    if (t === 'dhis2') {
+        applyDhis2ModeVisibility();
+    }
+}
+
+function onScheduleKindChange()
+{
+    const k = document.getElementById('ajb_schedule_kind').value;
+    applyScheduleVisibility(k);
+}
+
+function onDhis2ModeChange()
+{
+    applyDhis2ModeVisibility();
+}
+
+
+/* in-code comment: normalize "HH:MM" -> "HH:MM:SS" */
+function normalizeTime(hhmm) {
+    if (!hhmm) return "02:00:00";
+    return hhmm.length === 5 ? (hhmm + ":00") : hhmm;
+}
+
+/* in-code comment: build backend payload matching Export.py contract */
+function buildBackendPayload(jobType) {
+    const payload = {
+        type:  jobType,
+        label: document.getElementById('ajb_label').value.trim(),
+        active: document.getElementById('ajb_is_active').checked ? 'Y' : 'N',
+        schedule: {
+            kind: document.getElementById('ajb_schedule_kind').value,
+            time_utc: normalizeTime(document.getElementById('ajb_schedule_time').value),
+            dow: document.getElementById('ajb_schedule_dow').value || null,
+            dom: document.getElementById('ajb_schedule_dom').value || null,
+            last_dom: document.getElementById('ajb_schedule_last_dom').checked ? 'Y' : 'N',
+            start_on: document.getElementById('ajb_schedule_start_on').value || null
+        },
+        params: {}
+    };
+
+    // --- type-specific params ---
+    if (jobType === 'dhis2') {
+        payload.params.dhis2_mode         = document.getElementById('dhis2_mode').value;
+        payload.params.dhis2_sheet        = document.getElementById('dhis2_sheet').value || "";
+        payload.params.dhis2_folder_scope = document.getElementById('dhis2_folder_scope').value;
+        payload.params.dhis2_lblite_mode  = document.getElementById('dhis2_lblite_mode').value;
+
+        const dhis2MsgCbx = document.getElementById('dhis2_internal_msg');
+        payload.params.dhis2_internal_msg = dhis2MsgCbx && dhis2MsgCbx.checked ? 'Y' : 'N';
+        const rec1 = document.getElementById('dhis2_internal_recipient');
+        payload.params.dhis2_internal_recipient = rec1 ? (rec1.value || null) : null;
+
+        const apiCfgSel = document.getElementById('dhis2_api_config');
+        if (apiCfgSel) payload.params.dhis2_api_config = apiCfgSel.value;
+
+    } else if (jobType === 'activity') {
+        payload.params.activity_family   = document.getElementById('activity_family').value;
+        payload.params.activity_output   = document.getElementById('activity_output').value;
+        payload.params.activity_template = document.getElementById('activity_template').value;
+
+        const actMsgCbx = document.getElementById('activity_internal_msg');
+        payload.params.activity_internal_msg = actMsgCbx && actMsgCbx.checked ? 'Y' : 'N';
+        const rec2 = document.getElementById('activity_internal_recipient');
+        payload.params.activity_internal_recipient = rec2 ? (rec2.value || null) : null;
+
+    } else if (jobType === 'billing') {
+        payload.params.billing_template = document.getElementById('billing_template').value;
+
+        const billMsgCbx = document.getElementById('billing_internal_msg');
+        payload.params.billing_internal_msg = billMsgCbx && billMsgCbx.checked ? 'Y' : 'N';
+        const rec3 = document.getElementById('billing_internal_recipient');
+        payload.params.billing_internal_recipient = rec3 ? (rec3.value || null) : null;
+    }
+
+    return payload;
+}
+
+/* in-code comment: validate and POST/PUT to backend endpoints */
+function save_job() {
+    const jobType = (IDITEM > 0)
+        ? TYPEINIT
+        : document.getElementById('ajb_type').value;
+
+    if (!jobType) { alert("{{ _("Le type est obligatoire.") }}"); return; }
+    if (!document.getElementById('ajb_label').value.trim()) { alert("{{ _("Le libellé est obligatoire.") }}"); return; }
+    if (!document.getElementById('ajb_schedule_kind').value) { alert("{{ _("La fréquence est obligatoire.") }}"); return; }
+    if (!document.getElementById('ajb_schedule_time').value) { alert("{{ _("L'heure d'exécution est obligatoire.") }}"); return; }
+
+    const body = buildBackendPayload(jobType);
+
+    const isUpdate = IDITEM > 0;
+    const url = isUpdate
+        ? (SERVER + '/services/automation/job/' + IDITEM)
+        : (SERVER + '/services/automation/job');
+    const method = isUpdate ? 'PUT' : 'POST';
+
+    fetch(url, {
+        method,
+        headers: {
+            "Authorization": "Bearer {{ session.get('be_access_token','') }}",
+            "Content-Type": "application/json",
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        body: JSON.stringify(body)
+    })
+    .then(r => (isUpdate ? Promise.resolve({ok:r.ok}) : r.text().then(t => ({ok:r.ok, id:t}))))
+    .then(({ ok, id }) => {
+        if (!ok) {
+            alert("{{ _("Une erreur est survenue lors de l'enregistrement.") }}");
+            return;
+        }
+        // go back to list
+        window.location.href = SERVER + '/list-jobs';
+    })
+    .catch(err => {
+        console.error('save_job error', err);
+        alert("{{ _("Une erreur est survenue lors de l'enregistrement.") }}");
+    });
+}
+
+/* in-code comment: init Select2 on recipient selectors */
+function initRecipientSelect2()
+{
+    // small helper to DRY
+    function buildSelect2(jqSelector) {
+        if (!$(jqSelector).length) return;
+
+        $(jqSelector).select2({
+            placeholder: "{{ _("Cliquer pour commencer une recherche") }}",
+            tags: false,
+            multiple: false,
+            tokenSeparators: [','],
+            minimumInputLength: 2,
+            ajax: {
+                url: "{{ session['server_ext'] }}/services/user/search",
+                type: "POST",
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                // we send Bearer like in message page
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                data: function (params) {
+                    return JSON.stringify({
+                        term: params.term
+                    });
+                },
+                processResults: function (data) {
+                    return {
+                        results: $.map(data, function (item) {
+                            return {
+                                text: item.field_value,
+                                id: item.id_data
+                            }
+                        })
+                    };
+                }
+            },
+            // allow width 100%
+            width: '100%'
+        });
+    }
+
+    buildSelect2('#dhis2_internal_recipient');
+    buildSelect2('#activity_internal_recipient');
+    buildSelect2('#billing_internal_recipient');
+
+    // bugfix select2 focus (copié de ta page message)
+    $(document).on('select2:open', () => {
+        const el = document.querySelector('.select2-search__field');
+        if (el) { el.focus(); }
+    });
+}
+
+/* in-code comment: cancel action -> back to list */
+function cancel()
+{
+    window.location.href = SERVER + '/list-jobs';
+}
+
+{% if (has_permission("AUTO_180") and args['id_item'] == 0) or (has_permission("AUTO_181") and args['id_item'] > 0) %}
+document.addEventListener('DOMContentLoaded', function() {
+    const selTypeEl    = document.getElementById('ajb_type');
+    const effectiveType = (IDITEM > 0)
+        ? TYPEINIT
+        : (selTypeEl ? selTypeEl.value : '');
+
+    // 1. Show only the main block for the current type (or nothing if none yet)
+    applyTypeVisibility(effectiveType || '');
+
+    // 2. Show the correct scheduling sub-fields (day-of-week / day-of-month)
+    const kind = document.getElementById('ajb_schedule_kind').value;
+    applyScheduleVisibility(kind);
+
+    // 3. If current type is dhis2, apply DHIS2 mode visibility logic (create/send)
+    if (effectiveType === 'dhis2') {
+        applyDhis2ModeVisibility();
+    } else {
+        // safety: force-hide both DHIS2 sub-blocks if type is not dhis2
+        const internalBlock = document.getElementById('dhis2_internal_block');
+        const apiBlock      = document.getElementById('dhis2_api_block');
+        if (internalBlock) internalBlock.classList.add('d-none');
+        if (apiBlock)      apiBlock.classList.add('d-none');
+    }
+
+    // 4. Initialize internal messaging recipient visibility in each block
+    onInternalMsgToggle('dhis2');
+    onInternalMsgToggle('activity');
+    onInternalMsgToggle('billing');
+
+    // 5. Initialize Select2 on all recipient selects
+    initRecipientSelect2();
+});
+{% endif %}
+</script>
+{% endblock %}
+
