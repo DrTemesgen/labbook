@@ -81,6 +81,20 @@ SCHED_PID="${GUNICORN_DIR}/scheduler.pid"           # scheduler PID file
 # shellcheck disable=SC1091
 source ${VENV_DIR}/bin/activate
 
+# --- wait FE port ---
+FE_HOST="localhost"
+FE_PORT=8081
+FE_WAIT_SEC=120
+
+echo "[BE] wait FE ${FE_HOST}:${FE_PORT} ${FE_WAIT_SEC}s max"
+for i in $(seq 1 "$FE_WAIT_SEC"); do
+  # bash built-in TCP check (no curl/nc dependency)
+  (echo > /dev/tcp/"$FE_HOST"/"$FE_PORT") >/dev/null 2>&1 && { echo "[BE] FE ready"; break; }
+  sleep 1
+done
+(echo > /dev/tcp/"$FE_HOST"/"$FE_PORT") >/dev/null 2>&1 || { echo "[BE] FE not reachable"; exit 1; }
+# --- end wait FE port ---
+
 # create Gunicorn directory if necessary
 mkdir -p ${GUNICORN_DIR}
 mkdir -p ${LOGS_DIR}

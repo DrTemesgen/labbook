@@ -683,7 +683,9 @@ def oauth_callback():
     redirect_uri = f"/{redirect_name}/oauth/callback" if redirect_name else "/oauth/callback"
 
     server_int = session.get('server_int')
+    # server_ext = (session.get('server_ext') or request.url_root.rstrip('/')).rstrip('/')
     token_url = f"{server_int}/{redirect_name}/services/oauth/token" if redirect_name else f"{server_int}/services/oauth/token"
+    # token_url  = f"{server_ext if (not redirect_name or server_ext.endswith('/'+redirect_name)) else server_ext + '/' + redirect_name}/services/oauth/token"
 
     # Basic state check
     if request.args.get('state') != session.get('oauth_state'):
@@ -699,8 +701,12 @@ def oauth_callback():
         'code_verifier': session.get('oauth_pkce_verifier'),
     }
 
+    log.info(Logs.fileline() + " : DEBUG OAUTH_CB token_url=" + str(token_url))
+    log.info(Logs.fileline() + " : DEBUG OAUTH_CB redirect_uri=" + str(redirect_uri))    
+
     try:
         req = requests.post(token_url, data=data, timeout=5)
+        log.info(Logs.fileline() + " : DEBUG OAUTH_CB token_post_done status=" + str(req.status_code))        
     except requests.RequestException as e:
         log.error(Logs.fileline() + f" : OAUTH token POST raised exception: {e}")
         req = type('R', (), {'status_code': 500, 'json': lambda: {}})()
@@ -709,6 +715,7 @@ def oauth_callback():
         # Reset PKCE/state on failure and disconnect
         session.pop('oauth_pkce_verifier', None)
         session.pop('oauth_state', None)
+        log.info(Logs.fileline() + " : DEBUG OAUTH_CB state_mismatch")        
         return redirect(url_for('disconnect'))
 
     # Persist access token for BE calls
