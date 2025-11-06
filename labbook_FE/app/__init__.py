@@ -65,6 +65,7 @@ log = logging.getLogger('log_front')
 
 app = Flask(__name__)
 app.config.from_object('default_settings')
+app.permanent_session_lifetime = timedelta(hours=2)
 
 config_envvar = 'LOCAL_SETTINGS'
 
@@ -106,13 +107,24 @@ babel = Babel(app)
 
 @app.before_request
 def before_request_func():
+    last = session.get('last_activity')
+    now  = datetime.now()
+    if last:
+        try:
+            last_dt = datetime.fromisoformat(last)
+            if (now - last_dt) > timedelta(hours=2):
+                return redirect(url_for('disconnect'))
+        except Exception:
+            pass
+
     nonce = uuid.uuid1()
 
     session['nonce'] = str(nonce)
 
     user_agent = request.headers.get('User-Agent')
     session['user_agent'] = user_agent
-
+    session['last_activity'] = now.isoformat(timespec='seconds')
+    session.permanent = True
     session.modified = True
 
 
@@ -206,6 +218,8 @@ babel.init_app(app, locale_selector=get_locale)
 def check_init_version():
     log.info(Logs.fileline() + ' : LABBOOK_FE check_init_version begins')
 
+    ensure_base_urls_in_session()
+
     try:
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/init/version'
         req = requests.get(url, timeout=10)
@@ -251,7 +265,7 @@ def get_init_var(be_headers=None):
 
     ensure_base_urls_in_session()
 
-    call_headers = dict(be_headers) if be_headers else {}
+    call_headers = be_auth_headers()
 
     # init number version
     if not session or 'version' not in session or session['version'] != app.config.get('APP_VERSION'):
@@ -264,10 +278,9 @@ def get_init_var(be_headers=None):
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/default/val/auto_logout'
         req = requests.get(url, timeout=10, headers=call_headers)
 
-        if be_headers is not None:
-            redir = be_check_or_bounce(req)
-            if redir:
-                return redir
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
 
         if req.status_code == 200:
             ret_json = req.json()
@@ -286,6 +299,10 @@ def get_init_var(be_headers=None):
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/default/val/default_language'
         req = requests.get(url, timeout=10, headers=call_headers)
 
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
         if req.status_code == 200:
             ret_json = req.json()
             session['lang_pdf'] = ret_json['value']
@@ -298,6 +315,10 @@ def get_init_var(be_headers=None):
     try:
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/default/val/db_language'
         req = requests.get(url, timeout=10, headers=call_headers)
+
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
 
         if req.status_code == 200:
             ret_json = req.json()
@@ -312,6 +333,10 @@ def get_init_var(be_headers=None):
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/stock'
         req = requests.get(url, timeout=10, headers=call_headers)
 
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
         if req.status_code == 200:
             ret_json = req.json()
             session['stock_expir_warning'] = ret_json['sos_expir_warning']
@@ -325,6 +350,10 @@ def get_init_var(be_headers=None):
     try:
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/form/list'
         req = requests.get(url, timeout=10, headers=call_headers)
+
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
 
         if req.status_code == 200:
             l_fos = req.json()
@@ -344,7 +373,7 @@ def get_user_data(login, be_headers=None):
         log.error(Logs.fileline() + ' : get_user_data ERROR no login')
         return disconnect()  # redirect(session['server_ext'] + '/disconnect')
 
-    call_headers = dict(be_headers) if be_headers else {}
+    call_headers = be_auth_headers()
 
     try:
         if 'server_int' not in session or not session['server_int']:
@@ -382,6 +411,10 @@ def get_user_data(login, be_headers=None):
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/user/rights/list/' + str(session['user_id'])
         req = requests.get(url, timeout=10, headers=call_headers)
 
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
         if req.status_code == 200:
             session['l_user_rights'] = req.json()
             session.modified = True
@@ -400,6 +433,10 @@ def get_user_data(login, be_headers=None):
         try:
             url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/link/user/' + str(session['user_id'])
             req = requests.get(url, timeout=10, headers=call_headers)
+
+            redir = be_check_or_bounce(req)
+            if redir:
+                return redir
 
             if req.status_code == 200:
                 json = req.json()
@@ -424,7 +461,7 @@ def get_user_data(login, be_headers=None):
 
 
 def get_software_settings(be_headers=None):
-    call_headers = dict(be_headers) if be_headers else {}
+    call_headers = be_auth_headers()
 
     try:
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/record/number'
@@ -732,9 +769,16 @@ def oauth_callback():
 
 @app.route("/")
 def index():
-    if not session or 'current_page' not in session:
+    if 'login_ok' not in session:
+        check_init_version()
+        return render_template('login.html', rand=random.randint(0, 999))
+    elif 'current_page' not in session:
         log.info(Logs.fileline() + ' : TRACE Labbook_FE get_init_var()')
-        get_init_var()
+
+        resp = get_init_var()
+        if isinstance(resp, Response):
+            return resp
+
         check_init_version()
         if session and 'labbook_BE_OK' in session and session['labbook_BE_OK']:
             session['lang_chosen'] = False
@@ -800,6 +844,7 @@ def lang(lang='fr_FR'):
 def disconnect():
     log.info(Logs.fileline() + ' : TRACE Labbook FRONT END disconnect')
     session.clear()
+    ensure_base_urls_in_session()
     return index()
 
 

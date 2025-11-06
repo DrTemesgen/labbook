@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.5] - 2025-11-06
+
+### Fixed
+- sending whatsapp with file
+- export and import analysis repository
+- fix FE session expiry after 2h inactivity (returning without logout)
+
 ## [3.6.4] - 2025-11-04
 ### Added
 - 4 new rigths for automation

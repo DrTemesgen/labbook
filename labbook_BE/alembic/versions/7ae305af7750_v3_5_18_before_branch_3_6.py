@@ -53,7 +53,7 @@ def upgrade():
     except Exception as err:
         print("ERROR drop table list_comment,\n\terr=" + str(err))
 
-    # ADD COLUMN for report_pwd in sigl_param_cr_data
+    # ADD COLUMN for var_in_report in sigl_07_data
     try:
         conn.execute(text("ALTER TABLE sigl_07_data ADD COLUMN var_in_report varchar(1) not null default 'Y'"))
     except Exception as err:

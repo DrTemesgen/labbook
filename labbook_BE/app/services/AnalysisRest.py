@@ -478,15 +478,13 @@ class AnalysisDet(Resource):
                     else:
                         ret = Analysis.updateRefVariable(id_data=var['id_link'],
                                                          id_owner=args['id_owner'],
-                                                         id_refana=id_ana,
-                                                         id_refvar=var['id_var'],
                                                          var_pos=var['var_pos'],
                                                          var_num=var['var_num'],
                                                          oblig=var['var_oblig'],
                                                          var_whonet=var['var_whonet'],
                                                          var_qrcode=var['var_qrcode'])
 
-                        if not ret:
+                        if ret is False:
                             self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR update link var to analysis')
                             return compose_ret('', Constants.cst_content_type_json, 500)
 
@@ -912,8 +910,12 @@ class AnalysisExport(Resource):
                    'ana_whonet', 'id_link', 'link_ana_ref', 'link_var_ref', 'link_pos', 'link_num_var', 'link_oblig',
                    'id_var', 'var_label', 'var_descr', 'var_unit', 'var_min', 'var_max', 'var_comment', 'var_res_type',
                    'var_formula', 'var_accu', 'var_code', 'var_whonet', 'var_qrcode', 'var_highlight', 'var_show_minmax',
-                   'var_in_report', 'var_formula_conv', 'var_unit_conv', 'var_accu_conv', 'ana_ast', 'ana_lite',
-                   'ana_loinc']]
+                   # v4
+                   'var_formula_conv', 'var_unit_conv', 'var_accu_conv', 'ana_ast',
+                   # v5
+                   'ana_lite', 'ana_loinc',
+                   # v6
+                   'var_in_report']]
 
         if 'id_user' not in args:
             self.log.error(Logs.fileline() + ' : AnalysisExport ERROR args missing')
@@ -1123,11 +1125,6 @@ class AnalysisExport(Resource):
                 else:
                     data.append('N')
 
-                if d['var_in_report']:
-                    data.append(d['var_in_report'])
-                else:
-                    data.append('Y')
-
                 # --- added in v4 ---
                 if d['formule_unite2']:
                     data.append(d['formule_unite2'])
@@ -1165,6 +1162,12 @@ class AnalysisExport(Resource):
                     data.append(d['ana_loinc'])
                 else:
                     data.append('')
+
+                # --- added in v6 ---
+                if d['var_in_report']:
+                    data.append(d['var_in_report'])
+                else:
+                    data.append('Y')
 
                 l_data.append(data)
 
@@ -1298,18 +1301,14 @@ class AnalysisImport(Resource):
                      'id_var', 'var_label', 'var_descr', 'var_unit', 'var_min', 'var_max', 'var_comment', 'var_res_type',
                      'var_formula', 'var_accu', 'var_code', 'var_whonet', 'var_qrcode', 'var_highlight', 'var_show_minmax']
 
-        if version == 'v4' or version == 'v5':
-            head_list.append('var_formula_conv')
-            head_list.append('var_unit_conv')
-            head_list.append('var_accu_conv')
-            head_list.append('ana_ast')
+        if version in ('v4', 'v5', 'v6'):
+            head_list += ['var_formula_conv', 'var_unit_conv', 'var_accu_conv', 'ana_ast']
 
-        if version == 'v5':
-            head_list.append('ana_lite')
-            head_list.append('ana_loinc')
+        if version in ('v5', 'v6'):
+            head_list += ['ana_lite', 'ana_loinc']
 
         if version == 'v6':
-            head_list.append('var_in_report')
+            head_list += ['var_in_report']
 
         i = 0
         for head in head_line:
@@ -1402,7 +1401,7 @@ class AnalysisImport(Resource):
                         var_accu_conv = 0
                         ana_ast = 'N'
 
-                    if (version == 'v4' or version == 'v5' or version == 'v6') and len(row) > 40:
+                    if (version == 'v5' or version == 'v6') and len(row) > 40:
                         ana_lite = row[40]
                         ana_loinc = row[41]
                     else:
@@ -1426,6 +1425,11 @@ class AnalysisImport(Resource):
 
                     # same analysis
                     if ret:
+                        ana_local = Analysis.getAnalysisByCode(code)
+
+                        if ana_local and int(ana_local['id_data']) != int(id_ana):
+                            id_ana = ana_local['id_data']
+
                         # next analysis
                         if code != code_prev:
                             # update analysis
@@ -1461,7 +1465,7 @@ class AnalysisImport(Resource):
                         l_link = Analysis.getListVariable(id_ana, test)
 
                         for link in l_link:
-                            if int(link['id_data']) == int(id_refvariable):
+                            if int(link['id_item']) == int(id_refvariable):
                                 # UPDATE VAR
                                 ret = Analysis.updateAnalysisVar(id_data=id_var,
                                                                  id_owner=id_owner,
@@ -1492,10 +1496,11 @@ class AnalysisImport(Resource):
                                     return compose_ret('', Constants.cst_content_type_json, 500)
 
                                 # UPDATE LINK
-                                ret = Analysis.updateRefVariable(id_data=id_link,
+                                position = int(position) if str(position).strip().isdigit() else None
+                                num_var  = int(num_var) if str(num_var).strip().isdigit() else None
+
+                                ret = Analysis.updateRefVariable(id_data=link['id_data'],
                                                                  id_owner=id_owner,
-                                                                 id_refana=id_ana,
-                                                                 id_refvar=id_var,
                                                                  var_pos=position,
                                                                  var_num=num_var,
                                                                  oblig=obligatoire,
@@ -1503,7 +1508,7 @@ class AnalysisImport(Resource):
                                                                  var_qrcode=var_qrcode,
                                                                  test=test)
 
-                                if not ret:
+                                if ret is False:
                                     self.log.info(Logs.fileline() + ' : TRACE AnalysisImport ERROR update link var to analysis code: ' + str(code) + ' | csv_line=' + str(i))
                                     if test == 'N':
                                         DB.insertDbStatus(stat='ERR;AnalysisImport ERROR update link var to analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
@@ -1720,6 +1725,9 @@ class AnalysisImport(Resource):
                             self.log.info(Logs.fileline() + ' : DEBUG-TRACE IMPORT insert LINK')
 
                             # INSERT NEW LINK
+                            position = int(position) if str(position).strip().isdigit() else 0
+                            num_var  = int(num_var) if str(num_var).strip().isdigit() else 0
+
                             ret = Analysis.insertRefVariable(id_owner=id_owner,
                                                              id_refana=id_ana,
                                                              id_refvar=id_var,

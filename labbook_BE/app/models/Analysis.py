@@ -627,9 +627,8 @@ class Analysis:
             cursor = DB.cursor()
 
             cursor.execute('update sigl_05_07_data' + mode_test +
-                           'set id_owner=%(id_owner)s, id_refanalyse=%(id_refana)s, id_refvariable=%(id_refvar)s, '
-                           'position=%(var_pos)s, num_var=%(var_num)s, obligatoire=%(oblig)s, var_whonet=%(var_whonet)s, '
-                           'var_qrcode=%(var_qrcode)s '
+                           'set id_owner=%(id_owner)s, position=%(var_pos)s, num_var=%(var_num)s, obligatoire=%(oblig)s, '
+                           'var_whonet=%(var_whonet)s, var_qrcode=%(var_qrcode)s '
                            'where id_data=%(id_data)s', params)
 
             Analysis.log.info(Logs.fileline())

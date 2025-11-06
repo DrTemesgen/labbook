@@ -1919,16 +1919,17 @@ class Setting:
         if not model:
             return (False, _("modèle d’envoi introuvable"))
 
+        rec_num  = params.get('rec_num')
         pat_code = params.get('pat_code') or ''
-        raw_name = (params.get('filename') or params.get('rec_num') or pat_code).strip()
-        if not raw_name:
-            return (False, _("nom de fichier/numéro/ID patient manquant pour le PDF"))
 
-        safe_name = raw_name.replace(' ', '_')
-        if not safe_name.lower().endswith('.pdf'):
-            safe_name += '.pdf'
+        if not rec_num:
+            return (False, _("numéro de compte rendu manquant"))
 
-        pdf_filename = safe_name
+        pdf_filename = (params.get('filename') or '').strip()
+        if not pdf_filename.lower().endswith('.pdf'):
+            pdf_filename += '.pdf'
+
+        display_name = f"cr_{rec_num}.pdf"
 
         ok, tmp_path, info = Setting.make_pdf_copy_protected(
             generated_name=pdf_filename,
@@ -1969,7 +1970,7 @@ class Setting:
                     subject,
                     body_txt,
                     tmp_path,
-                    filename=pdf_filename
+                    filename=display_name
                 )
 
             # MAILJET MESSAGE
@@ -1979,7 +1980,7 @@ class Setting:
                 text_body = (html_body or '')
 
                 ok, msg = Setting.sendMailjetWithAttachment(
-                    method, recipient, subject, html_body, text_body, tmp_path, filename=pdf_filename
+                    method, recipient, subject, html_body, text_body, tmp_path, filename=display_name
                 )
 
             # WHATSAPP MESSSAGE
@@ -1999,7 +2000,7 @@ class Setting:
                     attach_path=(tmp_path if has_att else None),
                     lang=tpl_lang,
                     template_vars=info_pat,
-                    filename=pdf_filename
+                    filename=display_name
                 )
 
             else:
@@ -2277,7 +2278,8 @@ class Setting:
                 for _key, value in template_vars.items():
                     body_params.append({
                         "type": "text",
-                        "text": "" if value is None else str(value)
+                        "text": "" if value is None else str(value),
+                        "parameter_name": _key
                     })
 
             if body_params:

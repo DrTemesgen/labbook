@@ -211,7 +211,10 @@ class DatasetByName(Resource):
                 if item['type_result'] and item['result_value']:
                     if item['result_value'] != '0':
                         val = Various.getDicoById(item['result_value'])
-                        trans = val['label']
+                        trans = ''
+
+                        if val and 'label' in val and val['label']:
+                            trans = val['label']
 
                         if trans:
                             item['result_value'] = _(trans.strip())
