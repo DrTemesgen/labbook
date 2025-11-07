@@ -113,7 +113,8 @@ def before_request_func():
         try:
             last_dt = datetime.fromisoformat(last)
             if (now - last_dt) > timedelta(hours=2):
-                return redirect(url_for('disconnect'))
+                if request.endpoint != 'disconnect':
+                    return redirect(url_for('disconnect'))
         except Exception:
             pass
 
