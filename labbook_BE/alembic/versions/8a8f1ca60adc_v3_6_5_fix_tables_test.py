@@ -53,9 +53,11 @@ def upgrade():
 
     # ADD template activity report
     try:
-        conn.execute(text("insert into template_setting "
-                          "(tpl_date, tpl_name, tpl_file, tpl_default, tpl_type) "
-                          "values (NOW(), 'Modèle rapport d\'activité', 'tpl_activity_report.odt', 'Y', 'ACT')"))
+        conn.execute(text('''
+            insert into template_setting
+            (tpl_date, tpl_name, tpl_file, tpl_default, tpl_type)
+            values (NOW(), "Modèle rapport d'activité", "tpl_activity_report.odt", "Y", "ACT")
+            '''))
     except Exception as err:
         print("ERROR insert activity report template for template_setting,\n\terr=" + str(err))
 

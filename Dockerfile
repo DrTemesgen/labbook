@@ -41,6 +41,7 @@ RUN set -eux \
     && rm -f /tmp/*.rpm \
     && yum clean all \
     && python3.11 -m pip install --upgrade pip \
+    && python3.11 -m pip install --no-cache-dir --ignore-installed setuptools \
     && python3.11 -m pip install --no-cache-dir supervisor pipenv \
     && mkdir -p /home/supervisor/log /home/supervisor/tmp \
                /home/apps/labbook_FE/labbook_FE \

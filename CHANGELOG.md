@@ -17,7 +17,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Fixed
 - sending whatsapp with file
-- fileds time in automation job details
+- fields time in automation job details
 - export and import analysis repository
 - fix FE session expiry after 2h inactivity (returning without logout)
 - fix a bug when Lite try to import data to LabBook (because of new column pat_agreement and doc_agreement)
