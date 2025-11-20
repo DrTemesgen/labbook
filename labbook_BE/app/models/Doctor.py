@@ -138,6 +138,9 @@ class Doctor:
         try:
             cursor = DB.cursor()
 
+            if 'doc_agreement' not in params or params['doc_agreement'] is None:
+                params['doc_agreement'] = 'N'
+
             cursor.execute('insert into sigl_08_data '
                            '(id_owner, code, nom, prenom, ville, etablissement, specialite, tel, email, '
                            'titre, initiale, service, adresse, mobile, fax, doc_zipcity, doc_agreement) '
@@ -157,6 +160,9 @@ class Doctor:
     def updateDoctor(**params):
         try:
             cursor = DB.cursor()
+
+            if 'doc_agreement' not in params or params['doc_agreement'] is None:
+                params['doc_agreement'] = 'N'
 
             cursor.execute('update sigl_08_data '
                            'set code=%(code)s, nom=%(nom)s, prenom=%(prenom)s, ville=%(ville)s, '

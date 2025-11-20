@@ -20,7 +20,6 @@ class Constants:
     cst_io          = '/storage/io/'
     cst_key         = '/storage/key/'
     cst_log         = '/storage/log/'
-    cst_report      = '/storage/report/'
     cst_resource    = '/storage/resource/'
     cst_dhis2       = '/storage/resource/dhis2/'
     cst_epidemio    = '/storage/resource/epidemio/'
@@ -28,7 +27,13 @@ class Constants:
     cst_template    = '/storage/resource/template/'
     cst_photo       = '/storage/resource/photo/'
     cst_printer     = '/storage/resource/printer/'
+    cst_report      = '/storage/report/'
     cst_upload      = '/storage/upload/'
+
+    cst_dhis2_upload    = '/storage/upload/dhis2/'
+    cst_activity_upload = '/storage/upload/activity/'
+    cst_billing_upload  = '/storage/upload/billing/'
+
     cst_path_tmp    = '/home/apps/labbook_BE/labbook_BE/tmp/'
     cst_path_script = '/home/apps/labbook_BE/labbook_BE/script/'
     cst_path_lang   = '/home/apps/labbook_BE/labbook_BE/app/translations/'
@@ -60,6 +65,7 @@ class Constants:
     cst_filedata_outsourced = 'data_template_outsourced'
     cst_filedata_invoice    = 'data_template_invoice'
     cst_filedata_billing_status = 'data_template_billing_status'
+    cst_filedata_activity_report = 'data_template_activity_report'
 
     # Type or validation
     cst_tech_vld = 251

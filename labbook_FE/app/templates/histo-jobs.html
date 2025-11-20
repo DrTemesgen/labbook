@@ -1,0 +1,477 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+<title>{{ _("Historique des exécutions des automatismes") }}</title>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+            <h2 class="page-title page-title-color"><span>{{ _("Historique des exécutions des automatismes") }}</span></h2>
+
+            {% if has_permission("AUTO_179") %}
+
+            <table id="jobTable" class="display table table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>{{ _("Action") }}</th>
+                        <th hidden>{{ _("ID") }}</th>
+                        <th>{{ _("Libellé") }}</th>
+                        <th>{{ _("Type") }}</th>
+                        <th>{{ _("Date d'exécution") }}</th>
+                        <th>{{ _("Fréquence") }}</th>
+                        <th>{{ _("Avec message") }}</th>
+                        <th>{{ _("Statut") }}</th>
+                        <th>{{ _("Fichier") }}</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <div class="clearfix mt-4 mb-5">
+                <div class="float-start ms-0">
+                    <input type="button"
+                           onclick="return_back();"
+                           id="btn_return"
+                           value="{{ _('Retour') }}"
+                           class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                </div>
+            </div>
+
+            <!-- Toast -->
+            <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 9999">
+                <div id="jobToast" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="polite" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body" id="jobToastBody">
+                            {{ _("Action effectuée.") }}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="{{ _('Fermer') }}"></button>
+                    </div>
+                </div>
+            </div>
+
+            {% else %}
+            {% include 'no-rights.html' %}
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+    // IHM labels (translated by Jinja)
+    const LABEL_YES        = "{{ _('Oui') }}";
+const LABEL_NO         = "{{ _('Non') }}";
+const LABEL_UNKNOWN    = "{{ _('Inconnu') }}";
+
+const LABEL_STATUS_SUCCESS = "{{ _('Succès') }}";
+const LABEL_STATUS_ERROR   = "{{ _('Erreur') }}";
+const LABEL_STATUS_TIMEOUT = "{{ _('Timeout') }}";
+const LABEL_STATUS_RUNNING = "{{ _('En cours') }}";
+
+const LABEL_TYPE_DHIS2     = "{{ _('DHIS2') }}";
+const LABEL_TYPE_ACTIVITY  = "{{ _("Rapport d'activité") }}";
+const LABEL_TYPE_BILLING   = "{{ _('État de la facturation') }}";
+
+const LABEL_KIND_D = "{{ _('Quotidien') }}";
+const LABEL_KIND_W = "{{ _('Hebdomadaire') }}";
+const LABEL_KIND_M = "{{ _('Mensuel') }}";
+const LABEL_KIND_B = "{{ _('Bimestriel') }}";
+const LABEL_KIND_T = "{{ _('Trimestriel') }}";
+const LABEL_KIND_Q = "{{ _('Quadrimestriel') }}";
+const LABEL_KIND_S = "{{ _('Semestriel') }}";
+const LABEL_KIND_A = "{{ _('Annuel') }}";
+
+const LABEL_DOW_1 = "{{ _('Lundi') }}";
+const LABEL_DOW_2 = "{{ _('Mardi') }}";
+const LABEL_DOW_3 = "{{ _('Mercredi') }}";
+const LABEL_DOW_4 = "{{ _('Jeudi') }}";
+const LABEL_DOW_5 = "{{ _('Vendredi') }}";
+const LABEL_DOW_6 = "{{ _('Samedi') }}";
+const LABEL_DOW_7 = "{{ _('Dimanche') }}";
+
+// Escape HTML for safe tooltip content
+function escapeHtml(str) 
+{
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function jsStringEscape(str)
+{
+    if (!str) {
+        return '';
+    }
+    return String(str)
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, '\\\'');
+}
+
+// Status badge for run status
+function renderRunStatusBadge(status, row) {
+    if (status === "success") {
+        return '<span class="badge bg-success">' + LABEL_STATUS_SUCCESS + '</span>';
+    }
+    if (status === "error") {
+        const trace = row && row.arn_error_trace ? escapeHtml(row.arn_error_trace) : '';
+        const titleAttr = trace ? (' title="' + trace + '"') : '';
+        return '<span class="badge bg-danger"' + titleAttr + '>' + LABEL_STATUS_ERROR + '</span>';
+    }
+    if (status === "timeout") {
+        return '<span class="badge bg-warning text-dark">' + LABEL_STATUS_TIMEOUT + '</span>';
+    }
+    if (status === "running") {
+        return '<span class="badge bg-info text-dark">' + LABEL_STATUS_RUNNING + '</span>';
+    }
+    return '<span class="badge bg-secondary">' + LABEL_UNKNOWN + '</span>';
+}
+
+// Format internal messaging info
+function renderInternalMessaging(row) {
+    const params = row.ajb_params || {};
+    const type = row.ajb_type || "";
+
+    const labelYes = LABEL_YES;
+    const labelNo  = LABEL_NO;
+
+    let msgKey = null;
+    let labelKey = null;
+
+    if (type === "dhis2") {
+        msgKey   = "dhis2_internal_msg";
+        labelKey = "dhis2_internal_recipient_label";
+    } else if (type === "activity") {
+        msgKey   = "activity_internal_msg";
+        labelKey = "activity_internal_recipient_label";
+    } else if (type === "billing") {
+        msgKey   = "billing_internal_msg";
+        labelKey = "billing_internal_recipient_label";
+    } else {
+        return labelNo;
+    }
+
+    const flag = (params[msgKey] || "N").toUpperCase();
+    if (flag !== "Y") {
+        return labelNo;
+    }
+
+    const recipientLabel = (params[labelKey] || "").trim();
+    if (!recipientLabel) {
+        return labelYes;
+    }
+
+    return labelYes + " - " + recipientLabel;
+}
+
+// Back button
+function return_back()
+{
+    window.location.href = "{{ url_for('list_jobs') }}";
+}
+
+// View job details
+function view_job(id_val)
+{
+    // Same URL style as list-jobs page for job details
+    window.location.href = "{{ session['server_ext'] }}/det-job/" + id_val;
+}
+
+// Map backend type to human label (FR UI)
+function typeLabel(t) 
+{
+    if (t === 'dhis2')   return LABEL_TYPE_DHIS2;
+    if (t === 'activity') return LABEL_TYPE_ACTIVITY;
+    if (t === 'billing')  return LABEL_TYPE_BILLING;
+    return LABEL_UNKNOWN;
+}
+
+function kindLabel(k) 
+{
+    switch (k) {
+        case 'D': return LABEL_KIND_D;
+        case 'W': return LABEL_KIND_W;
+        case 'M': return LABEL_KIND_M;
+        case 'B': return LABEL_KIND_B;
+        case 'T': return LABEL_KIND_T;
+        case 'Q': return LABEL_KIND_Q;
+        case 'S': return LABEL_KIND_S;
+        case 'A': return LABEL_KIND_A;
+        default:  return LABEL_UNKNOWN;
+    }
+}
+
+// Format frequency as "Kind - DOW - StartDate - HH:MM"
+function formatFrequency(row) 
+{
+    const pieces = [];
+
+    // 1) Frequency kind
+    const kind = kindLabel(row.ajb_schedule_kind);
+    if (kind) {
+        pieces.push(kind);
+    }
+
+    // 2) Day of week (if any)
+    const dowText = dowLabel(row.ajb_schedule_dow);
+    if (dowText) {
+        pieces.push(dowText);
+    }
+
+    // 3) Start date (if any)
+    const startDateText = formatDateFr(row.ajb_schedule_start_on);
+    if (startDateText) {
+        pieces.push(startDateText);
+    }
+
+    // 4) Start time (HH:MM)
+    let t = row.ajb_schedule_time || '';
+    if (t.length >= 4) {
+        const parts = t.split(':');
+        if (parts.length >= 2) {
+            t = parts[0].padStart(2, '0') + ':' + parts[1].padStart(2, '0');
+        }
+    }
+    if (t) {
+        pieces.push(t);
+    }
+
+    return pieces.join(' - ');
+}
+
+// Map day of week number to French label
+function dowLabel(d) 
+{
+    const val = String(d || '');
+    switch (val) {
+        case '1': return LABEL_DOW_1;
+        case '2': return LABEL_DOW_2;
+        case '3': return LABEL_DOW_3;
+        case '4': return LABEL_DOW_4;
+        case '5': return LABEL_DOW_5;
+        case '6': return LABEL_DOW_6;
+        case '7': return LABEL_DOW_7;
+        default:  return '';
+    }
+}
+
+// Format ISO date (YYYY-MM-DD[ HH:MM:SS]) to DD/MM/YYYY
+function formatDateFr(dateStr) 
+{
+    if (!dateStr) {
+        return '';
+    }
+
+    // Keep only YYYY-MM-DD part if there is time
+    let base = dateStr.split('T')[0];
+    base = base.split(' ')[0];
+
+    const parts = base.split('-');
+    if (parts.length !== 3) {
+        return dateStr;
+    }
+    const year  = parts[0];
+    const month = parts[1].padStart(2, '0');
+    const day   = parts[2].padStart(2, '0');
+
+    return day + '/' + month + '/' + year;
+}
+
+// Extract last path segment from a URI
+function extractFileToken(uri) {
+    if (!uri) {
+        return '';
+    }
+    const s = String(uri);
+    const idx = s.lastIndexOf('/');
+    if (idx >= 0 && idx < s.length - 1) {
+        return s.substring(idx + 1);
+    }
+    return s;
+}
+
+// Table init
+function loadRunTable() {
+    if ($.fn.DataTable.isDataTable('#jobTable')) {
+        $('#jobTable').DataTable().destroy();
+    }
+
+    $('#jobTable').DataTable({
+        pageLength: 25,
+        order: [[1, "desc"]],       // sort by hidden ID (arn_ser)
+        deferRender: true,
+        processing: true,
+
+        columnDefs: [
+            { targets: 1, visible: false, searchable: false }, // hide ID col
+            { targets: 4, className: 'text-center' }
+        ],
+
+        language: {
+            lengthMenu: "{{ _('Afficher _MENU_ entrées') }}",
+            zeroRecords: "{{ _('Aucun enregistrement trouvé') }}",
+            info: "{{ _('Affichage de _START_ à _END_ sur _TOTAL_ entrées') }}",
+            infoEmpty: "{{ _('Aucune entrée disponible') }}",
+            infoFiltered: "{{ _('(filtré de _MAX_ entrées au total)') }}",
+            search: "{{ _('Rechercher') }}:",
+            paginate: {
+                first: "{{ _('Premier') }}",
+                last: "{{ _('Dernier') }}",
+                next: "{{ _('Suivant') }}",
+                previous: "{{ _('Précédent') }}"
+            }
+        },
+
+        ajax: {
+            url: "{{ session['server_ext'] }}/services/automation/run/list",
+            type: "POST",
+            contentType: "application/json",
+            data: () => JSON.stringify({}),
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer {{ session.get('be_access_token','') }}');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            },
+            dataSrc: function (json) {
+                try { if (typeof json === 'string') json = JSON.parse(json); } catch { return []; }
+                if (Array.isArray(json)) return json;
+                if (json && Array.isArray(json.data)) return json.data;
+                return [];
+            }
+        },
+
+        // Columns: Action | ID(hidden) | Libellé | Type | Date exécution | Fréquence | Avec message | Statut
+        columns: [
+            // 0) Action
+            {
+                data: null,
+                orderable: false,
+                render: function (row) {
+                    const jobId = row.arn_job_id;
+                    return `
+                        <nav class="nav-item dropdown">
+                        <a class="dropdown-toggle menu-act" data-bs-toggle="dropdown" aria-expanded="false"></a>
+                        <div class="dropdown-menu nav-style menu-act-drop">
+                        {% if has_permission("AUTO_181") %}
+                        <a class="dropdown-item menu-act-item" href="#" onclick="view_job(${jobId}); return false;">{{ _('Voir la tâche') }}</a>
+                        {% endif %}
+                        </div>
+                        </nav>`;
+                }
+            },
+
+            { data: "arn_ser", defaultContent: "" },
+
+            // 2) Label
+            {
+                data: "ajb_label",
+                render: function (data) {
+                    return data || "{{ _('Sans libellé') }}";
+                }
+            },
+
+            // 3) Type
+            {
+                data: "ajb_type",
+                render: function (val) { return typeLabel(val); }
+            },
+
+            // 4) Execution date
+            {
+                data: "arn_started_at",
+                render: function (val) {
+                    return val || "-";
+                }
+            },
+
+            // 5) Frequency
+            {
+                data: null,
+                render: function (row) { return formatFrequency(row); }
+            },
+
+            // 6) Internal message
+            {
+                data: null,
+                render: function (row) {
+                    return renderInternalMessaging(row);
+                }
+            },
+
+            // 7) Status
+            {
+                data: "arn_status",
+                render: function (val, type, row) {
+                    return renderRunStatusBadge(val, row);
+                }
+            },
+
+            // 8) Download file
+            {
+                data: "arn_output_uri",
+                orderable: false,
+                searchable: false,
+                render: function (val, type, row) {
+                    const fileId   = row.file_id || 0;
+                    const fileName = (row.file_name || '').trim();
+
+                    if (!fileId) {
+                        return '-';
+                    }
+
+                    const uri = val || row.arn_output_uri;
+                    if (!uri) {
+                        return '-';
+                    }
+
+                    const token = extractFileToken(uri);
+                    if (!token) {
+                        return '-';
+                    }
+
+                    const jobType = (row.ajb_type || '').toLowerCase();
+                    const title   = escapeHtml(fileName || token);
+                    const safeName = jsStringEscape(fileName || token);
+
+                    if (jobType === 'dhis2') {
+                        return '<a href="#" title="' + title +
+                               '" onclick="download_file(\'DHU\', \'' + safeName +
+                               '\', \'DHU\', \'' + token +
+                               '\'); return false;"><span class="bi bi-download"></span></a>';
+                    }
+
+                    if (jobType === 'billing') {
+                        return '<a href="#" title="' + title +
+                               '" onclick="download_file(\'BILU\', \'' + safeName +
+                               '\', \'BILU\', \'' + token +
+                               '\'); return false;"><span class="bi bi-download"></span></a>';
+                    }
+
+                    if (jobType === 'activity') {
+                        return '<a href="#" title="' + title +
+                               '" onclick="download_file(\'ACTU\', \'' + safeName +
+                               '\', \'ACTU\', \'' + token +
+                               '\'); return false;"><span class="bi bi-download"></span></a>';
+                    }
+
+                    return '-';
+                }
+            }
+        ]
+    });
+}
+
+{% if has_permission("AUTO_179") %}
+$(document).ready(function()
+    {
+        loadRunTable();
+    });
+{% endif %}
+</script>
+{% endblock %}

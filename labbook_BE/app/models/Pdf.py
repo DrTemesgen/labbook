@@ -2226,6 +2226,8 @@ class Pdf:
             debug_filename_data = Constants.cst_filedata_invoice
         elif type == 'BIL':
             debug_filename_data = Constants.cst_filedata_billing_status
+        elif type == 'ACT':
+            debug_filename_data = Constants.cst_filedata_activity_report
 
         # write odt with data and template
         try:
@@ -2244,7 +2246,9 @@ class Pdf:
             f = open(tmp_odt, "wb")
             f.write(tpl.generate(o=data).render().getvalue())
         except Exception as err:
-            Pdf.log.error(Logs.fileline() + ' : buildPdf failed, err=' + str(err) + ' , template=' + str(template) + ', filename=' + str(filename))
+            err_type = err.__class__.__name__
+            err_msg = str(err)
+            Pdf.log.error(Logs.fileline() + ' : buildPdf failed, err_type=' + err_type + ', err_msg=' + err_msg + ', template=' + str(template) + ', filename=' + str(filename))
             return False
 
         # convert odt to pdf via openoffice
@@ -3306,3 +3310,217 @@ class Pdf:
         # Pdf.log.error(Logs.fileline() + ' : DEBUG-TRACE invoice data : ' + str(data))
 
         return data
+
+    @staticmethod
+    def getPdfActivityReport(l_type, l_age, date_beg, date_end, tpl_file, filename, family_label=''):
+        """Build PDF for activity report from ODT template."""
+
+        data = {}
+
+        # Load logo
+        try:
+            logo_path = os.path.join(Constants.cst_resource, 'logo.png')
+            data['logo'] = (open(logo_path, 'rb'), 'image/png')
+        except Exception as err:
+            Pdf.log.error(Logs.fileline() + ' : getPdfActivityReport logo err=' + str(err))
+            data['logo'] = None
+
+        # Translations
+        Various.useLangPDF()
+        data['label'] = {}
+        data['label']['phone']     = str(_("Tél"))
+        data['label']['fax']       = str(_("Fax"))
+        data['label']['email']     = str(_("Email"))
+        data['label']['analyzes']  = str(_("Analyses"))
+        data['label']['by_type']   = str(_("Analyses par type de demande"))
+        data['label']['by_age']    = str(_("Analyses par tranche d'âge"))
+        data['label']['external']  = str(_("Externes"))
+        data['label']['inpatient'] = str(_("Hospitalisés"))
+        data['label']['oncall']    = str(_("Gardes"))
+        data['label']['total']     = str(_("Total"))
+        data['label']['from_']     = str(_("du"))
+        data['label']['to_']       = str(_("au"))
+        data['label']['legend']    = str(_("H = Homme, F = Femme, I = Inconnu"))
+        data['label']['activity_report'] = str(_("Rapport d'activité"))
+        data['label']['edit']      = str(_("édité le"))
+        data['label']['analysis_family'] = str(_("Famille d'analyse"))
+
+        # New age column labels
+        data['label']['age_col1'] = str(_("Moins de 5 ans"))
+        data['label']['age_col2'] = str(_("De 5 à 20 ans"))
+        data['label']['age_col3'] = str(_("De 20 à 40 ans"))
+        data['label']['age_col4'] = str(_("Plus de 40 ans"))
+
+        data['label']['M'] = str(_("H"))
+        data['label']['F'] = str(_("F"))
+        data['label']['U'] = str(_("I"))
+
+        # Lab info
+        data['lab'] = {}
+        try:
+            name  = Various.getDefaultValue('entete_1')
+            line2 = Various.getDefaultValue('entete_2')
+            line3 = Various.getDefaultValue('entete_3')
+            addr  = Various.getDefaultValue('entete_adr')
+            phone = Various.getDefaultValue('entete_tel')
+            fax   = Various.getDefaultValue('entete_fax')
+            email = Various.getDefaultValue('entete_email')
+
+            data['lab']['name']  = str(name['value'])
+            data['lab']['head2'] = str(line2['value'])
+            data['lab']['head3'] = str(line3['value'])
+            data['lab']['addr']  = str(addr['value'])
+            data['lab']['phone'] = str(phone['value'] or '')
+            data['lab']['fax']   = str(fax['value'] or '')
+            data['lab']['email'] = str(email['value'] or '')
+        except Exception as err:
+            Pdf.log.error(Logs.fileline() + ' : getPdfActivityReport lab err=' + str(err))
+
+        # Activity header
+        data['activity'] = {}
+        data['activity']['title']    = str(_("Rapport d'activité"))
+        data['activity']['date_now'] = datetime.strftime(datetime.now(), Constants.cst_date_eu)
+        data['activity']['time_now'] = datetime.strftime(datetime.now(), Constants.cst_time_HM)
+        data['activity']['family']   = ''
+
+        if family_label:
+            data['activity']['family'] = str(_(family_label))
+
+        try:
+            dt_beg = datetime.strptime(date_beg, Constants.cst_dt_HM)
+        except Exception:
+            try:
+                dt_beg = datetime.strptime(date_beg, Constants.cst_isodate)
+            except Exception:
+                dt_beg = datetime.now()
+
+        try:
+            dt_end = datetime.strptime(date_end, Constants.cst_dt_HM)
+        except Exception:
+            try:
+                dt_end = datetime.strptime(date_end, Constants.cst_isodate)
+            except Exception:
+                dt_end = datetime.now()
+
+        data['activity']['date_beg'] = dt_beg.strftime(Constants.cst_date_eu)
+        data['activity']['date_end'] = dt_end.strftime(Constants.cst_date_eu)
+
+        # Build table by type
+        def sex_key(sex):
+            # Returns suffix for M/F/U
+            if sex == 1:
+                return '_M'
+            if sex == 2:
+                return '_F'
+            return '_U'
+
+        type_map = {}
+        order_type = []
+
+        for row in l_type:
+            code = row.get('code', '')
+            ana  = row.get('analysis', '')
+            rec_custody = row.get('rec_custody', '')
+            rec_type    = row.get('rec_type', 0)
+            sex = row.get('sex')
+            nb  = int(row.get('nb_ana', 0) or 0)
+
+            if code not in type_map:
+                type_map[code] = {
+                    'ana_name': ana,
+                    'ana_code': code,
+                    'ext_M': 0, 'ext_F': 0, 'ext_U': 0,
+                    'inp_M': 0, 'inp_F': 0, 'inp_U': 0,
+                    'onc_M': 0, 'onc_F': 0, 'onc_U': 0,
+                    'tot_M': 0, 'tot_F': 0, 'tot_U': 0
+                }
+                order_type.append(code)
+
+            k = sex_key(sex)
+
+            if rec_custody == 'Y':
+                bucket = 'onc'
+            elif rec_type == 183:
+                bucket = 'ext'
+            else:
+                bucket = 'inp'
+
+            type_map[code][bucket + k] += nb
+            type_map[code]['tot' + k] += nb
+
+        data['l_type'] = [type_map[c] for c in order_type]
+
+        for row in data['l_type']:
+            for k in (
+                'ext_M', 'ext_F', 'ext_U',
+                'inp_M', 'inp_F', 'inp_U',
+                'onc_M', 'onc_F', 'onc_U'
+            ):
+                if row.get(k) == 0:
+                    row[k] = '-'
+
+        # Build table by age (new keys: age_col1_*, ..., age_col4_*, age_tot_*)
+        def age_bucket(a):
+            # Returns age column prefix: age_col1..age_col4 or None
+            if a is None:
+                return None
+            try:
+                v = int(a)
+            except Exception:
+                return None
+            if v < 5:
+                return 'age_col1'
+            if v <= 20:
+                return 'age_col2'
+            if v <= 40:
+                return 'age_col3'
+            return 'age_col4'
+
+        age_map = {}
+        order_age = []
+
+        for row in l_age:
+            code = row.get('code', '')
+            ana  = row.get('analysis', '')
+            sex  = row.get('sex')
+            a    = row.get('age')
+            nb   = int(row.get('nb_ana', 0) or 0)
+
+            if code not in age_map:
+                age_map[code] = {
+                    'ana_name': ana,
+                    'ana_code': code,
+                    # Age columns
+                    'age_col1_M': 0, 'age_col1_F': 0, 'age_col1_U': 0,
+                    'age_col2_M': 0, 'age_col2_F': 0, 'age_col2_U': 0,
+                    'age_col3_M': 0, 'age_col3_F': 0, 'age_col3_U': 0,
+                    'age_col4_M': 0, 'age_col4_F': 0, 'age_col4_U': 0,
+                    # Totals
+                    'age_tot_M': 0, 'age_tot_F': 0, 'age_tot_U': 0,
+                }
+                order_age.append(code)
+
+            k = sex_key(sex)
+
+            # Always increment total per sex
+            age_map[code]['age_tot' + k] += nb
+
+            # Increment bucket if age is valid
+            b = age_bucket(a)
+            if b is not None:
+                key = b + k      # for example: "age_col1_M"
+                age_map[code][key] += nb
+
+        data['l_age'] = [age_map[c] for c in order_age]
+
+        for row in data['l_age']:
+            for k, v in list(row.items()):
+                if k.startswith('age_col') and v == 0:
+                    row[k] = '-'
+
+        ret = Pdf.buildPdf('ACT', tpl_file, filename, data)
+        if not ret:
+            Pdf.log.error(Logs.fileline() + ' : getPdfActivityReport buildPdf failed')
+            return False
+
+        return True

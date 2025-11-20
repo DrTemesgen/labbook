@@ -8,12 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
-## [3.6.5] - 2025-11-06
+## [3.6.5] - 2025-11-20
+### Added
+- execute automation job
+- 3 new directory /storage/upload/dhis2, activity and billing
+- template for activity report
+- patient history configurable on the same principle as the patient form (new doc : patient_history_form_spec.md)
 
 ### Fixed
 - sending whatsapp with file
+- fileds time in automation job details
 - export and import analysis repository
 - fix FE session expiry after 2h inactivity (returning without logout)
+- fix a bug when Lite try to import data to LabBook (because of new column pat_agreement and doc_agreement)
 
 ## [3.6.4] - 2025-11-04
 ### Added

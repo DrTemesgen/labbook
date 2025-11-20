@@ -53,6 +53,7 @@ pat\_pbox         : enter a postal box [input\_type = "text"]
 pat\_district     : enter a district [input\_type = "text"]
 pat\_zipcode      : enter a zipcode [input\_type = "text"]
 pat\_city         : enter a city name [input\_type = "text"]
+pat\_email        : enter a email address [input\_type = "text"]
 
 __List of possible features for predefined element (**bold features are mandatory**)__ :
 **labbook\_ref = "_name of predefinedelement_"**

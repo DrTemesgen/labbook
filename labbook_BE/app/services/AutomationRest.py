@@ -108,7 +108,7 @@ class AutoJobUpdate(Resource):
         try:
             updated = Automation.updateAutomationJob(ajb_ser=ajb_ser, payload=body)
             if not updated:
-                return compose_ret('', Constants.cst_content_type_json, 404)
+                return compose_ret('', Constants.cst_content_type_json, 500)
             return compose_ret('', Constants.cst_content_type_json)
         except ValueError as verr:
             self.log.warning(Logs.fileline() + ' : AutoJobUpdate validation=%s', verr)
@@ -171,6 +171,7 @@ class AutoRunList(Resource):
                 limit=limit,
                 offset=offset
             )
+
             return compose_ret(json.dumps(runs, default=str), Constants.cst_content_type_json)
         except Exception as err:
             self.log.error(Logs.fileline() + ' : AutoRunList failed, err=%s', err)

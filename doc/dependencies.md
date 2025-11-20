@@ -2,7 +2,7 @@
 ## Front and Back End
 | Name                    | Version   | License      | static FE | venv FE | venv BE |
 |-------------------------|:---------:|:------------:|:---------:|:-------:|:-------:|
-| Python                  | 3.13.7    | PSF          |           |         |         |
+| Python                  | 3.11.11   | PSF          |           |         |         |
 | Bootstrap               | 5.2.3     | MIT          | x         |         |         |
 | Chart                   | 3.6.0     | MIT          | x         |         |         |
 | JQuery                  | 3.6.1     | MIT          | x         |         |         |

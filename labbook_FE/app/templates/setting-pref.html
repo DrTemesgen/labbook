@@ -71,7 +71,7 @@
                         </tr>
                         <tr class="d-lg-flex">
                             <th class="col-lg-6">{{ _("Déconnexion automatique (mn)") }}</th>
-                            <td class="col-lg-6"><input type="number" id="pref_logout" name="pref_logout"  min="1" step="1" value="{% if args['pref_list'] %}{{ args['pref_list'][11]['value'] }}{% endif %}"></td>
+                            <td class="col-lg-6"><input type="number" id="pref_logout" name="pref_logout"  min="1" step="1" max="120" value="{% if args['pref_list'] %}{{ args['pref_list'][11]['value'] }}{% endif %}"></td>
                         </tr>
                         <tr class="d-lg-flex">
                             <th class="col-lg-6">{{ _("Module qualité activé") }}</th>

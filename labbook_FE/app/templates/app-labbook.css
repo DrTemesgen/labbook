@@ -1,3 +1,15 @@
+{% set role_color =
+   '#FFCC00'  if session['user_role'] == 'A'
+   else '#8330E2' if session['user_role'] == 'B'
+   else '#00ADEE' if session['user_role'] in ('T','TA','TQ')
+   else '#EF8839' if session['user_role'] in ('S','SA')
+   else '#66994F' if session['user_role'] == 'SP'
+   else '#E23176' if session['user_role'] == 'Q'
+   else '#452ED1' if session['user_role'] == 'K'
+   else '#BB2688' if session['user_role'] == 'L'
+   else 'DCDCDC'
+%}
+
 .modal-body
 {
 max-height : 350px;
@@ -842,7 +854,6 @@ word-wrap       : normal;
   height: 3em;
   padding: 0 !important;         /* avoid vertical drift */
   line-height: 1;
-  border-radius: 6px;            /* soft corners */
   background-position: center;   /* existing bg icons stay centered */
   background-repeat: no-repeat;
   background-size: 100% 100%;
@@ -928,8 +939,10 @@ nav .qualite{
 }
 
 nav .non-conformite{
-  background: url({{ url_for('static', filename='img/non-conformite.png') }}) center center no-repeat;
-  background-size: 100% 100%;
+    background-image: url({{ url_for('static', filename='img/non-conformite.png') }}), linear-gradient(#EE7A7A, #E84D4D);
+    background-repeat: no-repeat, no-repeat;
+    background-position: center center, center center;
+    background-size: 100% 100%, 100% 100%;
 }
 
 nav .admin{
@@ -971,124 +984,144 @@ text-decoration : none;
 color : #0056b3;
 }
 
-.module .admin-gest-role 
-{ 
-background : transparent url({{ url_for('static', filename='img/admin-gestion-role.png') }}) center top no-repeat;
+/* Admin home: unified yellow tiles + icons */
+.module .admin-preferences{
+    /* yellow square + transparent icon, both 93x93 */
+    /* First layer: icon, Second layer: yellow square */
+    background-image: url({{ url_for('static', filename='img/admin-preferences.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat: no-repeat, no-repeat;
+    background-position: center top, center top;
+    background-size: 93px 93px, 93px 93px;
 }
 
-.module .admin-crea-profil 
-{ 
-background : transparent url({{ url_for('static', filename='img/admin-crea-profil.png') }}) center top no-repeat;
+.module .admin-gest-role{
+    background-image: url({{ url_for('static', filename='img/admin-gestion-role.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat: no-repeat, no-repeat;
+    background-position: center top, center top;
+    background-size: 93px 93px, 93px 93px;
 }
 
-.module .admin-preferences 
-{ 
-background : transparent url({{ url_for('static', filename='img/admin-preferences.png') }}) center top no-repeat;
+.module .admin-crea-profil{
+    background-image: url({{ url_for('static', filename='img/admin-crea-profil.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat: no-repeat, no-repeat;
+    background-position: center top, center top;
+    background-size: 93px 93px, 93px 93px;
 }
 
-.module .admin-referentiel
-{ 
-background : transparent url({{ url_for('static', filename='img/admin-referentiel.png') }}) center top no-repeat;
+.module .admin-referentiel{
+    background-image: url({{ url_for('static', filename='img/admin-referentiel.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat: no-repeat, no-repeat;
+    background-position: center top, center top;
+    background-size: 93px 93px, 93px 93px;
 }
 
-.module .admin-conf-cr
-{ 
-background : transparent url({{ url_for('static', filename='img/admin-conf-cr.png') }}) center top no-repeat;
+.module .admin-conf-cr{
+    background-image: url({{ url_for('static', filename='img/admin-conf-cr.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat: no-repeat, no-repeat;
+    background-position: center top, center top;
+    background-size: 93px 93px, 93px 93px;
 }
 
-.module .admin-num-doss 
-{ 
-background : transparent url({{ url_for('static', filename='img/admin-conf-num-doss.png') }}) center top no-repeat;
+.module .admin-num-doss{
+    background-image: url({{ url_for('static', filename='img/admin-conf-num-doss.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat: no-repeat, no-repeat;
+    background-position: center top, center top;
+    background-size: 93px 93px, 93px 93px;
 }
 
-.module .admin-connect
-{ 
-background : transparent url({{ url_for('static', filename='img/admin-connect.png') }}) center top no-repeat;
+.module .admin-connect{
+    background-image: url({{ url_for('static', filename='img/admin-connect.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat: no-repeat, no-repeat;
+    background-position: center top, center top;
+    background-size: 93px 93px, 93px 93px;
 }
 
-.module .admin-gest-fact-0 
-{ 
-background : transparent url({{ url_for('static', filename='img/admin-gest-facture-0.png') }}) center top no-repeat;
+.module .admin-conf-template
+{
+    background-image    : url({{ url_for('static', filename='img/config-template.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat   : no-repeat, no-repeat;
+    background-position : center top, center top;
+    background-size     : 93px 93px, 93px 93px;
 }
 
-.module .admin-gest-fact-1 
-{ 
-background : transparent url({{ url_for('static', filename='img/admin-gest-facture-1.png') }}) center top no-repeat;
+.module .admin-conf-form
+{
+    background-image    : url({{ url_for('static', filename='img/config-form.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat   : no-repeat, no-repeat;
+    background-position : center top, center top;
+    background-size     : 93px 93px, 93px 93px;
 }
 
-.module .admin-qualite-0
-{ 
-background : transparent url({{ url_for('static', filename='img/admin-module-qualite-0.png') }}) center top no-repeat;
+.module .admin-conf-sending-method
+{
+    background-image    : url({{ url_for('static', filename='img/config-sending-method.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat   : no-repeat, no-repeat;
+    background-position : center top, center top;
+    background-size     : 93px 93px, 93px 93px;
 }
 
-.module .admin-qualite-1
+.module .rec-list 
 { 
-background : transparent url({{ url_for('static', filename='img/admin-module-qualite-1.png') }}) center top no-repeat;
+    background-image    : url({{ url_for('static', filename='img/f-list-bio.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat   : no-repeat, no-repeat;
+    background-position : center top, center top;
+    background-size     : 93px 93px, 93px 93px;
 }
 
-.module .f-list-bio 
+.module .work-list 
 { 
-background : transparent url({{ url_for('static', filename='img/f-list-bio.png') }}) center top no-repeat;
+    background-image    : url({{ url_for('static', filename='img/b-list-bio.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat   : no-repeat, no-repeat;
+    background-position : center top, center top;
+    background-size     : 93px 93px, 93px 93px;
 }
 
-.module .b-list-bio 
+.module .samp-list 
 { 
-background : transparent url({{ url_for('static', filename='img/b-list-bio.png') }}) center top no-repeat;
+    background-image    : url({{ url_for('static', filename='img/prel-bio.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat   : no-repeat, no-repeat;
+    background-position : center top, center top;
+    background-size     : 93px 93px, 93px 93px;
 }
 
-.module .prel-bio 
+.module .res-list 
 { 
-background : transparent url({{ url_for('static', filename='img/prel-bio.png') }}) center top no-repeat;
-}
-
-.module .res-bio 
-{ 
-background : transparent url({{ url_for('static', filename='img/res-bio.png') }}) center top no-repeat;
+    background-image    : url({{ url_for('static', filename='img/res-bio.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat   : no-repeat, no-repeat;
+    background-position : center top, center top;
+    background-size     : 93px 93px, 93px 93px;
 }
 
 .module .home-qualite 
 { 
-background : transparent url({{ url_for('static', filename='img/home-qualite.png') }}) center top no-repeat;
+    background-image    : url({{ url_for('static', filename='img/home-qualite.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat   : no-repeat, no-repeat;
+    background-position : center top, center top;
+    background-size     : 93px 93px, 93px 93px;
 }
 
-.module .f-list-tec 
+.module .new-rec-ext
 { 
-background : transparent url({{ url_for('static', filename='img/f-list-tec.png') }}) center top no-repeat;
+    background-image    : url({{ url_for('static', filename='img/new-dos-ext-sec.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat   : no-repeat, no-repeat;
+    background-position : center top, center top;
+    background-size     : 93px 93px, 93px 93px;
 }
 
-.module .t-list-tec 
+.module .new-rec-int
 { 
-background : transparent url({{ url_for('static', filename='img/t-list-tec.png') }}) center top no-repeat;
-}
-
-.module .prel-tec 
-{ 
-background : transparent url({{ url_for('static', filename='img/prel-tec.png') }}) center top no-repeat;
-}
-
-.module .res-tec 
-{ 
-background : transparent url({{ url_for('static', filename='img/res-tec.png') }}) center top no-repeat;
-}
-
-.module .f-list-sec 
-{ 
-background : transparent url({{ url_for('static', filename='img/f-list-sec.png') }}) center top no-repeat;
-}
-
-.module .new-dos-ext-sec
-{ 
-background : transparent url({{ url_for('static', filename='img/new-dos-ext-sec.png') }}) center top no-repeat;
-}
-
-.module .new-dos-int-sec
-{ 
-background : transparent url({{ url_for('static', filename='img/new-dos-int-sec.png') }}) center top no-repeat;
+    background-image    : url({{ url_for('static', filename='img/new-dos-int-sec.png') }}), linear-gradient({{ role_color }}, {{ role_color }});
+    background-repeat   : no-repeat, no-repeat;
+    background-position : center top, center top;
+    background-size     : 93px 93px, 93px 93px;
 }
 
 .module .emergency 
 { 
-background : transparent url({{ url_for('static', filename='img/urgence.png') }}) center top no-repeat;
+    background-image    : url({{ url_for('static', filename='img/urgence.png') }}), linear-gradient(#EE7A7A, #E84D4D);
+    background-repeat   : no-repeat, no-repeat;
+    background-position : center top, center top;
+    background-size     : 93px 93px, 93px 93px;
 }
 
 .links
@@ -1274,6 +1307,17 @@ color : #8330E2;
 .bgcolor-B
 {
 background-color : #8330E2;
+color            : #FFF;
+}
+
+.color-S
+{
+color : #EF8839;
+}
+
+.bgcolor-S
+{
+background-color : #EF8839;
 color            : #FFF;
 }
 
@@ -1475,7 +1519,6 @@ font-size: 15px;
     padding          : 8px 12px;
     background-color : lightgray;
     border           : none;
-    border-radius    : 4px;
     }
 
     .navbar-collapse 
@@ -1865,7 +1908,6 @@ font-size: 15px;
     padding          : 8px 12px;
     background-color : lightgray;
     border           : none;
-    border-radius    : 4px;
     }
 
     .navbar-collapse 

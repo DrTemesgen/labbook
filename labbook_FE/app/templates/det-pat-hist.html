@@ -1,0 +1,56 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+    <title>{{ _("Historique patient") }}</title>
+    <style>
+    .history-table-container,
+    .history-table-container .table-responsive {
+        overflow: visible !important;
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+            <h2 class="page-title page-title-color">
+                <span>{{ _("Historique patient") }}</span>
+            </h2>
+
+            <form autocomplete="off">
+                {{ args['form_html'] | safe }}
+
+                <div class="clearfix row mt-3 mb-4">
+                    <div class="col-md-12">
+                        <div class="d-flex justify-content-between align-items-center gap-4">
+                            <div>
+                                <input type="button"
+                                       onclick="return_back();"
+                                       class="btn btn-lbk btn-{{ session['user_role']|safe }}"
+                                       value="{{ _('Retour') }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+var id_user = {{ session['user_id']|safe }} ;
+var id_pat  = {{ id_pat|safe }} ;
+
+{{ args['history_js'] | safe }}
+
+function return_back()
+{
+    window.history.back() ;
+}
+</script>
+{% endblock %}

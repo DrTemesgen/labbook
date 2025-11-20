@@ -39,6 +39,15 @@
                                 </div>
                             </div>
 
+                            {% if args.get('has_pat_hist_form') %}
+                            <div>
+                                <input type="button"
+                                       onclick="open_pat_hist({{ args['id_pat'] }});"
+                                       class="btn btn-lbk btn-{{ session['user_role']|safe }}"
+                                       value="{{ _('Historique') }}">
+                            </div>
+                            {% endif %}
+
                             <div>
                                 <input type="button" onclick="save_pat( {{ args['id_pat'] }} );" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Enregistrer") }}"> 
                             </div>
@@ -55,41 +64,111 @@
 <script type="text/javascript" nonce="{{ session['nonce'] }}">
 var id_user = {{ session['user_id']|safe}} ;
 
-function save_pat( id_pat ) 
+function open_pat_hist(id_pat)
 {
-var code_lab = $('#pat_code_lab').val() ;
+    // Always ask the user if he wants to save changes
+    var msg = "{{ _("Voulez-vous enregistrer les modifications avant d'accéder à l'historique ?") }}";
+    var wantSave = window.confirm(msg);
+
+    if (wantSave) {
+        // Save patient then open history page
+        save_pat_and_open_hist(id_pat);
+        return;
+    }
+
+    // User does not want to save changes
+    if (!id_pat || id_pat <= 0) {
+        alert("{{ _("Le patient doit être enregistré avant de consulter l'historique.") }}");
+        return;
+    }
+
+    // Existing patient, go to history without saving
+    go_to_pat_hist(id_pat);
+}
+
+function save_pat_and_open_hist(id_pat)
+{
+    var code_lab = $('#pat_code_lab').val();
 
     // we process the uniqueness of pat_code_lab if it is present on the form
-    if ( code_lab && $('#pat_code_lab').val().trim() !== '' ) 
+    if (code_lab && $('#pat_code_lab').val().trim() !== '') 
     {
-    var code_lab_ori = $('#pat_code_lab_ori').val() ;
+        var code_lab_ori = $('#pat_code_lab_ori').val();
 
-        $.ajax( 
+        $.ajax(
         {
             type: "GET",
             url: "{{ session['server_ext'] }}/services/patient/search/code/lab/" + code_lab,
             headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
             success: function(ret)
             {
-                if ( ret > 0 && (id_pat == 0 || (id_pat > 0 && code_lab_ori != code_lab)))
+                if (ret > 0 && (id_pat == 0 || (id_pat > 0 && code_lab_ori != code_lab)))
                 {
-                alert("{{ _("Code patient interne au laboratoire existe déjà") }}") ;
-                return false ;
+                    alert("{{ _('Code patient interne au laboratoire existe déjà') }}");
+                    return false;
                 }
                 else
                 {
-                save_form( id_pat ) ;
+                    save_form_and_open_hist(id_pat);
                 }
             },
             error: function(ret)
             {
-            console.log("ERROR GET patient code lab") ;
-            alert("{{ _("Une erreur est survenue lors de la vérification du code") }}") ;
+                console.log("ERROR GET patient code lab (hist)") ;
+                alert("{{ _('Une erreur est survenue lors de la vérification du code') }}") ;
             }
-        } ) ;
+        });
     }
     else
-    save_form( id_pat ) ;
+    {
+        save_form_and_open_hist(id_pat);
+    }
+}
+
+function save_form_and_open_hist(id_pat)
+{
+    {{ args['json_save'] | safe }} ;
+
+    param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
+
+    // popup wait
+    $("#dial-wait").off('shown.bs.modal');
+    $("#dial-wait").modal("show");
+
+    $.ajax(
+    {
+        type: "POST",
+        url: "{{ session['server_ext'] }}/services/patient/det/" + id_pat,
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(param),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        success: function(data)
+        {
+            $("#dial-wait").modal("hide");
+
+            var new_id_pat = data.id_pat || id_pat;
+            go_to_pat_hist(new_id_pat);
+        },
+        error: function(data)
+        {
+            $("#dial-wait").modal("hide");
+
+            console.log("ERROR POST patient det (hist)");
+            alert("{{ _("Une erreur est survenue lors de l'enregistrement") }}");
+        }
+    });
+}
+
+function go_to_pat_hist(id_pat)
+{
+    if (!id_pat || id_pat <= 0) {
+        alert("{{ _("Le patient doit être enregistré avant de consulter l'historique.") }}");
+        return;
+    }
+
+    // FE route for patient history page
+    window.location.href = "{{ url_for('det_pat_hist', id_pat=0) }}".replace('/0', '/' + id_pat);
 }
 
 function save_form( id_pat )

@@ -13,6 +13,7 @@ from app.models.Logs import Logs
 from app.models.Report import Report
 from app.models.Setting import Setting
 from app.models.File import File
+from app.models.Various import Various
 from app.security.oauth_routes import require_oauth
 
 
@@ -283,6 +284,85 @@ class PdfReportToday(Resource):
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE PdfReportToday')
+        return compose_ret('', Constants.cst_content_type_json)
+
+
+class PdfActivityReport(Resource):
+    log = logging.getLogger('log_services')
+
+    @require_oauth()
+    def post(self):
+        args = request.get_json()
+
+        if ('date_beg' not in args or 'date_end' not in args or 'type_ana' not in args or 'tpl_file' not in args or
+           'filename' not in args):
+            self.log.error(Logs.fileline() + ' : PdfActivityReport missing args')
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        date_beg = args['date_beg']
+        date_end = args['date_end']
+        type_ana = args['type_ana']
+        tpl_file = args['tpl_file']
+        filename = args['filename']
+
+        stat_type = Report.getActivityType(date_beg, date_end, type_ana)
+        if not stat_type:
+            self.log.error(Logs.fileline() + ' : stat_type empty')
+            stat_type = []
+
+        Various.useLangDB()
+
+        try:
+            type_ana_int = int(type_ana)
+        except Exception:
+            type_ana_int = 0
+
+        family_label = ''
+        if type_ana_int > 0:
+            dico_row = Various.getDicoById(type_ana_int)
+            if dico_row:
+                family_label = dico_row['label']
+
+        for row in stat_type:
+            ana = row.get('analysis') or ''
+            row['analysis'] = _(ana.strip())
+
+        stat_age = Report.getActivityAge(date_beg, date_end, type_ana)
+        if not stat_age:
+            self.log.error(Logs.fileline() + ' : stat_age empty')
+            stat_age = []
+
+        Various.useLangDB()
+        for row in stat_age:
+            ana = row.get('analysis') or ''
+            row['analysis'] = _(ana.strip())
+
+            unit = row.get('unite')
+            age  = row.get('age')
+            if age is not None:
+                if unit == 1034:
+                    row['age'] = int(age // 365)
+                elif unit == 1035:
+                    row['age'] = int(age // 52)
+                elif unit == 1036:
+                    row['age'] = int(age // 12)
+
+        for row in stat_type:
+            for k, v in list(row.items()):
+                if v is None:
+                    row[k] = ''
+
+        for row in stat_age:
+            for k, v in list(row.items()):
+                if v is None:
+                    row[k] = ''
+
+        ret = Pdf.getPdfActivityReport(stat_type, stat_age, date_beg, date_end, tpl_file, filename, family_label)
+        if not ret:
+            self.log.error(Logs.fileline() + ' : getPdfActivityReport failed')
+            return compose_ret('', Constants.cst_content_type_json, 500)
+
+        self.log.info(Logs.fileline() + ' : PdfActivityReport ok')
         return compose_ret('', Constants.cst_content_type_json)
 
 

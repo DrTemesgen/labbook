@@ -2506,17 +2506,34 @@ def setting_form():
     json_data = {}
 
     json_data['data_form_pat'] = []
+    json_data['data_form_pat_hist'] = []
 
     # Load form patient files
     try:
         path = Constants.cst_form_pat
 
-        for filename in os.listdir(path):
-            if not os.path.isdir(os.path.join(path, filename)) and filename.startswith('form_patient_') and filename.endswith('.toml'):
+        filenames = sorted(os.listdir(path))
+
+        for filename in filenames:
+            full_path = os.path.join(path, filename)
+
+            # skip directories
+            if os.path.isdir(full_path):
+                continue
+
+            # only TOML files
+            if not filename.endswith('.toml'):
+                continue
+
+            # history forms
+            if filename.startswith('form_patient_hist_'):
+                json_data['data_form_pat_hist'].append(filename)
+            # main patient forms (avoid mixing with history)
+            elif filename.startswith('form_patient_'):
                 json_data['data_form_pat'].append(filename)
 
     except Exception as err:
-        log.error(Logs.fileline() + ' : load dhis2 files in dhis2 directory failed, err=%s', err)
+        log.error(Logs.fileline() + ' : load patient form files failed, err=%s', err)
 
     # Load form setting
     try:
@@ -2553,6 +2570,60 @@ def preview_form(type_form='', filename=''):
 
     json_ihm  = {}
     json_data = {}
+
+    # ------------------------------------------------------------------
+    # case: patient history form (PAT-HIST)
+    # ------------------------------------------------------------------
+    if type_form == 'PAT-HIST':
+        try:
+            import tomli
+
+            path = os.path.join(Constants.cst_form_pat, filename)
+
+            # init empty values for all custom input fields
+            if os.path.isfile(path):
+                with open(path, "rb") as f:
+                    form_toml = tomli.load(f)
+
+                for elem in form_toml.get('description', {}).get('form_element', []):
+                    # only input elements with an id
+                    if elem and 'id' in elem and 'input_type' in elem:
+                        json_data[elem['id']] = ''
+        except Exception as err:
+            log.error(Logs.fileline() + ' : preview-form PAT-HIST init from toml failed, err=%s', err)
+
+        ret_build_form = Form.build_form(type_form, filename)
+        json_data['form_html'] = ret_build_form['form_html']
+
+        page_content = ('<!DOCTYPE html>'
+                        '<html lang="{{ locale }}" {% if locale == "ar" %}dir="rtl"{% else %}dir="ltr"{% endif %}>'
+                        '<head>'
+                            '<meta charset="UTF-8">'
+                            '<meta name="viewport" content="width=device-width, initial-scale=1.0">'
+                            '<title>Preview form</title>'
+                            '<link href="{{ url_for("static", filename="vendor/bootstrap/bootstrap-icons/bootstrap-icons.css") }}" rel="stylesheet">'
+                            '<link href="{{ url_for("static", filename="vendor/bootstrap/css/bootstrap.min.css") }}" media="screen, print" rel="stylesheet" type="text/css">'
+                            '<link href="{{ url_for("labbook_css") }}?{{ rand }}" media="screen" rel="stylesheet" type="text/css">'
+                            '<script src="{{ url_for("static", filename="vendor/js/jquery-3.6.1.min.js") }}"></script>'
+                            '<link href="{{ url_for("static", filename="vendor/bootstrap/css/bootstrap-datepicker3.min.css") }}" rel="stylesheet" />'
+                            '<link href="{{ url_for("static", filename="vendor/css/select2.min.css") }}" rel="stylesheet" />'
+                            '<script type="text/javascript" src="{{ url_for("static", filename="vendor/js/select2.min.js") }}" nonce="{{ session["nonce"] }}"></script>'
+                        '</head>'
+                        '<body>'
+                            '<div id="page" class="container-fluid">'
+                                '{{ args["form_html"] | safe }}'
+                            '</div>'
+                        '</body>'
+                        '</html>')
+
+        # pre-render the page
+        page_content = render_template_string(page_content, ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+        return render_template_string(page_content, ihm=json_ihm, args=json_data, rand=random.randint(0, 999))
+
+    # ------------------------------------------------------------------
+    # Default case: patient main form (PAT)
+    # ------------------------------------------------------------------
 
     # Load unit age
     try:
@@ -4392,7 +4463,19 @@ def det_patient(type_req='E', id_pat=0):
     json_ihm  = {}
     json_data = {}
 
+    has_pat_hist_form = False
+
     dt_start_req = datetime.now()
+
+    try:
+        path = Constants.cst_form_pat
+        for filename in os.listdir(path):
+            if filename.startswith('form_patient_hist_') and filename.endswith('.toml'):
+                has_pat_hist_form = True
+                break
+    except Exception as err:
+        log.error(Logs.fileline() + ' : failed to detect patient history form, err=%s', err)
+
     # Load unit age
     try:
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/dict/det/periode_unite'
@@ -4464,7 +4547,8 @@ def det_patient(type_req='E', id_pat=0):
                 return redir
 
             if req.status_code == 200:
-                json_data = req.json()
+                data_pat = req.json()
+                json_data.update(data_pat)
                 json_data['id_pat'] = id_pat
 
         except requests.exceptions.RequestException as err:
@@ -4545,6 +4629,7 @@ def det_patient(type_req='E', id_pat=0):
     ret_build_form = Form.build_form('PAT', form_filename)
     json_data['form_html'] = ret_build_form['form_html']
     json_data['json_save'] = ret_build_form['json_save']
+    json_data['has_pat_hist_form'] = has_pat_hist_form
 
     tpl_html = render_template('det-patient.html', type_req=type_req, ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
 
@@ -4554,6 +4639,58 @@ def det_patient(type_req='E', id_pat=0):
     log.info(Logs.fileline() + ' : TRACE det-patient processing time = ' + str(dt_time_req))
 
     return render_template_string(tpl_html, type_req=type_req, ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+
+# Page : patient history (form-based)
+@app.route('/det-pat-hist/<int:id_pat>')
+def det_pat_hist(id_pat=0):
+    log.info(Logs.fileline() + ' : TRACE det-pat-hist id_pat = ' + str(id_pat))
+
+    if not test_session():
+        log.info(Logs.fileline() + ' : TRACE Labbook det-pat-hist => disconnect')
+        session.clear()
+        return index()
+
+    session['current_page'] = 'det-pat-hist/' + str(id_pat)
+    session.modified = True
+
+    resp = ensure_be_token()
+    if resp:
+        return resp
+
+    json_data = {}
+    json_data['id_pat'] = id_pat
+
+    # --- Form PAT-HIST depuis fichier TOML ---
+    form_filename = 'form_patient_hist_fr.toml'
+
+    if session.get('lang_select') and session['lang_select'] != 'FR':
+        form_filename = 'form_patient_hist_' + session['lang_select'].lower() + '.toml'
+
+        dirpath = Constants.cst_form_pat
+        path = os.path.join(dirpath, form_filename)
+
+        # si fichier inexistant, on revient au FR
+        if not (os.path.isfile(path) and path.endswith('.toml')):
+            form_filename = 'form_patient_hist_fr.toml'
+
+    ret_build_form = Form.build_form('PAT-HIST', form_filename)
+    json_data['form_html'] = ret_build_form['form_html']
+    json_data['history_js'] = ret_build_form.get('history_js', '')
+
+    tpl_html = render_template(
+        'det-pat-hist.html',
+        id_pat=id_pat,
+        args=json_data,
+        rand=random.randint(0, 999)
+    )  # nosec B311
+
+    return render_template_string(
+        tpl_html,
+        id_pat=id_pat,
+        args=json_data,
+        rand=random.randint(0, 999)
+    )  # nosec B311
 
 
 # Page : external request details
@@ -4580,6 +4717,17 @@ def det_req_ext(entry='Y', ref=0):
     json_data = {}
 
     dt_start_req = datetime.now()
+    # Detect if a patient history form TOML exists
+    has_pat_hist_form = False
+    try:
+        path = Constants.cst_form_pat
+        for filename in os.listdir(path):
+            if filename.startswith('form_patient_hist_') and filename.endswith('.toml'):
+                has_pat_hist_form = True
+                break
+    except Exception as err:
+        log.error(Logs.fileline() + ' : failed to detect patient history form, err=%s', err)
+
     if entry == "Y":
         # ref = id_pat
         # Load data patient
@@ -4693,6 +4841,7 @@ def det_req_ext(entry='Y', ref=0):
         json_data['data_samples']  = []
         json_data['data_products'] = []
         json_data['record']        = []
+        json_data['has_pat_hist_form'] = has_pat_hist_form
 
     dt_stop_req = datetime.now()
     dt_time_req = dt_stop_req - dt_start_req
@@ -4724,6 +4873,17 @@ def det_req_int(entry='Y', ref=0):
 
     json_ihm  = {}
     json_data = {}
+
+    # Detect if a patient history form TOML exists
+    has_pat_hist_form = False
+    try:
+        path = Constants.cst_form_pat
+        for filename in os.listdir(path):
+            if filename.startswith('form_patient_hist_') and filename.endswith('.toml'):
+                has_pat_hist_form = True
+                break
+    except Exception as err:
+        log.error(Logs.fileline() + ' : failed to detect patient history form, err=%s', err)
 
     if entry == "Y":
         # here : ref = id_pat
@@ -4853,6 +5013,7 @@ def det_req_int(entry='Y', ref=0):
         json_data['data_samples']  = []
         json_data['data_products'] = []
         json_data['record']        = []
+        json_data['has_pat_hist_form'] = has_pat_hist_form
 
     return render_template('det-req-int.html', entry=entry, ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
 
@@ -4889,6 +5050,17 @@ def administrative_record(type_req='E', id_rec=0):
     json_data['doctor']['id_data'] = 0
 
     dt_start_req = datetime.now()
+    # Detect if a patient history form TOML exists
+    has_pat_hist_form = False
+    try:
+        path = Constants.cst_form_pat
+        for filename in os.listdir(path):
+            if filename.startswith('form_patient_hist_') and filename.endswith('.toml'):
+                has_pat_hist_form = True
+                break
+    except Exception as err:
+        log.error(Logs.fileline() + ' : failed to detect patient history form, err=%s', err)
+
     # Load save record
     try:
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/record/det/' + str(id_rec)
@@ -5085,6 +5257,8 @@ def administrative_record(type_req='E', id_rec=0):
 
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests sending method list failed, err=%s , url=%s', err, url)
+
+    json_data['has_pat_hist_form'] = has_pat_hist_form
 
     dt_stop_req = datetime.now()
     dt_time_req = dt_stop_req - dt_start_req
@@ -5765,7 +5939,7 @@ def report_activity():
             return redir
 
         if req.status_code == 200:
-            json_ihm['tpl_activity'] = req.json()
+            json_ihm['tpl_activity_report'] = req.json()
 
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests list template ACT failed, err=%s , url=%s', err, url)
@@ -9022,6 +9196,30 @@ def list_jobs():
     return render_template('list-jobs.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
 
 
+# Page : histo-jobs
+@app.route('/histo-jobs')
+def histo_jobs():
+    log.info(Logs.fileline() + ' : TRACE setting histo-jobs')
+
+    if not test_session():
+        log.info(Logs.fileline() + ' : TRACE Labbook histo-jobs => disconnect')
+        session.clear()
+        return index()
+
+    session['current_page'] = 'histo-jobs'
+    session.modified = True
+
+    resp = ensure_be_token()
+    if resp:
+        return resp
+    # headers = be_auth_headers()
+
+    json_ihm  = {}
+    json_data = {}
+
+    return render_template('histo-jobs.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+
 # Page : details sending method
 @app.route('/det-job/<int:id_item>')
 def det_job(id_item=0):
@@ -9064,6 +9262,21 @@ def det_job(id_item=0):
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests list dhis2 setting failed, err=%s , url=%s', err, url)
 
+    # Load analysis type
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/dict/det/famille_analyse'
+        req = requests.get(url, timeout=10, headers=headers)
+
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
+        if req.status_code == 200:
+            json_ihm['type_ana'] = req.json()
+
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests analysis type failed, err=%s , url=%s', err, url)
+
     # Load templates ACT
     try:
         url = f"{session['server_int']}/{session['redirect_name']}/services/setting/template/list/ACT"
@@ -9076,9 +9289,9 @@ def det_job(id_item=0):
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests list template ACT failed, err=%s , url=%s', err, url)
 
-    # Load templates DBS
+    # Load templates BIL
     try:
-        url = f"{session['server_int']}/{session['redirect_name']}/services/setting/template/list/DBS"
+        url = f"{session['server_int']}/{session['redirect_name']}/services/setting/template/list/BIL"
         req = requests.get(url, timeout=10, headers=headers)
         redir = be_check_or_bounce(req)
         if redir:
@@ -9485,6 +9698,9 @@ def download_file(type='', filename='', type_ref='', ref=''):
     # RP => Report
     # RLT => Report from LabBook Lite
     # DH => DHIS2 spreadsheet
+    # DHU => DHIS2 from job
+    # BILU => Billing report from job
+    # ACTU => Activity report from job
     # EP => EPIDEMIO spreadsheet
     # FP => Form Patient
     # IN => INDICATOR spreadsheet
@@ -9628,6 +9844,15 @@ def download_file(type='', filename='', type_ref='', ref=''):
     elif type == 'DH':
         filepath = Constants.cst_dhis2
         generated_name = filename
+    elif type == 'DHU':
+        filepath = Constants.cst_dhis2_upload
+        generated_name = ref or filename  # ref = hash name
+    elif type == 'BILU':
+        filepath = Constants.cst_billing_upload
+        generated_name = ref or filename
+    elif type == 'ACTU':
+        filepath = Constants.cst_activity_upload
+        generated_name = ref or filename
     elif type == 'EP':
         filepath = Constants.cst_epidemio
         generated_name = filename
@@ -9977,13 +10202,18 @@ def upload_form(type_form):
             return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
         if type_form == 'PAT':
+            # patient form
             file_start_with = 'form_patient_'
+            filepath = Constants.cst_form_pat
+        elif type_form == 'PAT-HIST':
+            # patient history form
+            file_start_with = 'form_patient_hist_'
             filepath = Constants.cst_form_pat
         else:
             return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
         # check if this file is a toml and start with
-        if not filename.startswith(file_start_with) and not filename.endswith('.toml'):
+        if not (filename.startswith(file_start_with) and filename.endswith('.toml')):
             return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
 
         log.info(Logs.fileline() + ' upload-form Before save file')
@@ -10208,13 +10438,14 @@ def upload_printer():
 def delete_file(type='', filename=''):
     log.info(Logs.fileline())
 
-    # DH => DHIS2 spreadsheet
-    # FP => Form Patient
-    # TP => template odt
+    # DH  => DHIS2 spreadsheet
+    # FP  => Form Patient
+    # FPH => Form Patient Hist
+    # TP  => template odt
 
     if type == 'DH':
         filepath = Constants.cst_dhis2
-    elif type == 'FP':
+    elif type in ('FP', 'FPH'):
         filepath = Constants.cst_form_pat
     elif type == 'TP':
         filepath = Constants.cst_template

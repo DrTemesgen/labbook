@@ -19,7 +19,12 @@ class Constants:
     cst_report    = '/storage/report/'
     cst_resource  = '/storage/resource/'
     cst_printer   = '/storage/resource/printer/'
-    cst_upload    = '/storage/upload/'
+
+    cst_upload          = '/storage/upload/'
+    cst_dhis2_upload    = '/storage/upload/dhis2/'
+    cst_activity_upload = '/storage/upload/activity/'
+    cst_billing_upload  = '/storage/upload/billing/'
+
     cst_path_tmp  = '/home/apps/labbook_BE/labbook_BE/tmp/'
 
     cst_connect_mapping = '/storage/resource/connect/analyzer/mapping'

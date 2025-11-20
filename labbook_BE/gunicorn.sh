@@ -70,14 +70,6 @@ GUNICORN_TIMEOUT=0  # Because restore and backup scripts that run synchronously
 
 SHARED_SECRET=/storage/key/secret_key.py
 
-# --- Automation scheduler settings (all UTC, 1-minute tick) ---
-SCHED_ENABLED=${SCHED_ENABLED:-1}                   # 1 = enabled, 0 = disabled
-SCHED_TICK_SECONDS=${SCHED_TICK_SECONDS:-60}        # wake-up interval in seconds
-SCHED_MAX_RUNTIME_MIN=${SCHED_MAX_RUNTIME_MIN:-60}  # timeout per run (minutes)
-SCHED_LOG="${LOGS_DIR}/scheduler.out"               # scheduler log file
-SCHED_PID="${GUNICORN_DIR}/scheduler.pid"           # scheduler PID file
-# --- end automation scheduler settings ---
-
 # shellcheck disable=SC1091
 source ${VENV_DIR}/bin/activate
 
@@ -151,25 +143,6 @@ alembic upgrade head >> ${LOGS_PERM}/alembic.out 2>&1
 
 # preload libreoffice
 unoconv --listener >> ${LOGS_PERM}/unoconv.out 2>&1 &
-
-# --- Start automation scheduler (background) ---
-if [ "${SCHED_ENABLED}" = "1" ]; then
-    # Ensure log file exists
-    touch "${SCHED_LOG}"
-    echo "$(date -Iseconds) Scheduler starting (tick=${SCHED_TICK_SECONDS}s)" >> "${SCHED_LOG}"
-
-    # Launch the scheduler as a background process
-    # NOTE: replace 'app.automation_scheduler' with your actual module path when ready
-    "${VENV_DIR}/bin/python" -m app.automation_scheduler \
-        --tick "${SCHED_TICK_SECONDS}" \
-        --max-runtime-min "${SCHED_MAX_RUNTIME_MIN}" \
-        >> "${SCHED_LOG}" 2>&1 &
-
-    # Persist background PID for diagnostics
-    echo $! > "${SCHED_PID}"
-fi
-# --- end automation scheduler ---
-
 
 # Gunicorn is installed in the virtual environment
 # When started by supervisord, exec is necessary for the signals to reach gunicorn.

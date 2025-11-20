@@ -83,7 +83,6 @@ def query_client(client_id):
 
     # Prefer environment-provided secret (shared with FE) over DB value
     env_secret = (os.environ.get('LABBOOK_OAUTH_FE_SECRET') or '').strip()
-    
 
     class Client:
         # Static attributes read by Authlib

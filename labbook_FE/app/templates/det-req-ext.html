@@ -97,6 +97,11 @@
                         <div class="ms-3 mt-3">
                             <input type="button" onclick="change_pat({% if args['patient'] %}{{ args['patient']['id_data'] }}{% else %}0{% endif %});" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Modifier le dossier du patient") }}">
                         </div>
+                        {% if args.get('has_pat_hist_form') %}
+                        <div class="ms-3 mt-3">
+                            <input type="button" onclick="change_pat_hist({{ args['patient']['id_data'] }});" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Modifier l'historique du patient") }}">
+                        </div>
+                        {% endif %}
                         {% endif %}
                     </div>
 
@@ -402,6 +407,11 @@ const SAMP_HTML_PATTERN = (SAMP_REGEX || '').replace(/^\^|\$$/g, '');
 function change_pat( id_pat ) 
 {
 window.location.href = "{{ session['server_ext'] }}/det-patient/E/" + id_pat ;
+}
+
+function change_pat_hist( id_pat ) 
+{
+window.location.href = "{{ session['server_ext'] }}/det-pat-hist/" + id_pat ;
 }
 
 $("#search_doctor").select2(

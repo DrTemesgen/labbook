@@ -104,12 +104,12 @@
                 <div class="form-group d-lg-flex align-items-start mt-2">
                     <label for="ajb_schedule_time" class="form-label col-3 text-end mt-2 me-1">{{ _("Heure d'exécution") }} *</label>
                     <div class="col">
-                        <input
-                            id="ajb_schedule_time"
-                            type="time"
-                            class="form-control form-lbk"
-                            required
-                            value="{{ args['item'].get('ajb_schedule_time','02:00:00') }}">
+                        {% if args['id_item']|int > 0 %}
+                            {% set raw_time = args['item'].get('ajb_schedule_time','') %}
+                        {% else %}
+                            {% set raw_time = '' %}
+                        {% endif %}
+                        <input id="ajb_schedule_time" type="time" class="form-control form-lbk" required data-raw-time="{{ raw_time }}">
                     </div>
                 </div>
 
@@ -283,11 +283,9 @@
                     <div class="form-group d-lg-flex align-items-start mt-2">
                         <label for="activity_family" class="form-label col-3 text-end mt-2 me-1">{{ _("Famille d'analyse") }}</label>
                         <div class="col">
-                            <select id="activity_family" class="form-select form-lbk">
-                                <option value="all"    {% if args['item'].get('ajb_params', {}).get('activity_family')=='all' %}selected{% endif %}>{{ _("Toutes") }}</option>
-                                <option value="micro"  {% if args['item'].get('ajb_params', {}).get('activity_family')=='micro' %}selected{% endif %}>{{ _("Microbiologie") }}</option>
-                                <option value="sero"   {% if args['item'].get('ajb_params', {}).get('activity_family')=='sero' %}selected{% endif %}>{{ _("Séro") }}</option>
-                                <option value="virol"  {% if args['item'].get('ajb_params', {}).get('activity_family')=='virol' %}selected{% endif %}>{{ _("Virologie") }}</option>
+                            <select name="activity_family" id="activity_family" class="form-select form-lbk">
+                                {% from 'macros.html' import select_type_ana %}
+                                {{ select_type_ana(ihm['type_ana']) }}
                             </select>
                         </div>
                     </div>
@@ -447,12 +445,12 @@
 
 {% block add_script %}
 <script type="text/javascript" nonce="{{ session['nonce'] }}">
-/* in-code comment: constants provided by server/session */
+/* constants provided by server/session */
 const SERVER   = "{{ session['server_ext'] }}";
 const IDITEM   = {{ args['id_item']|default(0)|int }};
 const TYPEINIT = "{{ args['type_item'] }}";  /* 'dhis2', 'activity', 'billing' when editing */
 
-/* in-code comment: show only the block that matches jobType, using Bootstrap d-none */
+/* show only the block that matches jobType, using Bootstrap d-none */
 function applyTypeVisibility(jobType)
 {
     const bDhis2    = document.getElementById('block_dhis2');
@@ -474,24 +472,34 @@ function applyTypeVisibility(jobType)
     }
 }
 
-/* in-code comment: show DOW row only for weekly, DOM row for monthly-like, else hide both */
+/* show DOW row only for weekly, DOM row for monthly-like, else hide both */
 function applyScheduleVisibility(kind)
 {
     const rowDow = document.getElementById('row_dow');
     const rowDom = document.getElementById('row_dom');
 
-    // hide both row first
+    if (!rowDow || !rowDom) return;
+
+    // Hide both rows and reset layout
     rowDow.classList.add('d-none');
     rowDom.classList.add('d-none');
 
-    // W => show day of week row
+    rowDow.classList.remove('d-lg-flex');
+    rowDom.classList.remove('d-lg-flex');
+
+    rowDow.style.display = 'none';
+    rowDom.style.display = 'none';
+
+    // W => show day-of-week row only
     if (kind === 'W') {
         rowDow.classList.remove('d-none');
-        // ensure Bootstrap flex layout for row_dow
         rowDow.classList.add('d-lg-flex');
+        rowDow.style.display = '';
+        return;
+    }
 
-    // M / B / T / Q / S / A => show day-of-month row
-    } else if (
+    // M / B / T / Q / S / A => show day-of-month row only
+    if (
         kind === 'M' ||
         kind === 'B' ||
         kind === 'T' ||
@@ -501,10 +509,11 @@ function applyScheduleVisibility(kind)
     ) {
         rowDom.classList.remove('d-none');
         rowDom.classList.add('d-lg-flex');
+        rowDom.style.display = '';
     }
 }
 
-/* in-code comment: show the correct DHIS2 sub-block:
+/* show the correct DHIS2 sub-block:
    - if mode = create  -> show internal messaging block only
    - if mode = send    -> show API config block only
    Both blocks start hidden (d-none) every time. */
@@ -515,31 +524,48 @@ function applyDhis2ModeVisibility()
     const apiBlock      = document.getElementById('dhis2_api_block');
 
     if (!modeSel) {
-        // not DHIS2, nothing to do
         return;
     }
 
-    // always hide both first
     if (internalBlock) internalBlock.classList.add('d-none');
     if (apiBlock)      apiBlock.classList.add('d-none');
 
-    // now show only what matches the current mode
-    if (modeSel.value === 'create') {
+    const mode = modeSel.value;
+
+    if (mode === 'create') {
         if (internalBlock) {
             internalBlock.classList.remove('d-none');
         }
-        // refresh the sub-recipient visibility in that block
+        // refresh sub-recipient visibility
         onInternalMsgToggle('dhis2');
     }
 
-    if (modeSel.value === 'send') {
+    if (mode === 'send') {
         if (apiBlock) {
             apiBlock.classList.remove('d-none');
+        }
+
+        // hard reset internal messaging state when switching to send
+        const cb  = document.getElementById('dhis2_internal_msg');
+        const sel = document.getElementById('dhis2_internal_recipient');
+        const recBlock = document.getElementById('dhis2_internal_recipient_block');
+
+        if (cb) {
+            cb.checked = false;
+        }
+        if (sel) {
+            sel.value = '';
+            if (window.jQuery && $(sel).hasClass('select2-hidden-accessible')) {
+                $(sel).val(null).trigger('change');
+            }
+        }
+        if (recBlock) {
+            recBlock.classList.add('d-none');
         }
     }
 }
 
-/* in-code comment: show/hide recipient select when checkbox 'Envoyer vers la messagerie interne' is toggled */
+/* show/hide recipient select when checkbox 'Envoyer vers la messagerie interne' is toggled */
 function onInternalMsgToggle(context)
 {
     // context is 'dhis2' | 'activity' | 'billing'
@@ -573,8 +599,30 @@ function onTypeChange()
     // show the correct main block (dhis2 / activity / billing)
     applyTypeVisibility(t);
 
-    // if the selected type is dhis2, also update DHIS2 sub-block visibility
-    if (t === 'dhis2') {
+    const kindSel  = document.getElementById('ajb_schedule_kind');
+    const optDaily = document.querySelector('#ajb_schedule_kind option[value="D"]');
+
+    if (kindSel && optDaily) 
+    {
+        // if the selected type is dhis2, also update DHIS2 sub-block visibility
+        if (t === 'dhis2') 
+        {
+            optDaily.disabled = true;
+            if (kindSel.value === 'D') 
+            {
+                kindSel.value = 'W';
+                applyScheduleVisibility('W');
+            }
+        } 
+        else
+        {
+            // other type : daily option enabled
+            optDaily.disabled = false;
+        }
+    }
+
+    if (t === 'dhis2') 
+    {
         applyDhis2ModeVisibility();
     }
 }
@@ -591,24 +639,45 @@ function onDhis2ModeChange()
 }
 
 
-/* in-code comment: normalize "HH:MM" -> "HH:MM:SS" */
+/* normalize "HH:MM" -> "HH:MM:SS" */
 function normalizeTime(hhmm) {
     if (!hhmm) return "02:00:00";
     return hhmm.length === 5 ? (hhmm + ":00") : hhmm;
 }
 
-/* in-code comment: build backend payload matching Export.py contract */
-function buildBackendPayload(jobType) {
+/* when last day of month is checked, day-of-month input is disabled and cleared */
+function onLastDomToggle()
+{
+    const chk = document.getElementById('ajb_schedule_last_dom');
+    const inp = document.getElementById('ajb_schedule_dom');
+    if (!chk || !inp) return;
+
+    if (chk.checked) {
+        inp.value = '';
+        inp.disabled = true;
+    } else {
+        inp.disabled = false;
+    }
+}
+
+/* build backend payload matching Export.py contract */
+function buildBackendPayload(jobType) 
+{
+    const kindSel = document.getElementById('ajb_schedule_kind');
+    const kindVal = kindSel ? kindSel.value : '';
+
+    const lastDomChecked = document.getElementById('ajb_schedule_last_dom').checked;
+
     const payload = {
         type:  jobType,
         label: document.getElementById('ajb_label').value.trim(),
         active: document.getElementById('ajb_is_active').checked ? 'Y' : 'N',
         schedule: {
-            kind: document.getElementById('ajb_schedule_kind').value,
-            time_utc: normalizeTime(document.getElementById('ajb_schedule_time').value),
-            dow: document.getElementById('ajb_schedule_dow').value || null,
-            dom: document.getElementById('ajb_schedule_dom').value || null,
-            last_dom: document.getElementById('ajb_schedule_last_dom').checked ? 'Y' : 'N',
+            kind: kindVal,
+            time: normalizeTime(document.getElementById('ajb_schedule_time').value),
+            dow: (kindVal === 'W') ? (document.getElementById('ajb_schedule_dow').value || null) : null,
+            dom: lastDomChecked ? null : (document.getElementById('ajb_schedule_dom').value || null),
+            last_dom: lastDomChecked ? 'Y' : 'N',
             start_on: document.getElementById('ajb_schedule_start_on').value || null
         },
         params: {}
@@ -616,18 +685,29 @@ function buildBackendPayload(jobType) {
 
     // --- type-specific params ---
     if (jobType === 'dhis2') {
-        payload.params.dhis2_mode         = document.getElementById('dhis2_mode').value;
+        const mode = document.getElementById('dhis2_mode').value;
+
+        payload.params.dhis2_mode         = mode;
         payload.params.dhis2_sheet        = document.getElementById('dhis2_sheet').value || "";
         payload.params.dhis2_folder_scope = document.getElementById('dhis2_folder_scope').value;
         payload.params.dhis2_lblite_mode  = document.getElementById('dhis2_lblite_mode').value;
 
-        const dhis2MsgCbx = document.getElementById('dhis2_internal_msg');
-        payload.params.dhis2_internal_msg = dhis2MsgCbx && dhis2MsgCbx.checked ? 'Y' : 'N';
-        const rec1 = document.getElementById('dhis2_internal_recipient');
-        payload.params.dhis2_internal_recipient = rec1 ? (rec1.value || null) : null;
+        if (mode === 'send') {
+            // in send mode, internal messaging must be disabled
+            payload.params.dhis2_internal_msg       = 'N';
+            payload.params.dhis2_internal_recipient = null;
+        } else {
+            const dhis2MsgCbx = document.getElementById('dhis2_internal_msg');
+            payload.params.dhis2_internal_msg = (dhis2MsgCbx && dhis2MsgCbx.checked) ? 'Y' : 'N';
+
+            const rec1 = document.getElementById('dhis2_internal_recipient');
+            payload.params.dhis2_internal_recipient = rec1 ? (rec1.value || null) : null;
+        }
 
         const apiCfgSel = document.getElementById('dhis2_api_config');
-        if (apiCfgSel) payload.params.dhis2_api_config = apiCfgSel.value;
+        if (apiCfgSel) {
+            payload.params.dhis2_api_config = apiCfgSel.value;
+        }
 
     } else if (jobType === 'activity') {
         payload.params.activity_family   = document.getElementById('activity_family').value;
@@ -651,7 +731,7 @@ function buildBackendPayload(jobType) {
     return payload;
 }
 
-/* in-code comment: validate and POST/PUT to backend endpoints */
+/* validate and POST/PUT to backend endpoints */
 function save_job() {
     const jobType = (IDITEM > 0)
         ? TYPEINIT
@@ -694,7 +774,7 @@ function save_job() {
     });
 }
 
-/* in-code comment: init Select2 on recipient selectors */
+/* init Select2 on recipient selectors */
 function initRecipientSelect2()
 {
     // small helper to DRY
@@ -746,25 +826,69 @@ function initRecipientSelect2()
     });
 }
 
-/* in-code comment: cancel action -> back to list */
+/* cancel action -> back to list */
 function cancel()
 {
     window.location.href = SERVER + '/list-jobs';
 }
 
 {% if (has_permission("AUTO_180") and args['id_item'] == 0) or (has_permission("AUTO_181") and args['id_item'] > 0) %}
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function() 
+{
     const selTypeEl    = document.getElementById('ajb_type');
+    const kindSel      = document.getElementById('ajb_schedule_kind');
+    const optDaily     = document.querySelector('#ajb_schedule_kind option[value="D"]');
     const effectiveType = (IDITEM > 0)
         ? TYPEINIT
         : (selTypeEl ? selTypeEl.value : '');
 
+    const lastDomCbx = document.getElementById('ajb_schedule_last_dom');
+    if (lastDomCbx) 
+    {
+        lastDomCbx.addEventListener('change', onLastDomToggle);
+        onLastDomToggle();  // sync initial state (edit mode)
+    }
+
+    // Initialize schedule time from raw value
+    const timeInput = document.getElementById('ajb_schedule_time');
+    if (timeInput) {
+        let raw = timeInput.getAttribute('data-raw-time') || "";
+        raw = raw.trim();
+        if (raw) {
+            const parts = raw.split(':');
+            if (parts.length >= 2) {
+                const hh = String(parts[0]).padStart(2, '0');
+                const mm = String(parts[1]).padStart(2, '0');
+                timeInput.value = hh + ':' + mm;
+            }
+        }
+    }
+
     // 1. Show only the main block for the current type (or nothing if none yet)
     applyTypeVisibility(effectiveType || '');
 
+    if (kindSel && optDaily) 
+    {
+        if (effectiveType === 'dhis2')
+        {
+            optDaily.disabled = true;
+            if (kindSel.value === 'D') 
+            {
+                kindSel.value = 'W';
+            }
+        } 
+        else 
+        {
+            optDaily.disabled = false;
+        }
+    }
+
     // 2. Show the correct scheduling sub-fields (day-of-week / day-of-month)
-    const kind = document.getElementById('ajb_schedule_kind').value;
+    const kind = kindSel ? kindSel.value : '';
+    if (kind)
+    {
     applyScheduleVisibility(kind);
+    }
 
     // 3. If current type is dhis2, apply DHIS2 mode visibility logic (create/send)
     if (effectiveType === 'dhis2') {

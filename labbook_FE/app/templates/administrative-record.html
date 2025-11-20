@@ -98,6 +98,12 @@
                            href="{{ session['server_ext'] }}/det-patient/A_{{ type_req }}_{{args['record']['id_data']}}/{{ args['patient']['id_data'] }}">
                           {{ _("Modifier patient") }}
                         </a>
+                        {% if args.get('has_pat_hist_form') %}
+                        <a class="btn btn-lbk btn-{{ session['user_role']|safe }} text-white"
+                           href="{{ session['server_ext'] }}/det-pat-hist/{{ args['patient']['id_data'] }}">
+                          {{ _("Historique patient") }}
+                        </a>
+                        {% endif %}
                     </div>
                 </div>
 

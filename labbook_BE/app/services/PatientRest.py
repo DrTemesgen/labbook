@@ -441,6 +441,98 @@ class PatientFormItem(Resource):
         return compose_ret(l_vals, Constants.cst_content_type_json, 200)
 
 
+class PatientHistFormItem(Resource):
+    log = logging.getLogger('log_services')
+
+    @require_oauth()
+    def get(self, id_pat):
+        l_items = Patient.getHistFormItems(id_pat)
+
+        if not l_items:
+            self.log.error(Logs.fileline() + ' : PatientHistFormItem WARNING not found')
+            return compose_ret([], Constants.cst_content_type_json, 200)
+
+        events = {}
+
+        for row in l_items:
+            evt_id   = row['phfi_evt']
+            evt_type = row['phfi_type']
+
+            if evt_id not in events:
+                evt = {}
+                evt['evt'] = evt_id
+                evt['block_id'] = evt_type
+
+                firstname = row.get('firstname') or ''
+                lastname = row.get('lastname') or ''
+                username = row.get('username') or ''
+                user_label = ''
+
+                if firstname or lastname:
+                    user_label = (firstname + ' ' + lastname).strip()
+                    if username:
+                        user_label += ' (' + username + ')'
+                elif username:
+                    user_label = username
+                else:
+                    user_label = str(row['phfi_user'])
+
+                evt['user_name'] = user_label
+
+                phfi_date = row['phfi_date']
+                if phfi_date is not None:
+                    evt['datetime'] = phfi_date.strftime(Constants.cst_dt_HM)
+                else:
+                    evt['datetime'] = ''
+
+                evt['fields'] = {}
+                events[evt_id] = evt
+
+            key = str(row['phfi_key'])
+            val = row['phfi_value']
+            events[evt_id]['fields'][key] = val
+
+        l_vals = list(events.values())
+
+        self.log.info(Logs.fileline() + ' : PatientHistFormItem get id_pat=' + str(id_pat))
+        return compose_ret(l_vals, Constants.cst_content_type_json, 200)
+
+    @require_oauth()
+    def post(self, id_pat):
+        args = request.get_json(silent=True) or {}
+
+        id_user  = args.get('id_user')
+        block_id = args.get('block_id')
+        fields   = args.get('fields')
+
+        if not id_pat or id_pat <= 0:
+            self.log.error(Logs.fileline() + ' : PatientHistFormItem ERROR id_pat invalid')
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        if not id_user or not block_id or not isinstance(fields, dict) or not fields:
+            self.log.error(Logs.fileline() + ' : PatientHistFormItem ERROR invalid payload')
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        evt = Patient.insertHistFormItem(id_pat, id_user, block_id, fields)
+
+        self.log.info(Logs.fileline() + ' : PatientHistFormItem saved evt=' + evt)
+        return compose_ret({'evt': evt}, Constants.cst_content_type_json, 200)
+
+    @require_oauth()
+    def delete(self, id_pat, evt_id):
+        if not evt_id:
+            self.log.error(Logs.fileline() + ' : PatientHistFormItem DELETE missing evt_id')
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        deleted = Patient.deleteHistFormEvent(id_pat, evt_id)
+        if not deleted:
+            self.log.error(Logs.fileline() + ' : PatientHistFormItem DELETE not found id_pat=' + str(id_pat) + ' evt_id=' + str(evt_id))
+            return compose_ret('', Constants.cst_content_type_json, 404)
+
+        self.log.info(Logs.fileline() + ' : PatientHistFormItem DELETE id_pat=' + str(id_pat) + ' evt_id=' + str(evt_id))
+        return compose_ret({'deleted': deleted}, Constants.cst_content_type_json, 200)
+
+
 class PatientHistoric(Resource):
     log = logging.getLogger('log_services')
 

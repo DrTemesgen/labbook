@@ -38,6 +38,11 @@
 
                 <div class="float-end d-lg-flex align-items-end">
                     <div>
+                        <input type="button"
+                               onclick="histo_jobs();"
+                               id="btn_history"
+                               value="{{ _('Historique') }}"
+                               class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
                         {% if has_permission("AUTO_180") %}
                         <input type="button"
                                onclick="add_job();"
@@ -134,6 +139,11 @@ function delete_job(id_val)
 function edit_job(id_val)
 {
     window.location.href = "{{ session['server_ext'] }}/det-job/" + id_val;
+}
+
+function histo_jobs()
+{
+    window.location.href = "{{ url_for('histo_jobs') }}";
 }
 
 function add_job()

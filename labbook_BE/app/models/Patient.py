@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import logging
 import mysql.connector
+import uuid
 
 from app.models.DB import DB
 from app.models.Logs import Logs
@@ -223,6 +224,44 @@ class Patient:
             return 0
 
     @staticmethod
+    def getHistFormItems(id_pat):
+        cursor = DB.cursor()
+        sql = ('select phfi_evt, phfi_date, phfi_user, phfi_type, phfi_key, phfi_value, '
+               'u.firstname, u.lastname, u.username '
+               'from patient_hist_form_item '
+               'left join sigl_user_data as u on u.id_data = phfi_user '
+               'where phfi_pat=%s and phfi_act="Y" '
+               'order by phfi_date desc, phfi_ser desc')
+        cursor.execute(sql, (id_pat,))
+        return cursor.fetchall()
+
+    @staticmethod
+    def insertHistFormItem(id_pat, id_user, block_id, fields):
+        cursor = DB.cursor()
+
+        phfi_evt = str(uuid.uuid4())  # event id
+
+        Patient.log.info(Logs.fileline() + ' : SAVE hist evt=' + phfi_evt)
+
+        sql = ('insert into patient_hist_form_item '
+               '(phfi_evt, phfi_date, phfi_user, phfi_pat, phfi_act, phfi_type, phfi_key, phfi_value) '
+               'values (%s, now(), %s, %s, %s, %s, %s, %s)')
+
+        for key, val in fields.items():
+            cursor.execute(sql, (phfi_evt, id_user, id_pat, 'Y', block_id, key, str(val)))
+
+        return phfi_evt
+
+    @staticmethod
+    def deleteHistFormEvent(id_pat, evt_id):
+        cursor = DB.cursor()
+        sql = ('update patient_hist_form_item '
+               'set phfi_act="N" '
+               'where phfi_pat=%s and phfi_evt=%s')
+        cursor.execute(sql, (id_pat, evt_id))
+        return cursor.rowcount
+
+    @staticmethod
     def getPatientByCode(code, code_lab):
         cursor = DB.cursor()
 
@@ -299,6 +338,9 @@ class Patient:
             if 'pat_lite' not in params or params['pat_lite'] is None:
                 params['pat_lite'] = 0
 
+            if 'pat_agreement' not in params or params['pat_agreement'] is None:
+                params['pat_agreement'] = 'N'
+
             cursor.execute('update sigl_03_data '
                            'set id_owner=%(id_owner)s, anonyme=%(anonyme)s, code=%(code)s, code_patient=%(code_patient)s, '
                            'nom=%(nom)s, prenom=%(prenom)s, ddn=%(ddn)s, sexe=%(sexe)s, adresse=%(adresse)s, '
@@ -326,6 +368,9 @@ class Patient:
 
             if 'pat_lite' not in params or params['pat_lite'] is None:
                 params['pat_lite'] = 0
+
+            if 'pat_agreement' not in params or params['pat_agreement'] is None:
+                params['pat_agreement'] = 'N'
 
             cursor.execute('insert into sigl_03_data '
                            '(id_owner, anonyme, code, code_patient, nom, prenom, ddn, sexe, adresse, cp, ville, '
