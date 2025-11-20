@@ -406,7 +406,7 @@ class Form:
                 fields_by_block[block_id] = fields
 
                 header_cells = ''
-                header_cells += '<th>' + _("Actions") + '</th>'
+                header_cells += '<th>' + _("Action") + '</th>'
                 header_cells += '<th>' + _("Date de saisie") + '</th>'
                 header_cells += '<th>' + _("Utilisateur") + '</th>'
 
