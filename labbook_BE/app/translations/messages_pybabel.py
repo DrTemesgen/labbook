@@ -831,6 +831,9 @@ _("VIH-1 et VIH-2 positifs")
 _("VIH-2 positif")
 _("Non")
 _("Oui")
+_("Écouvillon nasopharyngé")
+_("Écouvillon oropharyngé")
+_("Écouvillon nasal")
 
 # ----------------------------------------------------------------------------
 # DICTIONNARY SHORT LABEL SECTION
@@ -1428,6 +1431,16 @@ _("Prélèvement Vaginal")
 _("Prélèvement Urétral")
 _("Prélèvement de sang artériel")
 _("Microscopie ZN de la tuberculose")
+_("Xpert Carba-R Version 2")
+_("Xpert HBV Viral Load Version 1")
+_("Xpert HIV-1 Qual XC DBS Version 1")
+_("Xpert HIV-1 Qual XC WB Version 1")
+_("Xpert HIV-1 Viral Load XC Version 3")
+_("Xpert MTB-RIF Ultra Version 4")
+_("Xpert Xpress SARS-CoV-2 Version 2")
+_("Xpert_Carba-R Version 1")
+_("Xpert_HIV-1 Qual Version 2")
+_("Xpert_HIV-1 Viral Load Version 1")
 
 # ----------------------------------------------------------------------------
 # ANALYSIS COMMENT SECTION
@@ -2256,6 +2269,21 @@ _("Volume globulaire moyen (VGM)")
 _("VS 1ère heure")
 _("VS 2ème heure")
 _("Waaler-Rose")
+_("IMP1")
+_("KPC")
+_("NDM")
+_("OXA48")
+_("VIM")
+_("Xpert HBV Viral Load")
+_("HIV-1")
+_("QC")
+_("Xpert HIV-1 Viral Load XC")
+_("MTB")
+_("MTB Trace")
+_("RIF Resistance")
+_("Xpert Xpress SARS-CoV-2")
+_("IMP")
+_("Xpert_HIV-1 Viral Load")
 
 # ----------------------------------------------------------------------------
 # VARIABLE COMMENT SECTION

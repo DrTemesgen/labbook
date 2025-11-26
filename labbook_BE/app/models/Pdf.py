@@ -902,7 +902,7 @@ class Pdf:
                 if pat['pat_sex'] == 1:
                     data['pat']['sex'] = _('Masculin')
                 elif pat['pat_sex'] == 2:
-                    data['pat']['sex'] = _('Feminin')
+                    data['pat']['sex'] = _('Féminin')
 
                 if pat['pat_address']:
                     data['pat']['addr'] = str(pat['pat_address'])
@@ -1423,7 +1423,7 @@ class Pdf:
         if pat['pat_sex'] == 1:
             data['pat']['sex'] = _('Masculin')
         elif pat['pat_sex'] == 2:
-            data['pat']['sex'] = _('Feminin')
+            data['pat']['sex'] = _('Féminin')
 
         if pat['pat_address']:
             data['pat']['addr'] = str(pat['pat_address'])
@@ -2201,7 +2201,7 @@ class Pdf:
     def buildPdf(type, template, filename, data):
         """Build a PDF from a template with data
 
-        This function is call by getPdfSticker(), getPdfOutsourced(), getPdfInvoice() and getPdfBillList()
+        This function is call by getPdfSticker(), getPdfOutsourced(), getPdfInvoice(), getPdfBillList(), getPdfActivityReport()
 
         Args:
             type     (string): type of template.
@@ -2593,7 +2593,7 @@ class Pdf:
         if pat['pat_sex'] == 1:
             data['pat']['sex'] = _('Masculin')
         elif pat['pat_sex'] == 2:
-            data['pat']['sex'] = _('Feminin')
+            data['pat']['sex'] = _('Féminin')
 
         if pat['pat_address']:
             data['pat']['addr'] = str(pat['pat_address'])
@@ -3203,7 +3203,7 @@ class Pdf:
         if pat['pat_sex'] == 1:
             data['pat']['sex'] = _('Masculin')
         elif pat['pat_sex'] == 2:
-            data['pat']['sex'] = _('Feminin')
+            data['pat']['sex'] = _('Féminin')
 
         if pat['pat_address']:
             data['pat']['addr'] = str(pat['pat_address'])
@@ -3345,11 +3345,49 @@ class Pdf:
         data['label']['edit']      = str(_("édité le"))
         data['label']['analysis_family'] = str(_("Famille d'analyse"))
 
-        # New age column labels
-        data['label']['age_col1'] = str(_("Moins de 5 ans"))
-        data['label']['age_col2'] = str(_("De 5 à 20 ans"))
-        data['label']['age_col3'] = str(_("De 20 à 40 ans"))
-        data['label']['age_col4'] = str(_("Plus de 40 ans"))
+        # Age column labels: dynamic from age_interval_setting
+        try:
+            raw_intervals = Setting.getAgeInterval() or []
+        except Exception as err:
+            Pdf.log.error(Logs.fileline() + " : getPdfActivityReport getAgeInterval err=" + str(err))
+            raw_intervals = []
+
+        age_intervals = []
+        for r in raw_intervals:
+            age_intervals.append({
+                'lower': r.get('ais_lower_bound'),
+                'upper': r.get('ais_upper_bound'),
+            })
+
+        # Fallback legacy config if table empty
+        if not age_intervals:
+            age_intervals = [
+                {'lower': None, 'upper': 5},
+                {'lower': 5,    'upper': 20},
+                {'lower': 20,   'upper': 40},
+                {'lower': 40,   'upper': None},
+            ]
+
+        def build_age_label(lower, upper, index):
+            """Build translated age label using placeholders."""
+            if lower is None and upper is not None:
+                # "Moins de %s ans"
+                return str(_("<= %s ans")) % upper
+            if lower is not None and upper is None:
+                # "Plus de %s ans"
+                return str(_(">= %s ans")) % lower
+            if lower is not None and upper is not None:
+                # "De %s à %s ans"
+                return str(_("%s à %s ans")) % (lower, upper)
+            # Fully open interval, should not happen in pratique
+            return "Col %d" % index
+
+        # Fill data['label']['age_colX'] for each interval
+        for idx, itv in enumerate(age_intervals, start=1):
+            lower = itv.get('lower')
+            upper = itv.get('upper')
+            key = 'age_col%d' % idx
+            data['label'][key] = build_age_label(lower, upper, idx)
 
         data['label']['M'] = str(_("H"))
         data['label']['F'] = str(_("F"))
@@ -3459,25 +3497,37 @@ class Pdf:
                 if row.get(k) == 0:
                     row[k] = '-'
 
-        # Build table by age (new keys: age_col1_*, ..., age_col4_*, age_tot_*)
-        def age_bucket(a):
-            # Returns age column prefix: age_col1..age_col4 or None
+        # Build table by age (dynamic age_colX_* based on age_interval_setting)
+        def age_bucket_index(a, intervals):
+            """Return interval index (0..N-1) for given age in years, or None."""
             if a is None:
                 return None
             try:
                 v = int(a)
             except Exception:
                 return None
-            if v < 5:
-                return 'age_col1'
-            if v <= 20:
-                return 'age_col2'
-            if v <= 40:
-                return 'age_col3'
-            return 'age_col4'
+
+            for idx, iv in enumerate(intervals):
+                lower = iv.get('lower')
+                upper = iv.get('upper')
+
+                if lower is None and upper is not None:
+                    # ]-inf, upper[
+                    if v < upper:
+                        return idx
+                elif lower is not None and upper is None:
+                    # [lower, +inf[
+                    if v >= lower:
+                        return idx
+                elif lower is not None and upper is not None:
+                    # [lower, upper[
+                    if v >= lower and v < upper:
+                        return idx
+            return None
 
         age_map = {}
         order_age = []
+        bucket_count = len(age_intervals)
 
         for row in l_age:
             code = row.get('code', '')
@@ -3487,28 +3537,31 @@ class Pdf:
             nb   = int(row.get('nb_ana', 0) or 0)
 
             if code not in age_map:
-                age_map[code] = {
+                # Init structure for this analysis with ALL dynamic columns
+                base = {
                     'ana_name': ana,
                     'ana_code': code,
-                    # Age columns
-                    'age_col1_M': 0, 'age_col1_F': 0, 'age_col1_U': 0,
-                    'age_col2_M': 0, 'age_col2_F': 0, 'age_col2_U': 0,
-                    'age_col3_M': 0, 'age_col3_F': 0, 'age_col3_U': 0,
-                    'age_col4_M': 0, 'age_col4_F': 0, 'age_col4_U': 0,
-                    # Totals
-                    'age_tot_M': 0, 'age_tot_F': 0, 'age_tot_U': 0,
+                    'age_tot_M': 0,
+                    'age_tot_F': 0,
+                    'age_tot_U': 0,
                 }
+                for i in range(1, bucket_count + 1):
+                    base['age_col%d_M' % i] = 0
+                    base['age_col%d_F' % i] = 0
+                    base['age_col%d_U' % i] = 0
+                age_map[code] = base
                 order_age.append(code)
 
-            k = sex_key(sex)
+            k = sex_key(sex)          # "_M", "_F", "_U"
 
             # Always increment total per sex
             age_map[code]['age_tot' + k] += nb
 
-            # Increment bucket if age is valid
-            b = age_bucket(a)
-            if b is not None:
-                key = b + k      # for example: "age_col1_M"
+            # Assign to correct age bucket if possible
+            idx = age_bucket_index(a, age_intervals)
+            if idx is not None:
+                col_prefix = "age_col%d" % (idx + 1)
+                key = col_prefix + k
                 age_map[code][key] += nb
 
         data['l_age'] = [age_map[c] for c in order_age]

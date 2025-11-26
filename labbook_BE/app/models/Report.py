@@ -13,7 +13,7 @@ class Report:
     log = logging.getLogger('log_db')
 
     @staticmethod
-    def getNbResultRecevied(l_id_var, id_prod, date_beg, date_end):
+    def getNbResultRecevied(l_id_var, id_prod, date_beg, date_end, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
 
         req = ('select count(distinct rec.id_data) as total '
@@ -29,20 +29,31 @@ class Report:
 
         req = req + '0)'
 
+        lf = (lite_filter or 'A').upper()
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+
+        if lf == 'N':
+            req += ' and rec.rec_lite = 0'
+        elif lf == 'Y':
+            req += ' and rec.rec_lite > 0'
+            if lite_user_id > 0:
+                req += ' and rec.id_owner = ' + str(lite_user_id)
+
         cursor.execute(req, (date_beg, date_end, id_prod,))
 
         return cursor.fetchone()
 
     @staticmethod
-    def getNbResultReceviedV2(l_id_var, l_id_prod, date_beg, date_end):
+    def getNbResultReceviedV2(l_id_var, l_id_prod, date_beg, date_end, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
 
         cond_id_prod = ''
-
         for id_prod in l_id_prod:
             if not cond_id_prod:
                 cond_id_prod = '('
-
             cond_id_prod += str(id_prod) + ','
 
         if cond_id_prod:
@@ -62,13 +73,26 @@ class Report:
             req = req + str(id_var) + ','
 
         req = req + '0)'
+
+        lf = (lite_filter or 'A').upper()
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+
+        if lf == 'N':
+            req += ' and rec.rec_lite = 0'
+        elif lf == 'Y':
+            req += ' and rec.rec_lite > 0'
+            if lite_user_id > 0:
+                req += ' and rec.id_owner = ' + str(lite_user_id)
 
         cursor.execute(req, (date_beg, date_end,))
 
         return cursor.fetchone()
 
     @staticmethod
-    def getNbResultAnalyzed(l_id_var, id_prod, date_beg, date_end):
+    def getNbResultAnalyzed(l_id_var, id_prod, date_beg, date_end, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
 
         req = ('select count(distinct rec.id_data) as total '
@@ -85,20 +109,31 @@ class Report:
 
         req = req + '0)'
 
+        lf = (lite_filter or 'A').upper()
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+
+        if lf == 'N':
+            req += ' and rec.rec_lite = 0'
+        elif lf == 'Y':
+            req += ' and rec.rec_lite > 0'
+            if lite_user_id > 0:
+                req += ' and rec.id_owner = ' + str(lite_user_id)
+
         cursor.execute(req, (date_beg, date_end, id_prod,))
 
         return cursor.fetchone()
 
     @staticmethod
-    def getNbResultAnalyzedV2(l_id_var, l_id_prod, date_beg, date_end):
+    def getNbResultAnalyzedV2(l_id_var, l_id_prod, date_beg, date_end, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
 
         cond_id_prod = ''
-
         for id_prod in l_id_prod:
             if not cond_id_prod:
                 cond_id_prod = '('
-
             cond_id_prod += str(id_prod) + ','
 
         if cond_id_prod:
@@ -119,6 +154,19 @@ class Report:
             req = req + str(id_var) + ','
 
         req = req + '0)'
+
+        lf = (lite_filter or 'A').upper()
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+
+        if lf == 'N':
+            req += ' and rec.rec_lite = 0'
+        elif lf == 'Y':
+            req += ' and rec.rec_lite > 0'
+            if lite_user_id > 0:
+                req += ' and rec.id_owner = ' + str(lite_user_id)
 
         cursor.execute(req, (date_beg, date_end,))
 
@@ -157,6 +205,22 @@ class Report:
                'from sigl_02_data as rec ' + params['inner_req'] + ' '
                'where (rec.rec_date_receipt between %(date_beg)s and %(date_end)s) ' + params['end_req'])
 
+        lite_filter = params.get('lite_filter', 'A') or 'A'
+        lite_user_id = params.get('lite_user_id', 0) or 0
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+
+        lf = lite_filter.upper()
+        if lf == 'N':
+            req += ' and rec.rec_lite = 0'
+        elif lf == 'Y':
+            req += ' and rec.rec_lite > 0'
+            if lite_user_id > 0:
+                req += ' and rec.id_owner = %(lite_user_id)s'
+                params['lite_user_id'] = lite_user_id
+
         Report.log.info('----------------------------------')
         Report.log.info('getResultIndicator req=' + str(req))
 
@@ -165,13 +229,26 @@ class Report:
         return cursor.fetchone()
 
     @staticmethod
-    def getActivityAge(date_beg, date_end, type_ana):
+    def getActivityAge(date_beg, date_end, type_ana, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
 
         cond = ''
 
         if type_ana > 0:
             cond = ' and ana.famille= ' + str(type_ana) + ' '
+
+        # LabBook Lite filter: A = all, N = exclude Lite, Y = only Lite
+        lf = (lite_filter or 'A').upper()
+        if lf == 'N':
+            cond += ' and (rec.rec_lite <= 0 or rec.rec_lite is null) '
+        elif lf == 'Y':
+            cond += ' and rec.rec_lite > 0 '
+            try:
+                lite_user_id_int = int(lite_user_id)
+            except Exception:
+                lite_user_id_int = 0
+            if lite_user_id_int > 0:
+                cond += ' and rec.id_owner=' + str(lite_user_id_int) + ' '
 
         req = ('select ana.nom as analysis, ana.code as code, pat.sexe as sex, pat.age, pat.unite, count(*) as nb_ana '
                'from sigl_02_data as rec '
@@ -182,7 +259,7 @@ class Report:
                'group by id_analyse) as res on res.id_analyse = req.id_data '
                'inner join sigl_10_data as vld on vld.id_resultat = res.min_id_data '
                'where (rec.rec_date_receipt between %s and %s) and rec.statut in (255,256) ' + cond +
-               'and vld.type_validation = 252 '
+               ' and vld.type_validation = 252 '
                'group by ana.id_data, pat.unite, pat.age, pat.sexe order by ana.nom asc')
 
         cursor.execute(req, (date_beg, date_end,))
@@ -190,13 +267,26 @@ class Report:
         return cursor.fetchall()
 
     @staticmethod
-    def getActivityType(date_beg, date_end, type_ana):
+    def getActivityType(date_beg, date_end, type_ana, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
 
         cond = ''
 
         if type_ana > 0:
             cond = ' and ana.famille= ' + str(type_ana) + ' '
+
+        # LabBook Lite filter: A = all, N = exclude Lite, Y = only Lite
+        lf = (lite_filter or 'A').upper()
+        if lf == 'N':
+            cond += ' and (rec.rec_lite <= 0 or rec.rec_lite is null) '
+        elif lf == 'Y':
+            cond += ' and rec.rec_lite > 0 '
+            try:
+                lite_user_id_int = int(lite_user_id)
+            except Exception:
+                lite_user_id_int = 0
+            if lite_user_id_int > 0:
+                cond += ' and rec.id_owner=' + str(lite_user_id_int) + ' '
 
         req = ('select ana.nom as analysis, ana.code as code, pat.sexe as sex, rec.type as rec_type, '
                'count(*) as nb_ana, rec.rec_custody '
@@ -208,7 +298,7 @@ class Report:
                'group by id_analyse) as res on res.id_analyse = req.id_data '
                'inner join sigl_10_data as vld on vld.id_resultat = res.min_id_data '
                'where (rec.rec_date_receipt between %s and %s) and rec.statut in (255,256) ' + cond +
-               'and vld.type_validation = 252 '
+               ' and vld.type_validation = 252 '
                'group by ana.id_data, rec.type, pat.sexe order by ana.nom asc')
 
         cursor.execute(req, (date_beg, date_end,))
@@ -216,72 +306,118 @@ class Report:
         return cursor.fetchall()
 
     @staticmethod
-    def getStatPatient(date_beg, date_end, service_int):
+    def getStatPatient(date_beg, date_end, service_int, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
 
         cond = ''
 
         if service_int:
             cond += ' and rec.service_interne like "' + str(service_int) + '%" '
+
+        lf = lite_filter.upper()
+        if lf == 'N':
+            cond += ' and rec.rec_lite = 0'
+        elif lf == 'Y':
+            cond += ' and rec.rec_lite > 0'
+            if lite_user_id > 0:
+                cond += ' and rec.id_owner = ' + str(lite_user_id)
 
         req = ('select pat.sexe as sex, pat.age, count(*) as nb_rec, rec.type as rec_type '
                'from sigl_02_data as rec '
                'inner join sigl_03_data as pat on pat.id_data = rec.id_patient '
                'where (rec.rec_date_receipt between %s and %s) ' + cond +
-               'group by pat.age order by age asc')
+               ' group by pat.age order by age asc')
 
         cursor.execute(req, (date_beg, date_end,))
 
         return cursor.fetchall()
 
     @staticmethod
-    def getStatPrescr(date_beg, date_end, service_int):
+    def getStatPrescr(date_beg, date_end, service_int, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
 
         cond = ''
 
         if service_int:
             cond += ' and rec.service_interne like "' + str(service_int) + '%" '
+
+        lf = lite_filter.upper()
+        if lf == 'N':
+            cond += ' and rec.rec_lite = 0'
+        elif lf == 'Y':
+            cond += ' and rec.rec_lite > 0'
+            if lite_user_id > 0:
+                cond += ' and rec.id_owner = ' + str(lite_user_id)
 
         req = ('select doctor.nom as lastname, doctor.prenom as firstname, count(*) as nb_rec '
                'from sigl_02_data as rec '
                'inner join sigl_08_data as doctor on doctor.id_data = rec.med_prescripteur '
                'where (date_prescription between %s and %s) ' + cond +
-               'group by doctor.id_data order by lastname asc, firstname asc')
+               ' group by doctor.id_data order by lastname asc, firstname asc')
 
         cursor.execute(req, (date_beg, date_end,))
 
         return cursor.fetchall()
 
     @staticmethod
-    def getStatSampler(date_beg, date_end):
+    def getStatSampler(date_beg, date_end, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
+
+        cond = ''
+
+        lf = (lite_filter or 'A').upper()
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+
+        if lf == 'N':
+            cond += ' and prod.id_owner = 0'
+        elif lf == 'Y':
+            cond += ' and prod.id_owner > 0'
+            if lite_user_id > 0:
+                cond += ' and prod.id_owner = ' + str(lite_user_id)
 
         req = ('select preleveur as sampler, count(*) as nb_prod '
-               'from sigl_01_data '
-               'where (samp_date between %s and %s) '
-               'group by sampler order by sampler asc')
+               'from sigl_01_data as prod '
+               'where (samp_date between %s and %s) ' + cond +
+               ' group by sampler order by sampler asc')
 
         cursor.execute(req, (date_beg, date_end,))
 
         return cursor.fetchall()
 
     @staticmethod
-    def getStatProduct(date_beg, date_end):
+    def getStatProduct(date_beg, date_end, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
+
+        cond = ''
+
+        lf = (lite_filter or 'A').upper()
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+
+        if lf == 'N':
+            cond += ' and prod.id_owner = 0'
+        elif lf == 'Y':
+            cond += ' and prod.id_owner > 0'
+            if lite_user_id > 0:
+                cond += ' and prod.id_owner = ' + str(lite_user_id)
 
         req = ('select dict.label as product, count(*) as nb_prod '
                'from sigl_01_data as prod '
                'inner join sigl_dico_data as dict on dict.id_data = prod.type_prel '
-               'where (prod.samp_date between %s and %s) and statut=8 '
-               'group by product order by product asc')
+               'where (prod.samp_date between %s and %s) and statut=8 ' + cond +
+               ' group by product order by product asc')
 
         cursor.execute(req, (date_beg, date_end,))
 
         return cursor.fetchall()
 
     @staticmethod
-    def getStatNbPat(date_beg, date_end, service_int):
+    def getStatNbPat(date_beg, date_end, service_int, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
 
         cond = ''
@@ -289,18 +425,26 @@ class Report:
         if service_int:
             cond += ' and rec.service_interne like "' + str(service_int) + '%" '
 
+        lf = lite_filter.upper()
+        if lf == 'N':
+            cond += ' and rec.rec_lite = 0'
+        elif lf == 'Y':
+            cond += ' and rec.rec_lite > 0'
+            if lite_user_id > 0:
+                cond += ' and rec.id_owner = ' + str(lite_user_id)
+
         req = ('select pat.sexe as sex, rec.type, rec_custody, rec.statut '
                'from sigl_02_data as rec '
                'inner join sigl_03_data as pat on pat.id_data = rec.id_patient '
                'where (rec.rec_date_receipt between %s and %s) ' + cond +
-               'order by pat.sexe asc, rec.type asc, rec_custody asc')
+               ' order by pat.sexe asc, rec.type asc, rec_custody asc')
 
         cursor.execute(req, (date_beg, date_end,))
 
         return cursor.fetchall()
 
     @staticmethod
-    def getStatNbAna(date_beg, date_end, service_int):
+    def getStatNbAna(date_beg, date_end, service_int, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
 
         cond = ''
@@ -314,7 +458,7 @@ class Report:
                'inner join sigl_04_data as req on req.id_dos = rec.id_data '
                'inner join sigl_05_data as ana on ana.id_data = req.ref_analyse '
                'where (rec.rec_date_receipt between %s and %s) and ana.cote_unite != "PB" ' + cond +
-               'order by pat.sexe asc, rec.type asc, rec_custody asc')
+               ' order by pat.sexe asc, rec.type asc, rec_custody asc')
 
         cursor.execute(req, (date_beg, date_end,))
 
@@ -333,7 +477,7 @@ class Report:
                'rec.prix as bill_price, rec.a_payer as bill_remain, rec.num_quittance as receipt_num '
                'from sigl_02_data as rec '
                'where (rec.rec_date_receipt between %s and %s) ' + cond +
-               'order by rec.id_data asc limit 7000')
+               ' order by rec.id_data asc limit 7000')
 
         cursor.execute(req, (date_beg, date_end,))
 
@@ -362,7 +506,7 @@ class Report:
                'left join record_setting as rec_setting on rec_setting.rstg_ser=1 '
                'left join sigl_dico_data as dict_fam on dict_fam.id_data=ref.famille '
                'where (rec.rec_date_receipt between %s and %s) ' + cond +
-               'group by req.id_data order by rec.id_data asc limit 7000')
+               ' group by req.id_data order by rec.id_data asc limit 7000')
 
         cursor.execute(req, (date_beg, date_end,))
 
@@ -925,7 +1069,7 @@ class Report:
         return res
 
     @staticmethod
-    def getTAT(date_beg, date_end, type_ana, id_ana, code_pat, rec_num):
+    def getTAT(date_beg, date_end, type_ana, id_ana, code_pat, rec_num, lite_filter='A', lite_user_id=0):
         cursor = DB.cursor()
 
         cond = ''
@@ -942,6 +1086,20 @@ class Report:
         if code_pat:
             cond += ' and (pat.code like "' + str(code_pat) + '%" or pat.code_patient like "' + str(code_pat) + '%") '
 
+        # LabBook Lite filter on record
+        lf = (lite_filter or 'A').upper()
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+
+        if lf == 'N':
+            cond += ' and rec.rec_lite = 0'
+        elif lf == 'Y':
+            cond += ' and rec.rec_lite > 0'
+            if lite_user_id > 0:
+                cond += ' and rec.id_owner = ' + str(lite_user_id)
+
         req = ('select rec.rec_date_save, rec.rec_date_vld, rec.rec_num_int, rec.id_data as rec_id, rec.type as rec_type, '
                'if(rec_setting.rstg_period=1070, if(rec_setting.rstg_format=1072,substring(rec.num_dos_mois from 7), '
                'rec.num_dos_mois), if(rec_setting.rstg_format=1072, substring(rec.num_dos_an from 7), rec.num_dos_an)) '
@@ -956,7 +1114,7 @@ class Report:
                'left join sigl_dico_data as fam on fam.id_data = ana.famille '
                'left join record_setting as rec_setting on rec_setting.rstg_ser=1 '
                'where (rec.rec_date_receipt between %s and %s) and ana.cote_unite != "PB" and rec.statut=256 ' + cond +
-               'order by rec.id_data desc')
+               ' order by rec.id_data desc')
 
         cursor.execute(req, (date_beg, date_end,))
 
@@ -1377,7 +1535,7 @@ class Report:
         return {"exists_subqueries": exists_subqueries}
 
     @staticmethod
-    def getResultEpidemio(req_part, date_beg, date_end, rec_type=None, lite_filter='A'):
+    def getResultEpidemio(req_part, date_beg, date_end, rec_type=None, lite_filter="A", lite_user_id=0):
         """
         Execute COUNT(DISTINCT rec.id_data) with EXISTS subqueries built by ParseFormula.
         Always return {"value": <int>}.
@@ -1396,15 +1554,26 @@ class Report:
             sql += " AND rec.type = %(rec_type_code)s"
             sql_params["rec_type_code"] = rec_type_code
 
-        # LabBook Lite 3-state filter:
-        #  - 'A' (All): no filter
+        # LabBook Lite filter:
+        #  - 'A' (All): no lite filter unless lite_user_id > 0
         #  - 'N' (Exclude Lite): rec.rec_lite = 0
-        #  - 'Y' (Only Lite):    rec.rec_lite > 0
+        #  - 'Y' (Only Lite): rec.rec_lite > 0, and optionally filter by id_owner
         lf = (lite_filter or 'A').upper()
+        try:
+            lite_uid = int(lite_user_id)
+        except Exception:
+            lite_uid = 0
+
         if lf == 'N':
             sql += " AND rec.rec_lite = 0"
         elif lf == 'Y':
             sql += " AND rec.rec_lite > 0"
+            if lite_uid > 0:
+                sql += " AND rec.id_owner = %(lite_uid)s"
+                sql_params["lite_uid"] = lite_uid
+        elif lf == 'A' and lite_uid > 0:
+            sql += " AND rec.rec_lite > 0 AND rec.id_owner = %(lite_uid)s"
+            sql_params["lite_uid"] = lite_uid
 
         exists_parts = []
         if req_part and "exists_subqueries" in req_part:

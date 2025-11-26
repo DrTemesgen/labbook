@@ -173,3 +173,20 @@
     {% endfor %}
 {%- endmacro %}
 
+{% macro select_lite_filter(selected) -%}
+    <option value="A" {% if not selected or selected == 'A' %}selected{% endif %}>{{ _("Inclure LabBook Lite") }}</option>
+    <option value="N" {% if selected == 'N' %}selected{% endif %}>{{ _("Exclure LabBook Lite") }}</option>
+    <option value="Y" {% if selected == 'Y' %}selected{% endif %}>{{ _("Uniquement LabBook Lite") }}</option>
+{%- endmacro %}
+
+{% macro select_lite_user(l_lite_users, id_selected) -%}
+    <option value="0" {% if not id_selected or id_selected|int == 0 %}selected{% endif %}>{{ _("Tous les utilisateurs") }}</option>
+    {% for user in l_lite_users %}
+        {% if user['role_type'] != 'A' %}
+        <option value="{{ user['id_data'] }}"
+                {% if id_selected and id_selected|int == user['id_data']|int %}selected{% endif %}>
+            {{ user['pro_label'] }} - {{ user['lastname'] }} {{ user['firstname'] }} ({{ user['username'] }})
+        </option>
+        {% endif %}
+    {% endfor %}
+{%- endmacro %}

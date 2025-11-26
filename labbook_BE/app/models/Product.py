@@ -251,3 +251,63 @@ class Product:
 
         # Not found
         return 0
+
+    @staticmethod
+    def getLastSampleCode():
+        try:
+            cursor = DB.cursor()
+
+            cursor.execute(
+                'select code '
+                'from sigl_01_data '
+                'where code is not null and code != "" '
+                'order by id_data desc '
+                'limit 1'
+            )
+
+            row = cursor.fetchone()
+            Product.log.info(Logs.fileline() + ' : Product.getLastSampleCode')
+
+            if not row:
+                return ''
+
+            code = row.get('code') if isinstance(row, dict) else row[0]
+            return code or ''
+        except mysql.connector.Error as e:
+            Product.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
+            return ''
+
+    @staticmethod
+    def getExistingSampleCodes(codes):
+        if not codes:
+            return []
+
+        try:
+            cursor = DB.cursor()
+            placeholders = ','.join(['%s'] * len(codes))
+
+            cursor.execute(
+                'select distinct code '
+                'from sigl_01_data '
+                'where code in (' + placeholders + ')',
+                codes
+            )
+
+            rows = cursor.fetchall()
+            Product.log.info(Logs.fileline() + ' : Product.getExistingSampleCodes')
+
+            existing = []
+
+            for row in rows:
+                if isinstance(row, dict):
+                    val = row.get('code')
+                else:
+                    val = row[0]
+                if val:
+                    existing.append(val)
+
+            return existing
+
+        except mysql.connector.Error as e:
+            Product.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
+            return []

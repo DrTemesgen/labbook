@@ -217,3 +217,42 @@ class ProductReq(Resource):
 
         self.log.info(Logs.fileline() + ' : TRACE ProductReq')
         return compose_ret('', Constants.cst_content_type_json)
+
+
+class ProductLastCode(Resource):
+    log = logging.getLogger('log_services')
+
+    @require_oauth()
+    def get(self):
+        last_code = Product.getLastSampleCode()
+        body = {'last_code': last_code}
+        self.log.info(Logs.fileline() + ' : TRACE ProductLastCode')
+        return compose_ret(body, Constants.cst_content_type_json)
+
+
+class ProductCheckCode(Resource):
+    log = logging.getLogger('log_services')
+
+    @require_oauth()
+    def post(self):
+        args = request.get_json() or {}
+
+        if 'codes' not in args or not isinstance(args['codes'], list):
+            self.log.error(Logs.fileline() + ' : ProductCheckCode ERROR args missing or invalid')
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        raw_codes = args['codes'] or []
+        codes = []
+
+        for c in raw_codes:
+            if c is None:
+                continue
+            val = str(c).strip()
+            if val:
+                codes.append(val)
+
+        existing = Product.getExistingSampleCodes(codes)
+        body = {'existing_codes': list(existing)}
+
+        self.log.info(Logs.fileline() + ' : TRACE ProductCheckCode')
+        return compose_ret(body, Constants.cst_content_type_json)

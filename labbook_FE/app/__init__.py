@@ -24,6 +24,7 @@ import base64
 from logging.handlers import WatchedFileHandler
 from datetime import datetime, date, timedelta
 from urllib.parse import quote, urlencode
+from werkzeug.utils import secure_filename
 
 from flask import Flask, render_template, render_template_string, request, session, redirect, send_file, Response, url_for, jsonify, current_app
 from flask_babel import Babel
@@ -155,6 +156,12 @@ def locale():
         session.modified = True
 
     return dict(locale=lang)
+
+
+@app.context_processor
+def inject_app_version():
+    # value is global FE version from config, not per-session
+    return {"app_version": app.config.get("APP_VERSION", "")}
 
 
 def be_auth_headers():
@@ -2578,17 +2585,29 @@ def preview_form(type_form='', filename=''):
         try:
             import tomli
 
-            path = os.path.join(Constants.cst_form_pat, filename)
+            # Validate and sanitize filename
+            safe_name = secure_filename(filename or '')
+            if not safe_name:
+                log.error(Logs.fileline() + ' : preview-form PAT-HIST invalid filename (empty after sanitize)')
+                form_toml = {}
+            else:
+                base_dir = os.path.abspath(Constants.cst_form_pat)
+                path = os.path.abspath(os.path.join(base_dir, safe_name))
 
-            # init empty values for all custom input fields
-            if os.path.isfile(path):
-                with open(path, "rb") as f:
-                    form_toml = tomli.load(f)
+                # Prevent path traversal: path must stay under base_dir
+                if not path.startswith(base_dir + os.sep):
+                    log.error(Logs.fileline() + ' : preview-form PAT-HIST invalid filename (path traversal)')
+                    form_toml = {}
+                elif os.path.isfile(path):
+                    with open(path, "rb") as f:
+                        form_toml = tomli.load(f)
+                else:
+                    form_toml = {}
 
-                for elem in form_toml.get('description', {}).get('form_element', []):
-                    # only input elements with an id
-                    if elem and 'id' in elem and 'input_type' in elem:
-                        json_data[elem['id']] = ''
+            for elem in form_toml.get('description', {}).get('form_element', []):
+                # only input elements with an id
+                if elem and 'id' in elem and 'input_type' in elem:
+                    json_data[elem['id']] = ''
         except Exception as err:
             log.error(Logs.fileline() + ' : preview-form PAT-HIST init from toml failed, err=%s', err)
 
@@ -5929,6 +5948,20 @@ def report_activity():
     json_ihm  = {}
     json_data = {}
 
+    json_ihm['lite_users'] = []
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/user/lite/list'
+        req = requests.get(url, timeout=10, headers=headers)
+
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
+        if req.status_code == 200:
+            json_ihm['lite_users'] = req.json()
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : load lite users failed, err=%s , url=%s', err, url)
+
     # Load list template ACT
     try:
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/template/list/ACT'
@@ -6009,7 +6042,8 @@ def report_activity():
 # Page : report epidemiological
 @app.route('/report-epidemio')
 @app.route('/report-epidemio/<string:date_beg>/<string:date_end>')
-def report_epidemio(date_beg='', date_end=''):
+@app.route('/report-epidemio/<string:date_beg>/<string:date_end>/<string:lite_filter>/<int:lite_user_id>')
+def report_epidemio(date_beg='', date_end='', lite_filter='A', lite_user_id=0):
     log.info(Logs.fileline() + ' : TRACE report epidemio')
 
     if not test_session():
@@ -6028,6 +6062,31 @@ def report_epidemio(date_beg='', date_end=''):
     json_ihm  = {}
     json_data = {}
 
+    # Load lite users list
+    json_ihm['lite_users'] = []
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/user/lite/list'
+        req = requests.get(url, timeout=10, headers=headers)
+
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
+        if req.status_code == 200:
+            users = req.json()
+            json_ihm['lite_users'] = [u for u in users if u.get('role_type') != 'A']
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : load lite users failed, err=%s , url=%s', err, url)
+
+    # Normalize lite filter
+    if lite_filter not in ('A', 'N', 'Y'):
+        lite_filter = 'A'
+    if lite_filter != 'Y':
+        lite_user_id = 0
+
+    json_data['lite_filter'] = lite_filter
+    json_data['lite_user_id'] = lite_user_id
+
     # load data for epiodemio
     try:
         if not date_beg:
@@ -6043,7 +6102,9 @@ def report_epidemio(date_beg='', date_end=''):
         json_data['date_end'] = date_end
 
         payload = {'date_beg': date_beg + " 00:00",
-                   'date_end': date_end + " 23:59"}
+                   'date_end': date_end + " 23:59",
+                   'lite_filter': lite_filter,
+                   'lite_user_id': lite_user_id}
 
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/report/epidemio'
         req = requests.post(url, timeout=10, json=payload, headers=headers)
@@ -6064,7 +6125,8 @@ def report_epidemio(date_beg='', date_end=''):
 # Page : report with indicator
 @app.route('/report-indicator')
 @app.route('/report-indicator/<string:date_beg>/<string:date_end>')
-def report_indicator(date_beg='', date_end=''):
+@app.route('/report-indicator/<string:date_beg>/<string:date_end>/<string:lite_filter>/<int:lite_user_id>')
+def report_indicator(date_beg='', date_end='', lite_filter='A', lite_user_id=0):
     log.info(Logs.fileline() + ' : TRACE report indicator')
 
     if not test_session():
@@ -6083,6 +6145,20 @@ def report_indicator(date_beg='', date_end=''):
     json_ihm  = {}
     json_data = {}
 
+    json_ihm['lite_users'] = []
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/user/lite/list'
+        req = requests.get(url, timeout=10, headers=headers)
+
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
+        if req.status_code == 200:
+            json_ihm['lite_users'] = req.json()
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : load lite users failed, err=%s , url=%s', err, url)
+
     # load data for indicator
     try:
         if not date_beg:
@@ -6096,9 +6172,13 @@ def report_indicator(date_beg='', date_end=''):
 
         json_data['date_beg'] = date_beg
         json_data['date_end'] = date_end
+        json_data['lite_filter'] = lite_filter
+        json_data['lite_user_id'] = lite_user_id
 
         payload = {'date_beg': date_beg + " 00:00",
-                   'date_end': date_end + " 23:59"}
+                   'date_end': date_end + " 23:59",
+                   'lite_filter': lite_filter,
+                   'lite_user_id': lite_user_id}
 
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/report/indicator'
         req = requests.post(url, timeout=10, json=payload, headers=headers)
@@ -6146,7 +6226,8 @@ def pivot_table():
 
 # Page : report statistic
 @app.route('/report-statistic')
-def report_statistic():
+@app.route('/report-statistic/<string:lite_filter>/<int:lite_user_id>')
+def report_statistic(lite_filter='A', lite_user_id=0):
     log.info(Logs.fileline() + ' : TRACE report statistic')
 
     if not test_session():
@@ -6164,6 +6245,19 @@ def report_statistic():
 
     json_ihm  = {}
     json_data = {}
+
+    # load lite users
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/user/lite/list'
+        req = requests.get(url, timeout=10, headers=headers)
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+        if req.status_code == 200:
+            json_ihm['lite_users'] = req.json()
+    except Exception as err:
+        log.error(Logs.fileline() + ' : requests lite users list failed, err=%s , url=%s', err, url)
+        json_ihm['lite_users'] = []
 
     # load age interval setting
     try:
@@ -6206,10 +6300,14 @@ def report_statistic():
 
         json_data['date_beg'] = date_beg
         json_data['date_end'] = date_end
+        json_data['lite_filter'] = lite_filter
+        json_data['lite_user_id'] = lite_user_id
 
         payload = {'date_beg': date_beg + " 00:00",
                    'date_end': date_end + " 23:59",
-                   'service_int': ''}
+                   'service_int': '',
+                   'lite_filter': lite_filter,
+                   'lite_user_id': lite_user_id}
 
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/report/stat'
         req = requests.post(url, timeout=10, json=payload, headers=headers)
@@ -6262,6 +6360,21 @@ def report_tat():
 
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests analysis type failed, err=%s , url=%s', err, url)
+
+    # Load LabBook Lite users
+    json_ihm['lite_users'] = []
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/user/lite/list'
+        req = requests.get(url, timeout=10, headers=headers)
+
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
+        if req.status_code == 200:
+            json_ihm['lite_users'] = req.json()
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : load lite users failed, err=%s , url=%s', err, url)
 
     return render_template('report-tat.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
 
@@ -10409,21 +10522,34 @@ def upload_printer():
         try:
             f = request.files['file']
 
-            filename = f.filename
+            filename = f.filename or ''
         except Exception as err:
             log.error(Logs.fileline() + ' : upload-printer failed to get file from request, err=%s', err)
             return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        filepath = Constants.cst_printer
-
+        base_dir = Constants.cst_printer
         log.info(Logs.fileline())
 
-        # check if this file is a csv
-        if not filename.endswith('.sh'):
+        # Sanitize filename
+        safe_name = secure_filename(filename)
+        if not safe_name:
+            log.error(Logs.fileline() + ' : upload-printer invalid filename (empty after sanitize)')
+            return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+        # Only allow .sh scripts
+        if not safe_name.endswith('.sh'):
             return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
 
         try:
-            f.save(os.path.join(filepath, filename))
+            base_dir_abs = os.path.abspath(base_dir)
+            target_path = os.path.abspath(os.path.join(base_dir_abs, safe_name))
+
+            # Prevent path traversal
+            if not target_path.startswith(base_dir_abs + os.sep):
+                log.error(Logs.fileline() + ' : upload-printer path traversal attempt: %s', target_path)
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            f.save(target_path)
         except Exception as err:
             log.error(Logs.fileline() + ' : upload-printer failed to save file, err=%s', err)
             return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
@@ -10444,15 +10570,35 @@ def delete_file(type='', filename=''):
     # TP  => template odt
 
     if type == 'DH':
-        filepath = Constants.cst_dhis2
+        base_dir = Constants.cst_dhis2
     elif type in ('FP', 'FPH'):
-        filepath = Constants.cst_form_pat
+        base_dir = Constants.cst_form_pat
     elif type == 'TP':
-        filepath = Constants.cst_template
+        base_dir = Constants.cst_template
+    else:
+        # type inconnu → on ne fait rien
+        log.error(Logs.fileline() + ' : delete-file invalid type=%s', type)
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
     try:
-        if os.path.exists(os.path.join(filepath, filename)):
-            os.remove(os.path.join(filepath, filename))
+        # Sanitize filename
+        safe_name = secure_filename(filename or '')
+        if not safe_name:
+            log.error(Logs.fileline() + ' : delete-file invalid filename (empty after sanitize)')
+            return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+        # Build absolute path and prevent path traversal
+        base_dir_abs = os.path.abspath(base_dir)
+        target_path = os.path.abspath(os.path.join(base_dir_abs, safe_name))
+
+        # Ensure the target path stays inside the allowed directory
+        if not target_path.startswith(base_dir_abs + os.sep):
+            log.error(Logs.fileline() + ' : delete-file path traversal attempt: %s', target_path)
+            return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+        if os.path.exists(target_path):
+            os.remove(target_path)
+
     except Exception as err:
         log.error(Logs.fileline() + ' : delete-file failed to delete file, err=%s', err)
         return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}

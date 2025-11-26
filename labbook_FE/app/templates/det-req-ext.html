@@ -266,7 +266,7 @@
                         {% endif %}
                     </div>
                     <div class="form-group d-md-flex align-items-start col-md-12 mt-3">
-                        <label class="form-labeltext-end me-1 mt-1">{{ _("Remise sur la facturation") }}</label>
+                        <label class="form-label text-end me-1 mt-1">{{ _("Remise sur la facturation") }}</label>
                         {% if entry == 'Y' %}
                         <select id="discount" class="form-select w-auto">
                             {% from 'macros.html' import select_discount_bill %}
@@ -301,7 +301,7 @@
                     <div class="form-group d-md-flex align-items-start col-md-12 mt-3">
                         <label class="form-label text-end me-1 mt-1">{{ _("Numéro de quittance") }}</label>
                         {% if entry == 'Y' %}
-                        <input type="text" id="receipt_num" name="receipt_num" value="" maxlength="20" class="form-control form-lbk" style="width: 200px;" null="">
+                        <input type="text" id="receipt_num" name="receipt_num" value="" maxlength="20" class="form-control form-lbk" style="width: 200px;">
                         {% else %}
                         <span class="font-info">{{ args['record']['num_quittance'] }}</span>
                         {% endif %}
@@ -402,6 +402,8 @@ var opt_ana       = [] ;
 const SAMP_MASK  = {{ (session['samp_mask'] or '')|tojson }};
 const SAMP_REGEX = {{ (session['samp_regex'] or '')|tojson }};
 const SAMP_HTML_PATTERN = (SAMP_REGEX || '').replace(/^\^|\$$/g, '');
+
+var NEXT_SAMP_CODE = null;
 
 {% if entry == 'Y' %}
 function change_pat( id_pat ) 
@@ -592,7 +594,7 @@ let data_exist = false ;
                     if ( data_ana.type_prel > 0 )
                     {
                     let id_type_prod = data_ana.type_prel ;
-                        
+
                         // ADD type product
                         $.ajax( {
                             type: "GET",
@@ -606,6 +608,12 @@ let data_exist = false ;
                                 tmp_struct_prod.type       = data_prod.id_data ;
                                 tmp_struct_prod.stat       = 9 ;
                                 tmp_struct_prod.ana        = data_ana.id_data ;
+
+                                    if (NEXT_SAMP_CODE) 
+                                    {
+                                    tmp_struct_prod.code = NEXT_SAMP_CODE;
+                                    NEXT_SAMP_CODE = computeNextCode(NEXT_SAMP_CODE);
+                                    }
 
                                 data_products.push(tmp_struct_prod) ;
 
@@ -923,7 +931,7 @@ function create_td(id, val, cls, style, nb_colspan)
 {
 style = "font-size:14px;vertical-align:middle;padding-start:.3rem;padding-end:.3rem;" + style ;
 
-colspan = "" ;
+let colspan = "" ;
 
     if (nb_colspan > 1) colspan = ' colspan="' + nb_colspan + '"';
 
@@ -1156,6 +1164,12 @@ let tmp_struct_prod = JSON.parse(JSON.stringify(struct_prod)) ;
 
 tmp_struct_prod.id_data = ind_products++ ;
 
+    if (NEXT_SAMP_CODE) 
+    {
+        tmp_struct_prod.code = NEXT_SAMP_CODE;
+        NEXT_SAMP_CODE = computeNextCode(NEXT_SAMP_CODE);
+    }
+
 data_products.push(tmp_struct_prod) ;
 
 load_product( tmp_struct_prod ) ;
@@ -1235,7 +1249,7 @@ var rec_num_int = $("#rec_num_int").val() ;
             {
             console.log("ERROR SEARCH rec num int") ;
             alert("{{ _("Une erreur est survenue lors de la vérification du code") }}") ;
-            }        
+            }
         } ) ;
     }
 }
@@ -1264,6 +1278,9 @@ var bill_num      = "" ;
 var stat          = 181 ;
 var rec_custody   = $("input[type='radio'][name='rec_custody']:checked").val() ;
 var rec_num_int   = $("#rec_num_int").val() ;
+
+var seenCodesRecord = {} ;
+var codesToCheck    = [] ;
 
     if (id_med == null || id_med == "")
     id_med = 0 ;
@@ -1303,45 +1320,100 @@ var rec_num_int   = $("#rec_num_int").val() ;
     }
 
     // type and status required
-    for( i in data_products )
+    for (var i = 0; i < data_products.length; i++)
     {
-        /* USELESS 15/02/2022
-        if (data_products[i].code == "")
-        {
-        alert( "{{ _("Veuillez renseigner le code de prélèvement") }}" ) ;
-        return false ;
-        }
-        */
+        var prod = data_products[i];
+        if (!prod) continue;
 
-        if (data_products[i].type == 0)
+        if (prod.type == 0)
         {
-        alert( "{{ _("Veuillez renseigner le type du produit") }}" ) ;
-        return false ;
+        alert("{{ _("Veuillez renseigner le type du produit") }}");
+        return false;
         }
 
-        if (data_products[i].stat == 0)
+        if (prod.stat == 0)
         {
-        alert( "{{ _("Veuillez renseigner le statut du produit") }}" ) ;
-        return false ;
+        alert("{{ _("Veuillez renseigner le statut du produit") }}");
+        return false;
+        }
+
+        var c = (prod.code || "").trim();
+        if (!c) {
+            continue;
+        }
+
+        if (seenCodesRecord[c])
+        {
+            alert("{{ _("Ce code de prélèvement est déjà utilisé pour un autre prélèvement de ce dossier") }} : " + c);
+            return false;
+        }
+
+        seenCodesRecord[c] = true;
+
+        if (codesToCheck.indexOf(c) === -1) {
+            codesToCheck.push(c);
         }
 
         /* ISSUE 1 17/10/2020
-        if (data_products[i].dateReceipt == "")
+        if (prod.dateReceipt == "")
         {
-        alert( "{{ _("Veuillez renseigner toutes les dates de réception") }}" ) ;
+        alert( "{{ _("Veuillez renseigner toutes les dates de réception") }}") ;
         return false ;
         }
 
-        if (data_products[i].sampler == "")
+        if (prod.sampler == "")
         {
-        alert( "{{ _("Veuillez renseigner toutes les identités des préleveurs") }}" ) ;
+        alert( "{{ _("Veuillez renseigner toutes les identités des préleveurs") }}") ;
         return false ;
         }
         */
     }
 
-    if ( $.isEmptyObject(data_products) )
-    alert( "{{ _("Avertissement : Ce dossier n'est associé à aucun prélèvement") }}" ) ;
+    if (codesToCheck.length > 0)
+    {
+        var ajaxError     = false ;
+        var existingCodes = [] ;
+
+        $.ajax({
+            type: "POST",
+            url: "{{ session['server_ext'] }}/services/product/code/check",
+            dataType: "json",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({ codes: codesToCheck }),
+            headers: { 'Authorization': 'Bearer {{ session.get('be_access_token', '') }}' },
+            async: false,
+            success: function(data) {
+                if (data && data.existing_codes)
+                {
+                    existingCodes = data.existing_codes ;
+                } else {
+                    existingCodes = [] ;
+                }
+            },
+            error: function() {
+                ajaxError = true ;
+            }
+        });
+
+        if (ajaxError)
+        {
+            alert("{{ _("Une erreur est survenue lors de la vérification des codes de prélèvement") }}") ;
+            return false ;
+        }
+
+        if (existingCodes.length > 0)
+        {
+            var msg = "{{ _("Certains codes de prélèvement existent déjà dans la base. Voulez-vous continuer l'enregistrement ?") }}\n" +
+                      existingCodes.join(", ") ;
+
+            if (!window.confirm(msg)) return false ;
+        }
+    }
+
+    if (data_products.length === 0)
+    {
+        alert("{{ _("Avertissement : Ce dossier n'est associé à aucun prélèvement") }}");
+    }
 
     // confirm if user wants validate this record
     if ( window.confirm("{{ _("Merci de confirmer la création et validation de ce dossier") }}") )
@@ -1671,6 +1743,22 @@ function new_doctor()
 window.open("{{ session['server_ext'] }}/det-doctor/0", "_blank") ;
 }
 
+function computeNextCode(code) 
+{
+    const v = (code || '').trim();
+    if (!v) {
+        return '1';
+    }
+    const m = v.match(/(\d+)(?!.*\d)/);
+    if (!m) {
+        return v;
+    }
+    const num = m[1];
+    const idx = m.index;
+    const n = String(parseInt(num, 10) + 1).padStart(num.length, '0');
+    return v.slice(0, idx) + n + v.slice(idx + num.length);
+}
+
 function return_home()
 {
 window.location.href = "{{ url_for('homepage') }}";
@@ -1698,6 +1786,24 @@ $( document ).ready( function()
     {
     initTooltip(el);
     enhanceProdCode(el);
+    });
+
+    $.ajax({
+        type: "GET",
+        url: "{{ session['server_ext'] }}/services/product/last/code",
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        success: function(data) {
+            var last = (data && data.last_code) ? String(data.last_code).trim() : '';
+            if (last) {
+                NEXT_SAMP_CODE = computeNextCode(last);
+            } else {
+                NEXT_SAMP_CODE = null;
+            }
+        },
+        error: function() {
+            console.log("ERROR GET ProductLastCode");
+            NEXT_SAMP_CODE = null;
+        }
     });
 } ) ;
 </script>

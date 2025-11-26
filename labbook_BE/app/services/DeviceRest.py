@@ -60,7 +60,7 @@ class AnalyzerList(Resource):
         l_analyzers = Analyzer.getAnalyzerList()
 
         if not l_analyzers:
-            self.log.error(Logs.fileline() + ' : TRACE AnalyzerList not found')
+            self.log.info(Logs.fileline() + ' : TRACE AnalyzerList not found')
 
         self.log.info(Logs.fileline() + ' : TRACE AnalyzerList')
         return compose_ret(l_analyzers, Constants.cst_content_type_json)
@@ -397,7 +397,7 @@ class AnalyzerMsgList(Resource):
         l_msg = Analyzer.getAnalyzerMsgList(args)
 
         if not l_msg:
-            self.log.error(Logs.fileline() + ' : TRACE AnalyzerMsgList not found')
+            self.log.info(Logs.fileline() + ' : TRACE AnalyzerMsgList not found')
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         for msg in l_msg:

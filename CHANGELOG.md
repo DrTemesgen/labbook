@@ -8,6 +8,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.6] - 2025-11-25
+### Added
+- Auto-increment specimen code based on the latest existing value.
+- filter for Lite on Activity, Epidemio, Indicator, Statistic and TAT reports
+- 3 new type of sample
+- 10 new analyzes for Genexpert
+
+### Changed
+- Server now preserves Lite-side user IDs when inserting patients, records, samples, results and validations
+- Added dynamic age-interval columns (document template must be updated if more than 4 intervals)
+- Added a modal popup to display analyzer-received results instead of the old tooltip
+
+### Fixed
+- fix TAT report showing “undefined” values by properly initializing all TAT fields
+- version number on login page
+
 ## [3.6.5] - 2025-11-20
 ### Added
 - execute automation job
@@ -71,7 +87,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [3.6.0] - 2025-09-24
 ### Added
 - new setting to indicate whether a variable should be displayed in the report
-- add nex periods for DHIS2 export
+- add new periods for DHIS2 export
 - filter by type of record for DHIS2 export
 - export DHIS : EEQ , List of equipment failures, List of stock statuses
 - support for string literal filters in DHIS2 formulas using `$_IDVARIABLE = "STRING_VALUE"`

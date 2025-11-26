@@ -686,7 +686,8 @@ class LiteDataRecovery(Resource):
                 rec['num_dos_mois'] = num_dos_mois
                 rec['num_dos_an'] = num_dos_an
 
-                new_id = Lite.insertLiteRecord(rec, new_pat_id, 0)
+                lite_user_id = rec.get('rec_user', 0) or 0
+                new_id = Lite.insertLiteRecord(rec, new_pat_id, lite_user_id)
                 if new_id:
                     record_id_map[rec['id_data']] = new_id
                     record_inserted += 1
@@ -713,7 +714,7 @@ class LiteDataRecovery(Resource):
                     continue
 
                 params = {
-                    'id_owner': 0,
+                    'id_owner': req.get('ana_req_user', 0) or 0,
                     'id_dos': new_record_id,
                     'ref_analyse': req.get('analysisRef'),
                     'urgent': req.get('isUrgent', 0),
@@ -750,7 +751,7 @@ class LiteDataRecovery(Resource):
                     continue
 
                 params = {
-                    'id_owner': 0,
+                    'id_owner': samp.get('samp_user', 0) or 0,
                     'samp_date': Lite.parse_datetime(samp.get('samp_date')),
                     'type_prel': samp.get('sample_type'),
                     'samp_id_ana': samp.get('samp_id_ana', 0),
@@ -792,7 +793,7 @@ class LiteDataRecovery(Resource):
                     continue
 
                 params = {
-                    'id_owner': 0,
+                    'id_owner': res.get('ana_res_user', 0) or 0,
                     'id_analyse': new_req_id,
                     'ref_variable': res.get('variableRef'),
                     'valeur': res.get('value'),
@@ -826,7 +827,7 @@ class LiteDataRecovery(Resource):
                     continue
 
                 params = {
-                    'id_owner': 0,
+                    'id_owner': val.get('ana_vld_user', 0) or 0,
                     'id_resultat': new_result_id,
                     'date_validation': Lite.parse_datetime(val.get('validationDate')),
                     'utilisateur': val.get('userId'),

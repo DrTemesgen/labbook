@@ -206,6 +206,21 @@
                 </div>
             </div>
 
+            <!-- Modal analyzer result -->
+            <div class="modal fade" id="analyzerModal" tabindex="-1" aria-labelledby="analyzerModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="analyzerModalLabel">{{ _("Résultats reçus de l'automate") }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="{{ _('Fermer') }}"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="analyzerModalContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="toast-container position-fixed top-0 end-0 p-3">
                 <div id="toastSuccess" class="toast align-items-center text-white bg-success border-0" role="alert" aria-live="assertive" aria-atomic="true">
                     <div class="d-flex">
@@ -615,17 +630,17 @@ let btn_aliquot = "" ;
 
         let res_analyzer = "";
 
-            if (data[i].l_res_analyzer && data[i].l_res_analyzer.length > 0)
-            {
-            let tooltip = "";
-
-                for (let r of data[i].l_res_analyzer) 
-                {
-                    tooltip += r.anr_code + " : " + r.anr_value + " " + r.anr_unit + " (" + r.anr_date + ")\n";
-                }
-            
-                res_analyzer += "<span class=\"ms-2 analyzer-info-icon\" data-bs-toggle=\"tooltip\" data-bs-html=\"true\" title=\"" + tooltip + "\"><i class=\"bi bi-info-circle text-primary\"></i></span>";
-            }
+        if (data[i].l_res_analyzer && data[i].l_res_analyzer.length > 0)
+        {
+            // Button to open modal with analyzer results
+            res_analyzer += "<button type=\"button\" " +
+                            "class=\"btn btn-sm btn-link p-0 ms-2 analyzer-info-btn\" " +
+                            "data-ref-ana=\"" + ref_ana + "\" " +
+                            "data-id-rec=\"" + id_rec + "\" " +
+                            "title=\"{{ _("Résultats reçus de l'automate") }}\">" +
+                            "<i class=\"bi bi-info-circle text-primary\"></i>" +
+                            "</button>";
+        }
 
         res += "<form autocomplete=\"off\">" +
                "<fieldset class=\"d-lg-flex flex-wrap border px-1 px-lg-3 py-2 mt-2\">" +
@@ -1433,6 +1448,58 @@ function toggle_bio_button()
 }
 
 {% include 'js/display_histo.js' %}
+
+// Open modal with analyzer results for one analysis
+$(document).on('click', '.analyzer-info-btn', function () 
+{
+    const refAna = Number($(this).data('ref-ana'));
+    const idRec  = Number($(this).data('id-rec'));
+    const rows   = [];
+
+    // Build rows from data_res
+    if (Array.isArray(data_res)) {
+        for (let i = 0; i < data_res.length; i++) {
+            const r = data_res[i];
+            if (Number(r.id_dos) === idRec && Number(r.ref_ana) === refAna && Array.isArray(r.l_res_analyzer)) {
+                rows.push.apply(rows, r.l_res_analyzer);
+            }
+        }
+    }
+
+    let html = "";
+
+    if (!rows.length) {
+        html = "<p>{{ _('Aucun résultat reçu pour cette analyse.') }}</p>";
+    } else {
+        html = "<div class=\"table-responsive\">" +
+               "<table class=\"table table-sm table-striped mb-0\">" +
+               "<thead><tr>" +
+               "<th>{{ _('Code') }}</th>" +
+               "<th>{{ _('Valeur') }}</th>" +
+               "<th>{{ _('Unité') }}</th>" +
+               "<th>{{ _('Date') }}</th>" +
+               "</tr></thead><tbody>";
+
+        for (let k = 0; k < rows.length; k++) {
+            const rr = rows[k] || {};
+            html += "<tr>" +
+                    "<td>" + (rr.anr_code  || "") + "</td>" +
+                    "<td>" + (rr.anr_value || "") + "</td>" +
+                    "<td>" + (rr.anr_unit  || "") + "</td>" +
+                    "<td>" + (rr.anr_date  || "") + "</td>" +
+                    "</tr>";
+        }
+
+        html += "</tbody></table></div>";
+    }
+
+    $("#analyzerModalContent").html(html);
+
+    // Show modal
+    const modalEl = document.getElementById('analyzerModal');
+    const modal   = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modal.show();
+});
 
 {% if has_permission("RECORD_14") %}
 $( document ).ready( function()

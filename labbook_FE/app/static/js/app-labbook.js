@@ -150,7 +150,7 @@ eval_value( id_rec, ref_ana, id_res ) ;
         let k_var_p = 0  ;
 
             // Get var number for this formula
-            for ( k = 0; k < f1.length; k++ )
+            for ( let k = 0; k < f1.length; k++ )
             {
             let k_var = f1.indexOf("_", k) + 1 ;
 
@@ -173,7 +173,7 @@ eval_value( id_rec, ref_ana, id_res ) ;
          let l_value = [] ;
 
             // Get id_res for each var
-            for ( k = 0; k < l_var.length; k++ )
+            for ( let k = 0; k < l_var.length; k++ )
             {
             let val_tmp = "" ;
 
@@ -200,7 +200,7 @@ eval_value( id_rec, ref_ana, id_res ) ;
             // Calculation
             if ( l_var.length == l_value.length )
             {
-                for ( k = 0; k < l_var.length; k++ )
+                for ( let k = 0; k < l_var.length; k++ )
                 {
                 f1 = f1.replace("$_"+l_var[k], l_value[k]) ;
                 }

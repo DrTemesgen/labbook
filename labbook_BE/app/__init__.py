@@ -331,6 +331,8 @@ api.add_resource(ProcedureDet,          '/services/quality/procedure/det/<int:id
 api.add_resource(ProcedureExport,       '/services/quality/procedure/export')
 api.add_resource(ProcedureSearch,       '/services/quality/procedure/search')
 api.add_resource(ProductDet,            '/services/product/det/<int:id_prod>')
+api.add_resource(ProductCheckCode,      '/services/product/code/check')
+api.add_resource(ProductLastCode,       '/services/product/last/code')
 api.add_resource(ProductList,           '/services/product/list')
 api.add_resource(ProductReq,            '/services/product/list/req/<int:id_rec>', '/services/product/list/req')
 api.add_resource(QualityLastMeeting,    '/services/quality/last/meeting')

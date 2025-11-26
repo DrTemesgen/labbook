@@ -343,7 +343,7 @@ class Lite:
 
             params = {
                 'id_patient': new_patient_id,
-                'id_owner': 0,
+                'id_owner': lite_user_id or 0,
                 'type': rec.get('type'),
                 'rec_date_receipt': Lite.parse_datetime(rec.get('rec_date_receipt')),
                 'med_prescripteur': rec.get('prescriber'),

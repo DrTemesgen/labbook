@@ -28,6 +28,17 @@ class ReportEpidemio(Resource):
             self.log.error(Logs.fileline() + ' : ReportEpidemio ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
+        lite_filter = args.get('lite_filter', 'A') or 'A'
+        lite_user_id = args.get('lite_user_id', 0) or 0
+
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+
+        if lite_filter not in ('A', 'N', 'Y'):
+            lite_filter = 'A'
+
         data = []
 
         # Read epidemio.ini
@@ -100,10 +111,14 @@ class ReportEpidemio(Resource):
 
                     # self.log.error(Logs.fileline() + ' : DEBUG-TRACE req_part=' + str(req_part))
                     if inner_req and end_req:
-                        result = Report.getResultEpidemio(inner_req=req_part['inner'],
-                                                          end_req=req_part['end'],
-                                                          date_beg=args['date_beg'],
-                                                          date_end=args['date_end'])
+                        result = Report.getResultEpidemio(
+                            req_part,
+                            args['date_beg'],
+                            args['date_end'],
+                            None,
+                            lite_filter,
+                            lite_user_id
+                        )
 
                         if result:
                             details['res_value'] = result['value']
@@ -130,8 +145,22 @@ class ReportEpidemio(Resource):
             l_id_var  = list(set(l_id_var))
             disease['total_received'] = 0
 
-            received = Report.getNbResultRecevied(l_id_var, id_prod, args['date_beg'], args['date_end'])
-            analyzed = Report.getNbResultAnalyzed(l_id_var, id_prod, args['date_beg'], args['date_end'])
+            received = Report.getNbResultRecevied(
+                l_id_var,
+                l_id_prod,
+                args['date_beg'],
+                args['date_end'],
+                lite_filter,
+                lite_user_id
+            )
+            analyzed = Report.getNbResultAnalyzed(
+                l_id_var,
+                l_id_prod,
+                args['date_beg'],
+                args['date_end'],
+                lite_filter,
+                lite_user_id
+            )
 
             if received:
                 disease['total_received'] = received['total']
@@ -155,6 +184,15 @@ class ReportIndicator(Resource):
         if 'date_beg' not in args or 'date_end' not in args:
             self.log.error(Logs.fileline() + ' : ReportIndicator ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
+
+        lite_filter = args.get('lite_filter', 'A') or 'A'
+        lite_user_id = args.get('lite_user_id', 0) or 0
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+        if lite_filter not in ('A', 'N', 'Y'):
+            lite_filter = 'A'
 
         data = []
 
@@ -233,7 +271,9 @@ class ReportIndicator(Resource):
                     result = Report.getResultIndicator(inner_req=req_part['inner'],
                                                        end_req=req_part['end'],
                                                        date_beg=args['date_beg'],
-                                                       date_end=args['date_end'])
+                                                       date_end=args['date_end'],
+                                                       lite_filter=lite_filter,
+                                                       lite_user_id=lite_user_id)
 
                     if result:
                         self.log.info(Logs.fileline() + ' : DEBUG-TRACE result = ' + str(result))
@@ -258,8 +298,22 @@ class ReportIndicator(Resource):
             l_id_var  = list(set(l_id_var))
             disease['total_received'] = 0
 
-            received = Report.getNbResultReceviedV2(l_id_var, l_id_prod, args['date_beg'], args['date_end'])
-            analyzed = Report.getNbResultAnalyzedV2(l_id_var, l_id_prod, args['date_beg'], args['date_end'])
+            received = Report.getNbResultReceviedV2(
+                l_id_var,
+                l_id_prod,
+                args['date_beg'],
+                args['date_end'],
+                lite_filter,
+                lite_user_id
+            )
+            analyzed = Report.getNbResultAnalyzedV2(
+                l_id_var,
+                l_id_prod,
+                args['date_beg'],
+                args['date_end'],
+                lite_filter,
+                lite_user_id
+            )
 
             if received:
                 disease['total_received'] = received['total']
@@ -284,9 +338,17 @@ class ReportActivity(Resource):
             self.log.error(Logs.fileline() + ' : ReportActivity ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
+        # LabBook Lite filters
+        lite_filter = (args.get('lite_filter') or 'A').upper()
+        lite_user_id = args.get('lite_user_id') or 0
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+
         stat = {}
 
-        stat['type'] = Report.getActivityType(args['date_beg'], args['date_end'], args['type_ana'])
+        stat['type'] = Report.getActivityType(args['date_beg'], args['date_end'], args['type_ana'], lite_filter, lite_user_id)
 
         if not stat['type']:
             self.log.error(Logs.fileline() + ' : TRACE stat type not found')
@@ -300,7 +362,7 @@ class ReportActivity(Resource):
             else:
                 stat_type['analysis'] = ''
 
-        stat['age'] = Report.getActivityAge(args['date_beg'], args['date_end'], args['type_ana'])
+        stat['age'] = Report.getActivityAge(args['date_beg'], args['date_end'], args['type_ana'], lite_filter, lite_user_id)
 
         if not stat['age']:
             self.log.error(Logs.fileline() + ' : TRACE stat age not found')
@@ -337,34 +399,45 @@ class ReportStat(Resource):
             self.log.error(Logs.fileline() + ' : ReportStat ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
+        lite_filter = args.get('lite_filter', 'A') or 'A'
+        lite_user_id = args.get('lite_user_id', 0) or 0
+
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+
+        if lite_filter not in ('A', 'N', 'Y'):
+            lite_filter = 'A'
+
         stat = {}
 
-        stat['patient'] = Report.getStatPatient(args['date_beg'], args['date_end'], args['service_int'])
+        stat['patient'] = Report.getStatPatient(args['date_beg'], args['date_end'], args['service_int'], lite_filter, lite_user_id)
 
         if not stat['patient']:
             self.log.error(Logs.fileline() + ' : TRACE stat patient not found')
 
-        stat['prescr'] = Report.getStatPrescr(args['date_beg'], args['date_end'], args['service_int'])
+        stat['prescr'] = Report.getStatPrescr(args['date_beg'], args['date_end'], args['service_int'], lite_filter, lite_user_id)
 
         if not stat['prescr']:
             self.log.error(Logs.fileline() + ' : TRACE stat prescr not found')
 
-        stat['sampler'] = Report.getStatSampler(args['date_beg'], args['date_end'])
+        stat['sampler'] = Report.getStatSampler(args['date_beg'], args['date_end'], lite_filter, lite_user_id)
 
         if not stat['sampler']:
             self.log.error(Logs.fileline() + ' : TRACE stat sampler not found')
 
-        stat['product'] = Report.getStatProduct(args['date_beg'], args['date_end'])
+        stat['product'] = Report.getStatProduct(args['date_beg'], args['date_end'], lite_filter, lite_user_id)
 
         if not stat['product']:
             self.log.error(Logs.fileline() + ' : TRACE stat product not found')
 
-        stat['nb_pat'] = Report.getStatNbPat(args['date_beg'], args['date_end'], args['service_int'])
+        stat['nb_pat'] = Report.getStatNbPat(args['date_beg'], args['date_end'], args['service_int'], lite_filter, lite_user_id)
 
         if not stat['nb_pat']:
             self.log.error(Logs.fileline() + ' : TRACE stat nb_pat not found')
 
-        stat['nb_ana'] = Report.getStatNbAna(args['date_beg'], args['date_end'], args['service_int'])
+        stat['nb_ana'] = Report.getStatNbAna(args['date_beg'], args['date_end'], args['service_int'], lite_filter, lite_user_id)
 
         if not stat['nb_ana']:
             self.log.error(Logs.fileline() + ' : TRACE stat nb_ana not found')
@@ -385,12 +458,26 @@ class ReportTAT(Resource):
             self.log.error(Logs.fileline() + ' : ReportTAT ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
-        l_TAT = Report.getTAT(date_beg=args['date_beg'],
-                              date_end=args['date_end'],
-                              type_ana=args['type_ana'],
-                              id_ana=args['id_ana'],
-                              code_pat=args['code_pat'],
-                              rec_num=args['rec_num'])
+        # LabBook Lite filter
+        lite_filter = args.get('lite_filter', 'A') or 'A'
+        lite_user_id = args.get('lite_user_id', 0) or 0
+        try:
+            lite_user_id = int(lite_user_id)
+        except Exception:
+            lite_user_id = 0
+        if lite_filter not in ('A', 'N', 'Y'):
+            lite_filter = 'A'
+
+        l_TAT = Report.getTAT(
+            date_beg=args['date_beg'],
+            date_end=args['date_end'],
+            type_ana=args['type_ana'],
+            id_ana=args['id_ana'],
+            code_pat=args['code_pat'],
+            rec_num=args['rec_num'],
+            lite_filter=lite_filter,
+            lite_user_id=lite_user_id
+        )
 
         if not l_TAT:
             self.log.error(Logs.fileline() + ' : TRACE TAT not found')
@@ -407,6 +494,37 @@ class ReportTAT(Resource):
             for key, value in list(data.items()):
                 if data[key] is None:
                     data[key] = ''
+
+            # Init TAT fields to avoid undefined on front-end
+            data['tat_days'] = 0
+            data['tat_hours'] = 0
+            data['tat_mins'] = 0
+            data['tat_secs'] = 0
+
+            data['tat_tech_days'] = 0
+            data['tat_tech_hours'] = 0
+            data['tat_tech_mins'] = 0
+            data['tat_tech_secs'] = 0
+
+            data['tat_ana_days'] = 0
+            data['tat_ana_hours'] = 0
+            data['tat_ana_mins'] = 0
+            data['tat_ana_secs'] = 0
+
+            data['tot_days'] = 0
+            data['tot_hours'] = 0
+            data['tot_mins'] = 0
+            data['tot_secs'] = 0
+
+            data['tot_tech_days'] = 0
+            data['tot_tech_hours'] = 0
+            data['tot_tech_mins'] = 0
+            data['tot_tech_secs'] = 0
+
+            data['tot_ana_days'] = 0
+            data['tot_ana_hours'] = 0
+            data['tot_ana_mins'] = 0
+            data['tot_ana_secs'] = 0
 
             date_save     = ''
             date_vld      = ''
@@ -446,87 +564,84 @@ class ReportTAT(Resource):
                 diff_date = date_vld - date_save
 
                 if diff_date.total_seconds() >= 0:
-                    data['tat_days']  = diff_date.days
+                    data['tat_days'] = diff_date.days
                     data['tat_hours'], remain = divmod(diff_date.seconds, 3600)
                     data['tat_mins'], data['tat_secs'] = divmod(remain, 60)
                 else:
                     diff_date = timedelta()
-                    data['tat_days']  = 0
+                    data['tat_days'] = 0
                     data['tat_hours'] = 0
-                    data['tat_mins']  = 0
-                    data['tat_secs']  = 0
+                    data['tat_mins'] = 0
+                    data['tat_secs'] = 0
 
                 nb_tat += 1
-
                 total_tat = ((total_tat * (nb_tat - 1)) + diff_date) / nb_tat
 
             if total_tat:
-                data['tot_days']  = total_tat.days
+                data['tot_days'] = total_tat.days
                 data['tot_hours'], remain = divmod(total_tat.seconds, 3600)
-                data['tot_mins'], data['tat_secs'] = divmod(remain, 60)
+                data['tot_mins'], data['tot_secs'] = divmod(remain, 60)
             else:
-                data['tot_days']  = 0
+                data['tot_days'] = 0
                 data['tot_hours'] = 0
-                data['tot_mins']  = 0
-                data['tot_secs']  = 0
+                data['tot_mins'] = 0
+                data['tot_secs'] = 0
 
             # TAT technical validation calculation
             if date_save and date_vld_tech:
                 diff_date = date_vld_tech - date_save
 
                 if diff_date.total_seconds() >= 0:
-                    data['tat_tech_days']  = diff_date.days
+                    data['tat_tech_days'] = diff_date.days
                     data['tat_tech_hours'], remain = divmod(diff_date.seconds, 3600)
                     data['tat_tech_mins'], data['tat_tech_secs'] = divmod(remain, 60)
                 else:
                     diff_date = timedelta()
-                    data['tat_tech_days']  = 0
+                    data['tat_tech_days'] = 0
                     data['tat_tech_hours'] = 0
-                    data['tat_tech_mins']  = 0
-                    data['tat_tech_secs']  = 0
+                    data['tat_tech_mins'] = 0
+                    data['tat_tech_secs'] = 0
 
                 nb_tat_tech += 1
-
                 total_tat_tech = ((total_tat_tech * (nb_tat_tech - 1)) + diff_date) / nb_tat_tech
 
             if total_tat_tech:
-                data['tot_tech_days']  = total_tat_tech.days
+                data['tot_tech_days'] = total_tat_tech.days
                 data['tot_tech_hours'], remain = divmod(total_tat_tech.seconds, 3600)
                 data['tot_tech_mins'], data['tot_tech_secs'] = divmod(remain, 60)
             else:
-                data['tot_tech_days']  = 0
+                data['tot_tech_days'] = 0
                 data['tot_tech_hours'] = 0
-                data['tot_tech_mins']  = 0
-                data['tot_tech_secs']  = 0
+                data['tot_tech_mins'] = 0
+                data['tot_tech_secs'] = 0
 
             # TAT Analysis calculation
             if date_save and date_vld_ana:
                 diff_date = date_vld_ana - date_save
 
                 if diff_date.total_seconds() >= 0:
-                    data['tat_ana_days']  = diff_date.days
+                    data['tat_ana_days'] = diff_date.days
                     data['tat_ana_hours'], remain = divmod(diff_date.seconds, 3600)
                     data['tat_ana_mins'], data['tat_ana_secs'] = divmod(remain, 60)
                 else:
                     diff_date = timedelta()
-                    data['tat_ana_days']  = 0
+                    data['tat_ana_days'] = 0
                     data['tat_ana_hours'] = 0
-                    data['tat_ana_mins']  = 0
-                    data['tat_ana_secs']  = 0
+                    data['tat_ana_mins'] = 0
+                    data['tat_ana_secs'] = 0
 
                 nb_tat_ana += 1
-
                 total_tat_ana = ((total_tat_ana * (nb_tat_ana - 1)) + diff_date) / nb_tat_ana
 
             if total_tat_ana:
-                data['tot_ana_days']  = total_tat_ana.days
+                data['tot_ana_days'] = total_tat_ana.days
                 data['tot_ana_hours'], remain = divmod(total_tat_ana.seconds, 3600)
                 data['tot_ana_mins'], data['tot_ana_secs'] = divmod(remain, 60)
             else:
-                data['tot_ana_days']  = 0
+                data['tot_ana_days'] = 0
                 data['tot_ana_hours'] = 0
-                data['tot_ana_mins']  = 0
-                data['tot_ana_secs']  = 0
+                data['tot_ana_mins'] = 0
+                data['tot_ana_secs'] = 0
 
         self.log.info(Logs.fileline() + ' : TRACE ReportTAT')
         return compose_ret(l_TAT, Constants.cst_content_type_json)
