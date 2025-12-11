@@ -348,34 +348,46 @@ class AnalyzerLab29(Resource):
 
             has_obx = any(segment.name == "OBX" for segment in hl7_msg.children)
 
-            # save result matching with specimen_id
+            # Save results matching with specimen_id
             if has_obx:
-                obx_segments = [s for s in hl7_msg.children if s.name == "OBX"]
+                obx_segments = [segment for segment in hl7_msg.children if segment.name == "OBX"]
 
                 for obx in obx_segments:
                     try:
                         obs_id = obx.obx_3.value if hasattr(obx, "obx_3") else "UNKNOWN"
                         obs_value = obx.obx_5.value if hasattr(obx, "obx_5") else ""
                         obs_unit = obx.obx_6.value if hasattr(obx, "obx_6") else ""
-                        obs_status = obx.obx_11.value if hasattr(obx, "obx_11") else ""
+
+                        # Read OBX-11 (result status) from raw ER7 to avoid parsing issues
+                        obs_status = ""
+                        try:
+                            segment_er7 = obx.to_er7()
+                            fields = segment_er7.split("|")
+                            if len(fields) >= 11:
+                                obs_status = fields[10]  # OBX-11
+                        except Exception as e:
+                            self.log.error(Logs.fileline() + f" : ERROR reading OBX-11 from ER7: {str(e)}")
+
+                        obs_status = (obs_status or "").strip().upper()
 
                         # Filter only final results
                         if obs_status == "F":
-                            # save results
-                            ret = Analyzer.insertAnalyzerResult(ans_ser=analyzer['ans_ser'],
-                                                                code=obs_id,
-                                                                samp=specimen_id,
-                                                                value=obs_value,
-                                                                unit=obs_unit)
+                            ret = Analyzer.insertAnalyzerResult(
+                                ans_ser=analyzer['ans_ser'],
+                                code=obs_id,
+                                samp=specimen_id,
+                                value=obs_value,
+                                unit=obs_unit
+                            )
                             if not ret:
                                 self.log.warning(Logs.fileline() + f" : INSERT FAILED for {obs_id} (sample={specimen_id}, analyzer={id_analyzer})")
                             else:
-                                self.log.info(Logs.fileline() + f' : SAVED result: {obs_id} = {obs_value} {obs_unit}')
+                                self.log.info(Logs.fileline() + f" : SAVED result: {obs_id} = {obs_value} {obs_unit}")
                         else:
-                            self.log.info(Logs.fileline() + f' : SKIPPED non-final result: {obs_id} (status={obs_status})')
+                            self.log.info(Logs.fileline() + f" : SKIPPED non-final result: {obs_id} (status={obs_status})")
 
                     except Exception as e:
-                        self.log.error(Logs.fileline() + f' : ERROR while parsing OBX: {str(e)}')
+                        self.log.error(Logs.fileline() + f" : ERROR while parsing OBX: {str(e)}")
 
             # Return HL7 ACK^R22 as a response
             return compose_ret(msg_ack, Constants.cst_content_type_hl7)

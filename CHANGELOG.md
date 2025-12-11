@@ -8,6 +8,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.7] - 2025-12-11
+### Added
+- weekly rotation for all application logs in the container, keeping up to six months of compressed history 
+- entry menu and profile rights for audit trail
+- the new audit_trail database schema to store structured audit events
+- implemented a centralized insertAudit() method with normalized action names and outcomes
+- implemented a server-side paginated audit list with sorting and search support
+- ATNA-compliant XML export for audit events
+- secured download endpoint for ATNA audit export files
+- full audit logging to all User and Setting operations
+- full server-side audit filtering (user, role, details, status, IP, resource, date)
+- detailed audit event view to display full event information
+
+### Fixed
+- insert for sending method SMTP and Mailjet
+
 ## [3.6.6] - 2025-11-25
 ### Added
 - Auto-increment specimen code based on the latest existing value.

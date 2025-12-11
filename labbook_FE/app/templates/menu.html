@@ -364,6 +364,11 @@
                             <a class="dropdown-item" href="{{ session['server_ext'] }}/list-meeting">{{ _("Réunion du laboratoire") }}</a>
                         </li>
                         {% endif %}
+                        {% if has_permission("ADMIN_183") %}
+                        <li>
+                            <a class="dropdown-item" href="{{ session['server_ext'] }}/list-audits">{{ _("Journal d'audit") }}</a>
+                        </li>
+                        {% endif %}
                     </ul>
                     {% endif %}
 
@@ -649,6 +654,9 @@
                         {% endif %}
                         {% if has_permission("MEETING_163") %}
                         <a class="dropdown-item" href="{{ session['server_ext'] }}/list-meeting">{{ _("Réunion du laboratoire") }}</a>
+                        {% endif %}
+                        {% if has_permission("ADMIN_183") %}
+                        <a class="dropdown-item" href="{{ session['server_ext'] }}/list-audits">{{ _("Journal d'audit") }}</a>
                         {% endif %}
                     </div>
                 </li>

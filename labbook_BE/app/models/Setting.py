@@ -1746,7 +1746,11 @@ class Setting:
             mdl_name = params.get('mdl_name')
             mdl_text = params.get('mdl_text')
             mdl_displayname = params.get('mdl_displayname')
-            mdl_lang        = params.get('mdl_lang')
+            mdl_lang        = (params.get('mdl_lang') or 'fr').strip()
+
+            # Ensure non-null language
+            if not mdl_lang:
+                mdl_lang = 'fr'
 
             mdl_has_attachment = (params.get('mdl_has_attachment') or 'N')
             if mdl_type != 'W':

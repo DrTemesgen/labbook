@@ -79,4 +79,7 @@ COPY labbook_BE /home/apps/labbook_BE/labbook_BE
 RUN mkdir -p /home/apps/apache
 COPY apache/apache.sh /home/apps/apache/
 
+# Logrotate config for LabBook
+COPY logrotate.d/labbook /etc/logrotate.d/labbook
+
 CMD ["supervisord", "-c", "/home/supervisor/etc/supervisor.conf", "--pidfile", "/home/supervisor/tmp/supervisor.pid", "--user", "root"]

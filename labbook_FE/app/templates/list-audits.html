@@ -1,0 +1,387 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+    <title>{{ _("Journal d'audit") }}</title>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+            <h2 class="page-title page-title-color">
+                <span>{{ _("Journal d'audit") }}</span>
+            </h2>
+
+            {% if has_permission("ADMIN_183") %}
+
+            <!-- Filter section -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <form id="auditFilterForm">
+                        <div class="row mb-2">
+                            <!-- Period: start / end -->
+                            <div class="col-md-3 mb-2">
+                                <label for="filter_date_start" class="form-label">{{ _("Date/heure début") }}</label>
+                                <input type="datetime-local"
+                                       class="form-control"
+                                       id="filter_date_start"
+                                       name="filter_date_start">
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label for="filter_date_end" class="form-label">{{ _("Date/heure fin") }}</label>
+                                <input type="datetime-local"
+                                       class="form-control"
+                                       id="filter_date_end"
+                                       name="filter_date_end">
+                            </div>
+
+                            <!-- User (login/display) -->
+                            <div class="col-md-3 mb-2">
+                                <label for="filter_user" class="form-label">{{ _("Utilisateur") }}</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="filter_user"
+                                       name="filter_user"
+                                       placeholder="{{ _('Identifiant ou nom') }}">
+                            </div>
+
+                            <!-- Role -->
+                            <div class="col-md-3 mb-2">
+                                <label for="filter_role" class="form-label">{{ _("Rôle") }}</label>
+                                <select class="form-select"
+                                        id="filter_role"
+                                        name="filter_role">
+                                    {# Use user_role list from ihm, fallback to empty list #}
+                                    {% from 'macros.html' import select_user_role %}
+                                    {{ select_user_role(ihm.get('user_role', []), '', '') }}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row mb-2">
+                            <!-- Detail filter -->
+                            <div class="col-md-3 mb-2">
+                                <label for="filter_action" class="form-label">{{ _("Détails") }}</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="filter_action"
+                                       name="filter_action"
+                                       placeholder="{{ _('Ex: UserLogin, UserUpdate') }}">
+                            </div>
+
+                            <!-- Result -->
+                            <div class="col-md-3 mb-2">
+                                <label for="filter_status" class="form-label">{{ _("Résultat") }}</label>
+                                <select class="form-select"
+                                        id="filter_status"
+                                        name="filter_status">
+                                    <option value="">{{ _("Tous") }}</option>
+                                    <option value="SUCCESS">{{ _("Succès") }}</option>
+                                    <option value="FAILURE">{{ _("Échec") }}</option>
+                                </select>
+                            </div>
+
+                            <!-- IP address -->
+                            <div class="col-md-3 mb-2">
+                                <label for="filter_ip" class="form-label">{{ _("Adresse IP") }}</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="filter_ip"
+                                       name="filter_ip"
+                                       placeholder="{{ _('Ex: 192.168.1.10') }}">
+                            </div>
+
+                            <!-- Resource filter -->
+                            <div class="col-md-3 mb-2">
+                                <label for="filter_resource" class="form-label">{{ _("Ressource") }}</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="filter_resource"
+                                       name="filter_resource"
+                                       placeholder="{{ _('Ex: USER, SETTING, RECORD') }}">
+                            </div>
+                        </div>
+
+                        <div class="row mt-2">
+                            <div class="col-md-12 mb-2 d-flex justify-content-end">
+                                <button type="button"
+                                        id="btn_reset_filters"
+                                        class="btn btn-secondary">
+                                    {{ _("Réinitialiser") }}
+                                </button>
+                                <button type="button"
+                                        id="btn_apply_filters"
+                                        class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
+                                    {{ _("Filtrer") }}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <table id="auditTable" class="display table table-striped" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>{{ _("Action") }}</th>
+                        <th>{{ _("Date (UTC)") }}</th>
+                        <th>{{ _("Utilisateur") }}</th>
+                        <th>{{ _("Rôle") }}</th>
+                        <th>{{ _("Ressource") }}</th>
+                        <th>{{ _("Détails") }}</th>
+                        <th>{{ _("Adresse IP") }}</th>
+                        <th>{{ _("Résultat") }}</th>
+                        <th hidden>{{ _("ID") }}</th>
+                    </tr>
+                </thead>
+            </table>
+
+            <div class="clearfix mt-4 mb-5">
+                <div class="float-start ms-0">
+                    <input type="button"
+                           onclick="return_home();"
+                           id="btn_return"
+                           value="{{ _('Retour') }}"
+                           class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                </div>
+
+                <div class="float-end me-0">
+                    <input type="button"
+                           onclick="export_atna();"
+                           id="btn_export_atna"
+                           value="{{ _('Exporter') }}"
+                           class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                </div>
+            </div>
+
+            {% else %}
+            {% include 'no-rights.html' %}
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+function read_audit(id_val)
+{
+    // Redirect to audit detail page
+    window.location.href = "{{ session['server_ext'] }}/det-audit/" + id_val;
+}
+
+function return_home()
+{
+    // Redirect to homepage
+    window.location.href = "{{ url_for('homepage') }}";
+}
+
+function getAuditFilters() 
+{
+    // Build filter object from current form values
+    return {
+        filter_date_start: $('#filter_date_start').val() || null,
+        filter_date_end: $('#filter_date_end').val() || null,
+        filter_user: $('#filter_user').val() || null,
+        filter_role: $('#filter_role').val() || null,
+        filter_action: $('#filter_action').val() || null,
+        filter_status: $('#filter_status').val() || null,
+        filter_ip: $('#filter_ip').val() || null,
+        filter_resource: $('#filter_resource').val() || null
+    };
+}
+
+function loadAuditTable() {
+    if ($.fn.DataTable.isDataTable('#auditTable')) {
+        $('#auditTable').DataTable().destroy();
+    }
+
+    $('#auditTable').DataTable({
+        pageLength: 25,
+        order: [[1, "desc"]],
+        deferRender: true,
+        processing: true,
+        serverSide: true,
+        columnDefs: [
+            { targets: 8, visible: false, searchable: false } // hide ID column
+        ],
+
+        language: {
+            lengthMenu: "{{ _('Afficher _MENU_ entrées') }}",
+            zeroRecords: "{{ _('Aucun enregistrement trouvé') }}",
+            info: "{{ _('Affichage de _START_ à _END_ sur _TOTAL_ entrées') }}",
+            infoEmpty: "{{ _('Aucune entrée disponible') }}",
+            infoFiltered: "{{ _('(filtré de _MAX_ entrées au total)') }}",
+            search: "{{ _('Rechercher') }}:",
+            paginate: {
+                first: "{{ _('Premier') }}",
+                last: "{{ _('Dernier') }}",
+                next: "{{ _('Suivant') }}",
+                previous: "{{ _('Précédent') }}"
+            }
+        },
+
+        ajax: {
+            url: "{{ session['server_ext'] }}/services/audit/list",
+            type: "POST",
+            contentType: "application/json",
+            data: function (d) {
+                // Merge DataTables payload with filter values
+                var filters = getAuditFilters();
+                for (var key in filters) {
+                    if (Object.prototype.hasOwnProperty.call(filters, key)) {
+                        d[key] = filters[key];
+                    }
+                }
+                return JSON.stringify(d);
+            },
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader('Authorization', 'Bearer {{ session.get('be_access_token','') }}');
+                xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            },
+            dataSrc: function (json) {
+                try {
+                    if (typeof json === 'string') {
+                        json = JSON.parse(json);
+                    }
+                } catch (e) {
+                    return [];
+                }
+                if (Array.isArray(json)) {
+                    return json;
+                }
+                if (json && Array.isArray(json.data)) {
+                    return json.data;
+                }
+                return [];
+            }
+        },
+
+        columns: [
+            // 0) Action column (menu)
+            {
+                data: null,
+                orderable: false,
+                render: function (row) {
+                    var id = row.aud_ser;
+                    if (!id) {
+                        return "";
+                    }
+                    return '' +
+                        '<nav class="nav-item dropdown">' +
+                            '<a class="dropdown-toggle menu-act" data-bs-toggle="dropdown" aria-expanded="false"></a>' +
+                            '<div class="dropdown-menu nav-style menu-act-drop">' +
+                                '<a class="dropdown-item menu-act-item" href="#" onclick="read_audit(' + id + '); return false;">' +
+                                    '{{ _("Consulter") }}' +
+                                '</a>' +
+                            '</div>' +
+                        '</nav>';
+                }
+            },
+
+            // 1) Date / time (UTC)
+            { data: "event_time_utc", defaultContent: "" },
+
+            // 2) User display
+            {
+                data: null,
+                render: function (row) {
+                    var user = row.user_display || row.user_login || "";
+                    return user;
+                },
+                defaultContent: ""
+            },
+
+            // 3) Role
+            { data: "role_name", defaultContent: "" },
+
+            // 4) Resource label
+            { data: "resource_label", defaultContent: "" },
+
+            // 5) Details summary
+            { data: "details_summary", defaultContent: "" },
+
+            // 6) Client IP
+            { data: "ip_addr", defaultContent: "" },
+
+            // 7) Status
+            { data: "status_label", defaultContent: "" },
+
+            // 8) Internal ID (hidden)
+            { data: "aud_ser", defaultContent: "" }
+        ]
+    });
+}
+
+function export_atna()
+{
+    // Ask user for period in ISO format YYYY-MM-DD
+    var dateBeg = window.prompt("Date de début (YYYY-MM-DD)", "");
+    if (!dateBeg) {
+        return;
+    }
+
+    var dateEnd = window.prompt("Date de fin (YYYY-MM-DD)", "");
+    if (!dateEnd) {
+        return;
+    }
+
+    var payload = {
+        date_beg: dateBeg,
+        date_end: dateEnd
+    };
+
+    $.ajax({
+        url: "{{ session['server_ext'] }}/services/audit/export-atna",
+        type: "POST",
+        contentType: "application/json",
+        dataType: "json",
+        data: JSON.stringify(payload),
+        beforeSend: function (xhr) {
+            // Set OAuth and X-Requested-With headers
+            xhr.setRequestHeader('Authorization', 'Bearer {{ session.get('be_access_token','') }}');
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        },
+        success: function (resp) {
+            if (resp && resp.filename) {
+                var url = "{{ session['server_ext'] }}/services/audit/export-atna-download/" + encodeURIComponent(resp.filename);
+                window.open(url, '_blank');
+            } else {
+                alert("Export ATNA terminé mais aucun fichier retourné.");
+            }
+        },
+        error: function (xhr) {
+            if (xhr.status === 404) {
+                alert("Aucun événement d'audit sur cette période.");
+            } else if (xhr.status === 400) {
+                alert("Dates invalides ou manquantes pour l'export ATNA.");
+            } else {
+                alert("Erreur lors de l'export ATNA (code " + xhr.status + ").");
+            }
+        }
+    });
+}
+
+{% if has_permission("ADMIN_183") %}
+$(document).ready(function() {
+    loadAuditTable();
+
+    // Apply filters button
+    $('#btn_apply_filters').on('click', function () {
+        // Reload table with current filters
+        $('#auditTable').DataTable().ajax.reload();
+    });
+
+    // Reset filters button
+    $('#btn_reset_filters').on('click', function () {
+        // Clear all filters
+        $('#auditFilterForm')[0].reset();
+        // Reload table without filters
+        $('#auditTable').DataTable().ajax.reload();
+    });
+});
+{% endif %}
+</script>
+{% endblock %}

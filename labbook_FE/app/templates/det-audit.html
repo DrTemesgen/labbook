@@ -1,0 +1,192 @@
+{% extends "skeleton.html" %}
+
+{% block head %}
+{{ super() }}
+    <title>{{ _("Détail journal d'audit") }}</title>
+{% endblock %}
+
+{% block content %}
+<div id="content">
+    <div class="inner">
+        <div id="main">
+            <h2 class="page-title page-title-color">
+                <span>{{ _("Détail journal d'audit") }}</span>
+            </h2>
+
+            <div id="audit-messages" class="mt-3"></div>
+
+            <div class="row mt-3">
+                <div class="col-lg-8 col-md-10">
+
+                    <form autocomplete="off" id="audit-form">
+
+                        <div class="form-group d-lg-flex align-items-start mt-2">
+                            <label class="form-label col-3 text-end mt-2 me-1">{{ _("Date (UTC)") }}</label>
+                            <div class="mt-2">
+                                <span id="event_time_utc" class="fw-bold"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-2">
+
+                        <div class="form-group d-lg-flex align-items-start mt-2">
+                            <label class="form-label col-3 text-end mt-2 me-1">{{ _("Utilisateur") }}</label>
+                            <div class="mt-2">
+                                <span id="user_display" class="fw-bold"></span>
+                                <span id="aud_user_login" class="text-muted ms-1"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group d-lg-flex align-items-start mt-2">
+                            <label class="form-label col-3 text-end mt-2 me-1">{{ _("Rôle") }}</label>
+                            <div class="mt-2">
+                                <span id="role_name" class="badge bg-secondary"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-2">
+
+                        <div class="form-group d-lg-flex align-items-start mt-2">
+                            <label class="form-label col-3 text-end mt-2 me-1">{{ _("Action") }}</label>
+                            <div class="mt-2">
+                                <span id="action" class="fw-bold"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group d-lg-flex align-items-start mt-2">
+                            <label class="form-label col-3 text-end mt-2 me-1">{{ _("Ressource") }}</label>
+                            <div class="mt-2">
+                                <span id="resource" class="fw-bold"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group d-lg-flex align-items-start mt-2">
+                            <label class="form-label col-3 text-end mt-2 me-1">{{ _("Adresse IP") }}</label>
+                            <div class="mt-2">
+                                <span id="ip_addr" class="fw-bold"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group d-lg-flex align-items-start mt-2">
+                            <label class="form-label col-3 text-end mt-2 me-1">{{ _("Résultat") }}</label>
+                            <div class="mt-2">
+                                <span id="status_label" class="badge" style="font-size: 0.9rem;"></span>
+                            </div>
+                        </div>
+
+                        <hr class="my-2">
+
+                        <div id="details_group" class="mt-4">
+                            <label class="form-label d-block mb-2">{{ _("Détails") }}</label>
+                            <pre id="details"
+                                 class="border rounded p-3"
+                                 style="min-height: 140px; max-height: 400px; overflow:auto; background-color:#f8f9fa; white-space: pre-wrap; word-break: break-word; font-family: monospace; font-size: 0.9rem;"></pre>
+                        </div>
+
+                    </form>
+
+                    <div class="clearfix mt-4 mb-5">
+                        <div class="float-start ms-0">
+                            <input type="button"
+                                   onclick="history.back();"
+                                   id="btn_return"
+                                   value="{{ _('Retour') }}"
+                                   class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block add_script %}
+<script type="text/javascript" nonce="{{ session['nonce'] }}">
+function apply_status_style(status) {
+    var $badge = $("#status_label");
+    var text = status || "";
+    $badge.text(text);
+
+    $badge.removeClass("bg-success bg-danger bg-secondary");
+
+    if (text === "SUCCESS") {
+        $badge.addClass("bg-success");
+    } else if (text) {
+        $badge.addClass("bg-danger");
+    } else {
+        $badge.addClass("bg-secondary");
+    }
+}
+
+function toggle_row(rowId, value) {
+    if (value) {
+        $(rowId).show();
+    } else {
+        $(rowId).hide();
+    }
+}
+
+function load_audit_detail() {
+    $("#audit-messages").html("");
+
+    $.ajax({
+        url: "{{ session['server_ext'] }}/services/audit/det/{{ aud_ser }}",
+        type: "GET",
+        dataType: "json",
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader("Authorization", "Bearer {{ session.get('be_access_token','') }}");
+            xhr.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+        },
+        success: function (data) {
+            $("#event_time_utc").text(data.event_time_utc || "");
+            $("#user_display").text(data.user_display || data.aud_user_login || "");
+            $("#aud_user_login").text(data.aud_user_login ? "(" + data.aud_user_login + ")" : "");
+            $("#role_name").text(data.role_name || "");
+
+            $("#action").text(data.action || "");
+
+            var resourceLabel = "";
+            if (data.resource_type || data.resource_id) {
+                resourceLabel = (data.resource_type || "") + " " + (data.resource_id || "");
+            }
+            $("#resource").text(resourceLabel.trim());
+
+            $("#ip_addr").text(data.ip_addr || "");
+
+            apply_status_style(data.status_label || "");
+
+            if (data.details) {
+                var detailsStr = "";
+                try {
+                    if (typeof data.details === "string") {
+                        detailsStr = JSON.stringify(JSON.parse(data.details), null, 2);
+                    } else {
+                        detailsStr = JSON.stringify(data.details, null, 2);
+                    }
+                } catch (e) {
+                    detailsStr = String(data.details);
+                }
+                $("#details").text(detailsStr);
+                $("#details_group").show();
+            } else {
+                $("#details").text("");
+                $("#details_group").hide();
+            }
+        },
+        error: function () {
+            $("#audit-messages").html(
+                '<div class="alert alert-danger">{{ _("Erreur lors du chargement du journal d\\'audit.") }}</div>'
+            );
+            $("#audit-form")[0].reset && $("#audit-form")[0].reset();
+        }
+    });
+}
+
+$(document).ready(function() {
+    load_audit_detail();
+});
+</script>
+{% endblock %}

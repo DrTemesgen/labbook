@@ -160,6 +160,10 @@ class ProductReq(Resource):
 
         # Check if an analyzer is configured
         l_analyzer = Analyzer.getAnalyzerList()
+        has_batch_analyzer = any(
+            analyzer.get('ans_batch') == 'Y'
+            for analyzer in (l_analyzer or [])
+        )
 
         # Loop on list_prod
         for prod in args['list_prod']:
@@ -198,7 +202,7 @@ class ProductReq(Resource):
             res['id_req'] = ret
 
             # prepare task and run script for analyzer
-            if l_analyzer:
+            if has_batch_analyzer:
                 Analyzer.log.info(Logs.fileline() + ' DEBUG prepare task LAB28 for id_req=' + str(res['id_req']))
                 # prepare task to save for analyzer
                 ret = Analyzer.buildLab28(res['id_req'])

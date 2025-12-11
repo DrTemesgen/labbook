@@ -643,6 +643,8 @@ def confirm_access():
     if id_user is None:
         return jsonify({'error': 'id_user missing'}), 400
 
+    session.clear()
+
     session.permanent = True
     session['login_ok'] = login
     session['user_id'] = int(id_user)
@@ -9780,6 +9782,51 @@ def det_message(id_message=0):
     json_data['id_message'] = id_message
 
     return render_template('det-message.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+
+# Page : list-audits
+@app.route('/list-audits')
+def list_audits():
+    log.info(Logs.fileline() + ' : TRACE setting list-audits')
+
+    if not test_session():
+        log.info(Logs.fileline() + ' : TRACE Labbook list-audits => disconnect')
+        session.clear()
+        return index()
+
+    session['current_page'] = 'list-audits'
+    session.modified = True
+
+    resp = ensure_be_token()
+    if resp:
+        return resp
+    headers = be_auth_headers()
+
+    json_ihm  = {}
+    json_data = {}
+
+    # Load list of user role
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/user/role/list'
+        req = requests.post(url, timeout=10, json={}, headers=headers)
+
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
+        if req.status_code == 200:
+            json_ihm['user_role'] = req.json()
+
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests user role list failed, err=%s , url=%s', err, url)
+
+    return render_template('list-audits.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+
+# page : det-audit
+@app.route('/det-audit/<int:aud_ser>')
+def det_audit(aud_ser):
+    return render_template('det-audit.html', aud_ser=aud_ser)
 
 
 # --------------------

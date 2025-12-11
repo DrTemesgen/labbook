@@ -15,6 +15,7 @@ from authlib.integrations.flask_oauth2 import ResourceProtector
 
 from app.models.DB import DB
 from app.models.Logs import Logs
+from app.models.User import User
 
 
 log = logging.getLogger('log_services')
@@ -393,6 +394,7 @@ class MyBearerTokenValidator(BearerTokenValidator):
         """
         Look up a non-revoked access token and reject if expired.
         Returns a lightweight wrapper or None when invalid.
+        Also populates request.oauth_user from BE session for audit trail.
         """
         cur = DB.cursor()
         cur.execute("""
@@ -403,9 +405,33 @@ class MyBearerTokenValidator(BearerTokenValidator):
         tok = cur.fetchone()
         if not tok:
             return None
+
         now = int(time.time())
         if now > (tok['oato_issued_at'] + tok['oato_expires_in']):
             return None
+
+        # Build audit user from BE session when available
+        try:
+            login = session.get('user_login') or ''
+            display = session.get('user_display') or login
+            role = session.get('user_role')
+            user_id = session.get('user_id')
+
+            request.oauth_user = {
+                "usr_login": login,
+                "usr_display": display,
+                "usr_role": role,
+                "usr_id": user_id,
+            }
+        except Exception as err:
+            log.error(Logs.fileline() + ' : MyBearerTokenValidator ERROR building oauth_user from session err=' + str(err))
+            request.oauth_user = {
+                "usr_login": '',
+                "usr_display": '',
+                "usr_role": None,
+                "usr_id": None,
+            }
+
         return self._Tok(tok)
 
     def request_invalid(self, request):
@@ -515,6 +541,7 @@ def oauth_token():
 def confirm_access():
     """
     Bind the BE session to a user id so /authorize can grant.
+    Also store minimal user identity in session for later audit use.
     Returns any paused /authorize URL from session for the FE to resume.
     """
     args = request.get_json() or {}
@@ -522,10 +549,35 @@ def confirm_access():
     if id_user is None:
         return jsonify({'error': 'id_user missing'}), 400
 
-    # Set BE session (used by /services/oauth/authorize)
-    session['user_id'] = int(id_user)
+    try:
+        id_user_int = int(id_user)
+    except (TypeError, ValueError):
+        return jsonify({'error': 'id_user invalid'}), 400
+
+    # Store user id in session (used by /services/oauth/authorize)
+    session['user_id'] = id_user_int
+
+    # Store minimal user identity for audit
+    try:
+        user = User.getUserDetails(id_user_int)
+    except Exception as err:
+        log.error(Logs.fileline() + ' : confirm_access ERROR getUserDetails err=' + str(err))
+        user = None
+
+    if user:
+        firstname = (user.get('firstname') or '').strip()
+        lastname = (user.get('lastname') or '').strip()
+        display = (firstname + ' ' + lastname).strip() or (user.get('username') or '')
+        session['user_login'] = user.get('username') or ''
+        session['user_display'] = display
+        session['user_role'] = user.get('role_type')
+    else:
+        session['user_login'] = ''
+        session['user_display'] = ''
+        session['user_role'] = None
+
     session.modified = True
 
-    # Only return the paused OAuth authorize URL if present; no fallback here
+    # Only return the paused OAuth authorize URL if present
     redirect_url = session.pop('next', None)
     return jsonify({'redirect_url': redirect_url})

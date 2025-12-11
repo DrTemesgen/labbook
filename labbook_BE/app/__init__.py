@@ -29,6 +29,7 @@ from app.services.GeneralRest import *
 from app.services.UserRest import *
 from app.services.AnalysisRest import *
 from app.services.AutomationRest import *
+from app.services.AuditRest import *
 from app.services.DbRest import *
 from app.services.DeviceRest import *
 from app.services.ExportRest import *
@@ -217,13 +218,17 @@ api.add_resource(AnalyzerLab29,         '/services/external/device/analyzer/lab2
 api.add_resource(AnalyzerList,          '/services/device/analyzer/list')
 api.add_resource(AnalyzerMsgList,       '/services/device/analyzer/message/list')
 api.add_resource(AnalyzerMsgDet,        '/services/device/analyzer/message/det/<int:id_msg>')
+api.add_resource(AuditList,             '/services/audit/list')
+api.add_resource(AuditDet,              '/services/audit/det/<int:aud_ser>')
+api.add_resource(AuditCreate,           '/services/audit/create')
+api.add_resource(AuditExportATNA,       '/services/audit/export-atna')
+api.add_resource(AuditDownloadATNA,     '/services/audit/export-atna-download/<string:filename>')
 api.add_resource(AutoJobList,           '/services/automation/job/list')
 api.add_resource(AutoJobDet,            '/services/automation/job/det/<int:ajb_ser>')
 api.add_resource(AutoJobCreate,         '/services/automation/job')
 api.add_resource(AutoJobUpdate,         '/services/automation/job/<int:ajb_ser>')
 api.add_resource(AutoJobDelete,         '/services/automation/job/<int:ajb_ser>')
 api.add_resource(AutoRunList,           '/services/automation/run/list')
-# api.add_resource(AutoRunDHIS2,          '/services/automation/run/dhis2')
 api.add_resource(AutoJobRunNow,         '/services/automation/job/<int:ajb_ser>/run')
 api.add_resource(ConformityList,        '/services/quality/nonconformity/list')
 api.add_resource(ConformityDet,         '/services/quality/nonconformity/det/<int:id_item>')

@@ -3,6 +3,8 @@ import logging
 import mysql.connector
 import gettext
 
+from flask import request
+
 from app.models.Constants import Constants
 from app.models.DB import DB
 from app.models.Logs import Logs
@@ -296,3 +298,14 @@ class Various:
         cursor.execute(req, (id,))
 
         return cursor.fetchone()
+
+    @staticmethod
+    def get_client_ip():
+        """Return real client IP using proxy headers if available."""
+        xff = request.headers.get('X-Forwarded-For')
+        if xff:
+            return xff.split(',')[0].strip()
+        ip = request.headers.get('X-Real-IP')
+        if ip:
+            return ip
+        return request.remote_addr

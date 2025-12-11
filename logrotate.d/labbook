@@ -1,0 +1,46 @@
+# Dedicated rotation for Alembic migration log
+# /storage has permissive permissions, so we use "su" to satisfy logrotate security checks
+/storage/log/alembic.out {
+    weekly
+    rotate 180
+    compress
+    copytruncate
+    missingok
+    notifempty
+    dateext
+    su root root
+}
+
+# Rotation for all other application and supervisor logs
+/home/apps/logs/gunicorn-BE-access.log
+/home/apps/logs/gunicorn-BE-error.log
+/home/apps/logs/gunicorn-FE-access.log
+/home/apps/logs/gunicorn-FE-error.log
+/home/apps/logs/gunicorn.out
+/home/apps/logs/log_db.log
+/home/apps/logs/log_front.log
+/home/apps/logs/log_script.log
+/home/apps/logs/log_script_analyzer.log
+/home/apps/logs/log_services.log
+/home/apps/logs/log_wsgi.log
+/home/apps/logs/scheduler.out
+/home/supervisor/log/apache.stderr.log
+/home/supervisor/log/apache.stdout.log
+/home/supervisor/log/automation_runner.stderr.log
+/home/supervisor/log/automation_runner.stdout.log
+/home/supervisor/log/gunicorn_be.stderr.log
+/home/supervisor/log/gunicorn_be.stdout.log
+/home/supervisor/log/gunicorn_fe.stderr.log
+/home/supervisor/log/gunicorn_fe.stdout.log
+/home/supervisor/log/logrotate_fe.stderr.log
+/home/supervisor/log/logrotate_fe.stdout.log
+/home/supervisor/log/supervisord.log
+{
+    weekly
+    rotate 180
+    compress
+    copytruncate
+    missingok
+    notifempty
+    dateext
+}

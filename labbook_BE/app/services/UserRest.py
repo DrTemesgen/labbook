@@ -5,11 +5,13 @@ import random
 import string
 import csv
 import os
+import json
 
 from datetime import datetime
 from flask import request
 from flask_restful import Resource
 
+from app.models.Audit import Audit
 from app.models.General import compose_ret
 from app.models.Constants import Constants
 from app.models.User import User
@@ -24,39 +26,68 @@ class UserAccess(Resource):
     def post(self):
         args = request.get_json()
 
+        # Check required fields
         if 'login' not in args or 'pwd' not in args:
             self.log.error(Logs.fileline() + ' : UserAccess ERROR args missing')
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         login = args['login']
-
         user = User.getUserByLogin(login)
 
+        # User not found
         if not user:
             self.log.error(Logs.fileline() + ' : UserAccess login not found')
+            try:
+                details = {"login": login, "result": "ERROR", "reason": "LOGIN_NOT_FOUND"}
+                Audit.insertAudit(login, login, None, "UserLogin", "USER", None, Various.get_client_ip(), "ERROR",
+                                  json.dumps(details, default=str), "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserAccess ERROR audit UserLogin err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
+        # Extract salt
         salt_start = user['password'].find(":")
         salt = user['password'][salt_start + 1:]
-
         pwd_db = User.getPasswordDB(args['pwd'], salt)
 
+        # Validate password
         ret = User.checkUserAccess(login, pwd_db)
 
+        # Successful login
         if ret is True:
-            payload = {
-                "id_user": int(user["id_data"]),
-                "role_type": user["role_type"],
-                "login": login
-            }
+            payload = {"id_user": int(user["id_data"]), "role_type": user["role_type"], "login": login}
             self.log.info(Logs.fileline() + ' : UserAccess authorized role=' + str(user['role_type']) + ' | login=' + str(login))
+            try:
+                details = {"id_user": int(user["id_data"]), "login": login, "result": "SUCCESS"}
+                Audit.insertAudit(user["username"], user["username"], user["role_type"], "UserLogin", "USER",
+                                  int(user["id_data"]), Various.get_client_ip(), "SUCCESS",
+                                  json.dumps(details, default=str), "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserAccess ERROR audit UserLogin SUCCESS err=' + str(err))
             return compose_ret(payload, Constants.cst_content_type_json)
-        elif ret is False:
+
+        # Wrong password
+        if ret is False:
             self.log.info(Logs.fileline() + ' : UserAccess not authorized ' + str(login))
+            try:
+                details = {"login": login, "result": "ERROR", "reason": "BAD_PASSWORD"}
+                Audit.insertAudit(user["username"], user["username"], user["role_type"], "UserLogin", "USER",
+                                  int(user["id_data"]), Various.get_client_ip(), "ERROR",
+                                  json.dumps(details, default=str), "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserAccess ERROR audit UserLogin BAD_PASSWORD err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 401)
-        else:
-            self.log.error(Logs.fileline() + ' : UserAccess ERROR checkUserAccess')
-            return compose_ret('', Constants.cst_content_type_json, 500)
+
+        # Unexpected error
+        self.log.error(Logs.fileline() + ' : UserAccess ERROR checkUserAccess')
+        try:
+            details = {"login": login, "result": "ERROR", "reason": "CHECK_ERROR"}
+            Audit.insertAudit(user["username"], user["username"], user["role_type"], "UserLogin", "USER",
+                              int(user["id_data"]), Various.get_client_ip(), "ERROR",
+                              json.dumps(details, default=str), "E")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserAccess ERROR audit UserLogin CHECK_ERROR err=' + str(err))
+        return compose_ret('', Constants.cst_content_type_json, 500)
 
 
 class UserByLogin(Resource):
@@ -109,6 +140,7 @@ class UserDet(Resource):
 
     @require_oauth()
     def post(self, id_user):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'id_user' not in args or 'login' not in args or 'cps' not in args or 'rpps' not in args or \
@@ -160,7 +192,18 @@ class UserDet(Resource):
                                   side_account=args['id_pres'],
                                   commentaire=args['comment'])
 
-            if ret is False:
+            success = ret is not False
+            status = "SUCCESS" if success else "ERROR"
+
+            try:
+                details = {"id_user": id_user, "login": user['username'], "result": status}
+                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                                  "UserUpdate", "USER", id_user, Various.get_client_ip(), status,
+                                  json.dumps(details, default=str), "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserDet ERROR audit UserUpdate err=' + str(err))
+
+            if not success:
                 self.log.info(Logs.fileline() + ' : TRACE UserDet ERROR update user')
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
@@ -208,7 +251,18 @@ class UserDet(Resource):
                                   origin=args['id_owner'],
                                   role_pro=args['role_pro'])
 
-            if ret <= 0:
+            success = ret > 0
+            status = "SUCCESS" if success else "ERROR"
+
+            try:
+                details = {"id_user": ret, "login": args['login'], "result": status}
+                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                                  "UserCreate", "USER", ret, Various.get_client_ip(), status,
+                                  json.dumps(details, default=str), "C")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserDet ERROR audit UserCreate err=' + str(err))
+
+            if not success:
                 self.log.error(Logs.alert() + ' : UserDet ERROR insert user')
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
@@ -221,6 +275,7 @@ class UserStaffDet(Resource):
 
     @require_oauth()
     def post(self, id_user):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'id_user' not in args or 'firstname' not in args or 'lastname' not in args or 'email' not in args or \
@@ -269,9 +324,23 @@ class UserStaffDet(Resource):
 
             if ret is False:
                 self.log.info(Logs.fileline() + ' : TRACE UserStaffDet ERROR update user')
+                try:
+                    details = {"id_user": id_user, "login": user['username'], "result": "ERROR", "source": "UserStaffDet"}
+                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                                      "UserStaffUpdate", "USER", id_user, Various.get_client_ip(), "ERROR",
+                                      json.dumps(details, default=str), "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : UserStaffDet ERROR audit UserStaffUpdate err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserStaffDet id_user=' + str(id_user))
+        try:
+            details = {"id_user": id_user, "login": user['username'], "result": "SUCCESS", "source": "UserStaffDet"}
+            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                              "UserStaffUpdate", "USER", id_user, Various.get_client_ip(), "SUCCESS",
+                              json.dumps(details, default=str), "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserStaffDet ERROR audit UserStaffUpdate err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -437,6 +506,7 @@ class UserRoleDet(Resource):
 
     @require_oauth()
     def post(self, pro_ser):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'by_user' not in args or 'id_user' not in args or 'role_type' not in args or 'role_label' not in args or \
@@ -465,6 +535,14 @@ class UserRoleDet(Resource):
                 if ret_perm is False:
                     self.log.info(Logs.fileline() + ' : UserRoleDet ERROR update profilePermissions')
                     return compose_ret('', Constants.cst_content_type_json, 500)
+
+            try:
+                details = {"pro_ser": pro_ser, "by_user": args['by_user'], "result": "SUCCESS", "role_label": args['role_label']}
+                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                                  "UserRoleUpdate", "ROLE", pro_ser, Various.get_client_ip(), "SUCCESS",
+                                  json.dumps(details, default=str), "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit UserRoleUpdate err=' + str(err))
 
         # insert new user
         else:
@@ -497,11 +575,20 @@ class UserRoleDet(Resource):
                     self.log.error(Logs.alert() + ' : UserRoleDet ERROR insert profilePermissions')
                     return compose_ret('', Constants.cst_content_type_json, 500)
 
+            try:
+                details = {"pro_ser": ret, "by_user": args['by_user'], "result": "SUCCESS", "role_label": args['role_label'], "role_type": args['role_type']}
+                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                                  "UserRoleCreate", "ROLE", ret, Various.get_client_ip(), "SUCCESS",
+                                  json.dumps(details, default=str), "C")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit UserRoleCreate err=' + str(err))
+
         self.log.info(Logs.fileline() + ' : TRACE UserRoleDet pro_ser=' + str(pro_ser))
         return compose_ret(ret, Constants.cst_content_type_json)
 
     @require_oauth()
     def delete(self, pro_ser):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'id_user' not in args:
@@ -515,6 +602,13 @@ class UserRoleDet(Resource):
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserRoleDet delete pro_ser=' + str(pro_ser))
+        try:
+            details = {"pro_ser": pro_ser, "by_user": args['id_user'], "result": "SUCCESS"}
+            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                              "UserRoleDelete", "ROLE", pro_ser, Various.get_client_ip(), "SUCCESS",
+                              json.dumps(details, default=str), "D")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit UserRoleDelete err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -620,6 +714,7 @@ class UserRights(Resource):
 
     @require_oauth()
     def post(self, id_user):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'by_user' not in args or 'id_user' not in args or 'l_rights' not in args:
@@ -641,6 +736,14 @@ class UserRights(Resource):
 
                     if ret_perm <= 0:
                         self.log.info(Logs.fileline() + ' : UserRights ERROR insert userPermissions')
+                        try:
+                            details = {"user": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
+                                       "result": "ERROR", "action": "INSERT"}
+                            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                                              "UserRightsUpdate", "USER", args['id_user'], Various.get_client_ip(),
+                                              "ERROR", json.dumps(details, default=str), "C")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : UserRights ERROR audit UserRightsUpdate err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
                 # already user permission
@@ -655,6 +758,14 @@ class UserRights(Resource):
 
                         if ret_perm is False:
                             self.log.info(Logs.fileline() + ' : UserRights ERROR update userPermissions')
+                            try:
+                                details = {"user": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
+                                           "result": "ERROR", "action": "UPDATE"}
+                                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'],
+                                                  audit_user['usr_role'], "UserRightsUpdate", "USER", args['id_user'],
+                                                  Various.get_client_ip(), "ERROR", json.dumps(details, default=str), "U")
+                            except Exception as err:
+                                self.log.error(Logs.fileline() + ' : UserRights ERROR audit UserRightsUpdate err=' + str(err))
                             return compose_ret('', Constants.cst_content_type_json, 500)
 
                     # same granted with same right of role, we remove user permission
@@ -665,6 +776,14 @@ class UserRights(Resource):
 
                         if ret_perm is False:
                             self.log.info(Logs.fileline() + ' : UserRights ERROR update userPermissions')
+                            try:
+                                details = {"user": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
+                                           "result": "ERROR", "action": "DELETE"}
+                                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'],
+                                                  audit_user['usr_role'], "UserRightsUpdate", "USER", args['id_user'],
+                                                  Various.get_client_ip(), "ERROR", json.dumps(details, default=str), "D")
+                            except Exception as err:
+                                self.log.error(Logs.fileline() + ' : UserRights ERROR audit UserRightsUpdate err=' + str(err))
                             return compose_ret('', Constants.cst_content_type_json, 500)
                     else:
                         self.log.info(Logs.fileline() + ' : UserRights ERROR sameRight userPermissions')
@@ -679,6 +798,7 @@ class UserPassword(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'id_user' not in args or 'password' not in args:
@@ -691,9 +811,23 @@ class UserPassword(Resource):
 
         if ret is False:
             self.log.info(Logs.fileline() + ' : TRACE UserPassword ERROR update password')
+            try:
+                details = {"id_user": args['id_user'], "result": "ERROR"}
+                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                                  "UserPasswordUpdate", "USER", args['id_user'], Various.get_client_ip(), "ERROR",
+                                  json.dumps(details, default=str), "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserPassword ERROR audit UserPasswordUpdate err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserPassword')
+        try:
+            details = {"id_user": args['id_user'], "result": "SUCCESS"}
+            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                              "UserPasswordUpdate", "USER", args['id_user'], Various.get_client_ip(), "SUCCESS",
+                              json.dumps(details, default=str), "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserPassword ERROR audit UserPasswordUpdate err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -702,6 +836,7 @@ class UserStatus(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'id_user' not in args or 'status' not in args:
@@ -712,9 +847,23 @@ class UserStatus(Resource):
 
         if ret is False:
             self.log.info(Logs.fileline() + ' : TRACE UserStatus ERROR update password')
+            try:
+                details = {"id_user": args['id_user'], "status": args['status'], "result": "ERROR"}
+                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                                  "UserStatusUpdate", "USER", args['id_user'], Various.get_client_ip(), "ERROR",
+                                  json.dumps(details, default=str), "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserStatus ERROR audit UserStatusUpdate err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserStatus')
+        try:
+            details = {"id_user": args['id_user'], "status": args['status'], "result": "SUCCESS"}
+            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                              "UserStatusUpdate", "USER", args['id_user'], Various.get_client_ip(), "SUCCESS",
+                              json.dumps(details, default=str), "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserStatus ERROR audit UserStatusUpdate err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -723,7 +872,6 @@ class UserCount(Resource):
 
     @require_oauth()
     def get(self):
-
         res = User.getUserNbUsers()
 
         if not res:
@@ -741,6 +889,7 @@ class UserConnExport(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         l_data = [['id_user', 'username', 'date', 'event', ]]
@@ -797,6 +946,13 @@ class UserConnExport(Resource):
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserConnExport')
+        try:
+            details = {"date_beg": str(date_beg), "date_end": str(date_end), "result": "SUCCESS"}
+            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                              "UserConnExport", "USER", None, Various.get_client_ip(), "SUCCESS",
+                              json.dumps(details, default=str), "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserConnExport ERROR audit UserConnExport err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -805,6 +961,7 @@ class UserExport(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         l_data = [['version', 'firstname', 'lastname', 'username', 'password', 'title', 'email', 'status', 'locale',
@@ -989,6 +1146,13 @@ class UserExport(Resource):
             return False
 
         self.log.info(Logs.fileline() + ' : TRACE UserExport')
+        try:
+            details = {"id_user": args['id_user'], "result": "SUCCESS"}
+            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                              "UserExport", "USER", None, Various.get_client_ip(), "SUCCESS",
+                              json.dumps(details, default=str), "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserExport ERROR audit UserExport err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -997,6 +1161,7 @@ class UserImport(Resource):
 
     @require_oauth()
     def get(self, filename, id_user):
+        audit_user = request.oauth_user
 
         if not filename or id_user <= 0:
             self.log.error(Logs.fileline() + ' : UserImport ERROR args missing')
@@ -1116,6 +1281,13 @@ class UserImport(Resource):
 
                     if not ret:
                         self.log.error(Logs.alert() + ' : UserImport ERROR update user username=' + str(username))
+                        try:
+                            details = {"username": username, "action": "UPDATE", "result": "ERROR"}
+                            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                                              "UserImport", "USER", None, Various.get_client_ip(), "ERROR",
+                                              json.dumps(details, default=str), "U")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : UserImport ERROR audit UserImport err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
                 # if not EXIST => INSERT
@@ -1151,9 +1323,22 @@ class UserImport(Resource):
 
                     if ret <= 0:
                         self.log.error(Logs.alert() + ' : UserImport ERROR insert user')
+                        try:
+                            details = {"username": username, "action": "INSERT", "result": "ERROR"}
+                            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
+                                              "UserImport", "USER", None, Various.get_client_ip(), "ERROR",
+                                              json.dumps(details, default=str), "C")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : UserImport ERROR audit UserImport err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserImport')
+        try:
+            details = {"filename": filename, "id_user": id_user, "result": "SUCCESS"}
+            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'], "UserImport",
+                              "USER", None, Various.get_client_ip(), "SUCCESS", json.dumps(details, default=str), "E")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserImport ERROR audit UserImport err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json, 200)
 
 
