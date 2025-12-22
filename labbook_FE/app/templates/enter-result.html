@@ -355,6 +355,8 @@ function display_result( num_page )
 
 gen_ihm_res( data_res ) ;
 
+prefill_from_analyzer();
+
 // Update biological validation button visibility
 toggle_bio_button();
 }
@@ -1475,6 +1477,7 @@ $(document).on('click', '.analyzer-info-btn', function ()
                "<table class=\"table table-sm table-striped mb-0\">" +
                "<thead><tr>" +
                "<th>{{ _('Code') }}</th>" +
+               "<th>{{ _('Code mappé') }}</th>" +
                "<th>{{ _('Valeur') }}</th>" +
                "<th>{{ _('Unité') }}</th>" +
                "<th>{{ _('Date') }}</th>" +
@@ -1484,6 +1487,7 @@ $(document).on('click', '.analyzer-info-btn', function ()
             const rr = rows[k] || {};
             html += "<tr>" +
                     "<td>" + (rr.anr_code  || "") + "</td>" +
+                    "<td>" + (rr.anr_lb_code || "") + "</td>" +
                     "<td>" + (rr.anr_value || "") + "</td>" +
                     "<td>" + (rr.anr_unit  || "") + "</td>" +
                     "<td>" + (rr.anr_date  || "") + "</td>" +
@@ -1500,6 +1504,47 @@ $(document).on('click', '.analyzer-info-btn', function ()
     const modal   = bootstrap.Modal.getOrCreateInstance(modalEl);
     modal.show();
 });
+
+function prefill_from_analyzer()
+{
+    if (!Array.isArray(data_res)) return;
+
+    data_res.forEach(function(res)
+    {
+        // Conditions STRICTES
+        if (!res.code_var) return;
+        if (!res.validation || Number(res.validation.type_validation) !== 250) return;
+
+        // champ déjà rempli → on ne touche pas
+        if (res.valeur !== null && res.valeur !== undefined && String(res.valeur).trim() !== '') return;
+
+        if (!Array.isArray(res.l_res_analyzer)) return;
+
+        res.l_res_analyzer.forEach(function(ar)
+        {
+            if (!ar.anr_lb_code) return;
+            if (ar.anr_lb_code !== res.code_var) return;
+
+            // champ HTML
+            const input = document.getElementById("res_" + res.id_res);
+            if (!input) return;
+
+            let analyzerValue = (ar.anr_value === null || ar.anr_value === undefined) ? "" : String(ar.anr_value).trim();
+            const analyzerUnit = (ar.anr_unit === null || ar.anr_unit === undefined) ? "" : String(ar.anr_unit).trim();
+
+            // If text field (string) and unit exists -> "value unit"
+            if (analyzerValue !== "" && analyzerUnit !== "" && input && input.type === "text")
+            {
+                // Avoid duplicating unit if already present
+                if (analyzerValue.indexOf(analyzerUnit) === -1)
+                    analyzerValue = analyzerValue + " " + analyzerUnit;
+            }
+
+            input.value = analyzerValue;
+            res.valeur = analyzerValue;
+        });
+    });
+}
 
 {% if has_permission("RECORD_14") %}
 $( document ).ready( function()

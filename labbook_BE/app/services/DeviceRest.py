@@ -370,6 +370,11 @@ class AnalyzerLab29(Resource):
 
                         obs_status = (obs_status or "").strip().upper()
 
+                        lb_code = None
+                        obs_id = (obs_id or "").strip()
+                        if obs_id and len(obs_id) <= 10:
+                            lb_code = obs_id
+
                         # Filter only final results
                         if obs_status == "F":
                             ret = Analyzer.insertAnalyzerResult(
@@ -377,7 +382,8 @@ class AnalyzerLab29(Resource):
                                 code=obs_id,
                                 samp=specimen_id,
                                 value=obs_value,
-                                unit=obs_unit
+                                unit=obs_unit,
+                                lb_code=lb_code
                             )
                             if not ret:
                                 self.log.warning(Logs.fileline() + f" : INSERT FAILED for {obs_id} (sample={specimen_id}, analyzer={id_analyzer})")

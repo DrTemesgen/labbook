@@ -74,7 +74,12 @@ class ReportEpidemio(Resource):
 
             disease['details'] = []
 
-            id_prod = 0
+            # One sample_type per disease in epidemio.ini
+            try:
+                id_prod = int(config.get('DISEASE_' + x, 'sample_type') or 0)
+            except Exception:
+                id_prod = 0
+
             l_id_var = []
             # Loop on result to calculate
             for r in range(nb_res):
@@ -97,8 +102,6 @@ class ReportEpidemio(Resource):
                     details['res_value'] = 'N/A'
                 else:
                     details['res_type'] = 'R'  # Result
-
-                    id_prod = config.get('DISEASE_' + x, 'sample_type_' + y)
 
                     # Parse formula for result request
                     req_part = ''
@@ -147,7 +150,7 @@ class ReportEpidemio(Resource):
 
             received = Report.getNbResultRecevied(
                 l_id_var,
-                l_id_prod,
+                id_prod,
                 args['date_beg'],
                 args['date_end'],
                 lite_filter,
@@ -155,7 +158,7 @@ class ReportEpidemio(Resource):
             )
             analyzed = Report.getNbResultAnalyzed(
                 l_id_var,
-                l_id_prod,
+                id_prod,
                 args['date_beg'],
                 args['date_end'],
                 lite_filter,

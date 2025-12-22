@@ -718,14 +718,14 @@ class Analyzer:
         return ack_message
 
     @staticmethod
-    def insertAnalyzerResult(ans_ser, code, samp, value, unit):
+    def insertAnalyzerResult(ans_ser, code, samp, value, unit, lb_code=None):
         try:
             cursor = DB.cursor()
 
             cursor.execute('''
-                           INSERT INTO analyzer_result (anr_date, anr_ans, anr_code, anr_samp, anr_value, anr_unit)
-                           VALUES (NOW(), %s, %s, %s, %s, %s)
-                           ''', (ans_ser, code, samp, value, unit))
+                           INSERT INTO analyzer_result (anr_date, anr_ans, anr_code, anr_lb_code, anr_samp, anr_value, anr_unit)
+                           VALUES (NOW(), %s, %s, %s, %s, %s, %s)
+                           ''', (ans_ser, code, lb_code, samp, value, unit))
             Analyzer.log.info(Logs.fileline() + f" : INSERT analyzer_result OK ({code}={value} {unit})")
             return True
         except mysql.connector.Error as e:
@@ -738,7 +738,7 @@ class Analyzer:
             cursor = DB.cursor()
 
             cursor.execute('''
-                           SELECT anr_ser, anr_date, anr_ans, anr_code, anr_samp, anr_value, anr_unit
+                           SELECT anr_ser, anr_date, anr_ans, anr_code, anr_lb_code, anr_samp, anr_value, anr_unit
                            FROM analyzer_result
                            WHERE anr_samp = %s
                            ORDER BY anr_date DESC

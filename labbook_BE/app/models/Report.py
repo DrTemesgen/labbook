@@ -250,20 +250,27 @@ class Report:
             if lite_user_id_int > 0:
                 cond += ' and rec.id_owner=' + str(lite_user_id_int) + ' '
 
-        req = ('select ana.nom as analysis, ana.code as code, pat.sexe as sex, pat.age, pat.unite, count(*) as nb_ana '
-               'from sigl_02_data as rec '
-               'inner join sigl_03_data as pat on pat.id_data = rec.id_patient '
-               'inner join sigl_04_data as req on req.id_dos = rec.id_data '
-               'inner join sigl_05_data as ana on ana.id_data = req.ref_analyse and ana.cote_unite != "PB" '
-               'inner join (select id_analyse, min(id_data) as min_id_data from sigl_09_data where valeur is not null '
-               'group by id_analyse) as res on res.id_analyse = req.id_data '
-               'inner join sigl_10_data as vld on vld.id_resultat = res.min_id_data '
-               'where (rec.rec_date_receipt between %s and %s) and rec.statut in (255,256) ' + cond +
-               ' and vld.type_validation = 252 '
-               'group by ana.id_data, pat.unite, pat.age, pat.sexe order by ana.nom asc')
+        req = (
+            'select ana.nom as analysis, ana.code as code, pat.sexe as sex, pat.age, pat.unite, count(*) as nb_ana '
+            'from sigl_02_data as rec '
+            'inner join sigl_03_data as pat on pat.id_data = rec.id_patient '
+            'inner join sigl_04_data as req on req.id_dos = rec.id_data '
+            'inner join sigl_05_data as ana on ana.id_data = req.ref_analyse and ana.cote_unite != "PB" '
+            'inner join ('
+            '  select id_analyse, max(id_data) as res_id_data '
+            '  from sigl_09_data where valeur is not null '
+            '  group by id_analyse'
+            ') as res on res.id_analyse = req.id_data '
+            'where (rec.rec_date_receipt between %s and %s) and rec.statut in (255,256) ' + cond +
+            ' and exists ('
+            '   select 1 from sigl_10_data vld '
+            '   where vld.id_resultat = res.res_id_data and vld.type_validation = 252'
+            ' ) '
+            'group by ana.id_data, pat.unite, pat.age, pat.sexe '
+            'order by ana.nom asc'
+        )
 
         cursor.execute(req, (date_beg, date_end,))
-
         return cursor.fetchall()
 
     @staticmethod
@@ -288,21 +295,27 @@ class Report:
             if lite_user_id_int > 0:
                 cond += ' and rec.id_owner=' + str(lite_user_id_int) + ' '
 
-        req = ('select ana.nom as analysis, ana.code as code, pat.sexe as sex, rec.type as rec_type, '
-               'count(*) as nb_ana, rec.rec_custody '
-               'from sigl_02_data as rec '
-               'inner join sigl_03_data as pat on pat.id_data = rec.id_patient '
-               'inner join sigl_04_data as req on req.id_dos = rec.id_data '
-               'inner join sigl_05_data as ana on ana.id_data = req.ref_analyse and ana.cote_unite != "PB" '
-               'inner join (select id_analyse, min(id_data) as min_id_data from sigl_09_data where valeur is not null '
-               'group by id_analyse) as res on res.id_analyse = req.id_data '
-               'inner join sigl_10_data as vld on vld.id_resultat = res.min_id_data '
-               'where (rec.rec_date_receipt between %s and %s) and rec.statut in (255,256) ' + cond +
-               ' and vld.type_validation = 252 '
-               'group by ana.id_data, rec.type, pat.sexe order by ana.nom asc')
+        req = (
+            'select ana.nom as analysis, ana.code as code, pat.sexe as sex, rec.type as rec_type, '
+            'count(*) as nb_ana, rec.rec_custody '
+            'from sigl_02_data as rec '
+            'inner join sigl_03_data as pat on pat.id_data = rec.id_patient '
+            'inner join sigl_04_data as req on req.id_dos = rec.id_data '
+            'inner join sigl_05_data as ana on ana.id_data = req.ref_analyse and ana.cote_unite != "PB" '
+            'inner join ('
+            '  select id_analyse, max(id_data) as res_id_data '
+            '  from sigl_09_data where valeur is not null '
+            '  group by id_analyse'
+            ') as res on res.id_analyse = req.id_data '
+            'where (rec.rec_date_receipt between %s and %s) and rec.statut in (255,256) ' + cond +
+            ' and exists ('
+            '   select 1 from sigl_10_data vld '
+            '   where vld.id_resultat = res.res_id_data and vld.type_validation = 252'
+            ' ) '
+            'group by ana.id_data, rec.type, pat.sexe order by ana.nom asc'
+        )
 
         cursor.execute(req, (date_beg, date_end,))
-
         return cursor.fetchall()
 
     @staticmethod

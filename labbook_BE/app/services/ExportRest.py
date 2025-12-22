@@ -3,7 +3,6 @@ import logging
 import gettext
 import csv
 import re
-import json
 
 from datetime import datetime, timedelta
 from flask import request

@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.8] - 2025-12-22
+### Added
+- support for mapped analyzer result codes to persist the LabBook variable code resolved from analyzer mappings
+- analyzer results popup to technical and biological validation pages, aligned with enter-result behavior
+- safe prefill of result fields from analyzer data when applicable (only if empty and not validated)
+
+### Changed
+- analyzer popup content to display raw analyzer codes, mapped LabBook codes, values, units, and timestamps
+
+### Fixed
+- activity report : fix double-counting after result reset
+- epidemio report
+
 ## [3.6.7] - 2025-12-11
 ### Added
 - weekly rotation for all application logs in the container, keeping up to six months of compressed history 
