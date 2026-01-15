@@ -129,7 +129,7 @@ function save_form_and_open_hist(id_pat)
 {
 {{ args['json_save'] | safe }} ;
 
-param.pat_code = $(".badge").first().text().trim();    
+param.pat_code = $("#pat_code").text().trim();    
 param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
 
     // popup wait
@@ -176,7 +176,7 @@ function save_form( id_pat )
 {
 {{ args['json_save'] | safe }} ;
 
-param.pat_code = $(".badge").first().text().trim();
+param.pat_code = $("#pat_code").text().trim();
 param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
 
     // popup wait

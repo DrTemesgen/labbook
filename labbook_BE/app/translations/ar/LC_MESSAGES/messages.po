@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Labbook_BE\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2025-11-26 09:23+0100\n"
+"POT-Creation-Date: 2026-01-15 11:48+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ar\n"
@@ -15,68 +15,68 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
-#: models/Automation.py:1597 models/Automation.py:1650
+#: models/Automation.py:1700 models/Automation.py:1753
 #: translations/messages_pybabel.py:2576
 msgid "Export DHIS2"
 msgstr "تصدير DHIS2"
 
-#: models/Automation.py:1598
+#: models/Automation.py:1701
 #, python-format
 msgid "Export DHIS2 pour la période %(beg)s → %(end)s : aucun résultat."
 msgstr ""
 
-#: models/Automation.py:1651
+#: models/Automation.py:1754
 #, python-format
 msgid "Fichier %(name)s généré pour la période %(beg)s → %(end)s."
 msgstr ""
 
-#: models/Automation.py:1726 models/Automation.py:1811 models/Pdf.py:71
+#: models/Automation.py:1829 models/Automation.py:1914 models/Pdf.py:71
 #: models/Pdf.py:111
 msgid "État de la facturation"
 msgstr ""
 
-#: models/Automation.py:1727
+#: models/Automation.py:1830
 #, python-format
 msgid "Aucune donnée de facturation pour la période %(beg)s → %(end)s."
 msgstr ""
 
-#: models/Automation.py:1812
+#: models/Automation.py:1915
 #, python-format
 msgid "Le rapport de facturation a été généré pour la période %(beg)s → %(end)s."
 msgstr ""
 
-#: models/Automation.py:1998 models/Automation.py:2391 models/Pdf.py:3344
+#: models/Automation.py:2101 models/Automation.py:2494 models/Pdf.py:3344
 #: models/Pdf.py:3419
 msgid "Rapport d'activité"
 msgstr ""
 
-#: models/Automation.py:1999
+#: models/Automation.py:2102
 msgid "Aucune donnée d'activité pour la période sélectionnée."
 msgstr ""
 
-#: models/Automation.py:2151
+#: models/Automation.py:2254
 msgid "Rapport d'activité - CSV par type"
 msgstr ""
 
-#: models/Automation.py:2152
+#: models/Automation.py:2255
 #, python-format
 msgid ""
 "Le fichier CSV (analyses par type) a été généré pour la période %(beg)s →"
 " %(end)s."
 msgstr ""
 
-#: models/Automation.py:2301
+#: models/Automation.py:2404
 msgid "Rapport d'activité - CSV par âge"
 msgstr ""
 
-#: models/Automation.py:2302
+#: models/Automation.py:2405
 #, python-format
 msgid ""
 "Le fichier CSV (analyses par âge) a été généré pour la période %(beg)s → "
 "%(end)s."
 msgstr ""
 
-#: models/Automation.py:2392
+#: models/Automation.py:2495
 #, python-format
 msgid "Le rapport d'activité a été généré pour la période %(beg)s → %(end)s."
 msgstr ""
@@ -415,88 +415,88 @@ msgstr ""
 msgid "I"
 msgstr ""
 
-#: models/Setting.py:1916
+#: models/Setting.py:1920
 msgid "méthode d’envoi introuvable"
 msgstr ""
 
-#: models/Setting.py:1920
+#: models/Setting.py:1924
 msgid "modèle d’envoi introuvable"
 msgstr ""
 
-#: models/Setting.py:1926
+#: models/Setting.py:1930
 msgid "numéro de compte rendu manquant"
 msgstr ""
 
-#: models/Setting.py:1945
+#: models/Setting.py:1949
 msgid "patient introuvable"
 msgstr ""
 
-#: models/Setting.py:1991
+#: models/Setting.py:1995
 msgid "nom de modèle WhatsApp manquant dans le modèle d’envoi"
 msgstr ""
 
-#: models/Setting.py:2009 models/Setting.py:2010
+#: models/Setting.py:2013 models/Setting.py:2014
 msgid "type de méthode invalide"
 msgstr ""
 
-#: models/Setting.py:2017 models/Setting.py:2019
+#: models/Setting.py:2021 models/Setting.py:2023
 msgid "échec d’envoi"
 msgstr ""
 
-#: models/Setting.py:2019
+#: models/Setting.py:2023
 msgid "envoyé"
 msgstr ""
 
-#: models/Setting.py:2039
+#: models/Setting.py:2043
 msgid "nom de fichier source manquant"
 msgstr ""
 
-#: models/Setting.py:2042
+#: models/Setting.py:2046
 msgid "code patient manquant pour le mot de passe PDF"
 msgstr ""
 
-#: models/Setting.py:2260
+#: models/Setting.py:2264
 msgid "Nom de modèle WhatsApp manquant"
 msgstr ""
 
-#: models/Setting.py:2528
+#: models/Setting.py:2532
 msgid "Echec envoi"
 msgstr ""
 
-#: models/Setting.py:2530
+#: models/Setting.py:2534
 msgid "Réenvoyer"
 msgstr ""
 
-#: models/Setting.py:2530
+#: models/Setting.py:2534
 msgid "Echec réenvoi"
 msgstr ""
 
-#: services/ExportRest.py:998 translations/messages_pybabel.py:528
+#: services/ExportRest.py:1144 translations/messages_pybabel.py:528
 msgid "Années"
 msgstr "سنوات"
 
-#: services/ExportRest.py:1000 translations/messages_pybabel.py:522
+#: services/ExportRest.py:1146 translations/messages_pybabel.py:522
 #: translations/messages_pybabel.py:530
 msgid "Mois"
 msgstr "شهر"
 
-#: services/ExportRest.py:1002 translations/messages_pybabel.py:531
+#: services/ExportRest.py:1148 translations/messages_pybabel.py:531
 msgid "Semaines"
 msgstr "أسابيع"
 
-#: services/ExportRest.py:1004 translations/messages_pybabel.py:529
+#: services/ExportRest.py:1150 translations/messages_pybabel.py:529
 msgid "Jours"
 msgstr "أيام"
 
-#: services/QualityRest.py:1428
+#: services/QualityRest.py:1901
 msgid "Pannes"
 msgstr "أعطال"
 
-#: services/QualityRest.py:1430
+#: services/QualityRest.py:1903
 msgid "Réparations"
 msgstr " إصلاحات"
 
-#: services/ResultRest.py:110 services/ResultRest.py:241
+#: services/ResultRest.py:135 services/ResultRest.py:278
 msgid "validation"
 msgstr "تحقّق"
 
