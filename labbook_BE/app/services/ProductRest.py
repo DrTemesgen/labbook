@@ -10,6 +10,7 @@ from flask import request
 from flask_restful import Resource
 
 from app.models.General import compose_ret
+from app.models.Audit import Audit
 from app.models.Analyzer import Analyzer
 from app.models.Constants import Constants
 from app.models.Product import Product
@@ -23,10 +24,17 @@ class ProductDet(Resource):
 
     @require_oauth()
     def get(self, id_prod):
+        audit_user = request.oauth_user
         prod = Product.getProductDet(id_prod)
 
         if not prod:
             self.log.error(Logs.fileline() + ' : TRACE ProductDet not found')
+            try:
+                details = {"reason": "NOT_FOUND", "id_prod": int(id_prod)}
+                Audit.insertAudit(audit_user, "ProductDet", "PRODUCT", int(id_prod), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ProductDet ERROR audit not found err=' + str(err))
+            return compose_ret('', Constants.cst_content_type_json, 404)
 
         for key, value in list(prod.items()):
             if prod[key] is None:
@@ -39,10 +47,16 @@ class ProductDet(Resource):
             prod['receipt_date'] = datetime.strftime(prod['receipt_date'], Constants.cst_dt_HM)
 
         self.log.info(Logs.fileline() + ' : TRACE ProductDet ' + str(id_prod))
+        try:
+            details = {"result": "SUCCESS", "id_prod": int(id_prod)}
+            Audit.insertAudit(audit_user, "ProductDet", "PRODUCT", int(id_prod), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ProductDet ERROR audit success err=' + str(err))
         return compose_ret(prod, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self, id_prod):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'stat' not in args or 'type' not in args or 'storage' not in args or 'ana' not in args or \
@@ -50,6 +64,11 @@ class ProductDet(Resource):
            'location_accu' not in args or 'receipt_date' not in args or \
            'comment' not in args or 'code' not in args:
             self.log.error(Logs.fileline() + ' : ProductDet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "id_prod": int(id_prod)}
+                Audit.insertAudit(audit_user, "ProductDet", "PRODUCT", int(id_prod) if int(id_prod) > 0 else None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ProductDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         if id_prod > 0:
@@ -70,11 +89,21 @@ class ProductDet(Resource):
 
             if ret is False:
                 self.log.info(Logs.fileline() + ' : TRACE ProductDet ERROR update product')
+                try:
+                    details = {"result": "ERROR", "reason": "UPDATE_FAILED", "id_prod": int(id_prod)}
+                    Audit.insertAudit(audit_user, "ProductDet", "PRODUCT", int(id_prod), "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ProductDet ERROR audit update failed err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         else:
             if 'id_owner' not in args:
                 self.log.error(Logs.fileline() + ' : ProductDet ERROR args missing')
+                try:
+                    details = {"reason": "ARGS_MISSING", "missing": ["id_owner"]}
+                    Audit.insertAudit(audit_user, "ProductDet", "PRODUCT", None, "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ProductDet ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 400)
 
             ret = Product.insertProductReq(id_owner=args['id_owner'],
@@ -93,9 +122,21 @@ class ProductDet(Resource):
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : ProductDet ERROR insert product')
+                try:
+                    details = {"reason": "INSERT_FAILED", "id_owner": args.get('id_owner')}
+                    Audit.insertAudit(audit_user, "ProductDet", "PRODUCT", None, "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ProductDet ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE ProductDet')
+        try:
+            details = {"id_prod": int(id_prod) if int(id_prod) > 0 else int(ret)}
+            Audit.insertAudit(audit_user, "ProductDet", "PRODUCT",
+                              int(id_prod) if int(id_prod) > 0 else int(ret), "SUCCESS", details,
+                              "U" if int(id_prod) > 0 else "C")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ProductDet ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -104,10 +145,8 @@ class ProductList(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
-
-        if not args:
-            args = {}
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         l_products = Product.getProductList(args)
 
@@ -115,6 +154,11 @@ class ProductList(Resource):
             self.log.error(Logs.fileline() + ' : TRACE ProductList not found')
 
         self.log.info(Logs.fileline() + ' : TRACE ProductList')
+        try:
+            details = {"result": "SUCCESS", "filters": args, "count": len(l_products) if l_products else 0}
+            Audit.insertAudit(audit_user, "ProductList", "PRODUCT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ProductList ERROR audit success err=' + str(err))
         return compose_ret(l_products, Constants.cst_content_type_json)
 
 
@@ -123,10 +167,16 @@ class ProductReq(Resource):
 
     @require_oauth()
     def get(self, id_rec):
+        audit_user = request.oauth_user
         l_prod = Product.getProductReq(id_rec)
 
         if not l_prod:
             self.log.error(Logs.fileline() + ' : ' + 'AnalysisReq ERROR not found')
+            try:
+                details = {"reason": "NOT_FOUND", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "ProductReq", "RECORD", int(id_rec), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ProductReq ERROR audit err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -148,14 +198,25 @@ class ProductReq(Resource):
                 prod['samp_receipt_date'] = datetime.strftime(prod['samp_receipt_date'], Constants.cst_dt_HM)
 
         self.log.info(Logs.fileline() + ' : ProductReq id_rec=' + str(id_rec))
+        try:
+            details = {"id_rec": int(id_rec), "count": len(l_prod)}
+            Audit.insertAudit(audit_user, "ProductReq", "PRODUCT", int(id_rec), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ProductReq ERROR audit success err=' + str(err))
         return compose_ret(l_prod, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'list_prod' not in args:
             self.log.error(Logs.fileline() + ' : ProductReq ERROR args missing')
+            try:
+                details = {"reason": "ARGS_MISSING", "missing": ["list_prod"]}
+                Audit.insertAudit(audit_user, "ProductReq", "PRODUCT", None, "ERROR", details, "C")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ProductReq ERROR audit err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Check if an analyzer is configured
@@ -172,6 +233,11 @@ class ProductReq(Resource):
                'time_receipt' not in prod or 'comm' not in prod or 'locat_samp' not in prod or \
                'locat_samp_more' not in prod or 'location' not in prod or 'code' not in prod:
                 self.log.error(Logs.fileline() + ' : ProductReq ERROR prod missing')
+                try:
+                    details = {"reason": "PROD_MISSING_FIELDS"}
+                    Audit.insertAudit(audit_user, "ProductReq", "PRODUCT", None, "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ProductReq ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 400)
 
             if prod['date_samp']:
@@ -196,6 +262,11 @@ class ProductReq(Resource):
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : ProductReq ERROR  insert')
+                try:
+                    details = {"reason": "INSERT_FAILED", "id_rec": prod.get("id_rec"), "id_owner": prod.get("id_owner")}
+                    Audit.insertAudit(audit_user, "ProductReq", "PRODUCT", None, "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ProductReq ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             res = {}
@@ -220,6 +291,11 @@ class ProductReq(Resource):
                     subprocess.Popen(cmd_split, stdout=out_file, stderr=subprocess.STDOUT)  # nosec B603
 
         self.log.info(Logs.fileline() + ' : TRACE ProductReq')
+        try:
+            details = {"count": len(args.get("list_prod") or [])}
+            Audit.insertAudit(audit_user, "ProductReq", "PRODUCT", None, "SUCCESS", details, "C")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ProductReq ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -228,9 +304,15 @@ class ProductLastCode(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         last_code = Product.getLastSampleCode()
         body = {'last_code': last_code}
         self.log.info(Logs.fileline() + ' : TRACE ProductLastCode')
+        try:
+            details = {"last_code": last_code}
+            Audit.insertAudit(audit_user, "ProductLastCode", "PRODUCT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ProductLastCode ERROR audit success err=' + str(err))
         return compose_ret(body, Constants.cst_content_type_json)
 
 
@@ -239,10 +321,16 @@ class ProductCheckCode(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json() or {}
 
         if 'codes' not in args or not isinstance(args['codes'], list):
             self.log.error(Logs.fileline() + ' : ProductCheckCode ERROR args missing or invalid')
+            try:
+                details = {"reason": "ARGS_MISSING_OR_INVALID"}
+                Audit.insertAudit(audit_user, "ProductCheckCode", "PRODUCT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ProductCheckCode ERROR audit err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         raw_codes = args['codes'] or []
@@ -259,4 +347,9 @@ class ProductCheckCode(Resource):
         body = {'existing_codes': list(existing)}
 
         self.log.info(Logs.fileline() + ' : TRACE ProductCheckCode')
+        try:
+            details = {"count_in": len(codes), "count_existing": len(body['existing_codes'])}
+            Audit.insertAudit(audit_user, "ProductCheckCode", "PRODUCT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ProductCheckCode ERROR audit success err=' + str(err))
         return compose_ret(body, Constants.cst_content_type_json)

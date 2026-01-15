@@ -1,7 +1,9 @@
 # -*- coding:utf-8 -*-
 import logging
+import json
 
 from app.models.DB import DB
+from app.models.Various import Various
 
 
 class Audit:
@@ -27,18 +29,9 @@ class Audit:
             filters = filters or {}
 
             sql = '''
-                SELECT aud_ser,
-                       aud_date_utc,
-                       aud_user_login,
-                       aud_user_display,
-                       aud_user_role,
-                       aud_resource_type,
-                       aud_resource_id,
-                       aud_action,
-                       aud_client_ip,
-                       aud_status
-                FROM audit_trail
-                WHERE 1=1
+                select aud_ser, aud_date_utc, aud_user_login, aud_user_display, aud_user_role, aud_resource_type,
+                aud_resource_id, aud_action, aud_client_ip, aud_status
+                from audit_trail where 1=1
             '''
             params = []
 
@@ -303,10 +296,21 @@ class Audit:
                 pass
 
     @staticmethod
-    def insertAudit(user_login, user_display, user_role, action, resource_type=None, resource_id=None, client_ip=None, status=None, details_json=None, event_type="E"):
+    def insertAudit(user, action, resource_type=None, resource_id=None, status=None, details_json=None, event_type="E"):
         """Insert a new audit event into audit_trail."""
         cursor = DB.cursor()
         try:
+            user_login = user.get('usr_login') if user else None
+            user_display = user.get('usr_display') if user else None
+            user_role = user.get('usr_role') if user else None
+            try:
+                client_ip = Various.get_client_ip()
+            except Exception:
+                client_ip = '127.0.0.1'
+
+            if details_json is not None and not isinstance(details_json, str):
+                details_json = json.dumps(details_json, default=str)
+
             sql = """
                 INSERT INTO audit_trail (aud_date_utc, aud_user_login, aud_user_display, aud_user_role, aud_resource_type,
                     aud_resource_id, aud_action, aud_client_ip, aud_status, aud_details, aud_event_type)

@@ -78,7 +78,7 @@
                                         name="filter_status">
                                     <option value="">{{ _("Tous") }}</option>
                                     <option value="SUCCESS">{{ _("Succès") }}</option>
-                                    <option value="FAILURE">{{ _("Échec") }}</option>
+                                    <option value="ERROR">{{ _("Échec") }}</option>
                                 </select>
                             </div>
 
@@ -104,7 +104,36 @@
                         </div>
 
                         <div class="row mt-2">
-                            <div class="col-md-12 mb-2 d-flex justify-content-end">
+                            <div class="col-md-6 mb-2 d-flex align-items-center">
+                                {% set ntp_status = ihm.get('ntp_status') %}
+
+                                <div class="d-flex align-items-center">
+                                    {% if ntp_status and ntp_status.get('synced') is not none %}
+                                        {% if ntp_status.get('synced')|int == 1 %}
+                                            <i class="bi bi-circle-fill text-success"></i>
+                                        {% else %}
+                                            <i class="bi bi-circle-fill text-danger"></i>
+                                        {% endif %}
+                                    {% else %}
+                                        <i class="bi bi-circle-fill text-secondary"></i>
+                                    {% endif %}
+
+                                    <span class="ms-2 fw-semibold">
+                                        {{ _("Horloge système (NTP)") }}
+                                    </span>
+
+                                    <span class="ms-2 small text-muted">
+                                        {{ _("Dernier relevé :") }}
+                                        {% if ntp_status and ntp_status.get('timestamp_utc_fmt') %}
+                                            {{ ntp_status.get('timestamp_utc_fmt') }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6 mb-2 d-flex justify-content-end">
                                 <button type="button"
                                         id="btn_reset_filters"
                                         class="btn btn-secondary">
@@ -117,6 +146,7 @@
                                 </button>
                             </div>
                         </div>
+                        
                     </form>
                 </div>
             </div>

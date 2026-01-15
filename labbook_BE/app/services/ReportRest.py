@@ -11,6 +11,7 @@ from flask_restful import Resource
 
 from app.models.General import *
 from app.models.Logs import Logs
+from app.models.Audit import Audit
 from app.models.Report import Report
 from app.models.Result import Result
 from app.models.Various import Various
@@ -22,10 +23,16 @@ class ReportEpidemio(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'date_beg' not in args or 'date_end' not in args:
             self.log.error(Logs.fileline() + ' : ReportEpidemio ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["date_beg", "date_end"]}
+                Audit.insertAudit(audit_user, "ReportEpidemio", "REPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ReportEpidemio ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         lite_filter = args.get('lite_filter', 'A') or 'A'
@@ -174,6 +181,12 @@ class ReportEpidemio(Resource):
             data.append(disease)
 
         self.log.info(Logs.fileline() + ' : TRACE ReportEpidemio')
+        try:
+            details = {"result": "SUCCESS", "date_beg": args.get("date_beg"), "date_end": args.get("date_end"),
+                       "lite_filter": lite_filter, "lite_user_id": int(lite_user_id), "count": len(data)}
+            Audit.insertAudit(audit_user, "ReportEpidemio", "REPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ReportEpidemio ERROR audit success err=' + str(err))
         return compose_ret(data, Constants.cst_content_type_json)
 
 
@@ -182,10 +195,16 @@ class ReportIndicator(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'date_beg' not in args or 'date_end' not in args:
             self.log.error(Logs.fileline() + ' : ReportIndicator ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["date_beg", "date_end"]}
+                Audit.insertAudit(audit_user, "ReportIndicator", "REPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ReportIndicator ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         lite_filter = args.get('lite_filter', 'A') or 'A'
@@ -327,6 +346,12 @@ class ReportIndicator(Resource):
             data.append(disease)
 
         self.log.info(Logs.fileline() + ' : TRACE ReportIndicator')
+        try:
+            details = {"result": "SUCCESS", "date_beg": args.get("date_beg"), "date_end": args.get("date_end"),
+                       "lite_filter": lite_filter, "lite_user_id": int(lite_user_id), "count": len(data)}
+            Audit.insertAudit(audit_user, "ReportIndicator", "REPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ReportIndicator ERROR audit success err=' + str(err))
         return compose_ret(data, Constants.cst_content_type_json)
 
 
@@ -335,10 +360,16 @@ class ReportActivity(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'date_beg' not in args or 'date_end' not in args or 'type_ana' not in args:
             self.log.error(Logs.fileline() + ' : ReportActivity ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["date_beg", "date_end", "type_ana"]}
+                Audit.insertAudit(audit_user, "ReportActivity", "REPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ReportActivity ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # LabBook Lite filters
@@ -388,6 +419,13 @@ class ReportActivity(Resource):
                 stat_age['age'] = int(stat_age['age'] // 12)
 
         self.log.info(Logs.fileline() + ' : TRACE ReportActivity')
+        try:
+            details = {"result": "SUCCESS", "date_beg": args.get("date_beg"), "date_end": args.get("date_end"),
+                       "type_ana": args.get("type_ana"), "lite_filter": lite_filter, "lite_user_id": int(lite_user_id),
+                       "count_type": len(stat.get("type") or []), "count_age": len(stat.get("age") or [])}
+            Audit.insertAudit(audit_user, "ReportActivity", "REPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ReportActivity ERROR audit success err=' + str(err))
         return compose_ret(stat, Constants.cst_content_type_json)
 
 
@@ -396,10 +434,16 @@ class ReportStat(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'date_beg' not in args or 'date_end' not in args or 'service_int' not in args:
             self.log.error(Logs.fileline() + ' : ReportStat ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["date_beg", "date_end", "service_int"]}
+                Audit.insertAudit(audit_user, "ReportStat", "REPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ReportStat ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         lite_filter = args.get('lite_filter', 'A') or 'A'
@@ -446,6 +490,15 @@ class ReportStat(Resource):
             self.log.error(Logs.fileline() + ' : TRACE stat nb_ana not found')
 
         self.log.info(Logs.fileline() + ' : TRACE ReportStat')
+        try:
+            details = {"result": "SUCCESS", "date_beg": args.get("date_beg"), "date_end": args.get("date_end"),
+                       "service_int": args.get("service_int"), "lite_filter": lite_filter, "lite_user_id": int(lite_user_id),
+                       "count_patient": len(stat.get("patient") or []), "count_prescr": len(stat.get("prescr") or []),
+                       "count_sampler": len(stat.get("sampler") or []), "count_product": len(stat.get("product") or []),
+                       "nb_pat": stat.get("nb_pat"), "nb_ana": stat.get("nb_ana")}
+            Audit.insertAudit(audit_user, "ReportStat", "REPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ReportStat ERROR audit success err=' + str(err))
         return compose_ret(stat, Constants.cst_content_type_json)
 
 
@@ -454,11 +507,18 @@ class ReportTAT(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'date_beg' not in args or 'date_end' not in args or 'type_ana' not in args or 'id_ana' not in args or \
            'code_pat' not in args or 'rec_num' not in args:
             self.log.error(Logs.fileline() + ' : ReportTAT ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING",
+                           "missing": ["date_beg", "date_end", "type_ana", "id_ana", "code_pat", "rec_num"]}
+                Audit.insertAudit(audit_user, "ReportTAT", "REPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ReportTAT ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # LabBook Lite filter
@@ -647,6 +707,15 @@ class ReportTAT(Resource):
                 data['tot_ana_secs'] = 0
 
         self.log.info(Logs.fileline() + ' : TRACE ReportTAT')
+        try:
+            details = {"result": "SUCCESS", "date_beg": args.get("date_beg"), "date_end": args.get("date_end"),
+                       "type_ana": args.get("type_ana"), "id_ana": args.get("id_ana"),
+                       "code_pat": args.get("code_pat"), "rec_num": args.get("rec_num"),
+                       "lite_filter": lite_filter, "lite_user_id": int(lite_user_id),
+                       "count": len(l_TAT) if l_TAT else 0}
+            Audit.insertAudit(audit_user, "ReportTAT", "REPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ReportTAT ERROR audit success err=' + str(err))
         return compose_ret(l_TAT, Constants.cst_content_type_json)
 
 
@@ -655,10 +724,16 @@ class ReportBilling(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'date_beg' not in args or 'date_end' not in args or 'id_user' not in args:
             self.log.error(Logs.fileline() + ' : ReportBilling ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["date_beg", "date_end", "id_user"]}
+                Audit.insertAudit(audit_user, "ReportBilling", "REPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ReportBilling ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         l_datas = Report.getBillingStatus(args['date_beg'], args['date_end'], args['id_user'])
@@ -682,6 +757,12 @@ class ReportBilling(Resource):
                 data['bill_remain'] = 0
 
         self.log.info(Logs.fileline() + ' : TRACE ReportBilling')
+        try:
+            details = {"result": "SUCCESS", "date_beg": args.get("date_beg"), "date_end": args.get("date_end"),
+                       "id_user": args.get("id_user"), "count": len(l_datas) if l_datas else 0}
+            Audit.insertAudit(audit_user, "ReportBilling", "REPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ReportBilling ERROR audit success err=' + str(err))
         return compose_ret(l_datas, Constants.cst_content_type_json)
 
 
@@ -690,10 +771,16 @@ class ReportToday(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'date_beg' not in args or 'date_end' not in args or 'service_int' not in args:
             self.log.error(Logs.fileline() + ' : ReportToday ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["date_beg", "date_end", "service_int"]}
+                Audit.insertAudit(audit_user, "ReportToday", "REPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ReportToday ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         l_datas = Report.getTodayList(args['date_beg'], args['date_end'], args['service_int'])
@@ -723,6 +810,13 @@ class ReportToday(Resource):
                 data['type_rec'] = 'I'
 
         self.log.info(Logs.fileline() + ' : TRACE ReportToday')
+        try:
+            details = {"result": "SUCCESS",
+                       "date_beg": args.get("date_beg"), "date_end": args.get("date_end"), "service_int": args.get("service_int"),
+                       "count": len(l_datas) if l_datas else 0}
+            Audit.insertAudit(audit_user, "ReportToday", "REPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ReportToday ERROR audit success err=' + str(err))
         return compose_ret(l_datas, Constants.cst_content_type_json)
 
 
@@ -731,12 +825,18 @@ class ReportTodayExport(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         l_data = [['id_rec', 'rec_date', 'rec_num', 'family', 'analysis', 'vld_type']]
 
         if 'date_beg' not in args or 'date_end' not in args or 'service_int' not in args:
             self.log.error(Logs.fileline() + ' : ReportTodayExport ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["date_beg", "date_end", "service_int"]}
+                Audit.insertAudit(audit_user, "ReportTodayExport", "REPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ReportTodayExport ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         dict_data = Report.getTodayList(args['date_beg'], args['date_end'], args['service_int'])
@@ -760,6 +860,12 @@ class ReportTodayExport(Resource):
 
         # if no result to export
         if len(l_data) < 2:
+            try:
+                details = {"result": "ERROR", "reason": "NO_DATA", "date_beg": args.get("date_beg"),
+                           "date_end": args.get("date_end"), "service_int": args.get("service_int")}
+                Audit.insertAudit(audit_user, "ReportTodayExport", "REPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ReportTodayExport ERROR audit no data err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # write csv file
@@ -775,7 +881,20 @@ class ReportTodayExport(Resource):
 
         except Exception as err:
             self.log.error(Logs.fileline() + ' : post ReportTodayExport failed, err=%s', err)
-            return False
+            try:
+                details = {"result": "ERROR", "reason": "WRITE_CSV_FAILED", "error": str(err),
+                           "date_beg": args.get("date_beg"), "date_end": args.get("date_end"),
+                           "service_int": args.get("service_int")}
+                Audit.insertAudit(audit_user, "ReportTodayExport", "REPORT", None, "ERROR", details, "R")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : ReportTodayExport ERROR audit write csv err=' + str(err2))
+            return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE ReportTodayExport')
+        try:
+            details = {"result": "SUCCESS", "date_beg": args.get("date_beg"), "date_end": args.get("date_end"),
+                       "service_int": args.get("service_int"), "filename": filename, "rows": len(l_data) - 1}
+            Audit.insertAudit(audit_user, "ReportTodayExport", "REPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ReportTodayExport ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)

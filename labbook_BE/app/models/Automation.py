@@ -14,6 +14,7 @@ from io import StringIO
 
 from app.models.Constants import Constants
 from app.models.DB import DB
+from app.models.Audit import Audit
 from app.models.Export import Export
 from app.models.Setting import Setting
 from app.models.Pdf import Pdf
@@ -116,6 +117,7 @@ class Automation:
             'dhis2_internal_recipient',
             'activity_internal_recipient',
             'billing_internal_recipient',
+            'system_internal_recipient',
         ]
 
         id_list = []
@@ -165,9 +167,9 @@ class Automation:
         """
         Insert new automation_job row.
         Required:
-          payload.type in ('dhis2','activity','billing')
+          payload.type in ('dhis2','activity','billing','system')
           payload.label non-empty
-          payload.schedule.kind in ('D','W','M','B','T','Q','S','A')
+          payload.schedule.kind in ('H', 'D','W','M','B','T','Q','S','A')
         """
         job_type = (payload.get('type') or '').strip()
         label = (payload.get('label') or '').strip()
@@ -175,13 +177,13 @@ class Automation:
         params_obj = payload.get('params') or {}
         is_active = (payload.get('active') or 'Y').upper()
 
-        if job_type not in ('dhis2', 'activity', 'billing'):
+        if job_type not in ('dhis2', 'activity', 'billing', 'system'):
             raise ValueError('invalid job type')
         if not label:
             raise ValueError('missing label')
 
         schedule_kind = (schedule.get('kind') or '').upper()
-        if schedule_kind not in ('D', 'W', 'M', 'B', 'T', 'Q', 'S', 'A'):
+        if schedule_kind not in ('H', 'D', 'W', 'M', 'B', 'T', 'Q', 'S', 'A'):
             raise ValueError('invalid schedule kind')
 
         # DHIS2 does not support daily schedule
@@ -196,6 +198,12 @@ class Automation:
         schedule_dom = schedule.get('dom')            # int or None
         schedule_last_dom = (schedule.get('last_dom') or 'N').upper()
         schedule_anchor_jan = (schedule.get('anchor_jan') or 'Y').upper()
+
+        if schedule_kind == 'H':
+            schedule_dow = None
+            schedule_dom = None
+            schedule_last_dom = 'N'
+            schedule_anchor_jan = 'Y'
 
         fire_on = (schedule.get('fire_on') or 'period_end')
         if fire_on not in ('period_start', 'period_end'):
@@ -213,7 +221,7 @@ class Automation:
             start_on=schedule_start_on
         )
 
-        cursor = DB.cursor(ecr=True)
+        cursor = DB.cursor()
 
         req = (
             'insert into automation_job ('
@@ -275,7 +283,7 @@ class Automation:
 
         if 'type' in payload:
             job_type = (payload.get('type') or '').strip()
-            if job_type not in ('dhis2', 'activity', 'billing'):
+            if job_type not in ('dhis2', 'activity', 'billing', 'system'):
                 raise ValueError('invalid job type')
             set_clauses.append('ajb_type = %s')
             values.append(job_type)
@@ -303,12 +311,29 @@ class Automation:
         if schedule is not None:
             if 'kind' in schedule:
                 new_kind = (schedule.get('kind') or '').upper()
-                if new_kind not in ('D', 'W', 'M', 'B', 'T', 'Q', 'S', 'A'):
+                if new_kind not in ('H', 'D', 'W', 'M', 'B', 'T', 'Q', 'S', 'A'):
                     raise ValueError('invalid schedule kind')
                 set_clauses.append('ajb_schedule_kind = %s')
                 values.append(new_kind)
                 effective_kind = new_kind
                 schedule_changed = True
+
+                if new_kind == 'H':
+                    set_clauses.append('ajb_schedule_dow = %s')
+                    values.append(None)
+                    effective_dow = None
+
+                    set_clauses.append('ajb_schedule_dom = %s')
+                    values.append(None)
+                    effective_dom = None
+
+                    set_clauses.append('ajb_schedule_last_dom = %s')
+                    values.append('N')
+                    effective_last_dom = 'N'
+
+                    set_clauses.append('ajb_schedule_anchor_jan = %s')
+                    values.append('Y')
+                    effective_anchor_jan = 'Y'
 
             if 'time' in schedule:
                 new_time = schedule.get('time') or '02:00:00'
@@ -396,7 +421,7 @@ class Automation:
         req = f'update automation_job set {set_sql} where ajb_ser = %s'
         values.append(ajb_ser)
 
-        cursor = DB.cursor(ecr=True)
+        cursor = DB.cursor()
         try:
             cursor.execute(req, tuple(values))
             return True
@@ -406,7 +431,7 @@ class Automation:
 
     @staticmethod
     def deleteAutomationJob(ajb_ser: int) -> bool:
-        cursor = DB.cursor(ecr=True)
+        cursor = DB.cursor()
         try:
             req = 'delete from automation_job where ajb_ser = %s'
             cursor.execute(req, (ajb_ser,))
@@ -472,6 +497,7 @@ class Automation:
             'dhis2': 'dhis2_internal_recipient',
             'activity': 'activity_internal_recipient',
             'billing': 'billing_internal_recipient',
+            'system': 'system_internal_recipient',
         }
 
         for row in rows:
@@ -605,7 +631,7 @@ class Automation:
         Force next_run_at = now() so scheduler will execute ASAP.
         We do NOT pre-create a run row here, UI will see it once real run starts.
         """
-        cursor = DB.cursor(ecr=True)
+        cursor = DB.cursor()
         try:
             req = (
                 'update automation_job '
@@ -657,7 +683,7 @@ class Automation:
             if not run_id:
                 continue
 
-            cursor2 = DB.cursor(ecr=True)
+            cursor2 = DB.cursor()
             try:
                 req2 = (
                     'update automation_job '
@@ -686,7 +712,7 @@ class Automation:
 
             try:
                 next_dt = _recompute_next_from_row(job)
-                cursor3 = DB.cursor(ecr=True)
+                cursor3 = DB.cursor()
                 req3 = (
                     'update automation_job '
                     'set ajb_next_run_at = %s, ajb_last_status = %s '
@@ -760,7 +786,6 @@ class Automation:
             "WHERE ajb_ser = %s"
         )
         cursor.execute(req, (next_run_at_str, ajb_ser))
-        DB.commit()
 
     @staticmethod
     def execute_job(job_row: dict) -> dict:
@@ -840,56 +865,123 @@ def compute_next_run_at(kind: str,
                         anchor_jan: str | None,
                         start_on: str | None,
                         now_dt: datetime | None = None) -> datetime:
-    """Compute the first next_run_at >= now()"""
+    """Compute the first next_run_at strictly > now()."""
     time_str = str(time_str or '02:00:00')
     run_at = _parse_time(time_str)
     now_dt = now_dt or datetime.now()
     today = now_dt.date()
-    base_day = today
 
+    start_day = None
     if start_on:
         try:
             start_day = datetime.strptime(start_on, '%Y-%m-%d').date()
-            if start_day > base_day:
-                base_day = start_day
         except Exception:
             start_day = None
-    else:
-        start_day = None
+
+    # -----------------
+    # Hourly / Daily / Weekly
+    # -----------------
+    if kind == 'H':
+        candidate_dt = datetime(now_dt.year, now_dt.month, now_dt.day, now_dt.hour, run_at.minute, run_at.second)
+        if candidate_dt <= now_dt:
+            candidate_dt = candidate_dt + timedelta(hours=1)
+
+        if start_day and candidate_dt.date() < start_day:
+            candidate_dt = datetime.combine(start_day, time(0, run_at.minute, run_at.second))
+
+        return candidate_dt
 
     if kind == 'D':
+        base_day = today
+        if start_day and start_day > base_day:
+            base_day = start_day
+
         candidate_dt = datetime.combine(base_day, run_at)
         if candidate_dt <= now_dt:
             candidate_dt = datetime.combine(base_day + timedelta(days=1), run_at)
         return candidate_dt
 
     if kind == 'W':
+        base_day = today
+        if start_day and start_day > base_day:
+            base_day = start_day
+
         desired_dow = int(schedule_dow or 1)
         return _next_weekly_occurrence(base_day, now_dt, desired_dow, run_at)
 
+    # -----------------
+    # Monthly-like (M/B/T/Q/S/A)
+    # -----------------
     span = SPAN_BY_KIND.get(kind, 1)
+    use_anchor_jan = (str(anchor_jan or 'Y').upper() == 'Y')
+    last_dom_flag = str(schedule_last_dom or 'N').upper()
 
-    # Helper: add span months keeping day inside month range
-    def add_months_safe(d: date, delta: int) -> date:
-        y, m = _add_months(d.year, d.month, delta)
-        last = calendar.monthrange(y, m)[1]
-        return date(y, m, min(d.day, last))
+    def _exec_dt_for_period_start(start_y: int, start_m: int) -> datetime:
+        end_y, end_m = _add_months(start_y, start_m, span - 1)
+        month_end = _end_of_month(end_y, end_m)
+        exec_day = _apply_day_choice(month_end, schedule_dom, last_dom_flag)
+        return datetime.combine(exec_day, run_at)
 
-    # Use start_on if valid, otherwise base_day
-    anchor_day = start_day or base_day
-    candidate_day = anchor_day
-    candidate_dt = datetime.combine(candidate_day, run_at)
+    if use_anchor_jan:
+        # Periods are aligned to January (e.g. quarters: Jan-Apr-Jul-Oct start months)
+        base_day = today
+        if start_day and start_day > base_day:
+            base_day = start_day
 
+        # Find the period containing base_day
+        group_idx = (base_day.month - 1) // span
+        start_m = group_idx * span + 1
+        start_y = base_day.year
+
+        candidate_dt = _exec_dt_for_period_start(start_y, start_m)
+
+        # If we missed it, jump by span months until > now
+        while candidate_dt <= now_dt:
+            start_y, start_m = _add_months(start_y, start_m, span)
+            candidate_dt = _exec_dt_for_period_start(start_y, start_m)
+
+        # Respect start_on as a minimal date (date-only)
+        if start_day and candidate_dt.date() < start_day:
+            # recompute from the period containing start_day
+            group_idx = (start_day.month - 1) // span
+            start_m = group_idx * span + 1
+            start_y = start_day.year
+            candidate_dt = _exec_dt_for_period_start(start_y, start_m)
+            while candidate_dt <= now_dt or candidate_dt.date() < start_day:
+                start_y, start_m = _add_months(start_y, start_m, span)
+                candidate_dt = _exec_dt_for_period_start(start_y, start_m)
+
+        return candidate_dt
+
+    # Rolling periods anchored to start_on (if provided) otherwise anchored to today month
+    anchor_day = start_day or today
+    anchor_index = anchor_day.year * 12 + (anchor_day.month - 1)
+    now_index = today.year * 12 + (today.month - 1)
+
+    diff = now_index - anchor_index
+    if diff < 0:
+        period_idx = 0
+    else:
+        period_idx = diff // span
+
+    start_index = anchor_index + (period_idx * span)
+    start_y, start_m = divmod(start_index, 12)
+    start_m += 1
+
+    candidate_dt = _exec_dt_for_period_start(start_y, start_m)
     while candidate_dt <= now_dt:
-        candidate_day = add_months_safe(candidate_day, span)
-        candidate_dt = datetime.combine(candidate_day, run_at)
+        period_idx += 1
+        start_index = anchor_index + (period_idx * span)
+        start_y, start_m = divmod(start_index, 12)
+        start_m += 1
+        candidate_dt = _exec_dt_for_period_start(start_y, start_m)
 
     return candidate_dt
 
 
 def _start_run(job_id: int, message: str = '') -> int:
     """Create a new automation_run row with status=running."""
-    cursor = DB.cursor(ecr=True)
+    cursor = DB.cursor()
     try:
         req = (
             'insert into automation_run (arn_job_id, arn_started_at, arn_status, arn_message) '
@@ -909,7 +1001,7 @@ def _finish_run(run_id: int,
                 message: str | None = None,
                 error_trace: str | None = None) -> None:
     """Finalize automation_run row."""
-    cursor = DB.cursor(ecr=True)
+    cursor = DB.cursor()
     try:
         req = (
             'update automation_run '
@@ -941,7 +1033,7 @@ def _compute_period_window(job_row: dict, now_dt: datetime | None = None) -> tup
     Compute [date_beg, date_end] for the job being fired now.
     Inclusive bounds, in local server time.
     Honors:
-      - ajb_schedule_kind: 'D','W','M','B','T','Q','S','A'
+      - ajb_schedule_kind: 'H', 'D','W','M','B','T','Q','S','A'
       - ajb_schedule_dow (weekly)
       - ajb_schedule_dom / ajb_schedule_last_dom / ajb_schedule_anchor_jan (monthly-like)
       - ajb_fire_on: 'period_end' | 'period_start'
@@ -960,6 +1052,17 @@ def _compute_period_window(job_row: dict, now_dt: datetime | None = None) -> tup
         beg = datetime(d.year, d.month, d.day, 0, 0, 0)
         end = datetime(d.year, d.month, d.day, 23, 59, 59)
         return beg, end
+
+    if kind == 'H':
+        # Hourly window: previous full hour (period_end) or current hour (period_start).
+        if fire_on == 'period_end':
+            ref_dt = now_dt - timedelta(hours=1)
+        else:
+            ref_dt = now_dt
+
+        hour_start = datetime(ref_dt.year, ref_dt.month, ref_dt.day, ref_dt.hour, 0, 0)
+        hour_end = datetime(ref_dt.year, ref_dt.month, ref_dt.day, ref_dt.hour, 59, 59)
+        return hour_start, hour_end
 
     if kind == 'D':
         if fire_on == 'period_end':
@@ -2525,26 +2628,77 @@ def _attach_file_to_message(message_id: int,
         Automation.log.error(Logs.fileline() + " : _attach_file_to_message failed err=" + str(err))
 
 
+def _execute_job_ssh(job_row: dict) -> dict:
+    params = job_row.get('ajb_params') or {}
+    if isinstance(params, str):
+        try:
+            params = json.loads(params)
+        except Exception:
+            params = {}
+
+    cmd = params.get('command')
+    if not cmd:
+        return {'status': 'error', 'rows_count': 0, 'output_uri': None,
+                'message': 'missing ssh command', 'error_trace': None}
+
+    try:
+        rc = os.system(cmd + " > /storage/io/ntp_status.out 2>&1")
+        with open("/storage/io/ntp_status.out", "r") as f:
+            content = f.read().strip()
+        synced = 1 if rc == 0 else 0
+
+        audit_flag = (params.get('audit') or 'N').upper() == 'Y'
+        if audit_flag:
+            try:
+                # No request context in scheduler => do NOT rely on client_ip, Audit.py does.
+                # We still call it and log if it fails.
+                Audit.insertAudit(
+                    None,
+                    "NTP_STATUS",
+                    "SYSTEM",
+                    str(job_row.get('ajb_ser') or ''),
+                    "SUCCESS" if synced else "ERROR",
+                    {"synced": synced, "output": content},
+                    "E"
+                )
+            except Exception as err:
+                Automation.log.error(Logs.fileline() + ' : _execute_job_ssh Audit.insertAudit failed err=' + str(err))
+
+        return {
+            'status': 'success' if synced else 'error',
+            'rows_count': 0,
+            'output_uri': None,
+            'message': content,
+            'error_trace': None
+        }
+
+    except Exception as err:
+        return {
+            'status': 'error',
+            'rows_count': 0,
+            'output_uri': None,
+            'message': 'ssh execution failed',
+            'error_trace': str(err)
+        }
+
+
 def _execute_job(job_row: dict) -> dict:
     """Dispatch execution by job type."""
     ajb_type = (job_row.get('ajb_type') or '').lower()
+    params = job_row.get('ajb_params') or {}
+
+    if isinstance(params, str):
+        try:
+            params = json.loads(params)
+        except Exception:
+            params = {}
 
     if ajb_type == 'dhis2':
-        params = job_row.get('ajb_params') or {}
-        if isinstance(params, str):
-            try:
-                params = json.loads(params)
-            except Exception:
-                params = {}
-
         mode = (params.get('dhis2_mode') or 'create').lower()
-
         if mode == 'create':
             return _execute_job_dhis2_create(job_row)
-
         if mode == 'send':
             return _execute_job_dhis2_send(job_row)
-
         return {
             'status': 'error',
             'rows_count': 0,
@@ -2559,7 +2713,23 @@ def _execute_job(job_row: dict) -> dict:
     if ajb_type == 'activity':
         return _execute_job_activity(job_row)
 
-    # Default fallback: compute window only
-    date_beg, date_end = _compute_period_window(job_row)
-    msg = ('window: ' + date_beg.strftime('%Y-%m-%d') + ' -> ' + date_end.strftime('%Y-%m-%d') + '; type=' + str(job_row.get('ajb_type')))
-    return {'status': 'success', 'rows_count': 0, 'output_uri': None, 'message': msg, 'error_trace': None}
+    if ajb_type == 'system':
+        job_kind = (params.get('type') or '').lower()
+        if job_kind == 'ssh':
+            return _execute_job_ssh(job_row)
+
+        return {
+            'status': 'error',
+            'rows_count': 0,
+            'output_uri': None,
+            'message': 'unknown system job type=' + job_kind,
+            'error_trace': None,
+        }
+
+    return {
+        'status': 'error',
+        'rows_count': 0,
+        'output_uri': None,
+        'message': 'unsupported ajb_type=' + str(job_row.get('ajb_type')),
+        'error_trace': None,
+    }

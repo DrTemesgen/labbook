@@ -127,9 +127,10 @@ function save_pat_and_open_hist(id_pat)
 
 function save_form_and_open_hist(id_pat)
 {
-    {{ args['json_save'] | safe }} ;
+{{ args['json_save'] | safe }} ;
 
-    param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
+param.pat_code = $(".badge").first().text().trim();    
+param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
 
     // popup wait
     $("#dial-wait").off('shown.bs.modal');
@@ -175,6 +176,7 @@ function save_form( id_pat )
 {
 {{ args['json_save'] | safe }} ;
 
+param.pat_code = $(".badge").first().text().trim();
 param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
 
     // popup wait

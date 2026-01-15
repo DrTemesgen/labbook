@@ -5,7 +5,6 @@ import gettext
 import subprocess
 import csv
 import re
-import json
 
 from datetime import datetime
 from flask import request
@@ -26,6 +25,7 @@ class SettingAgeInterval(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_datas = Setting.getAgeInterval()
 
         if not l_datas:
@@ -39,21 +39,36 @@ class SettingAgeInterval(Resource):
                     data[key] = ''
 
         self.log.info(Logs.fileline() + ' : SettingAgeInterval')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY"}
+            Audit.insertAudit(audit_user, "SettingAgeInterval", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingAgeInterval ERROR audit success err=' + str(err))
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'list_val' not in args:
             self.log.error(Logs.fileline() + ' : SettingAgeInterval ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "SettingAgeInterval", "SETTING", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingAgeInterval ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         l_interval = Setting.getAgeInterval()
 
         if not l_interval:
             self.log.info(Logs.fileline() + ' : TRACE SettingAgeInterval ERROR notfound age interval')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingAgeInterval", "SETTING", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingAgeInterval ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         for val in args['list_val']:
@@ -83,9 +98,7 @@ class SettingAgeInterval(Resource):
                 try:
                     details = {"ais_ser": val['ais_ser'], "result": "ERROR", "action": action}
                     event_type = "C" if action == "INSERT" else "U"
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingAgeInterval", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), event_type)
+                    Audit.insertAudit(audit_user, "SettingAgeInterval", "SETTING", None, "ERROR", details, event_type)
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingAgeInterval ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -104,9 +117,7 @@ class SettingAgeInterval(Resource):
                     self.log.info(Logs.fileline() + ' : TRACE SettingAgeInterval ERROR delete val age interval')
                     try:
                         details = {"ais_ser": db_val['ais_ser'], "result": "ERROR", "action": "DELETE"}
-                        Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                          "SettingAgeInterval", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                          json.dumps(details, default=str), "D")
+                        Audit.insertAudit(audit_user, "SettingAgeInterval", "SETTING", None, "ERROR", details, "D")
                     except Exception as err:
                         self.log.error(Logs.fileline() + ' : SettingAgeInterval ERROR audit err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 500)
@@ -114,9 +125,7 @@ class SettingAgeInterval(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingAgeInterval')
         try:
             details = {"count": len(args['list_val']), "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingAgeInterval", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "SettingAgeInterval", "SETTING", None, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingAgeInterval ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -127,6 +136,7 @@ class SettingReqServices(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_datas = Setting.getReqServices()
 
         if not l_datas:
@@ -140,15 +150,25 @@ class SettingReqServices(Resource):
                     data[key] = ''
 
         self.log.info(Logs.fileline() + ' : SettingReqServices')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_datas)}
+            Audit.insertAudit(audit_user, "SettingReqServices", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingReqServices ERROR audit success err=' + str(err))
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'list_val' not in args:
             self.log.error(Logs.fileline() + ' : SettingReqServices ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "SettingReqServices", "SETTING", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingReqServices ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         l_req_services = Setting.getReqServices()
@@ -171,9 +191,7 @@ class SettingReqServices(Resource):
                 try:
                     details = {"rqs_ser": val['rqs_ser'], "result": "ERROR", "action": action}
                     event_type = "C" if action == "INSERT" else "U"
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingReqServices", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), event_type)
+                    Audit.insertAudit(audit_user, "SettingReqServices", "SETTING", None, "ERROR", details, event_type)
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingReqServices ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -192,9 +210,7 @@ class SettingReqServices(Resource):
                     self.log.info(Logs.fileline() + ' : TRACE SettingReqServices ERROR deleteReqServices')
                     try:
                         details = {"rqs_ser": db_val['rqs_ser'], "result": "ERROR", "action": "DELETE"}
-                        Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                          "SettingReqServices", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                          json.dumps(details, default=str), "D")
+                        Audit.insertAudit(audit_user, "SettingReqServices", "SETTING", None, "ERROR", details, "D")
                     except Exception as err:
                         self.log.error(Logs.fileline() + ' : SettingReqServices ERROR audit err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 500)
@@ -202,9 +218,7 @@ class SettingReqServices(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingReqServices')
         try:
             details = {"count": len(args['list_val']), "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingReqServices", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "SettingReqServices", "SETTING", None, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingReqServices ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -215,10 +229,16 @@ class SettingFuncUnitDet(Resource):
 
     @require_oauth()
     def get(self, id_unit):
+        audit_user = request.oauth_user
         func_unit = Setting.getFuncUnitDet(id_unit)
 
         if not func_unit:
             self.log.error(Logs.fileline() + ' : ' + 'SettingFuncUnit ERROR not found')
+            try:
+                details = {"id_unit": int(id_unit), "result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingFuncUnitDet", "SETTING", int(id_unit), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingFuncUnitDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -227,6 +247,11 @@ class SettingFuncUnitDet(Resource):
                 func_unit[key] = ''
 
         self.log.info(Logs.fileline() + ' : SettingFuncUnitDet')
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "id_unit": int(id_unit)}
+            Audit.insertAudit(audit_user, "SettingFuncUnitDet", "SETTING", int(id_unit), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingFuncUnitDet ERROR audit success err=' + str(err))
         return compose_ret(func_unit, Constants.cst_content_type_json, 200)
 
 
@@ -235,10 +260,16 @@ class SettingFuncUnit(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_datas = Setting.getFuncUnit()
 
         if not l_datas:
             self.log.error(Logs.fileline() + ' : ' + 'SettingFuncUnit ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingFuncUnit", "SETTING", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingFuncUnit ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         for data in l_datas:
@@ -262,15 +293,25 @@ class SettingFuncUnit(Resource):
 
         self.log.info(Logs.fileline() + ' : SettingFuncUnit l_datas=' + str(l_datas))
         self.log.info(Logs.fileline() + ' : SettingFuncUnit')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_datas)}
+            Audit.insertAudit(audit_user, "SettingFuncUnit", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingFuncUnit ERROR audit success err=' + str(err))
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'list_val' not in args:
             self.log.error(Logs.fileline() + ' : SettingFuncUnit ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "SettingFuncUnit", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingFuncUnit ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         l_req_services = Setting.getFuncUnit()
@@ -293,9 +334,7 @@ class SettingFuncUnit(Resource):
                 try:
                     details = {"fun_ser": val['fun_ser'], "result": "ERROR", "action": action}
                     event_type = "C" if action == "INSERT" else "U"
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingFuncUnit", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), event_type)
+                    Audit.insertAudit(audit_user, "SettingFuncUnit", "SETTING", None, "ERROR", details, event_type)
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingFuncUnit ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -314,9 +353,7 @@ class SettingFuncUnit(Resource):
                     self.log.info(Logs.fileline() + ' : TRACE SettingFuncUnit ERROR deleteFuncUnit')
                     try:
                         details = {"fun_ser": db_val['fun_ser'], "result": "ERROR", "action": "DELETE"}
-                        Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                          "SettingFuncUnit", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                          json.dumps(details, default=str), "D")
+                        Audit.insertAudit(audit_user, "SettingFuncUnit", "SETTING", None, "ERROR", details, "D")
                     except Exception as err:
                         self.log.error(Logs.fileline() + ' : SettingFuncUnit ERROR audit err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 500)
@@ -324,9 +361,7 @@ class SettingFuncUnit(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingFuncUnit')
         try:
             details = {"count": len(args['list_val']), "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingFuncUnit", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "SettingFuncUnit", "SETTING", None, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingFuncUnit ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -334,10 +369,15 @@ class SettingFuncUnit(Resource):
     @require_oauth()
     def delete(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_unit' not in args:
             self.log.error(Logs.fileline() + ' : SettingFuncUnit ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "SettingFuncUnit", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingFuncUnit ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Setting.deleteFuncUnit(args['id_unit'])
@@ -346,9 +386,7 @@ class SettingFuncUnit(Resource):
             self.log.error(Logs.fileline() + ' : TRACE SettingFuncUnit delete ERROR')
             try:
                 details = {"fun_ser": args['id_unit'], "result": "ERROR", "action": "DELETE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingFuncUnit", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "D")
+                Audit.insertAudit(audit_user, "SettingFuncUnit", "SETTING", None, "ERROR", details, "D")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingFuncUnit ERROR audit delete err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -356,9 +394,7 @@ class SettingFuncUnit(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingFuncUnit delete id_item=' + str(args['id_unit']))
         try:
             details = {"fun_ser": args['id_unit'], "result": "SUCCESS", "action": "DELETE"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingFuncUnit", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "D")
+            Audit.insertAudit(audit_user, "SettingFuncUnit", "SETTING", None, "SUCCESS", details, "D")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingFuncUnit ERROR audit delete success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -369,10 +405,16 @@ class SettingLinkUnit(Resource):
 
     @require_oauth()
     def get(self, type, id_unit):
+        audit_user = request.oauth_user
         l_datas = Setting.getLinkUnit(type, id_unit)
 
         if not l_datas:
             self.log.error(Logs.fileline() + ' : ' + 'SettingLinkUnit ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "type": type, "id_unit": int(id_unit)}
+                Audit.insertAudit(audit_user, "SettingLinkUnit", "SETTING", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingLinkUnit ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -386,17 +428,27 @@ class SettingLinkUnit(Resource):
                     data[key] = _(data[key].strip())
 
         self.log.info(Logs.fileline() + ' : SettingLinkUnit')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "type": type, "id_unit": int(id_unit), "count": len(l_datas)}
+            Audit.insertAudit(audit_user, "SettingLinkUnit", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingLinkUnit ERROR audit success err=' + str(err))
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self, type, id_unit):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         # self.log.info(Logs.fileline() + ' : DEBUG-TRACE args=' + str(args))
 
         if 'list_link' not in args:
             self.log.error(Logs.fileline() + ' : SettingLinkUnit ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "type": type, "id_unit": int(id_unit)}
+                Audit.insertAudit(audit_user, "SettingLinkUnit", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingLinkUnit ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         l_link_unit = Setting.getListLinkUnit(type, id_unit)
@@ -411,9 +463,7 @@ class SettingLinkUnit(Resource):
                     self.log.info(Logs.fileline() + ' : TRACE SettingLinkUnit ERROR insertLinkUnit')
                     try:
                         details = {"type": type, "id_unit": id_unit, "id_item": link['id_item'], "result": "ERROR", "action": "INSERT"}
-                        Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                          "SettingLinkUnit", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                          json.dumps(details, default=str), "C")
+                        Audit.insertAudit(audit_user, "SettingLinkUnit", "SETTING", None, "ERROR", details, "C")
                     except Exception as err:
                         self.log.error(Logs.fileline() + ' : SettingLinkUnit ERROR audit insert err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 500)
@@ -432,9 +482,7 @@ class SettingLinkUnit(Resource):
                     self.log.info(Logs.fileline() + ' : TRACE SettingLinkUnit ERROR deleteLinkUnit')
                     try:
                         details = {"type": type, "id_unit": id_unit, "id_item": db_val, "result": "ERROR", "action": "DELETE"}
-                        Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                          "SettingLinkUnit", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                          json.dumps(details, default=str), "D")
+                        Audit.insertAudit(audit_user, "SettingLinkUnit", "SETTING", None, "ERROR", details, "D")
                     except Exception as err:
                         self.log.error(Logs.fileline() + ' : SettingLinkUnit ERROR audit insert err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 500)
@@ -442,9 +490,7 @@ class SettingLinkUnit(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingLinkUnit')
         try:
             details = {"type": type, "id_unit": id_unit, "count": len(args['list_link']), "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingLinkUnit", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "SettingLinkUnit", "SETTING", None, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingLinkUnit ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -455,13 +501,24 @@ class SettingLinkByUser(Resource):
 
     @require_oauth()
     def get(self, id_user):
+        audit_user = request.oauth_user
         l_datas = Setting.getLinkByUser(id_user)
 
         if not l_datas:
             self.log.error(Logs.fileline() + ' : ' + 'SettingLinkByUser ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_user": int(id_user)}
+                Audit.insertAudit(audit_user, "SettingLinkByUser", "SETTING", int(id_user), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingLinkByUser ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         self.log.info(Logs.fileline() + ' : SettingLinkByUser id_ser=' + str(id_user))
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "id_user": int(id_user), "count": len(l_datas)}
+            Audit.insertAudit(audit_user, "SettingLinkByUser", "SETTING", int(id_user), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingLinkByUser ERROR audit success err=' + str(err))
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
 
@@ -470,6 +527,7 @@ class SettingPref(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_prefs = Setting.getPrefList()
 
         if not l_prefs:
@@ -483,12 +541,17 @@ class SettingPref(Resource):
                     pref[key] = ''
 
         self.log.info(Logs.fileline() + ' : SettingPref')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY"}
+            Audit.insertAudit(audit_user, "SettingPref", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingPref ERROR audit success err=' + str(err))
         return compose_ret(l_prefs, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self, id_owner):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if id_owner < 1 or 'prix_acte' not in args or 'entete_1' not in args or 'entete_2' not in args or \
            'entete_3' not in args or 'entete_adr' not in args or 'entete_tel' not in args or 'entete_fax' not in args or \
@@ -496,6 +559,11 @@ class SettingPref(Resource):
            'unite_age_defaut' not in args or 'auto_logout' not in args or 'qualite' not in args or \
            'facturation' not in args or 'default_language' not in args or 'db_language' not in args:
             self.log.error(Logs.fileline() + ' : SettingPref ERROR args missing')
+            try:
+                details = {"id_owner": int(id_owner), "result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "SettingPref", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingPref ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Persist all preferences to DB only
@@ -505,9 +573,7 @@ class SettingPref(Resource):
                 self.log.error(Logs.alert() + ' : SettingPref ERROR update')
                 try:
                     details = {"id_owner": id_owner, "key": key, "result": "ERROR", "action": "UPDATE"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingPref", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "U")
+                    Audit.insertAudit(audit_user, "SettingPref", "SETTING", None, "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingPref ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -515,9 +581,7 @@ class SettingPref(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingPref')
         try:
             details = {"id_owner": id_owner, "keys": list(args.keys()), "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingPref", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "SettingPref", "SETTING", None, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingPref ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -528,10 +592,16 @@ class SettingRecNum(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         setting = Setting.getRecNumSetting()
 
         if not setting:
             self.log.error(Logs.fileline() + ' : ERROR SettingRecNum not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingRecNum", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingRecNum ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -546,15 +616,28 @@ class SettingRecNum(Resource):
             setting['rstg_date_upd'] = datetime.strftime(setting['rstg_date_upd'], '%Y-%m-%d %H:%M:%S')
 
         self.log.info(Logs.fileline() + ' : TRACE SettingRecNum')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY"}
+            Audit.insertAudit(audit_user, "SettingRecNum", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingRecNum ERROR audit success err=' + str(err))
         return compose_ret(setting, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_owner' not in args or 'period' not in args or 'format' not in args or 'samp_mask' not in args or 'samp_regex' not in args:
             self.log.error(Logs.fileline() + ' : SettingRecNum ERROR args missing')
+            try:
+                details = {"id_owner": args.get('id_owner') if isinstance(args, dict) else None,
+                           "period": args.get('period') if isinstance(args, dict) else None,
+                           "format": args.get('format') if isinstance(args, dict) else None,
+                           "result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "SettingRecNum", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingRecNum ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Setting.updateRecNumSetting(id_owner=args['id_owner'],
@@ -568,9 +651,7 @@ class SettingRecNum(Resource):
             try:
                 details = {"id_owner": args['id_owner'], "period": args['period'], "format": args['format'],
                            "result": "ERROR", "action": "UPDATE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingRecNum", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "U")
+                Audit.insertAudit(audit_user, "SettingRecNum", "SETTING", None, "ERROR", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingRecNum ERROR audit err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -579,9 +660,7 @@ class SettingRecNum(Resource):
         try:
             details = {"id_owner": args['id_owner'], "period": args['period'], "format": args['format'],
                        "result": "SUCCESS", "action": "UPDATE"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingRecNum", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "SettingRecNum", "SETTING", None, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingRecNum ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -592,10 +671,16 @@ class SettingReport(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         setting = Setting.getReportSetting()
 
         if not setting:
             self.log.error(Logs.fileline() + ' : ERROR SettingReport not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingReport", "SETTING", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingReport ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -610,15 +695,25 @@ class SettingReport(Resource):
             setting['sys_last_mod_date'] = datetime.strftime(setting['sys_last_mod_date'], '%Y-%m-%d %H:%M:%S')
 
         self.log.info(Logs.fileline() + ' : TRACE SettingReport')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY"}
+            Audit.insertAudit(audit_user, "SettingReport", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingReport ERROR audit success err=' + str(err))
         return compose_ret(setting, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_owner' not in args or 'header' not in args or 'comment' not in args or 'report_pwd' not in args:
             self.log.error(Logs.fileline() + ' : SettingReport ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "SettingReport", "SETTING", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingReport ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Setting.updateReportSetting(id_owner=args['id_owner'],
@@ -630,9 +725,7 @@ class SettingReport(Resource):
             self.log.error(Logs.alert() + ' : SettingReport ERROR update')
             try:
                 details = {"id_owner": args['id_owner'], "result": "ERROR", "action": "UPDATE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingReport", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "U")
+                Audit.insertAudit(audit_user, "SettingReport", "SETTING", None, "ERROR", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingReport ERROR audit err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -640,9 +733,7 @@ class SettingReport(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingReport')
         try:
             details = {"id_owner": args['id_owner'], "result": "SUCCESS", "action": "UPDATE"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingReport", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "SettingReport", "SETTING", None, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingReport ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -653,10 +744,16 @@ class SettingBackup(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         setting = Setting.getBackupSetting()
 
         if not setting:
             self.log.error(Logs.fileline() + ' : ERROR SettingBackup not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingBackup", "SETTING", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingBackup ERROR audit not found err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -668,6 +765,11 @@ class SettingBackup(Resource):
             setting['bks_start_time'] = str(setting['bks_start_time'])
 
         self.log.info(Logs.fileline() + ' : TRACE SettingBackup')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY"}
+            Audit.insertAudit(audit_user, "SettingBackup", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingBackup ERROR audit success err=' + str(err))
         return compose_ret(setting, Constants.cst_content_type_json)
 
 
@@ -686,9 +788,7 @@ class ScriptBackup(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ScriptBackup ret=' + str(ret))
         try:
             details = {"media": media, "cmd": cmd, "ret": ret, "result": "CALLED"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "ScriptBackup", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "E")
+            Audit.insertAudit(audit_user, "ScriptBackup", "SETTING", None, "SUCCESS", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ScriptBackup ERROR audit err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
@@ -700,10 +800,15 @@ class ScriptGenkey(Resource):
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'pwd_key' not in args:
             self.log.error(Logs.fileline() + ' : ScriptGenkey ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "ScriptGenkey", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ScriptGenkey ERROR audit args missing err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 400)
 
         os.environ['LABBOOK_KEY_PWD'] = args['pwd_key']
@@ -716,9 +821,7 @@ class ScriptGenkey(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ScriptGenkey ret=' + str(ret))
         try:
             details = {"cmd": cmd, "ret": ret, "result": "CALLED"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "ScriptGenkey", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "E")
+            Audit.insertAudit(audit_user, "ScriptGenkey", "SETTING", None, "SUCCESS", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ScriptGenkey ERROR audit err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
@@ -739,9 +842,7 @@ class ScriptInitMedia(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ScriptInitMedia ret=' + str(ret))
         try:
             details = {"media": media, "cmd": cmd, "ret": ret, "result": "CALLED"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "ScriptInitMedia", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "E")
+            Audit.insertAudit(audit_user, "ScriptInitMedia", "SETTING", None, "SUCCESS", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ScriptInitMedia ERROR audit err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
@@ -761,9 +862,7 @@ class ScriptKeyexist(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ScriptKeyexist ret=' + str(ret))
         try:
             details = {"cmd": cmd, "ret": ret, "result": "CALLED"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "ScriptKeyexist", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "E")
+            Audit.insertAudit(audit_user, "ScriptKeyexist", "SETTING", None, "SUCCESS", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ScriptKeyexist ERROR audit err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
@@ -775,10 +874,15 @@ class ScriptListarchive(Resource):
     @require_oauth()
     def post(self, media):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'user_pwd' not in args:
             self.log.error(Logs.fileline() + ' : ScriptListmedia ERROR args missing')
+            try:
+                details = {"media": str(media), "result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "ScriptListarchive", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ScriptListarchive ERROR audit args missing err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 400)
 
         os.environ['LABBOOK_USER_PWD'] = args['user_pwd']
@@ -789,29 +893,10 @@ class ScriptListarchive(Resource):
         self.log.error(Logs.fileline() + ' : ScriptListarchive cmd=' + cmd)
         ret = os.system(cmd)
 
-        """
-        l_archive = {}
-
-        l_archive['ret']   = ret
-        l_archive['archive'] = []
-
-        # read listarchive file
-        if ret == 0:
-            try:
-                # No encoding forced because script return list from system so its depend of encoding of operating system
-                f = open(os.path.join(Constants.cst_io, 'listarchive').strip(), 'r')
-                for archive in f:
-                    l_archive['archive'].append(archive[:-1])
-            except Exception:
-                self.log.info(Logs.fileline() + ' : ERROR ScriptListarchive impossible to open listarchive file')
-                return compose_ret(l_archive, Constants.cst_content_type_json, 500)"""
-
         self.log.info(Logs.fileline() + ' : TRACE ScriptListarchive ret=' + str(ret))  # l_archive=' + str(l_archive))
         try:
             details = {"media": media, "cmd": cmd, "ret": ret, "result": "CALLED"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "ScriptListarchive", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "E")
+            Audit.insertAudit(audit_user, "ScriptListarchive", "SETTING", None, "SUCCESS", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ScriptListarchive ERROR audit err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
@@ -828,10 +913,15 @@ class ScriptListmedia(Resource):
         else:
             type = ' '
 
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'user_pwd' not in args:
             self.log.error(Logs.fileline() + ' : ScriptListmedia ERROR args missing')
+            try:
+                details = {"reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "ScriptListmedia", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ScriptListmedia ERROR audit args missing err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 400)
 
         os.environ['LABBOOK_USER_PWD'] = args['user_pwd']
@@ -842,29 +932,10 @@ class ScriptListmedia(Resource):
         self.log.error(Logs.fileline() + ' : ScriptListmedia cmd=' + cmd)
         ret = os.system(cmd)
 
-        """
-        l_media = {}
-
-        l_media['ret']   = ret
-        l_media['media'] = []
-
-        # read listmedia file
-        if ret == 0:
-            try:
-                # No encoding forced because script return list from system so its depend of encoding of operating system
-                f = open(os.path.join(Constants.cst_io, 'listmedia').strip(), 'r')
-                for media in f:
-                    l_media['media'].append(media[:-1])
-            except Exception:
-                self.log.info(Logs.fileline() + ' : ERROR ScriptListmedia impossible to open listmedia file')
-                return compose_ret(l_media, Constants.cst_content_type_json, 500)"""
-
         self.log.info(Logs.fileline() + ' : TRACE ScriptListmedia ret=' + str(ret))  # l_media=' + str(l_media))
         try:
             details = {"type": type, "cmd": cmd, "ret": ret, "result": "CALLED"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "ScriptListmedia", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "E")
+            Audit.insertAudit(audit_user, "ScriptListmedia", "SETTING", None, "SUCCESS", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ScriptListmedia ERROR audit err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
@@ -876,16 +947,14 @@ class ScriptProgbackup(Resource):
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'start_time' not in args or 'user_pwd' not in args:
             self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR args missing')
             try:
                 details = {"start_time": args.get('start_time') if args else None, "result": "ERROR",
                            "reason": "ARGS_MISSING"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "ScriptProgbackup", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "ScriptProgbackup", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR audit err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 400)
@@ -898,9 +967,7 @@ class ScriptProgbackup(Resource):
             self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR invalid start_time')
             try:
                 details = {"start_time": start_time, "result": "ERROR", "reason": "INVALID_START_TIME"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "ScriptProgbackup", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "ScriptProgbackup", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR audit err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 400)
@@ -913,9 +980,7 @@ class ScriptProgbackup(Resource):
             try:
                 details = {"start_time": start_time, "script_path": script_path, "result": "ERROR",
                            "reason": "SCRIPT_NOT_FOUND"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "ScriptProgbackup", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "ScriptProgbackup", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR audit err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 500)
@@ -946,9 +1011,7 @@ class ScriptProgbackup(Resource):
             try:
                 details = {"start_time": start_time, "script_path": script_path, "result": "ERROR",
                            "reason": "EXEC_FAILED", "err": str(exc)}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "ScriptProgbackup", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "ScriptProgbackup", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR audit err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 500)
@@ -959,9 +1022,7 @@ class ScriptProgbackup(Resource):
             try:
                 details = {"start_time": start_time, "script_path": script_path, "rc": result.returncode,
                            "result": "ERROR", "reason": "BAD_RC"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "ScriptProgbackup", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "ScriptProgbackup", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR audit err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 500)
@@ -977,9 +1038,7 @@ class ScriptProgbackup(Resource):
             try:
                 details = {"start_time": start_time, "start_time_db": start_time_db, "result": "ERROR",
                            "reason": "DB_EXCEPTION", "err": str(exc)}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "ScriptProgbackup", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "ScriptProgbackup", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR audit err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 500)
@@ -989,14 +1048,17 @@ class ScriptProgbackup(Resource):
             try:
                 details = {"start_time": start_time, "start_time_db": start_time_db, "result": "ERROR",
                            "reason": "DB_FALSY"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "ScriptProgbackup", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "ScriptProgbackup", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR audit err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + f" : ScriptProgbackup done rc=0 stdout_len={len(result.stdout or '')} stderr_len={len(result.stderr or '')}")
+        try:
+            details = {"start_time": start_time, "start_time_db": start_time_db, "result": "CALLED"}
+            Audit.insertAudit(audit_user, "ScriptProgbackup", "SETTING", None, "SUCCESS", details, "E")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ScriptProgbackup ERROR audit success err=' + str(err))
         return compose_ret('0', Constants.cst_content_type_json, 200)
 
 
@@ -1006,10 +1068,15 @@ class ScriptRestart(Resource):
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'pwd_user' not in args:
             self.log.error(Logs.fileline() + ' : ScriptRestart ERROR args missing')
+            try:
+                details = {"reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "ScriptRestart", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ScriptRestart ERROR audit args missing err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 400)
 
         os.environ['LABBOOK_USER_PWD'] = args['pwd_user']
@@ -1022,9 +1089,7 @@ class ScriptRestart(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ScriptRestart ret=' + str(ret))
         try:
             details = {"cmd": cmd, "ret": ret, "result": "CALLED"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "ScriptRestart", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "E")
+            Audit.insertAudit(audit_user, "ScriptRestart", "SETTING", None, "SUCCESS", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ScriptRestart ERROR audit err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
@@ -1036,10 +1101,15 @@ class ScriptRestore(Resource):
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'media' not in args or 'pwd_key' not in args or 'archive' not in args:
             self.log.error(Logs.fileline() + ' : ScriptRestore ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "ScriptRestore", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ScriptRestore ERROR audit args missing err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 400)
 
         media   = str(args['media'])
@@ -1056,9 +1126,7 @@ class ScriptRestore(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ScriptRestore ret=' + str(ret))
         try:
             details = {"media": media, "archive": archive, "cmd": cmd, "ret": ret, "result": "CALLED"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "ScriptRestore", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "E")
+            Audit.insertAudit(audit_user, "ScriptRestore", "SETTING", None, "SUCCESS", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ScriptRestore ERROR audit err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
@@ -1069,6 +1137,7 @@ class ScriptStatus(Resource):
 
     @require_oauth()
     def get(self, mode):
+        audit_user = request.oauth_user
         date_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         try:
@@ -1095,12 +1164,16 @@ class ScriptStatus(Resource):
 
             with open(path, 'r') as f:
                 for line in f:
-                    pass
-                last_line = line
+                    last_line = line
 
             if not last_line:
                 self.log.info(Logs.fileline() + ' : ERROR ScriptStatus impossible to open or read file, last line is empty')
                 ret = "WAIT;" + str(date_now) + ";Impossible to open or read file, last line is empty"
+                try:
+                    details = {"result": "SUCCESS", "action": "QUERY"}
+                    Audit.insertAudit(audit_user, "ScriptStatus", "SETTING", None, "SUCCESS", details, "R")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ScriptStatus ERROR audit success err=' + str(err))
                 return compose_ret(ret, Constants.cst_content_type_json, 200)
 
             ret = last_line[:-1]
@@ -1128,6 +1201,11 @@ class ScriptStatus(Resource):
                     return compose_ret(ret, Constants.cst_content_type_json, 200)
 
                 self.log.info(Logs.fileline() + ' : TRACE ScriptStatus l_media=' + str(l_media))
+                try:
+                    details = {"result": "SUCCESS", "action": "QUERY"}
+                    Audit.insertAudit(audit_user, "ScriptStatus", "SETTING", None, "SUCCESS", details, "R")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ScriptStatus ERROR audit success err=' + str(err))
                 return compose_ret(l_media, Constants.cst_content_type_json)
 
             elif mode == 'A' and ret.startswith('OK'):
@@ -1149,6 +1227,11 @@ class ScriptStatus(Resource):
                 except Exception:
                     self.log.info(Logs.fileline() + ' : ERROR ScriptStatus impossible to open listarchive file')
                     ret = "WAIT;" + str(date_now) + ";Impossible to read listarchive file"
+                    try:
+                        details = {"result": "SUCCESS", "action": "QUERY"}
+                        Audit.insertAudit(audit_user, "ScriptStatus", "SETTING", None, "SUCCESS", details, "R")
+                    except Exception as err:
+                        self.log.error(Logs.fileline() + ' : ScriptStatus ERROR audit success err=' + str(err))
                     return compose_ret(l_archive, Constants.cst_content_type_json, 200)
 
                 self.log.info(Logs.fileline() + ' : TRACE ScriptStatus l_archive=' + str(l_archive))
@@ -1161,6 +1244,11 @@ class ScriptStatus(Resource):
             return compose_ret(ret, Constants.cst_content_type_json, 200)  # 200 : dont want to stop poll in ihm
 
         self.log.info(Logs.fileline() + ' : TRACE ScriptStatus ret=' + str(ret))
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY"}
+            Audit.insertAudit(audit_user, "ScriptStatus", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ScriptStatus ERROR audit success err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
 
 
@@ -1169,6 +1257,7 @@ class TemplateList(Resource):
 
     @require_oauth()
     def get(self, type=''):
+        audit_user = request.oauth_user
         l_items = Setting.getTemplateList(type)
 
         if not l_items:
@@ -1181,6 +1270,11 @@ class TemplateList(Resource):
                     item[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE TemplateList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_items)}
+            Audit.insertAudit(audit_user, "TemplateList", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : TemplateList ERROR audit success err=' + str(err))
         return compose_ret(l_items, Constants.cst_content_type_json)
 
 
@@ -1189,10 +1283,16 @@ class TemplateDet(Resource):
 
     @require_oauth()
     def get(self, id_item):
+        audit_user = request.oauth_user
         item = Setting.getTemplate(id_item)
 
         if not item:
             self.log.error(Logs.fileline() + ' : ' + 'TemplateDet ERROR not found')
+            try:
+                details = {"id_item": int(id_item), "result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "TemplateDet", "SETTING", int(id_item), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : TemplateDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -1201,21 +1301,24 @@ class TemplateDet(Resource):
                 item[key] = ''
 
         self.log.info(Logs.fileline() + ' : TemplateDet id_item=' + str(id_item))
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "id_item": int(id_item)}
+            Audit.insertAudit(audit_user, "TemplateDet", "SETTING", int(id_item), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : TemplateDet ERROR audit success err=' + str(err))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self, id_item):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_item' not in args or 'tpl_name' not in args or 'tpl_type' not in args or \
            'tpl_default' not in args or 'tpl_file' not in args:
             self.log.error(Logs.fileline() + ' : TemplateDet ERROR args missing')
             try:
                 details = {"id_item": id_item, "result": "ERROR", "reason": "ARGS_MISSING"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "TemplateDet", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "TemplateDet", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : TemplateDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
@@ -1236,9 +1339,7 @@ class TemplateDet(Resource):
                 self.log.error(Logs.alert() + ' : TemplateDet ERROR update')
                 try:
                     details = {"id_item": id_item, "tpl_name": args['tpl_name'], "result": "ERROR", "action": "UPDATE"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "TemplateDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "U")
+                    Audit.insertAudit(audit_user, "TemplateDet", "SETTING", id_item, "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : TemplateDet ERROR audit update err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1255,9 +1356,7 @@ class TemplateDet(Resource):
                 self.log.error(Logs.alert() + ' : TemplateDet ERROR  insert')
                 try:
                     details = {"id_item": ret, "tpl_name": args['tpl_name'], "result": "ERROR", "action": "INSERT"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "TemplateDet", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "C")
+                    Audit.insertAudit(audit_user, "TemplateDet", "SETTING", None, "ERROR", details, "C")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : TemplateDet ERROR audit insert err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1268,9 +1367,7 @@ class TemplateDet(Resource):
         try:
             details = {"id_item": id_item, "tpl_name": args['tpl_name'], "result": "SUCCESS", "action": action}
             event_type = "C" if action == "INSERT" else "U"
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "TemplateDet", "SETTING", id_item, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), event_type)
+            Audit.insertAudit(audit_user, "TemplateDet", "SETTING", id_item, "SUCCESS", details, event_type)
         except Exception as err:
             self.log.error(Logs.fileline() + ' : TemplateDet ERROR audit success err=' + str(err))
         return compose_ret(id_item, Constants.cst_content_type_json)
@@ -1284,9 +1381,7 @@ class TemplateDet(Resource):
             self.log.error(Logs.fileline() + ' : TRACE TemplateDet delete ERROR')
             try:
                 details = {"id_item": id_item, "result": "ERROR", "action": "DELETE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "TemplateDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "D")
+                Audit.insertAudit(audit_user, "TemplateDet", "SETTING", id_item, "ERROR", details, "D")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : TemplateDet ERROR audit delete err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1294,9 +1389,7 @@ class TemplateDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE TemplateDet delete id_item=' + str(id_item))
         try:
             details = {"id_item": id_item, "result": "SUCCESS", "action": "DELETE"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "TemplateDet", "SETTING", id_item, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "D")
+            Audit.insertAudit(audit_user, "TemplateDet", "SETTING", id_item, "SUCCESS", details, "D")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : TemplateDet ERROR audit delete success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -1308,15 +1401,13 @@ class ZipCityAdd(Resource):
     @require_oauth()
     def post(self, filename):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if not args or 'id_user' not in args:
             self.log.error(Logs.fileline() + ' : ZipCityAdd ERROR args missing')
             try:
                 details = {"filename": filename, "result": "ERROR", "reason": "ARGS_MISSING"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "ZipCityAdd", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "ZipCityAdd", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : ZipCityAdd ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
@@ -1332,9 +1423,7 @@ class ZipCityAdd(Resource):
             self.log.error(Logs.fileline() + ' : TRACE ZipCityAdd ERROR file empty')
             try:
                 details = {"filename": filename, "result": "ERROR", "reason": "FILE_EMPTY"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "ZipCityAdd", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "ZipCityAdd", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : ZipCityAdd ERROR audit file empty err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1354,9 +1443,7 @@ class ZipCityAdd(Resource):
                     self.log.error(Logs.alert() + ' : ZipCityAdd ERROR insert')
                     try:
                         details = {"zip": zip_code, "city": city_name, "result": "ERROR", "action": "INSERT"}
-                        Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                          "ZipCityAdd", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                          json.dumps(details, default=str), "C")
+                        Audit.insertAudit(audit_user, "ZipCityAdd", "SETTING", None, "ERROR", details, "C")
                     except Exception as err:
                         self.log.error(Logs.fileline() + ' : ZipCityAdd ERROR audit insert err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1369,9 +1456,7 @@ class ZipCityAdd(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ZipCityAdd')
         try:
             details = {"filename": filename, "rows": len(l_rows), "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "ZipCityAdd", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "C")
+            Audit.insertAudit(audit_user, "ZipCityAdd", "SETTING", None, "SUCCESS", details, "C")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ZipCityAdd ERROR audit success err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
@@ -1383,15 +1468,13 @@ class ZipCityDelAll(Resource):
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if not args or 'id_user' not in args:
             self.log.error(Logs.fileline() + ' : ZipCityDelAll ERROR args missing')
             try:
                 details = {"result": "ERROR", "reason": "ARGS_MISSING"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "ZipCityDelAll", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "ZipCityDelAll", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : ZipCityDelAll ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
@@ -1402,9 +1485,7 @@ class ZipCityDelAll(Resource):
             self.log.error(Logs.fileline() + ' : TRACE ZipCityDelAll truncate ERROR')
             try:
                 details = {"result": "ERROR", "action": "DELETE_ALL"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "ZipCityDelAll", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "D")
+                Audit.insertAudit(audit_user, "ZipCityDelAll", "SETTING", None, "ERROR", details, "D")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : ZipCityDelAll ERROR audit delete err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1417,9 +1498,7 @@ class ZipCityDelAll(Resource):
         self.log.info(Logs.fileline() + ' : TRACE ZipCityDelAll')
         try:
             details = {"result": "SUCCESS", "action": "DELETE_ALL"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "ZipCityDelAll", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "D")
+            Audit.insertAudit(audit_user, "ZipCityDelAll", "SETTING", None, "SUCCESS", details, "D")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ZipCityDelAll ERROR audit success err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
@@ -1430,10 +1509,16 @@ class ZipCityDet(Resource):
 
     @require_oauth()
     def get(self, id_item):
+        audit_user = request.oauth_user
         item = Setting.getZipCity(id_item)
 
         if not item:
             self.log.error(Logs.fileline() + ' : ' + 'ZipCityDet ERROR not found')
+            try:
+                details = {"id_item": int(id_item), "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "ZipCityDet", "SETTING", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ZipCityDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -1442,6 +1527,11 @@ class ZipCityDet(Resource):
                 item[key] = ''
 
         self.log.info(Logs.fileline() + ' : ZipCityDet id_item=' + str(id_item))
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY"}
+            Audit.insertAudit(audit_user, "ZipCityDet", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ZipCityDet ERROR audit success err=' + str(err))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
 
@@ -1450,10 +1540,8 @@ class ZipCityList(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
-
-        if not args:
-            args = {}
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         l_items = Setting.getZipCityList(args)
 
@@ -1467,6 +1555,11 @@ class ZipCityList(Resource):
                     item[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE ZipCityList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_items)}
+            Audit.insertAudit(audit_user, "ZipCityList", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ZipCityList ERROR audit success err=' + str(err))
         return compose_ret(l_items, Constants.cst_content_type_json)
 
 
@@ -1475,7 +1568,8 @@ class ZipCitySearch(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         l_zipcity = Setting.getZipCitySearch(args['term'])
 
@@ -1483,6 +1577,11 @@ class ZipCitySearch(Resource):
             self.log.error(Logs.fileline() + ' : TRACE ZipCitySearch not found')
 
         self.log.info(Logs.fileline() + ' : TRACE ZipCitySearch')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY"}
+            Audit.insertAudit(audit_user, "ZipCitySearch", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ZipCitySearch ERROR audit success err=' + str(err))
         return compose_ret(l_zipcity, Constants.cst_content_type_json)
 
 
@@ -1491,10 +1590,16 @@ class SettingStock(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         setting = Setting.getStockSetting()
 
         if not setting:
             self.log.error(Logs.fileline() + ' : ERROR SettingStock not found')
+            try:
+                details = {"reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingStock", "SETTING", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingStock ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -1503,16 +1608,26 @@ class SettingStock(Resource):
                 setting[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE SettingStock')
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW"}
+            Audit.insertAudit(audit_user, "SettingStock", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingStock ERROR audit success err=' + str(err))
         return compose_ret(setting, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_owner' not in args or 'expir_warning' not in args or 'expir_alert' not in args or \
            'list_local' not in args:
             self.log.error(Logs.fileline() + ' : SettingStock ERROR args missing')
+            try:
+                details = {"reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "SettingStock", "SETTING", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingStock ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Setting.updateStockSetting(id_owner=args['id_owner'],
@@ -1523,9 +1638,7 @@ class SettingStock(Resource):
             self.log.error(Logs.alert() + ' : SettingStock ERROR update')
             try:
                 details = {"id_owner": args['id_owner'], "result": "ERROR", "action": "UPDATE_STOCK"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingStock", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "U")
+                Audit.insertAudit(audit_user, "SettingStock", "SETTING", None, "ERROR", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingStock ERROR audit err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1552,9 +1665,7 @@ class SettingStock(Resource):
                         details = {"id_owner": args['id_owner'], "prl_ser": local['prl_ser'],
                                    "prl_rank": local['prl_rank'], "prl_name": name, "result": "ERROR", "action": action}
                         event_type = "C" if action == "INSERT" else "U"
-                        Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                          "SettingStock", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                          json.dumps(details, default=str), event_type)
+                        Audit.insertAudit(audit_user, "SettingStock", "SETTING", None, "ERROR", details, event_type)
                     except Exception as err:
                         self.log.error(Logs.fileline() + ' : SettingStock ERROR audit err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1574,9 +1685,7 @@ class SettingStock(Resource):
                         try:
                             details = {"id_owner": args['id_owner'], "result": "ERROR", "action": "DELETE",
                                        "prl_ser": db_local['prl_ser']}
-                            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                              "SettingStock", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                              json.dumps(details, default=str), "D")
+                            Audit.insertAudit(audit_user, "SettingStock", "SETTING", None, "ERROR", details, "D")
                         except Exception as err:
                             self.log.error(Logs.fileline() + ' : SettingStock ERROR audit err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1585,9 +1694,7 @@ class SettingStock(Resource):
         try:
             details = {"id_owner": args['id_owner'], "result": "SUCCESS", "action": "UPDATE",
                        "local_count": len(args['list_local'])}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingStock", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "SettingStock", "SETTING", None, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingStock ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -1598,6 +1705,7 @@ class SettingFormList(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_items = Setting.getSettingFormList()
 
         if not l_items:
@@ -1614,6 +1722,11 @@ class SettingFormList(Resource):
                     item[key] = _(item[key].strip())
 
         self.log.info(Logs.fileline() + ' : TRACE SettingFormList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY"}
+            Audit.insertAudit(audit_user, "SettingFormList", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingFormList ERROR audit success err=' + str(err))
         return compose_ret(l_items, Constants.cst_content_type_json)
 
 
@@ -1623,10 +1736,15 @@ class SettingFormDet(Resource):
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_owner' not in args or 'ref' not in args or 'stat' not in args:
             self.log.error(Logs.fileline() + ' : SettingFormDet ERROR args missing')
+            try:
+                details = {"reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "SettingFormDet", "SETTING", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingFormDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Setting.updateFormSetting(ref=args['ref'],
@@ -1636,9 +1754,7 @@ class SettingFormDet(Resource):
             self.log.error(Logs.alert() + ' : SettingFormDet ERROR update')
             try:
                 details = {"ref": args['ref'], "stat": args['stat'], "result": "ERROR", "action": "UPDATE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingFormDet", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "U")
+                Audit.insertAudit(audit_user, "SettingFormDet", "SETTING", None, "ERROR", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingFormDet ERROR audit err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1646,9 +1762,7 @@ class SettingFormDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingFormDet')
         try:
             details = {"ref": args['ref'], "stat": args['stat'], "result": "SUCCESS", "action": "UPDATE"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingFormDet", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "SettingFormDet", "SETTING", None, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingFormDet ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -1659,10 +1773,16 @@ class SettingManual(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_datas = Setting.getManualSetting()
 
         if not l_datas:
             self.log.error(Logs.fileline() + ' : ' + 'SettingManual ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingManual", "SETTING", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingManual ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         for data in l_datas:
@@ -1672,15 +1792,25 @@ class SettingManual(Resource):
                     data[key] = ''
 
         self.log.info(Logs.fileline() + ' : SettingManual')
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW"}
+            Audit.insertAudit(audit_user, "SettingManual", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingManual ERROR audit success err=' + str(err))
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'list_val' not in args:
             self.log.error(Logs.fileline() + ' : SettingManual ERROR args missing')
+            try:
+                details = {"reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "SettingManual", "SETTING", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingManual ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         l_manuals = Setting.getManualSetting()
@@ -1703,9 +1833,7 @@ class SettingManual(Resource):
                 try:
                     details = {"mas_ser": val['mas_ser'], "result": "ERROR", "action": action}
                     event_type = "C" if action == "INSERT" else "U"
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingManual", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), event_type)
+                    Audit.insertAudit(audit_user, "SettingManual", "SETTING", None, "ERROR", details, event_type)
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingManual ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1724,9 +1852,7 @@ class SettingManual(Resource):
                     self.log.info(Logs.fileline() + ' : TRACE SettingManual ERROR deleteManual')
                     try:
                         details = {"mas_ser": db_val['mas_ser'], "result": "ERROR", "action": "DELETE"}
-                        Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                          "SettingManual", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                          json.dumps(details, default=str), "D")
+                        Audit.insertAudit(audit_user, "SettingManual", "SETTING", None, "ERROR", details, "D")
                     except Exception as err:
                         self.log.error(Logs.fileline() + ' : SettingManual ERROR audit err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1734,9 +1860,7 @@ class SettingManual(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingManual')
         try:
             details = {"count": len(args['list_val']), "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingManual", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "SettingManual", "SETTING", None, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingManual ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -1747,10 +1871,16 @@ class SettingManualCat(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_datas = Setting.getManualCategory()
 
         if not l_datas:
             self.log.error(Logs.fileline() + ' : ' + 'SettingManualCat ERROR not found')
+            try:
+                details = {"reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingManualCat", "SETTING", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingManualCat ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         for data in l_datas:
@@ -1760,6 +1890,11 @@ class SettingManualCat(Resource):
                     data[key] = ''
 
         self.log.info(Logs.fileline() + ' : SettingManualCat')
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW"}
+            Audit.insertAudit(audit_user, "SettingManualCat", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingManualCat ERROR audit success err=' + str(err))
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
 
@@ -1768,6 +1903,7 @@ class SettingDHIS2List(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_items = Setting.getDHIS2List()
 
         if not l_items:
@@ -1780,6 +1916,11 @@ class SettingDHIS2List(Resource):
                     item[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE SettingDHIS2List')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY"}
+            Audit.insertAudit(audit_user, "SettingDHIS2List", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingDHIS2List ERROR audit success err=' + str(err))
         return compose_ret(l_items, Constants.cst_content_type_json)
 
 
@@ -1788,23 +1929,39 @@ class SettingDHIS2Det(Resource):
 
     @require_oauth()
     def get(self, id_item):
+        audit_user = request.oauth_user
         item = Setting.getDHIS2Det(id_item)
 
         if not item:
             self.log.error(Logs.fileline() + ' : ERROR SettingDHIS2Det not found')
+            try:
+                details = {"id_item": int(id_item), "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingDHIS2Det", "SETTING", int(id_item), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingDHIS2Det ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         self.log.info(Logs.fileline() + ' : TRACE SettingDHIS2Det')
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "id_item": int(id_item)}
+            Audit.insertAudit(audit_user, "SettingDHIS2Det", "SETTING", int(id_item), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingDHIS2Det ERROR audit success err=' + str(err))
         return compose_ret(item, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self, id_item):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_user' not in args or 'name' not in args or 'login' not in args or 'pwd' not in args or \
            'url' not in args or 'default' not in args:
             self.log.error(Logs.fileline() + ' : SettingDHIS2Det ERROR args missing')
+            try:
+                details = {"id_item": int(id_item), "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "SettingDHIS2Det", "SETTING", int(id_item), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingDHIS2Det ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         action = "UPDATE" if id_item > 0 else "INSERT"
@@ -1828,9 +1985,7 @@ class SettingDHIS2Det(Resource):
                 try:
                     details = {"id_item": id_item, "id_user": args['id_user'], "name": args['name'],
                                "result": "ERROR", "action": "UPDATE"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingDHIS2Det", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "U")
+                    Audit.insertAudit(audit_user, "SettingDHIS2Det", "SETTING", id_item, "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingDHIS2Det ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1852,9 +2007,7 @@ class SettingDHIS2Det(Resource):
                 try:
                     details = {"id_item": ret, "id_user": args['id_user'], "name": args['name'],
                                "result": "ERROR", "action": "INSERT"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingDHIS2Det", "SETTING", ret, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "C")
+                    Audit.insertAudit(audit_user, "SettingDHIS2Det", "SETTING", ret, "ERROR", details, "C")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingDHIS2Det ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1866,9 +2019,7 @@ class SettingDHIS2Det(Resource):
             details = {"id_item": id_item, "id_user": args['id_user'], "name": args['name'], "result": "SUCCESS",
                        "action": action}
             event_type = "C" if action == "INSERT" else "U"
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingDHIS2Det", "SETTING", id_item, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), event_type)
+            Audit.insertAudit(audit_user, "SettingDHIS2Det", "SETTING", id_item, "SUCCESS", details, event_type)
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingDHIS2Det ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -1882,9 +2033,7 @@ class SettingDHIS2Det(Resource):
             self.log.error(Logs.fileline() + ' : TRACE SettingDHIS2Det delete ERROR')
             try:
                 details = {"id_item": id_item, "result": "ERROR", "action": "DELETE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingDHIS2Det", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "D")
+                Audit.insertAudit(audit_user, "SettingDHIS2Det", "SETTING", id_item, "ERROR", details, "D")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingDHIS2Det ERROR audit err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1892,9 +2041,7 @@ class SettingDHIS2Det(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingDHIS2Det delete id_item=' + str(id_item))
         try:
             details = {"id_item": id_item, "result": "SUCCESS", "action": "DELETE"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingDHIS2Det", "SETTING", id_item, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "D")
+            Audit.insertAudit(audit_user, "SettingDHIS2Det", "SETTING", id_item, "SUCCESS", details, "D")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingDHIS2Det ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -1905,6 +2052,7 @@ class SettingSendMethodList(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_items = Setting.getSendingMethodList()
 
         if not l_items:
@@ -1920,6 +2068,11 @@ class SettingSendMethodList(Resource):
                 item['sdi_date'] = datetime.strftime(item['sdi_date'], '%Y-%m-%d')
 
         self.log.info(Logs.fileline() + ' : TRACE SettingSendMethodList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_items)}
+            Audit.insertAudit(audit_user, "SettingSendMethodList", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingSendMethodList ERROR audit success err=' + str(err))
         return compose_ret(l_items, Constants.cst_content_type_json)
 
 
@@ -1928,10 +2081,16 @@ class SettingSendMethodDet(Resource):
 
     @require_oauth()
     def get(self, type, id_item):
+        audit_user = request.oauth_user
         item = Setting.getSendingMethodDet(type, id_item)
 
         if not item:
             self.log.error(Logs.fileline() + ' : ERROR SettingSendMethodDet not found')
+            try:
+                details = {"type": str(type), "id_item": int(id_item), "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingSendMethodDet", "SETTING", int(id_item), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingSendMethodDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -1944,21 +2103,24 @@ class SettingSendMethodDet(Resource):
                 item[key] = value.strftime('%Y-%m-%d')
 
         self.log.info(Logs.fileline() + ' : TRACE SettingSendMethodDet')
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "type": type, "id_item": int(id_item)}
+            Audit.insertAudit(audit_user, "SettingSendMethodDet", "SETTING", int(id_item), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingSendMethodDet ERROR audit success err=' + str(err))
         return compose_ret(item, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self, type, id_item):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'sdi_type' not in args or 'sdi_name' not in args or 'sdi_default' not in args:
             self.log.error(Logs.fileline() + ' : SettingSendMethodDet ERROR args missing')
             try:
                 details = {"id_item": id_item, "sdi_type": args.get('sdi_type') if isinstance(args, dict) else None,
                            "result": "ERROR", "reason": "ARGS_MISSING"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingSendMethodDet", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "SettingSendMethodDet", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingSendMethodDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
@@ -1976,9 +2138,7 @@ class SettingSendMethodDet(Resource):
                 try:
                     details = {"id_item": id_item, "sdi_type": args['sdi_type'], "sdi_name": args['sdi_name'],
                                "result": "ERROR", "action": "UPDATE"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingSendMethodDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "U")
+                    Audit.insertAudit(audit_user, "SettingSendMethodDet", "SETTING", id_item, "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingSendMethodDet ERROR audit update err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1994,9 +2154,7 @@ class SettingSendMethodDet(Resource):
                 try:
                     details = {"id_item": ret, "sdi_type": args['sdi_type'], "sdi_name": args['sdi_name'],
                                "result": "ERROR", "action": "INSERT"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingSendMethodDet", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "C")
+                    Audit.insertAudit(audit_user, "SettingSendMethodDet", "SETTING", None, "ERROR", details, "C")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingSendMethodDet ERROR audit insert err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -2008,9 +2166,7 @@ class SettingSendMethodDet(Resource):
             details = {"id_item": id_item, "sdi_type": args['sdi_type'], "sdi_name": args['sdi_name'],
                        "result": "SUCCESS", "action": action}
             event_type = "C" if action == "INSERT" else "U"
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingSendMethodDet", "SETTING", id_item, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), event_type)
+            Audit.insertAudit(audit_user, "SettingSendMethodDet", "SETTING", id_item, "SUCCESS", details, event_type)
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingSendMethodDet ERROR audit success err=' + str(err))
         return compose_ret(id_item, Constants.cst_content_type_json)
@@ -2024,9 +2180,7 @@ class SettingSendMethodDet(Resource):
             self.log.error(Logs.fileline() + ' : TRACE SettingSendMethodDet delete ERROR')
             try:
                 details = {"id_item": id_item, "result": "ERROR", "action": "DELETE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingSendMethodDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "D")
+                Audit.insertAudit(audit_user, "SettingSendMethodDet", "SETTING", id_item, "ERROR", details, "D")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingSendMethodDet ERROR audit delete err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -2034,9 +2188,7 @@ class SettingSendMethodDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingSendMethodDet delete id_item=' + str(id_item))
         try:
             details = {"id_item": id_item, "result": "SUCCESS", "action": "DELETE"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingSendMethodDet", "SETTING", id_item, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "D")
+            Audit.insertAudit(audit_user, "SettingSendMethodDet", "SETTING", id_item, "SUCCESS", details, "D")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingSendMethodDet ERROR audit delete success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -2058,16 +2210,13 @@ class SettingSendMethodTest(Resource):
         elif type == 'W':
             ok, msg = Setting.testWhatsappMethod(id_item, to)
         else:
-            return compose_ret({'error': 'Test not available for this type'},
-                               Constants.cst_content_type_json, 400)
+            return compose_ret({'error': 'Test not available for this type'}, Constants.cst_content_type_json, 400)
 
         if ok:
             self.log.info(Logs.fileline() + f' : {type} test OK for id={id_item}')
             try:
                 details = {"id_item": id_item, "type": type, "to": to, "result": "SUCCESS"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingSendMethodTest", "SETTING", id_item, Various.get_client_ip(), "SUCCESS",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "SettingSendMethodTest", "SETTING", id_item, "SUCCESS", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingSendMethodTest ERROR audit success err=' + str(err))
             return compose_ret({'message': msg}, Constants.cst_content_type_json)
@@ -2075,9 +2224,7 @@ class SettingSendMethodTest(Resource):
             self.log.error(Logs.fileline() + f' : {type} test FAIL for id={id_item} -> {msg}')
             try:
                 details = {"id_item": id_item, "type": type, "to": to, "result": "ERROR", "reason": msg}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingSendMethodTest", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "SettingSendMethodTest", "SETTING", id_item, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingSendMethodTest ERROR audit fail err=' + str(err))
             return compose_ret({'error': msg}, Constants.cst_content_type_json, 400)
@@ -2088,6 +2235,7 @@ class SettingSendModelList(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_items = Setting.getSendingModelList()
 
         if not l_items:
@@ -2103,6 +2251,11 @@ class SettingSendModelList(Resource):
                 item['mdl_date'] = datetime.strftime(item['mdl_date'], '%Y-%m-%d')
 
         self.log.info(Logs.fileline() + ' : TRACE SettingSendModelList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_items)}
+            Audit.insertAudit(audit_user, "SettingSendModelList", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingSendModelList ERROR audit success err=' + str(err))
         return compose_ret(l_items, Constants.cst_content_type_json)
 
 
@@ -2111,6 +2264,7 @@ class SettingSendModelDet(Resource):
 
     @require_oauth()
     def get(self, type, id_item):
+        audit_user = request.oauth_user
         item = Setting.getSendingModelDet(type, id_item)
 
         if not item:
@@ -2125,20 +2279,23 @@ class SettingSendModelDet(Resource):
                 item[key] = value.strftime('%Y-%m-%d')
 
         self.log.info(Logs.fileline() + ' : TRACE SettingSendModelDet')
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "id_item": int(id_item)}
+            Audit.insertAudit(audit_user, "SettingSendModelDet", "SETTING", int(id_item), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingSendModelDet ERROR audit success err=' + str(err))
         return compose_ret(item, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self, type, id_item):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'mdl_type' not in args or 'mdl_displayname' not in args or 'mdl_default' not in args:
             self.log.error(Logs.fileline() + ' : SettingSendModelDet ERROR args missing')
             try:
                 details = {"id_item": id_item, "type": type, "result": "ERROR", "reason": "ARGS_MISSING"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingSendModelDet", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "SettingSendModelDet", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingSendModelDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
@@ -2157,9 +2314,7 @@ class SettingSendModelDet(Resource):
                 try:
                     details = {"id_item": id_item, "type": type, "mdl_displayname": args.get('mdl_displayname'),
                                "result": "ERROR", "action": "UPDATE"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingSendModelDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "U")
+                    Audit.insertAudit(audit_user, "SettingSendModelDet", "SETTING", id_item, "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingSendModelDet ERROR audit update err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -2174,9 +2329,7 @@ class SettingSendModelDet(Resource):
                 try:
                     details = {"id_item": ret, "type": type, "mdl_displayname": args.get('mdl_displayname'),
                                "result": "ERROR", "action": "INSERT"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingSendModelDet", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "C")
+                    Audit.insertAudit(audit_user, "SettingSendModelDet", "SETTING", None, "ERROR", details, "C")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingSendModelDet ERROR audit insert err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -2189,9 +2342,7 @@ class SettingSendModelDet(Resource):
             details = {"id_item": ret_id, "type": type, "mdl_displayname": args.get('mdl_displayname'),
                        "result": "SUCCESS", "action": action}
             event_type = "C" if action == "INSERT" else "U"
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingSendModelDet", "SETTING", ret_id, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), event_type)
+            Audit.insertAudit(audit_user, "SettingSendModelDet", "SETTING", ret_id, "SUCCESS", details, event_type)
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingSendModelDet ERROR audit success err=' + str(err))
         return compose_ret(id_item, Constants.cst_content_type_json)
@@ -2205,9 +2356,7 @@ class SettingSendModelDet(Resource):
             self.log.error(Logs.fileline() + ' : TRACE SettingSendModelDet delete ERROR')
             try:
                 details = {"id_item": id_item, "type": type, "result": "ERROR", "action": "DELETE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingSendModelDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "D")
+                Audit.insertAudit(audit_user, "SettingSendModelDet", "SETTING", id_item, "ERROR", details, "D")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingSendModelDet ERROR audit delete err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -2215,9 +2364,7 @@ class SettingSendModelDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE SettingSendModelDet delete id_item=' + str(id_item))
         try:
             details = {"id_item": id_item, "type": type, "result": "SUCCESS", "action": "DELETE"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingSendModelDet", "SETTING", id_item, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "D")
+            Audit.insertAudit(audit_user, "SettingSendModelDet", "SETTING", id_item, "SUCCESS", details, "D")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingSendModelDet ERROR audit delete success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -2237,9 +2384,7 @@ class SettingSendModelTest(Resource):
             if not to:
                 try:
                     details = {"mdl_ser": mdl_ser, "type": type, "result": "ERROR", "reason": "MISSING_RECIPIENT"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingSendModelTest", "SETTING", mdl_ser, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "E")
+                    Audit.insertAudit(audit_user, "SettingSendModelTest", "SETTING", mdl_ser, "ERROR", details, "E")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingSendModelTest ERROR audit missing recipient err=' + str(err))
                 return compose_ret({'error': 'missing recipient'}, Constants.cst_content_type_json, 400)
@@ -2249,9 +2394,7 @@ class SettingSendModelTest(Resource):
             if not model:
                 try:
                     details = {"mdl_ser": mdl_ser, "type": type, "result": "ERROR", "reason": "MODEL_NOT_FOUND"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingSendModelTest", "SETTING", mdl_ser, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "E")
+                    Audit.insertAudit(audit_user, "SettingSendModelTest", "SETTING", mdl_ser, "ERROR", details, "E")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingSendModelTest ERROR audit model not found err=' + str(err))
                 return compose_ret({'error': 'model not found'}, Constants.cst_content_type_json, 404)
@@ -2261,9 +2404,7 @@ class SettingSendModelTest(Resource):
             if not method_id:
                 try:
                     details = {"mdl_ser": mdl_ser, "type": type, "result": "ERROR", "reason": "NO_METHOD_CONFIGURED"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingSendModelTest", "SETTING", mdl_ser, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "E")
+                    Audit.insertAudit(audit_user, "SettingSendModelTest", "SETTING", mdl_ser, "ERROR", details, "E")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingSendModelTest ERROR audit no method configured err=' + str(err))
                 return compose_ret({'error': 'no sending method configured for this type'}, Constants.cst_content_type_json, 412)
@@ -2293,9 +2434,7 @@ class SettingSendModelTest(Resource):
                 try:
                     details = {"mdl_ser": mdl_ser, "type": type, "method_id": method_id, "to": to,
                                "result": "ERROR", "reason": "INVALID_TYPE", "action": "TEST"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingSendModelTest", "SETTING", mdl_ser, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "E")
+                    Audit.insertAudit(audit_user, "SettingSendModelTest", "SETTING", mdl_ser, "ERROR", details, "E")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingSendModelTest ERROR audit success err=' + str(err))
                 return compose_ret({'error': 'invalid type'}, Constants.cst_content_type_json, 400)
@@ -2304,9 +2443,7 @@ class SettingSendModelTest(Resource):
                 try:
                     details = {"mdl_ser": mdl_ser, "type": type, "method_id": method_id, "to": to,
                                "result": "SUCCESS", "action": "TEST"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingSendModelTest", "SETTING", mdl_ser, Various.get_client_ip(), "SUCCESS",
-                                      json.dumps(details, default=str), "E")
+                    Audit.insertAudit(audit_user, "SettingSendModelTest", "SETTING", mdl_ser, "SUCCESS", details, "E")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingSendModelTest ERROR audit success err=' + str(err))
                 return compose_ret({'message': 'test sent'}, Constants.cst_content_type_json, 200)
@@ -2314,9 +2451,7 @@ class SettingSendModelTest(Resource):
                 try:
                     details = {"mdl_ser": mdl_ser, "type": type, "method_id": method_id, "to": to,
                                "result": "ERROR", "action": "TEST"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingSendModelTest", "SETTING", mdl_ser, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "E")
+                    Audit.insertAudit(audit_user, "SettingSendModelTest", "SETTING", mdl_ser, "ERROR", details, "E")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingSendModelTest ERROR audit send failed err=' + str(err))
                 return compose_ret({'error': 'send failed'}, Constants.cst_content_type_json, 502)
@@ -2325,9 +2460,7 @@ class SettingSendModelTest(Resource):
             self.log.error(Logs.fileline() + f' : ERROR model test, err={e}')
             try:
                 details = {"mdl_ser": mdl_ser, "type": type, "result": "ERROR", "reason": "EXCEPTION"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingSendModelTest", "SETTING", mdl_ser, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "SettingSendModelTest", "SETTING", mdl_ser, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingSendModelTest ERROR audit exception err=' + str(err))
             return compose_ret({'error': 'internal error'}, Constants.cst_content_type_json, 500)
@@ -2364,9 +2497,7 @@ class SettingSendReport(Resource):
             try:
                 details = {"method_id": method_id, "method_type": method_type, "template_id": template_id,
                            "recipient": recipient, "rec_num": rec_num, "pat_code": pat_code, "id_user": id_user, "result": "ERROR", "reason": "EXCEPTION"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingSendReport", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "SettingSendReport", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingSendReport ERROR audit exception err=' + str(err))
             return compose_ret({'error': "Erreur lors de l’envoi."}, Constants.cst_content_type_json, 500)
@@ -2377,9 +2508,7 @@ class SettingSendReport(Resource):
                 details = {"method_id": method_id, "method_type": method_type, "template_id": template_id,
                            "recipient": recipient, "rec_num": rec_num, "pat_code": pat_code, "id_user": id_user,
                            "result": "ERROR", "reason": "SEND_FAILED", "message": msg}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingSendReport", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "SettingSendReport", "SETTING", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingSendReport ERROR audit send failed err=' + str(err))
             return compose_ret({'error': msg or "Échec de l’envoi."}, Constants.cst_content_type_json, 502)
@@ -2390,9 +2519,7 @@ class SettingSendReport(Resource):
             details = {"method_id": method_id, "method_type": method_type, "template_id": template_id,
                        "recipient": recipient, "rec_num": rec_num, "pat_code": pat_code, "id_user": id_user,
                        "result": "SUCCESS", "reason": "SEND_OK"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingSendReport", "SETTING", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "E")
+            Audit.insertAudit(audit_user, "SettingSendReport", "SETTING", None, "SUCCESS", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingSendReport ERROR audit success err=' + str(err))
         return compose_ret({'message': "Envoi déclenché."}, Constants.cst_content_type_json, 200)
@@ -2406,6 +2533,7 @@ class SettingSendList(Resource):
         """
         Return a list of sending_event rows for the DataTable.
         """
+        audit_user = request.oauth_user
         args  = request.get_json(silent=True) or {}
         limit = args.get('limit') or 1000
 
@@ -2423,6 +2551,11 @@ class SettingSendList(Resource):
                     r[k] = ''
 
         self.log.info(Logs.fileline() + ' : SettingSendList count=' + str(len(rows)))
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(rows), "limit": int(limit)}
+            Audit.insertAudit(audit_user, "SettingSendList", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingSendList ERROR audit success err=' + str(err))
         return compose_ret(rows, Constants.cst_content_type_json, 200)
 
 
@@ -2446,9 +2579,7 @@ class SettingSendResend(Resource):
             try:
                 details = {"sde_ser": sde_ser, "id_user": id_user, "result": "ERROR", "reason": "EXCEPTION",
                            "message": str(e)}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingSendResend", "SETTING", sde_ser, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "SettingSendResend", "SETTING", sde_ser, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingSendResend ERROR audit exception err=' + str(err))
             return compose_ret({'error': "Erreur lors du réenvoi."}, Constants.cst_content_type_json, 500)
@@ -2458,9 +2589,7 @@ class SettingSendResend(Resource):
             try:
                 details = {"sde_ser": sde_ser, "id_user": id_user, "result": "ERROR", "reason": "RESEND_FAILED",
                            "message": msg}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingSendResend", "SETTING", sde_ser, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "SettingSendResend", "SETTING", sde_ser, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingSendResend ERROR audit failed err=' + str(err))
             return compose_ret({'error': msg or "Échec du réenvoi."}, Constants.cst_content_type_json, 502)
@@ -2468,9 +2597,7 @@ class SettingSendResend(Resource):
         self.log.info(Logs.fileline() + f' : SettingSendResend OK sde_ser={sde_ser} user={id_user}')
         try:
             details = {"sde_ser": sde_ser, "id_user": id_user, "result": "SUCCESS", "reason": "RESEND_OK"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingSendResend", "SETTING", sde_ser, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "E")
+            Audit.insertAudit(audit_user, "SettingSendResend", "SETTING", sde_ser, "SUCCESS", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingSendResend ERROR audit success err=' + str(err))
         return compose_ret({'message': "Réenvoi déclenché."}, Constants.cst_content_type_json, 200)
@@ -2481,6 +2608,7 @@ class SettingOauthList(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_items = Setting.getSettingOauthList()
 
         if not l_items:
@@ -2493,6 +2621,11 @@ class SettingOauthList(Resource):
                     item[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE SettingOauthList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_items)}
+            Audit.insertAudit(audit_user, "SettingOauthList", "SETTING", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingOauthList ERROR audit success err=' + str(err))
         return compose_ret(l_items, Constants.cst_content_type_json)
 
 
@@ -2501,10 +2634,16 @@ class SettingOauthDet(Resource):
 
     @require_oauth()
     def get(self, id_item):
+        audit_user = request.oauth_user
         item = Setting.getSettingOauth(id_item)
 
         if not item:
             self.log.error(Logs.fileline() + ' : ' + 'SettingOauthDet ERROR not found')
+            try:
+                details = {"id_item": int(id_item), "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", int(id_item), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -2513,12 +2652,17 @@ class SettingOauthDet(Resource):
                 item[key] = ''
 
         self.log.info(Logs.fileline() + ' : SettingOauthDet id_item=' + str(id_item))
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "id_item": int(id_item)}
+            Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", int(id_item), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit success err=' + str(err))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self, id_item):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         # STEP 1: basic shape validation
         wanted = [
@@ -2547,9 +2691,7 @@ class SettingOauthDet(Resource):
                 self.log.error(Logs.fileline() + ' : SettingOauthDet update target not found')
                 try:
                     details = {"id_item": id_item, "result": "ERROR", "reason": "NOT_FOUND", "action": "UPDATE"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingOauthDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "E")
+                    Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", id_item, "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit not found err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 404)
@@ -2558,9 +2700,7 @@ class SettingOauthDet(Resource):
                 try:
                     details = {"id_item": id_item, "client_id": cur.get('oacl_client_id'), "result": "ERROR",
                                "reason": "FORBIDDEN_FE_CLIENT", "action": "UPDATE"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingOauthDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "E")
+                    Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", id_item, "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit forbidden err=' + str(err))
                 return compose_ret({'error': 'forbidden'}, Constants.cst_content_type_json, 403)
@@ -2577,9 +2717,7 @@ class SettingOauthDet(Resource):
                 try:
                     details = {"id_item": id_item, "client_id": params.get('oacl_client_id'), "result": "ERROR",
                                "reason": "UPDATE_FAILED", "action": "UPDATE"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "SettingOauthDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "U")
+                    Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", id_item, "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit update err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -2588,9 +2726,7 @@ class SettingOauthDet(Resource):
             try:
                 details = {"id_item": id_item, "client_id": params.get('oacl_client_id'), "result": "SUCCESS",
                            "action": "UPDATE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingOauthDet", "SETTING", id_item, Various.get_client_ip(), "SUCCESS",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", id_item, "SUCCESS", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit success update err=' + str(err))
             return compose_ret(id_item, Constants.cst_content_type_json, 200)
@@ -2605,9 +2741,7 @@ class SettingOauthDet(Resource):
             try:
                 details = {"id_item": new_id, "client_id": params.get('oacl_client_id'), "result": "ERROR",
                            "reason": "INSERT_FAILED", "action": "INSERT"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingOauthDet", "SETTING", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "C")
+                Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", None, "ERROR", details, "C")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit insert err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -2617,9 +2751,7 @@ class SettingOauthDet(Resource):
             details = {"id_item": new_id, "client_id": params.get('oacl_client_id'), "result": "SUCCESS",
                        "action": "INSERT"}
             event_type = "C" if action == "INSERT" else "U"
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingOauthDet", "SETTING", new_id, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), event_type)
+            Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", new_id, "SUCCESS", details, event_type)
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit success insert err=' + str(err))
         return compose_ret(new_id, Constants.cst_content_type_json, 200)
@@ -2632,9 +2764,7 @@ class SettingOauthDet(Resource):
         if not cur:
             try:
                 details = {"id_item": id_item, "result": "ERROR", "reason": "NOT_FOUND", "action": "DELETE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingOauthDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "D")
+                Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", id_item, "ERROR", details, "D")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit not found delete err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
@@ -2644,9 +2774,7 @@ class SettingOauthDet(Resource):
             try:
                 details = {"id_item": id_item, "client_id": cur.get('oacl_client_id'), "result": "ERROR",
                            "reason": "FORBIDDEN_FE_CLIENT", "action": "DELETE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingOauthDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "D")
+                Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", id_item, "ERROR", details, "D")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit forbidden delete err=' + str(err))
             return compose_ret({'error': 'forbidden'}, Constants.cst_content_type_json, 403)
@@ -2657,9 +2785,7 @@ class SettingOauthDet(Resource):
             try:
                 details = {"id_item": id_item, "client_id": cur.get('oacl_client_id'), "result": "ERROR",
                            "reason": "DELETE_FAILED", "action": "DELETE"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "SettingOauthDet", "SETTING", id_item, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "D")
+                Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", id_item, "ERROR", details, "D")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit delete err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -2667,9 +2793,7 @@ class SettingOauthDet(Resource):
         self.log.info(Logs.fileline() + ' : SettingOauthDet delete id=' + str(id_item))
         try:
             details = {"id_item": id_item, "client_id": cur.get('oacl_client_id'), "result": "SUCCESS", "action": "DELETE"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "SettingOauthDet", "SETTING", id_item, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "D")
+            Audit.insertAudit(audit_user, "SettingOauthDet", "SETTING", id_item, "SUCCESS", details, "D")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : SettingOauthDet ERROR audit success delete err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json, 200)

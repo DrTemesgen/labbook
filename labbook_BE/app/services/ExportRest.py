@@ -12,6 +12,7 @@ from io import StringIO
 
 from app.models.General import compose_ret
 from app.models.Constants import Constants
+from app.models.Audit import Audit
 from app.models.Various import Various
 from app.models.Export import Export
 from app.models.Report import Report
@@ -26,10 +27,16 @@ class ExportCSV(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'filename' not in args or 'csv_str' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ExportCSV ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["filename", "csv_str"]}
+                Audit.insertAudit(audit_user, "ExportCSV", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ExportCSV ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # write csv file
@@ -52,9 +59,19 @@ class ExportCSV(Resource):
         except Exception as err:
             # Log error and return failure
             self.log.error(Logs.fileline() + ' : ERROR post ExportCSV failed, err=%s', err)
-            return False
+            try:
+                details = {"result": "ERROR", "reason": "WRITE_FAILED", "filename": args.get('filename'), "error": str(err)}
+                Audit.insertAudit(audit_user, "ExportCSV", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : ExportCSV ERROR audit write failed err=' + str(err2))
+            return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE ExportCSV')
+        try:
+            details = {"result": "SUCCESS", "filename": args.get('filename')}
+            Audit.insertAudit(audit_user, "ExportCSV", "EXPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ExportCSV ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -63,11 +80,18 @@ class ExportDHIS2(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'date_beg' not in args or 'date_end' not in args or 'filename' not in args or 'id_user' not in args or \
            'period' not in args or 'rec_type' not in args or 'lite_filter' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING",
+                           "missing": ["date_beg", "date_end", "filename", "id_user", "period", "rec_type", "lite_filter"]}
+                Audit.insertAudit(audit_user, "ExportDHIS2", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ExportDHIS2 ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         period    = args['period']
@@ -82,6 +106,12 @@ class ExportDHIS2(Resource):
             date_end = datetime.strptime(args['date_end'], '%Y-%m-%d')
         except Exception as e:
             self.log.error(Logs.fileline() + f' : TRACE ExportDHIS2 ERROR bad dates: {e}')
+            try:
+                details = {"result": "ERROR", "reason": "BAD_DATES", "date_beg": args.get('date_beg'),
+                           "date_end": args.get('date_end'), "error": str(e)}
+                Audit.insertAudit(audit_user, "ExportDHIS2", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ExportDHIS2 ERROR audit bad dates err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 409)
 
         # build list of period
@@ -157,6 +187,11 @@ class ExportDHIS2(Resource):
 
         else:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR wrong period : ' + str(period))
+            try:
+                details = {"result": "ERROR", "reason": "WRONG_PERIOD", "period": str(period)}
+                Audit.insertAudit(audit_user, "ExportDHIS2", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ExportDHIS2 ERROR audit wrong period err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 409)
 
         # --- BUILD DATA ---
@@ -197,7 +232,7 @@ class ExportDHIS2(Resource):
                     l_data.append(data)
 
         elif filename == "LIST_EEQ":
-            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api LIST_EEQ')
+            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 LIST_EEQ')
 
             # Data headers
             l_data = [["period", "control name", "control date",  "supplier", "result date", "result", "comment"]]
@@ -222,7 +257,7 @@ class ExportDHIS2(Resource):
                     l_data.append(data)
 
         elif filename == "LIST_EQUIPMENT_FAILURE":
-            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api LIST_EQUIPMENT_FAILURE')
+            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 LIST_EQUIPMENT_FAILURE')
 
             l_data = [["period", "Equipment name", "Manufacturer name", "Supplier name", "Inventory number", "Date of failure", "Comment"]]
 
@@ -243,7 +278,7 @@ class ExportDHIS2(Resource):
                     l_data.append(data)
 
         elif filename == "LIST_STOCK_STATUS":
-            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api LIST_STOCK')
+            self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 LIST_STOCK')
 
             l_data = [["period", "product name", "Expiration status", "Quantity status"]]
 
@@ -274,6 +309,11 @@ class ExportDHIS2(Resource):
 
             if base_dir not in csv_path.parents:
                 self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR invalid input path')
+                try:
+                    details = {"result": "ERROR", "reason": "INVALID_INPUT_PATH", "filename": args.get('filename')}
+                    Audit.insertAudit(audit_user, "ExportDHIS2", "EXPORT", None, "ERROR", details, "R")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ExportDHIS2 ERROR audit invalid input path err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 400)
 
             with csv_path.open('r', encoding='utf-8', newline='') as csv_file:
@@ -282,6 +322,11 @@ class ExportDHIS2(Resource):
 
             if not l_rows or len(l_rows) < 2:
                 self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR spreadsheet empty')
+                try:
+                    details = {"result": "ERROR", "reason": "SPREADSHEET_EMPTY", "filename": args.get('filename')}
+                    Audit.insertAudit(audit_user, "ExportDHIS2", "EXPORT", None, "ERROR", details, "R")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ExportDHIS2 ERROR audit spreadsheet empty err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             l_cols = l_rows[0]  # keep first row to read l_cols of csv
@@ -293,9 +338,19 @@ class ExportDHIS2(Resource):
                 version = l_rows[1][idx_version]
                 if version not in ("v1", "v2", "v3"):
                     self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR spreadsheet wrong version :' + str(version))
+                    try:
+                        details = {"result": "ERROR", "reason": "WRONG_VERSION", "version": str(version), "filename": args.get('filename')}
+                        Audit.insertAudit(audit_user, "ExportDHIS2", "EXPORT", None, "ERROR", details, "R")
+                    except Exception as err:
+                        self.log.error(Logs.fileline() + ' : ExportDHIS2 ERROR audit wrong version err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 409)
             else:
                 self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR spreadsheet not found version')
+                try:
+                    details = {"result": "ERROR", "reason": "VERSION_NOT_FOUND"}
+                    Audit.insertAudit(audit_user, "ExportDHIS2", "EXPORT", None, "ERROR", details, "R")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ExportDHIS2 ERROR audit version not found err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 409)
 
             # Determine orgunit
@@ -438,6 +493,14 @@ class ExportDHIS2(Resource):
 
         # if no result to export
         if len(l_data) < 2:
+            try:
+                details = {"result": "ERROR", "reason": "NO_DATA",
+                           "date_beg": args.get('date_beg'), "date_end": args.get('date_end'),
+                           "filename": args.get('filename'), "period": args.get('period'),
+                           "rec_type": args.get('rec_type'), "lite_filter": args.get('lite_filter')}
+                Audit.insertAudit(audit_user, "ExportDHIS2", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ExportDHIS2 ERROR audit no data err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         try:
@@ -467,6 +530,11 @@ class ExportDHIS2(Resource):
             # Final guard: forbid escaping the base directory
             if base_dir not in outpath.parents:
                 self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR invalid output path')
+                try:
+                    details = {"result": "ERROR", "reason": "INVALID_OUTPUT_PATH", "outname": outname}
+                    Audit.insertAudit(audit_user, "ExportDHIS2", "EXPORT", None, "ERROR", details, "R")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ExportDHIS2 ERROR audit invalid output path err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 400)
 
             # Write CSV
@@ -476,9 +544,22 @@ class ExportDHIS2(Resource):
 
         except Exception as err:
             self.log.error(Logs.fileline() + ' : post ExportDHIS2 failed, err=%s', err)
-            return False
+            try:
+                details = {"result": "ERROR", "reason": "WRITE_FAILED", "error": str(err)}
+                Audit.insertAudit(audit_user, "ExportDHIS2", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : ExportDHIS2 ERROR audit write failed err=' + str(err2))
+            return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE ExportDHIS2')
+        try:
+            details = {"result": "SUCCESS",
+                       "date_beg": args.get('date_beg'), "date_end": args.get('date_end'),
+                       "filename": args.get('filename'), "period": args.get('period'),
+                       "rec_type": args.get('rec_type'), "lite_filter": args.get('lite_filter')}
+            Audit.insertAudit(audit_user, "ExportDHIS2", "EXPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ExportDHIS2 ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -487,12 +568,22 @@ class ExportDHIS2Api(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'date_beg' not in args or 'date_end' not in args or 'filename' not in args or 'id_user' not in args or \
            'period' not in args or 'rec_type' not in args or 'dhs_ser' not in args or 'dry_run' not in args or \
            'lite_filter' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api ERROR args missing')
+            try:
+                missing = []
+                for k in ["date_beg", "date_end", "filename", "id_user", "period", "rec_type", "dhs_ser", "dry_run", "lite_filter"]:
+                    if k not in args:
+                        missing.append(k)
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": missing}
+                Audit.insertAudit(audit_user, "ExportDHIS2Api", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ExportDHIS2Api ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         period   = args['period']
@@ -507,6 +598,11 @@ class ExportDHIS2Api(Resource):
             date_end = datetime.strptime(args['date_end'], '%Y-%m-%d')
         except Exception as e:
             self.log.error(Logs.fileline() + f' : TRACE ExportDHIS2 ERROR bad dates: {e}')
+            try:
+                details = {"result": "ERROR", "reason": "BAD_DATES"}
+                Audit.insertAudit(audit_user, "ExportDHIS2Api", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ExportDHIS2Api ERROR audit bad dates err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 409)
 
         # build list of period
@@ -574,6 +670,11 @@ class ExportDHIS2Api(Resource):
 
         else:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api ERROR wrong period : ' + str(period))
+            try:
+                details = {"result": "ERROR", "reason": "WRONG_PERIOD", "period": str(period)}
+                Audit.insertAudit(audit_user, "ExportDHIS2Api", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ExportDHIS2Api ERROR audit wrong period err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 409)
 
         # --- BUILD DATA ---
@@ -691,6 +792,11 @@ class ExportDHIS2Api(Resource):
 
             if base_dir not in csv_path.parents:
                 self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2 ERROR invalid input path')
+                try:
+                    details = {"result": "ERROR", "reason": "INVALID_INPUT_PATH"}
+                    Audit.insertAudit(audit_user, "ExportDHIS2Api", "EXPORT", None, "ERROR", details, "R")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ExportDHIS2Api ERROR audit invalid path err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 400)
 
             with csv_path.open('r', encoding='utf-8', newline='') as csv_file:
@@ -699,6 +805,11 @@ class ExportDHIS2Api(Resource):
 
             if not l_rows or len(l_rows) < 2:
                 self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api ERROR spreadsheet empty')
+                try:
+                    details = {"result": "ERROR", "reason": "SPREADSHEET_EMPTY"}
+                    Audit.insertAudit(audit_user, "ExportDHIS2Api", "EXPORT", None, "ERROR", details, "R")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ExportDHIS2Api ERROR audit spreadsheet empty err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             l_cols = l_rows[0]  # keep first row to read l_cols of csv
@@ -710,9 +821,19 @@ class ExportDHIS2Api(Resource):
                 version = l_rows[1][idx_version]
                 if version not in ("v1", "v2", "v3"):
                     self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api ERROR spreadsheet wrong version :' + str(version))
+                    try:
+                        details = {"result": "ERROR", "reason": "WRONG_VERSION", "version": str(version)}
+                        Audit.insertAudit(audit_user, "ExportDHIS2Api", "EXPORT", None, "ERROR", details, "R")
+                    except Exception as err:
+                        self.log.error(Logs.fileline() + ' : ExportDHIS2Api ERROR audit wrong version err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 409)
             else:
                 self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api ERROR spreadsheet not found version')
+                try:
+                    details = {"result": "ERROR", "reason": "VERSION_NOT_FOUND"}
+                    Audit.insertAudit(audit_user, "ExportDHIS2Api", "EXPORT", None, "ERROR", details, "R")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ExportDHIS2Api ERROR audit version not found err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 409)
 
             # Determine orgunit
@@ -854,6 +975,11 @@ class ExportDHIS2Api(Resource):
 
         if not api:
             self.log.error(Logs.fileline() + ' : TRACE ExportDHIS2Api ERROR api setting not found version')
+            try:
+                details = {"result": "ERROR", "reason": "API_SETTING_NOT_FOUND", "dhs_ser": args.get('dhs_ser')}
+                Audit.insertAudit(audit_user, "ExportDHIS2Api", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ExportDHIS2Api ERROR audit api setting not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 405)
 
         dry_run = ''
@@ -885,12 +1011,27 @@ class ExportDHIS2Api(Resource):
                 self.log.info(Logs.fileline() + ' : post ExportDHIS2Api requests OK resp = ' + str(resp.text))
             else:
                 self.log.error(Logs.fileline() + ' : post ExportDHIS2Api requests KO code:' + str(resp.status_code) + 'resp = ' + str(resp.text))
+                try:
+                    details = {"result": "ERROR", "reason": "DHIS2_API_ERROR", "status_code": resp.status_code}
+                    Audit.insertAudit(audit_user, "ExportDHIS2Api", "EXPORT", None, "ERROR", details, "R")
+                except Exception as err2:
+                    self.log.error(Logs.fileline() + ' : ExportDHIS2Api ERROR audit dhis2 api error err=' + str(err2))
                 return compose_ret(resp.text, Constants.cst_content_type_json, resp.status_code)
         except Exception as err:
             self.log.error(Logs.fileline() + ' : post ExportDHIS2Api requests post failed, err=%s', err)
+            try:
+                details = {"result": "ERROR", "reason": "WRITE_FAILED"}
+                Audit.insertAudit(audit_user, "ExportDHIS2Api", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : ExportDHIS2Api ERROR audit write failed err=' + str(err2))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE ExportDHIS2Api')
+        try:
+            details = {"result": "SUCCESS"}
+            Audit.insertAudit(audit_user, "ExportDHIS2Api", "EXPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ExportDHIS2Api ERROR audit success err=' + str(err))
         return compose_ret(resp.text, Constants.cst_content_type_json, resp.status_code)
 
 
@@ -899,10 +1040,16 @@ class ExportWhonet(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'date_beg' not in args or 'date_end' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ExportWhonet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["date_beg", "date_end"]}
+                Audit.insertAudit(audit_user, "ExportWhonet", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ExportWhonet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Data
@@ -1116,6 +1263,11 @@ class ExportWhonet(Resource):
 
         # if no result to export
         if len(l_data) < 2:
+            try:
+                details = {"result": "ERROR", "reason": "NO_DATA", "date_beg": args.get('date_beg'), "date_end": args.get('date_end')}
+                Audit.insertAudit(audit_user, "ExportWhonet", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ExportWhonet ERROR audit no data err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # write csv file
@@ -1138,7 +1290,18 @@ class ExportWhonet(Resource):
 
         except Exception as err:
             self.log.error(Logs.fileline() + ' : post ExportWhonet failed, err=%s', err)
-            return False
+            try:
+                details = {"result": "ERROR", "reason": "WRITE_FAILED", "error": str(err),
+                           "date_beg": args.get('date_beg'), "date_end": args.get('date_end'), "filename": safe_filename}
+                Audit.insertAudit(audit_user, "ExportWhonet", "EXPORT", None, "ERROR", details, "R")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : ExportWhonet ERROR audit write failed err=' + str(err2))
+            return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE ExportWhonet')
+        try:
+            details = {"result": "SUCCESS", "filename": safe_filename, "date_beg": args.get('date_beg'), "date_end": args.get('date_end')}
+            Audit.insertAudit(audit_user, "ExportWhonet", "EXPORT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ExportWhonet ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)

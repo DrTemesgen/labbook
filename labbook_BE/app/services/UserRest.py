@@ -5,7 +5,6 @@ import random
 import string
 import csv
 import os
-import json
 
 from datetime import datetime
 from flask import request
@@ -24,11 +23,16 @@ class UserAccess(Resource):
     log = logging.getLogger('log_services')
 
     def post(self):
-        args = request.get_json()
+        args = request.get_json() or {}
 
         # Check required fields
         if 'login' not in args or 'pwd' not in args:
             self.log.error(Logs.fileline() + ' : UserAccess ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(None, "UserAccess", "USER", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserAccess ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         login = args['login']
@@ -39,8 +43,7 @@ class UserAccess(Resource):
             self.log.error(Logs.fileline() + ' : UserAccess login not found')
             try:
                 details = {"login": login, "result": "ERROR", "reason": "LOGIN_NOT_FOUND"}
-                Audit.insertAudit(login, login, None, "UserLogin", "USER", None, Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit({"usr_login": login, "usr_display": login, "usr_role": None}, "UserAccess", "USER", None, "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserAccess ERROR audit UserLogin err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
@@ -59,9 +62,8 @@ class UserAccess(Resource):
             self.log.info(Logs.fileline() + ' : UserAccess authorized role=' + str(user['role_type']) + ' | login=' + str(login))
             try:
                 details = {"id_user": int(user["id_data"]), "login": login, "result": "SUCCESS"}
-                Audit.insertAudit(user["username"], user["username"], user["role_type"], "UserLogin", "USER",
-                                  int(user["id_data"]), Various.get_client_ip(), "SUCCESS",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit({"usr_login": user["username"], "usr_display": user["username"], "usr_role": user["role_type"]},
+                                  "UserAccess", "USER", int(user["id_data"]), "SUCCESS", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserAccess ERROR audit UserLogin SUCCESS err=' + str(err))
             return compose_ret(payload, Constants.cst_content_type_json)
@@ -71,9 +73,8 @@ class UserAccess(Resource):
             self.log.info(Logs.fileline() + ' : UserAccess not authorized ' + str(login))
             try:
                 details = {"login": login, "result": "ERROR", "reason": "BAD_PASSWORD"}
-                Audit.insertAudit(user["username"], user["username"], user["role_type"], "UserLogin", "USER",
-                                  int(user["id_data"]), Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "E")
+                Audit.insertAudit({"usr_login": user["username"], "usr_display": user["username"], "usr_role": user["role_type"]},
+                                  "UserAccess", "USER", int(user["id_data"]), "ERROR", details, "E")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserAccess ERROR audit UserLogin BAD_PASSWORD err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 401)
@@ -82,9 +83,8 @@ class UserAccess(Resource):
         self.log.error(Logs.fileline() + ' : UserAccess ERROR checkUserAccess')
         try:
             details = {"login": login, "result": "ERROR", "reason": "CHECK_ERROR"}
-            Audit.insertAudit(user["username"], user["username"], user["role_type"], "UserLogin", "USER",
-                              int(user["id_data"]), Various.get_client_ip(), "ERROR",
-                              json.dumps(details, default=str), "E")
+            Audit.insertAudit({"usr_login": user["username"], "usr_display": user["username"], "usr_role": user["role_type"]},
+                              "UserAccess", "USER", int(user["id_data"]), "ERROR", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserAccess ERROR audit UserLogin CHECK_ERROR err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json, 500)
@@ -95,11 +95,17 @@ class UserByLogin(Resource):
 
     @require_oauth()
     def get(self, login):
+        audit_user = request.oauth_user
         user = User.getUserByLogin(login)
 
         if not user:
             self.log.error(Logs.fileline() + ' : TRACE UserByLogin')
-            return compose_ret('', Constants.cst_content_type_json, 500)
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "login": str(login)}
+                Audit.insertAudit(audit_user, "UserByLogin", "USER", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserByLogin ERROR audit not found err=' + str(err))
+            return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
         for key, value in list(user.items()):
@@ -107,6 +113,11 @@ class UserByLogin(Resource):
                 user[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE UserByLogin')
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "login": login}
+            Audit.insertAudit(audit_user, "UserByLogin", "USER", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserByLogin ERROR audit success err=' + str(err))
         return compose_ret(user, Constants.cst_content_type_json)
 
 
@@ -115,11 +126,17 @@ class UserDet(Resource):
 
     @require_oauth()
     def get(self, id_user):
+        audit_user = request.oauth_user
         user = User.getUserDetails(id_user)
 
         if not user:
             self.log.error(Logs.fileline() + ' : TRACE UserDet no user')
-            return compose_ret('', Constants.cst_content_type_json, 500)
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "usr_ser": int(id_user)}
+                Audit.insertAudit(audit_user, "UserDet", "USER", int(id_user), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserDet ERROR audit not found err=' + str(err))
+            return compose_ret('', Constants.cst_content_type_json, 404)
 
         if user['birth']:
             user['birth'] = datetime.strftime(user['birth'], '%Y-%m-%d')
@@ -136,12 +153,17 @@ class UserDet(Resource):
                 user[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE UserDet')
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "usr_ser": int(id_user)}
+            Audit.insertAudit(audit_user, "UserDet", "USER", int(id_user), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserDet ERROR audit success err=' + str(err))
         return compose_ret(user, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self, id_user):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_user' not in args or 'login' not in args or 'cps' not in args or 'rpps' not in args or \
            'firstname' not in args or 'lastname' not in args or 'lang' not in args or 'email' not in args or \
@@ -150,12 +172,22 @@ class UserDet(Resource):
            'address' not in args or 'cv' not in args or 'diploma' not in args or 'training' not in args or \
            'comment' not in args or 'id_pres' not in args or 'role_type' not in args or 'role_pro' not in args:
             self.log.error(Logs.fileline() + ' : UserDet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "usr_ser": int(id_user)}
+                Audit.insertAudit(audit_user, "UserDet", "USER", int(id_user), "ERROR", details, "U" if id_user > 0 else "C")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # update user
         if id_user > 0:
             if 'stat' not in args:
                 self.log.error(Logs.fileline() + ' : UserDet ERROR args missing')
+                try:
+                    details = {"result": "ERROR", "reason": "ARGS_MISSING", "usr_ser": int(id_user), "missing": ["stat"]}
+                    Audit.insertAudit(audit_user, "UserDet", "USER", int(id_user), "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : UserDet ERROR audit args missing err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 400)
 
             # get login by id_user
@@ -163,7 +195,12 @@ class UserDet(Resource):
 
             if not user:
                 self.log.error(Logs.fileline() + ' : TRACE UserDet no user')
-                return compose_ret('', Constants.cst_content_type_json, 500)
+                try:
+                    details = {"result": "ERROR", "reason": "NOT_FOUND", "usr_ser": int(id_user)}
+                    Audit.insertAudit(audit_user, "UserDet", "USER", int(id_user), "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : UserDet ERROR audit not found err=' + str(err))
+                return compose_ret('', Constants.cst_content_type_json, 404)
 
             # update sigl_user_data
             ret = User.updateUser(id_data=id_user,
@@ -195,22 +232,28 @@ class UserDet(Resource):
             success = ret is not False
             status = "SUCCESS" if success else "ERROR"
 
-            try:
-                details = {"id_user": id_user, "login": user['username'], "result": status}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "UserUpdate", "USER", id_user, Various.get_client_ip(), status,
-                                  json.dumps(details, default=str), "U")
-            except Exception as err:
-                self.log.error(Logs.fileline() + ' : UserDet ERROR audit UserUpdate err=' + str(err))
-
             if not success:
                 self.log.info(Logs.fileline() + ' : TRACE UserDet ERROR update user')
+                try:
+                    details = {"id_user": id_user, "login": user['username'], "result": status,
+                               "reason": "UPDATE_FAILED" if not success else None}
+                    if details.get("reason") is None:
+                        details.pop("reason", None)
+                    Audit.insertAudit(audit_user, "UserDet", "USER", id_user, status, details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : UserDet ERROR audit UserDet err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         # insert new user
         else:
             if 'id_owner' not in args or 'password' not in args:
                 self.log.error(Logs.fileline() + ' : UserDet ERROR args missing')
+                try:
+                    details = {"result": "ERROR", "reason": "ARGS_MISSING", "usr_ser": int(id_user),
+                               "missing": ["id_owner", "password"]}
+                    Audit.insertAudit(audit_user, "UserDet", "USER", None, "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : UserDet ERROR audit args missing err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 400)
 
             if args['role_type'] == 'Z':
@@ -254,19 +297,28 @@ class UserDet(Resource):
             success = ret > 0
             status = "SUCCESS" if success else "ERROR"
 
-            try:
-                details = {"id_user": ret, "login": args['login'], "result": status}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "UserCreate", "USER", ret, Various.get_client_ip(), status,
-                                  json.dumps(details, default=str), "C")
-            except Exception as err:
-                self.log.error(Logs.fileline() + ' : UserDet ERROR audit UserCreate err=' + str(err))
-
             if not success:
                 self.log.error(Logs.alert() + ' : UserDet ERROR insert user')
+                try:
+                    details = {"id_user": ret, "login": args['login'], "result": status,
+                               "reason": "INSERT_FAILED" if not success else None}
+                    if details.get("reason") is None:
+                        details.pop("reason", None)
+                    Audit.insertAudit(audit_user, "UserDet", "USER", ret, status, details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : UserDet ERROR audit UserDet err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserDet id_user=' + str(id_user))
+        try:
+            event_type = "U" if id_user > 0 else "C"
+            details = {"result": "SUCCESS", "usr_ser": int(ret) if id_user <= 0 else int(id_user)}
+            if id_user > 0 and 'login' in args:
+                details["login"] = str(args.get('login'))
+            Audit.insertAudit(audit_user, "UserDet", "USER", int(ret) if id_user <= 0 else int(id_user), "SUCCESS",
+                              details, event_type)
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserDet ERROR audit success err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
 
 
@@ -276,7 +328,7 @@ class UserStaffDet(Resource):
     @require_oauth()
     def post(self, id_user):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_user' not in args or 'firstname' not in args or 'lastname' not in args or 'email' not in args or \
            'title' not in args or 'initial' not in args or 'birth' not in args or 'phone' not in args or \
@@ -284,6 +336,11 @@ class UserStaffDet(Resource):
            'address' not in args or 'cv' not in args or 'diploma' not in args or 'training' not in args or \
            'comment' not in args or 'role_type' not in args or 'role_pro' not in args:
             self.log.error(Logs.fileline() + ' : UserStaffDet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "usr_ser": int(id_user)}
+                Audit.insertAudit(audit_user, "UserStaffDet", "USER", int(id_user), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserStaffDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # update user
@@ -293,6 +350,11 @@ class UserStaffDet(Resource):
 
             if not user:
                 self.log.error(Logs.fileline() + ' : TRACE UserStaffDet no user')
+                try:
+                    details = {"result": "ERROR", "reason": "NOT_FOUND", "usr_ser": int(id_user)}
+                    Audit.insertAudit(audit_user, "UserStaffDet", "USER", int(id_user), "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : UserStaffDet ERROR audit not found err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             # update sigl_user_data
@@ -326,9 +388,7 @@ class UserStaffDet(Resource):
                 self.log.info(Logs.fileline() + ' : TRACE UserStaffDet ERROR update user')
                 try:
                     details = {"id_user": id_user, "login": user['username'], "result": "ERROR", "source": "UserStaffDet"}
-                    Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                      "UserStaffUpdate", "USER", id_user, Various.get_client_ip(), "ERROR",
-                                      json.dumps(details, default=str), "U")
+                    Audit.insertAudit(audit_user, "UserStaffUpdate", "USER", id_user, "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : UserStaffDet ERROR audit UserStaffUpdate err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
@@ -336,9 +396,7 @@ class UserStaffDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE UserStaffDet id_user=' + str(id_user))
         try:
             details = {"id_user": id_user, "login": user['username'], "result": "SUCCESS", "source": "UserStaffDet"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "UserStaffUpdate", "USER", id_user, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "UserStaffUpdate", "USER", id_user, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserStaffDet ERROR audit UserStaffUpdate err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -349,7 +407,8 @@ class UserList(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if not args:
             args = {}
@@ -381,6 +440,11 @@ class UserList(Resource):
                 user['last_eval'] = datetime.strftime(user['last_eval'], '%Y-%m-%d')
 
         self.log.info(Logs.fileline() + ' : TRACE UserList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_users)}
+            Audit.insertAudit(audit_user, "UserList", "USER", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserList ERROR audit success err=' + str(err))
         return compose_ret(l_users, Constants.cst_content_type_json)
 
 
@@ -390,7 +454,8 @@ class UserListFromExt(Resource):
     @require_oauth('external/user')
     def post(self):
         self.log.info(Logs.fileline() + ' : UserListFromExt API access authorized')
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if not args:
             args = {}
@@ -422,6 +487,11 @@ class UserListFromExt(Resource):
                 user['last_eval'] = datetime.strftime(user['last_eval'], '%Y-%m-%d')
 
         self.log.info(Logs.fileline() + ' : TRACE UserListFromExt')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_users)}
+            Audit.insertAudit(audit_user, "UserListFromExt", "USER", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserListFromExt ERROR audit success err=' + str(err))
         return compose_ret(l_users, Constants.cst_content_type_json, 200)
 
 
@@ -430,6 +500,7 @@ class UserLiteList(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_users = User.getUserLiteList()
 
         if not l_users:
@@ -442,6 +513,11 @@ class UserLiteList(Resource):
                     user[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE UserLiteList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_users)}
+            Audit.insertAudit(audit_user, "UserLiteList", "USER", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserLiteList ERROR audit success err=' + str(err))
         return compose_ret(l_users, Constants.cst_content_type_json)
 
 
@@ -450,7 +526,8 @@ class UserRoleList(Resource):
 
     @require_oauth()
     def post(self, type=''):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         l_exclude = []
         genuine   = "N"
@@ -487,6 +564,11 @@ class UserRoleList(Resource):
                     role['role_based'] = _(role[key].strip())
 
         self.log.info(Logs.fileline() + ' : TRACE UserRoleList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_roles)}
+            Audit.insertAudit(audit_user, "UserRoleList", "ROLE", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserRoleList ERROR audit success err=' + str(err))
         return compose_ret(l_roles, Constants.cst_content_type_json)
 
 
@@ -495,24 +577,40 @@ class UserRoleDet(Resource):
 
     @require_oauth()
     def get(self, pro_ser):
+        audit_user = request.oauth_user
         role = User.getRoleDetails(pro_ser)
 
         if not role:
             self.log.error(Logs.fileline() + ' : TRACE UserRoleDet no role')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "pro_ser": int(pro_ser)}
+                Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", int(pro_ser), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserRoleDet')
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "role_id": int(pro_ser)}
+            Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", int(pro_ser), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit success err=' + str(err))
         return compose_ret(role, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self, pro_ser):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'by_user' not in args or 'id_user' not in args or 'role_type' not in args or 'role_label' not in args or \
            'role_color_1' not in args or 'role_color_2' not in args or 'role_text_color' not in args or \
            'l_rights' not in args:
             self.log.error(Logs.fileline() + ' : UserRoleDet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "pro_ser": int(pro_ser)}
+                Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", int(pro_ser), "ERROR", details, "U" if pro_ser > 0 else "C")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # update user
@@ -534,13 +632,17 @@ class UserRoleDet(Resource):
 
                 if ret_perm is False:
                     self.log.info(Logs.fileline() + ' : UserRoleDet ERROR update profilePermissions')
+                    try:
+                        details = {"result": "ERROR", "reason": "UPDATE_FAILED", "pro_ser": int(pro_ser),
+                                   "prp_ser": right.get('prp_ser')}
+                        Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", int(pro_ser), "ERROR", details, "U")
+                    except Exception as err:
+                        self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit update perm err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 500)
 
             try:
                 details = {"pro_ser": pro_ser, "by_user": args['by_user'], "result": "SUCCESS", "role_label": args['role_label']}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "UserRoleUpdate", "ROLE", pro_ser, Various.get_client_ip(), "SUCCESS",
-                                  json.dumps(details, default=str), "U")
+                Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", pro_ser, "SUCCESS", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit UserRoleUpdate err=' + str(err))
 
@@ -550,6 +652,11 @@ class UserRoleDet(Resource):
 
             if not role:
                 self.log.error(Logs.fileline() + ' : UserRoleDet ERROR role not found')
+                try:
+                    details = {"result": "ERROR", "reason": "NOT_FOUND", "role_type": args.get('role_type')}
+                    Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", None, "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit role not found err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             # insert profile_role
@@ -562,6 +669,11 @@ class UserRoleDet(Resource):
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : UserRoleDet ERROR insert user')
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_FAILED", "role_type": args.get('role_type')}
+                    Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", None, "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit insert role err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             # insert profile_permissions
@@ -573,13 +685,17 @@ class UserRoleDet(Resource):
 
                 if ret_perm <= 0:
                     self.log.error(Logs.alert() + ' : UserRoleDet ERROR insert profilePermissions')
+                    try:
+                        details = {"result": "ERROR", "reason": "INSERT_FAILED", "pro_ser": int(ret),
+                                   "prp_ser": right.get('prp_ser')}
+                        Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", int(ret), "ERROR", details, "C")
+                    except Exception as err:
+                        self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit insert perm err=' + str(err))
                     return compose_ret('', Constants.cst_content_type_json, 500)
 
             try:
                 details = {"pro_ser": ret, "by_user": args['by_user'], "result": "SUCCESS", "role_label": args['role_label'], "role_type": args['role_type']}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "UserRoleCreate", "ROLE", ret, Various.get_client_ip(), "SUCCESS",
-                                  json.dumps(details, default=str), "C")
+                Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", ret, "SUCCESS", details, "C")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit UserRoleCreate err=' + str(err))
 
@@ -589,24 +705,32 @@ class UserRoleDet(Resource):
     @require_oauth()
     def delete(self, pro_ser):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_user' not in args:
             self.log.error(Logs.fileline() + ' : UserRoleDet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "pro_ser": int(pro_ser), "missing": ["id_user"]}
+                Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", int(pro_ser), "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = User.deleteRoleDet(pro_ser, args['id_user'])
 
         if not ret:
             self.log.error(Logs.fileline() + ' : TRACE UserRoleDet delete ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "DELETE_FAILED", "pro_ser": int(pro_ser)}
+                Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", int(pro_ser), "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit delete failed err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserRoleDet delete pro_ser=' + str(pro_ser))
         try:
             details = {"pro_ser": pro_ser, "by_user": args['id_user'], "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "UserRoleDelete", "ROLE", pro_ser, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "D")
+            Audit.insertAudit(audit_user, "UserRoleDet", "ROLE", pro_ser, "SUCCESS", details, "D")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserRoleDet ERROR audit UserRoleDelete err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -617,13 +741,24 @@ class UserRoleByUser(Resource):
 
     @require_oauth()
     def get(self, id_user):
+        audit_user = request.oauth_user
         role = User.getRoleDetByUser(id_user)
 
         if not role:
             self.log.error(Logs.fileline() + ' : TRACE UserRoleByUser no role')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "usr_ser": int(id_user)}
+                Audit.insertAudit(audit_user, "UserRoleByUser", "ROLE", int(id_user), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRoleByUser ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserRoleByUser')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "usr_ser": int(id_user)}
+            Audit.insertAudit(audit_user, "UserRoleByUser", "ROLE", int(id_user), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserRoleByUser ERROR audit success err=' + str(err))
         return compose_ret(role, Constants.cst_content_type_json)
 
 
@@ -632,6 +767,7 @@ class UserIdentList(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_ident = User.getUserIdentList()
 
         if not l_ident:
@@ -644,6 +780,11 @@ class UserIdentList(Resource):
                     ident[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE UserIdentList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_ident)}
+            Audit.insertAudit(audit_user, "UserIdentList", "USER", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserIdentList ERROR audit success err=' + str(err))
         return compose_ret(l_ident, Constants.cst_content_type_json)
 
 
@@ -652,7 +793,8 @@ class UserSearch(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         l_users = User.getUserSearch(args['term'])
 
@@ -666,6 +808,11 @@ class UserSearch(Resource):
                     user[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE UserSearch')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_users)}
+            Audit.insertAudit(audit_user, "UserSearch", "USER", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserSearch ERROR audit success err=' + str(err))
         return compose_ret(l_users, Constants.cst_content_type_json)
 
 
@@ -674,18 +821,30 @@ class UserRightsList(Resource):
 
     @require_oauth()
     def get(self, id_user):
+        audit_user = request.oauth_user
         l_rights = User.getUserListOfRights(id_user)
 
         if not l_rights:
             self.log.error(Logs.fileline() + ' : TRACE UserRightsList getUserListOfRights not found')
-            return compose_ret('', Constants.cst_content_type_json, 500)
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "usr_ser": int(id_user)}
+                Audit.insertAudit(audit_user, "UserRightsList", "RIGHT", int(id_user), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRightsList ERROR audit not found err=' + str(err))
+            return compose_ret('', Constants.cst_content_type_json, 404)
 
         self.log.info(Logs.fileline() + ' : TRACE UserRightsList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_rights)}
+            Audit.insertAudit(audit_user, "UserRightsList", "RIGHT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserRightsList ERROR audit success err=' + str(err))
         return compose_ret(l_rights, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         l_rights = User.getUserRightsList(args['id_user'], args['role_type'], args['role_id'])
 
@@ -693,7 +852,13 @@ class UserRightsList(Resource):
 
         if not l_rights:
             self.log.error(Logs.fileline() + ' : TRACE UserRightsList not found')
-            return compose_ret('', Constants.cst_content_type_json, 500)
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_user": args.get('id_user'),
+                           "role_type": args.get('role_type'), "role_id": args.get('role_id')}
+                Audit.insertAudit(audit_user, "UserRightsList", "RIGHT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRightsList ERROR audit not found err=' + str(err))
+            return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
 
@@ -706,6 +871,11 @@ class UserRightsList(Resource):
                     right[key] = _(right[key].strip())
 
         self.log.info(Logs.fileline() + ' : TRACE UserRightsList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_rights)}
+            Audit.insertAudit(audit_user, "UserRightsList", "RIGHT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserRightsList ERROR audit success err=' + str(err))
         return compose_ret(l_rights, Constants.cst_content_type_json)
 
 
@@ -715,10 +885,22 @@ class UserRights(Resource):
     @require_oauth()
     def post(self, id_user):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'by_user' not in args or 'id_user' not in args or 'l_rights' not in args:
             self.log.error(Logs.fileline() + ' : UserRights ERROR args missing')
+            try:
+                missing = []
+                if 'by_user' not in args:
+                    missing.append("by_user")
+                if 'id_user' not in args:
+                    missing.append("id_user")
+                if 'l_rights' not in args:
+                    missing.append("l_rights")
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "usr_ser": int(id_user), "missing": missing}
+                Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", int(id_user), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRights ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # update user
@@ -739,9 +921,7 @@ class UserRights(Resource):
                         try:
                             details = {"user": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
                                        "result": "ERROR", "action": "INSERT"}
-                            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                              "UserRightsUpdate", "USER", args['id_user'], Various.get_client_ip(),
-                                              "ERROR", json.dumps(details, default=str), "C")
+                            Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", args['id_user'], "ERROR", details, "U")
                         except Exception as err:
                             self.log.error(Logs.fileline() + ' : UserRights ERROR audit UserRightsUpdate err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
@@ -761,9 +941,7 @@ class UserRights(Resource):
                             try:
                                 details = {"user": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
                                            "result": "ERROR", "action": "UPDATE"}
-                                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'],
-                                                  audit_user['usr_role'], "UserRightsUpdate", "USER", args['id_user'],
-                                                  Various.get_client_ip(), "ERROR", json.dumps(details, default=str), "U")
+                                Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", args['id_user'], "ERROR", details, "U")
                             except Exception as err:
                                 self.log.error(Logs.fileline() + ' : UserRights ERROR audit UserRightsUpdate err=' + str(err))
                             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -779,17 +957,27 @@ class UserRights(Resource):
                             try:
                                 details = {"user": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
                                            "result": "ERROR", "action": "DELETE"}
-                                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'],
-                                                  audit_user['usr_role'], "UserRightsUpdate", "USER", args['id_user'],
-                                                  Various.get_client_ip(), "ERROR", json.dumps(details, default=str), "D")
+                                Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", args['id_user'], "ERROR", details, "D")
                             except Exception as err:
                                 self.log.error(Logs.fileline() + ' : UserRights ERROR audit UserRightsUpdate err=' + str(err))
                             return compose_ret('', Constants.cst_content_type_json, 500)
                     else:
                         self.log.info(Logs.fileline() + ' : UserRights ERROR sameRight userPermissions')
+                        try:
+                            details = {"user": args.get('id_user'), "by_user": args.get('by_user'), "result": "ERROR",
+                                       "reason": "SAME_RIGHT"}
+                            Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", args.get('id_user'), "ERROR",
+                                              details, "D")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : UserRights ERROR audit UserRightsUpdate SAME_RIGHT err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserRights')
+        try:
+            details = {"user": args.get('id_user'), "by_user": args.get('by_user'), "result": "SUCCESS"}
+            Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", args.get('id_user'), "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserRights ERROR audit UserRightsUpdate SUCCESS err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -798,8 +986,7 @@ class UserPassword(Resource):
 
     @require_oauth()
     def post(self):
-        audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_user' not in args or 'password' not in args:
             self.log.error(Logs.fileline() + ' : UserPassword ERROR args missing')
@@ -811,23 +998,9 @@ class UserPassword(Resource):
 
         if ret is False:
             self.log.info(Logs.fileline() + ' : TRACE UserPassword ERROR update password')
-            try:
-                details = {"id_user": args['id_user'], "result": "ERROR"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "UserPasswordUpdate", "USER", args['id_user'], Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "U")
-            except Exception as err:
-                self.log.error(Logs.fileline() + ' : UserPassword ERROR audit UserPasswordUpdate err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserPassword')
-        try:
-            details = {"id_user": args['id_user'], "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "UserPasswordUpdate", "USER", args['id_user'], Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
-        except Exception as err:
-            self.log.error(Logs.fileline() + ' : UserPassword ERROR audit UserPasswordUpdate err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -837,10 +1010,15 @@ class UserStatus(Resource):
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'id_user' not in args or 'status' not in args:
             self.log.error(Logs.fileline() + ' : UserStatus ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "UserStatusUpdate", "USER", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserStatus ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = User.updateStatus(args['id_user'], args['status'])
@@ -849,9 +1027,7 @@ class UserStatus(Resource):
             self.log.info(Logs.fileline() + ' : TRACE UserStatus ERROR update password')
             try:
                 details = {"id_user": args['id_user'], "status": args['status'], "result": "ERROR"}
-                Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                  "UserStatusUpdate", "USER", args['id_user'], Various.get_client_ip(), "ERROR",
-                                  json.dumps(details, default=str), "U")
+                Audit.insertAudit(audit_user, "UserStatusUpdate", "USER", args['id_user'], "ERROR", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserStatus ERROR audit UserStatusUpdate err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
@@ -859,9 +1035,7 @@ class UserStatus(Resource):
         self.log.info(Logs.fileline() + ' : TRACE UserStatus')
         try:
             details = {"id_user": args['id_user'], "status": args['status'], "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "UserStatusUpdate", "USER", args['id_user'], Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "U")
+            Audit.insertAudit(audit_user, "UserStatusUpdate", "USER", args['id_user'], "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserStatus ERROR audit UserStatusUpdate err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -872,6 +1046,7 @@ class UserCount(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         res = User.getUserNbUsers()
 
         if not res:
@@ -881,6 +1056,11 @@ class UserCount(Resource):
             nb_users = res['nb_users']
 
         self.log.info(Logs.fileline() + ' : TRACE UserNbUsers')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": int(nb_users)}
+            Audit.insertAudit(audit_user, "UserCount", "USER", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : UserCount ERROR audit success err=' + str(err))
         return compose_ret(nb_users, Constants.cst_content_type_json)
 
 
@@ -890,12 +1070,17 @@ class UserConnExport(Resource):
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         l_data = [['id_user', 'username', 'date', 'event', ]]
 
         if 'date_beg' not in args or 'date_end' not in args:
             self.log.error(Logs.fileline() + ' : UserConnExport ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "UserConnExport", "USER", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserConnExport ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         try:
@@ -903,6 +1088,12 @@ class UserConnExport(Resource):
             date_end = datetime.strptime(args['date_end'], Constants.cst_isodate).date()
         except (ValueError, TypeError):
             self.log.error(Logs.fileline() + ' : UserConnExport ERROR invalid date format')
+            try:
+                details = {"result": "ERROR", "reason": "BAD_DATE_FORMAT", "date_beg": args.get('date_beg'),
+                           "date_end": args.get('date_end')}
+                Audit.insertAudit(audit_user, "UserConnExport", "USER", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserConnExport ERROR audit bad date err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         dict_data = User.getUserConnections(str(date_beg) + ' 00:00', str(date_end) + ' 23:59')
@@ -926,6 +1117,11 @@ class UserConnExport(Resource):
 
         # if no result to export
         if len(l_data) < 2:
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "date_beg": str(date_beg), "date_end": str(date_end)}
+                Audit.insertAudit(audit_user, "UserConnExport", "USER", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserConnExport ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # write csv file
@@ -943,14 +1139,17 @@ class UserConnExport(Resource):
 
         except Exception as err:
             self.log.error(Logs.fileline() + ' : post UserConnExport failed, err=%s', err)
+            try:
+                details = {"result": "ERROR", "reason": "FILE_WRITE_FAILED", "date_beg": str(date_beg), "date_end": str(date_end)}
+                Audit.insertAudit(audit_user, "UserConnExport", "USER", None, "ERROR", details, "R")
+            except Exception as e:
+                self.log.error(Logs.fileline() + ' : UserConnExport ERROR audit write file err=' + str(e))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE UserConnExport')
         try:
             details = {"date_beg": str(date_beg), "date_end": str(date_end), "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "UserConnExport", "USER", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "R")
+            Audit.insertAudit(audit_user, "UserConnExport", "USER", None, "SUCCESS", details, "R")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserConnExport ERROR audit UserConnExport err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -962,7 +1161,7 @@ class UserExport(Resource):
     @require_oauth()
     def post(self):
         audit_user = request.oauth_user
-        args = request.get_json()
+        args = request.get_json() or {}
 
         l_data = [['version', 'firstname', 'lastname', 'username', 'password', 'title', 'email', 'status', 'locale',
                    'cps_id', 'rpps', 'phone', 'initial', 'birth', 'address', 'position', 'cv', 'diploma',
@@ -970,6 +1169,11 @@ class UserExport(Resource):
 
         if 'id_user' not in args:
             self.log.error(Logs.fileline() + ' : UserExport ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "UserExport", "USER", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserExport ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         dict_data = User.getUserExport()
@@ -1128,6 +1332,11 @@ class UserExport(Resource):
 
         # if no result to export
         if len(l_data) < 2:
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "UserExport", "USER", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserExport ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # write csv file
@@ -1148,9 +1357,7 @@ class UserExport(Resource):
         self.log.info(Logs.fileline() + ' : TRACE UserExport')
         try:
             details = {"id_user": args['id_user'], "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                              "UserExport", "USER", None, Various.get_client_ip(), "SUCCESS",
-                              json.dumps(details, default=str), "R")
+            Audit.insertAudit(audit_user, "UserExport", "USER", None, "SUCCESS", details, "R")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserExport ERROR audit UserExport err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
@@ -1165,6 +1372,11 @@ class UserImport(Resource):
 
         if not filename or id_user <= 0:
             self.log.error(Logs.fileline() + ' : UserImport ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "filename": str(filename), "usr_ser": int(id_user)}
+                Audit.insertAudit(audit_user, "UserImport", "USER", int(id_user), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserImport ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Read CSV user
@@ -1179,6 +1391,11 @@ class UserImport(Resource):
 
         if not l_rows or len(l_rows) < 2:
             self.log.error(Logs.fileline() + ' : TRACE UserImport ERROR file empty')
+            try:
+                details = {"result": "ERROR", "reason": "FILE_EMPTY", "filename": str(filename), "usr_ser": int(id_user)}
+                Audit.insertAudit(audit_user, "UserImport", "USER", int(id_user), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserImport ERROR audit file empty err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # remove headers line
@@ -1187,11 +1404,22 @@ class UserImport(Resource):
         # check version
         if l_rows[0][0] != 'v3':
             self.log.error(Logs.fileline() + ' : TRACE UserImport ERROR wrong version')
+            try:
+                details = {"result": "ERROR", "reason": "WRONG_VERSION", "filename": str(filename), "version": str(l_rows[0][0])}
+                Audit.insertAudit(audit_user, "UserImport", "USER", int(id_user), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserImport ERROR audit wrong version err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 409)
 
         # check number of column (dont forget version columns)
         if len(l_rows[0]) != 26:
             self.log.error(Logs.fileline() + ' : TRACE UserImport ERROR wrong number of column')
+            try:
+                details = {"result": "ERROR", "reason": "WRONG_COLUMN_OR_ORDER", "filename": str(filename),
+                           "col_count": len(l_rows[0]), "expected": 26}
+                Audit.insertAudit(audit_user, "UserImport", "USER", int(id_user), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserImport ERROR audit wrong column err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 409)
 
         for row in l_rows:
@@ -1283,9 +1511,7 @@ class UserImport(Resource):
                         self.log.error(Logs.alert() + ' : UserImport ERROR update user username=' + str(username))
                         try:
                             details = {"username": username, "action": "UPDATE", "result": "ERROR"}
-                            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                              "UserImport", "USER", None, Various.get_client_ip(), "ERROR",
-                                              json.dumps(details, default=str), "U")
+                            Audit.insertAudit(audit_user, "UserImport", "USER", None, "ERROR", details, "U")
                         except Exception as err:
                             self.log.error(Logs.fileline() + ' : UserImport ERROR audit UserImport err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1325,9 +1551,7 @@ class UserImport(Resource):
                         self.log.error(Logs.alert() + ' : UserImport ERROR insert user')
                         try:
                             details = {"username": username, "action": "INSERT", "result": "ERROR"}
-                            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'],
-                                              "UserImport", "USER", None, Various.get_client_ip(), "ERROR",
-                                              json.dumps(details, default=str), "C")
+                            Audit.insertAudit(audit_user, "UserImport", "USER", None, "ERROR", details, "U")
                         except Exception as err:
                             self.log.error(Logs.fileline() + ' : UserImport ERROR audit UserImport err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
@@ -1335,8 +1559,7 @@ class UserImport(Resource):
         self.log.info(Logs.fileline() + ' : TRACE UserImport')
         try:
             details = {"filename": filename, "id_user": id_user, "result": "SUCCESS"}
-            Audit.insertAudit(audit_user['usr_login'], audit_user['usr_display'], audit_user['usr_role'], "UserImport",
-                              "USER", None, Various.get_client_ip(), "SUCCESS", json.dumps(details, default=str), "E")
+            Audit.insertAudit(audit_user, "UserImport", "USER", int(id_user), "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserImport ERROR audit UserImport err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json, 200)
@@ -1347,15 +1570,31 @@ class UserRoleExist(Resource):
 
     @require_oauth()
     def get(self, role_label):
+        audit_user = request.oauth_user
         ret = User.role_exist(role_label)
 
         if ret and ret == -1:
             self.log.error(Logs.fileline() + ' : ' + 'UserRoleExist ERROR sql')
+            try:
+                details = {"result": "ERROR", "reason": "SQL_ERROR", "role_label": str(role_label)}
+                Audit.insertAudit(audit_user, "UserRoleExist", "ROLE", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRoleExist ERROR audit sql err=' + str(err))
             return compose_ret(-1, Constants.cst_content_type_json, 500)
 
         if ret:
             self.log.error(Logs.fileline() + ' : ' + 'UserRoleExist WARNING role already exist')
+            try:
+                details = {"result": "SUCCESS", "action": "QUERY", "role_label": role_label}
+                Audit.insertAudit(audit_user, "UserRoleExist", "ROLE", None, "SUCCESS", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRoleExist ERROR audit success err=' + str(err))
             return compose_ret(1, Constants.cst_content_type_json, 200)
         else:
             self.log.info(Logs.fileline() + ' : UserRoleExist code ok :' + str(role_label))
+            try:
+                details = {"result": "SUCCESS", "action": "QUERY", "role_label": role_label}
+                Audit.insertAudit(audit_user, "UserRoleExist", "ROLE", None, "SUCCESS", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : UserRoleExist ERROR audit success err=' + str(err))
             return compose_ret(0, Constants.cst_content_type_json, 200)

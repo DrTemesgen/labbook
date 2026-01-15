@@ -1,5 +1,4 @@
 # -*- coding:utf-8 -*-
-# import informixdb
 import mysql.connector
 import logging
 import re
@@ -32,20 +31,33 @@ class DB:
     @staticmethod
     def open_cnx():
         try:
-            if DB.cnx is None:
-                # read default_settings.py
-                # file_path = '/home/apps/labbook_BE/labbook_BE/default_settings.py'
-                # desact 14/05/2024 return to use current_app : config_data = DB.read_config_file(file_path)
+            # If we already have a connection, ensure it's still alive (sleep/resume can kill sockets)
+            if DB.cnx is not None:
+                try:
+                    # mysql-connector supports reconnect ping
+                    DB.cnx.ping(reconnect=True, attempts=1, delay=0)
+                    return DB.cnx
+                except Exception as e:
+                    DB.log.error(Logs.fileline() + ' : open_cnx() TRACE ping failed, reconnect MYSQL error=' + str(e))
+                    try:
+                        DB.cnx.close()
+                    except Exception:
+                        pass
+                    DB.cnx = None
 
-                if current_app.config['DB_TYPE'] == 'MYSQL':
-                    DB.log.info(Logs.fileline() + ' : open_cnx() TRACE connect MYSQL')
-                    DB.cnx = mysql.connector.connect(user=current_app.config['DB_USER'],
-                                                     password=current_app.config['DB_PWD'],
-                                                     host=current_app.config['DB_HOST'],
-                                                     database=current_app.config['DB_NAME'])
-                    DB.cnx.autocommit = True
-                else:
-                    DB.log.critical(Logs.fileline() + ' : open_cnx() error DB_TYPE = %s', current_app.config['DB_TYPE'])
+            # read default_settings.py
+            # file_path = '/home/apps/labbook_BE/labbook_BE/default_settings.py'
+            # desact 14/05/2024 return to use current_app : config_data = DB.read_config_file(file_path)
+
+            if current_app.config['DB_TYPE'] == 'MYSQL':
+                DB.log.info(Logs.fileline() + ' : open_cnx() TRACE connect MYSQL')
+                DB.cnx = mysql.connector.connect(user=current_app.config['DB_USER'],
+                                                 password=current_app.config['DB_PWD'],
+                                                 host=current_app.config['DB_HOST'],
+                                                 database=current_app.config['DB_NAME'])
+                DB.cnx.autocommit = True
+            else:
+                DB.log.critical(Logs.fileline() + ' : open_cnx() error DB_TYPE = %s', current_app.config['DB_TYPE'])
 
             return DB.cnx
 

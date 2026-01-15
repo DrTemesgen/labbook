@@ -6,6 +6,7 @@ from datetime import datetime
 from flask import request
 from flask_restful import Resource
 
+from app.models.Audit import Audit
 from app.models.General import compose_ret
 from app.models.Constants import Constants
 from app.models.Doctor import Doctor
@@ -20,7 +21,8 @@ class DoctorList(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if not args:
             args = {}
@@ -41,6 +43,11 @@ class DoctorList(Resource):
                     doctor[key] = _(doctor[key].strip())
 
         self.log.info(Logs.fileline() + ' : TRACE DoctorList')
+        try:
+            details = {"result": "SUCCESS", "count": len(l_doctors) if l_doctors else 0}
+            Audit.insertAudit(audit_user, "DoctorList", "DOCTOR", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : DoctorList ERROR audit success err=' + str(err))
         return compose_ret(l_doctors, Constants.cst_content_type_json)
 
 
@@ -49,7 +56,8 @@ class DoctorSearch(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         l_doctors = Doctor.getDoctorSearch(args['term'])
 
@@ -57,6 +65,11 @@ class DoctorSearch(Resource):
             self.log.error(Logs.fileline() + ' : TRACE DoctorSearch not found')
 
         self.log.info(Logs.fileline() + ' : TRACE DoctorSearch')
+        try:
+            details = {"result": "SUCCESS", "term": args.get('term'), "count": len(l_doctors) if l_doctors else 0}
+            Audit.insertAudit(audit_user, "DoctorSearch", "DOCTOR", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : DoctorSearch ERROR audit success err=' + str(err))
         return compose_ret(l_doctors, Constants.cst_content_type_json)
 
 
@@ -65,10 +78,16 @@ class DoctorDet(Resource):
 
     @require_oauth()
     def get(self, id_doctor):
+        audit_user = request.oauth_user
         doctor = Doctor.getDoctor(id_doctor)
 
         if not doctor:
             self.log.error(Logs.fileline() + ' : ' + 'DoctorDet ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_doctor": int(id_doctor)}
+                Audit.insertAudit(audit_user, "DoctorDet", "DOCTOR", id_doctor, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : DoctorDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -81,17 +100,28 @@ class DoctorDet(Resource):
                 doctor[key] = _(doctor[key].strip())
 
         self.log.info(Logs.fileline() + ' : DoctorDet id_doctor=' + str(id_doctor))
+        try:
+            details = {"result": "SUCCESS", "id_doctor": id_doctor}
+            Audit.insertAudit(audit_user, "DoctorDet", "DOCTOR", id_doctor, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : DoctorDet ERROR audit success err=' + str(err))
         return compose_ret(doctor, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self, id_doctor):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'id_owner' not in args or 'id_doctor' not in args or 'code' not in args or 'title' not in args or \
            'lastname' not in args or 'firstname' not in args or 'initial' not in args or 'facility' not in args or \
            'service' not in args or 'address' not in args or 'city' not in args or 'zipcity' not in args or \
            'spe' not in args or 'phone' not in args or 'mobile' not in args or 'fax' not in args or 'email' not in args:
             self.log.error(Logs.fileline() + ' : DoctorDet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "id_doctor": id_doctor}
+                Audit.insertAudit(audit_user, "DoctorDet", "DOCTOR", id_doctor, "ERROR", details, "U" if int(id_doctor) > 0 else "C")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : DoctorDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         if 'doc_agreement' not in args:
@@ -120,6 +150,11 @@ class DoctorDet(Resource):
 
             if ret is False:
                 self.log.error(Logs.alert() + ' : DoctorDet ERROR update')
+                try:
+                    details = {"result": "ERROR", "reason": "UPDATE_FAILED", "id_doctor": id_doctor}
+                    Audit.insertAudit(audit_user, "DoctorDet", "DOCTOR", id_doctor, "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : DoctorDet ERROR audit update failed err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         # Insert new doctor
@@ -144,22 +179,44 @@ class DoctorDet(Resource):
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : DoctorDet ERROR  insert')
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_FAILED", "id_doctor": id_doctor}
+                    Audit.insertAudit(audit_user, "DoctorDet", "DOCTOR", id_doctor, "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : DoctorDet ERROR audit insert failed err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             id_doctor = ret
 
         self.log.info(Logs.fileline() + ' : TRACE DoctorDet id_doctor=' + str(id_doctor))
+        try:
+            event_type = "U" if int(id_doctor) > 0 else "C"
+            details = {"result": "SUCCESS", "id_doctor": int(id_doctor)}
+            Audit.insertAudit(audit_user, "DoctorDet", "DOCTOR", int(id_doctor), "SUCCESS", details, event_type)
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : DoctorDet ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
     @require_oauth()
     def delete(self, id_doctor):
+        audit_user = request.oauth_user
         ret = Doctor.deleteDoctor(id_doctor)
 
         if not ret:
             self.log.error(Logs.fileline() + ' : TRACE DoctorDet delete ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "DELETE_FAILED", "id_doctor": id_doctor}
+                Audit.insertAudit(audit_user, "DoctorDet", "DOCTOR", id_doctor, "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : DoctorDet ERROR audit delete failed err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE DoctorDet delete id_item=' + str(id_doctor))
+        try:
+            details = {"result": "SUCCESS", "id_doctor": id_doctor}
+            Audit.insertAudit(audit_user, "DoctorDet", "DOCTOR", id_doctor, "SUCCESS", details, "D")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : DoctorDet ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -168,7 +225,8 @@ class DoctorExport(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if not args:
             args = {}
@@ -214,6 +272,11 @@ class DoctorExport(Resource):
 
         # if no result to export
         if len(l_data) < 2:
+            try:
+                details = {"result": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "DoctorExport", "DOCTOR", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : DoctorExport ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # write csv file
@@ -231,7 +294,17 @@ class DoctorExport(Resource):
 
         except Exception as err:
             self.log.error(Logs.fileline() + ' : post DoctorExport failed, err=%s', err)
+            try:
+                details = {"result": "ERROR", "reason": "EXCEPTION", "error": str(err)}
+                Audit.insertAudit(audit_user, "DoctorExport", "DOCTOR", None, "ERROR", details, "R")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : DoctorExport ERROR audit exception err=' + str(err2))
             return False
 
         self.log.info(Logs.fileline() + ' : TRACE DoctorExport')
+        try:
+            details = {"result": "SUCCESS", "count": len(l_data) - 1}
+            Audit.insertAudit(audit_user, "DoctorExport", "DOCTOR", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : DoctorExport ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)

@@ -11,6 +11,7 @@ from hl7apy.core import Message
 
 from app.models.General import compose_ret
 from app.models.Constants import Constants
+from app.models.Audit import Audit
 from app.models.Analyzer import Analyzer
 # from app.models.Record import Record
 from app.models.Product import Product
@@ -25,30 +26,57 @@ class ConnectSetting(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         setting = Analyzer.getConnectSetting()
 
         if not setting:
             self.log.error(Logs.alert() + ' : ConnectSetting ERROR get')
+            try:
+                details = {"result": "ERROR", "reason": "GET_FAILED"}
+                Audit.insertAudit(audit_user, "ConnectSetting", "DEVICE", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ConnectSetting ERROR audit get err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE ConnectSetting')
+        try:
+            details = {"result": "SUCCESS"}
+            Audit.insertAudit(audit_user, "ConnectSetting", "DEVICE", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ConnectSetting ERROR audit success err=' + str(err))
         return compose_ret(setting, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'id_user' not in args or 'url' not in args:
             self.log.error(Logs.fileline() + ' : ConnectSetting ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["id_user", "url"]}
+                Audit.insertAudit(audit_user, "ConnectSetting", "DEVICE", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ConnectSetting ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Analyzer.updateConnectSetting(id_user=args['id_user'], url=args['url'])
 
         if ret is False:
             self.log.error(Logs.alert() + ' : ConnectSetting ERROR update')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_FAILED", "id_user": args.get('id_user'), "url": args.get('url')}
+                Audit.insertAudit(audit_user, "ConnectSetting", "DEVICE", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ConnectSetting ERROR audit update err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE ConnectSetting')
+        try:
+            details = {"result": "SUCCESS", "id_user": args.get('id_user'), "url": args.get('url')}
+            Audit.insertAudit(audit_user, "ConnectSetting", "DEVICE", None, "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ConnectSetting ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -57,12 +85,18 @@ class AnalyzerList(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_analyzers = Analyzer.getAnalyzerList()
 
         if not l_analyzers:
             self.log.info(Logs.fileline() + ' : TRACE AnalyzerList not found')
 
         self.log.info(Logs.fileline() + ' : TRACE AnalyzerList')
+        try:
+            details = {"result": "SUCCESS", "count": len(l_analyzers) if l_analyzers else 0}
+            Audit.insertAudit(audit_user, "AnalyzerList", "DEVICE", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalyzerList ERROR audit err=' + str(err))
         return compose_ret(l_analyzers, Constants.cst_content_type_json)
 
 
@@ -71,10 +105,16 @@ class AnalyzerDet(Resource):
 
     @require_oauth()
     def get(self, id_analyzer):
+        audit_user = request.oauth_user
         item = Analyzer.getAnalyzerDet(id_analyzer)
 
         if not item:
-            self.log.error(Logs.fileline() + ' : ' + 'AnalyzerDet ERROR not found')
+            self.log.error(Logs.fileline() + ' : AnalyzerDet ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_analyzer": id_analyzer}
+                Audit.insertAudit(audit_user, "AnalyzerDet", "DEVICE", id_analyzer, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalyzerDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -83,15 +123,26 @@ class AnalyzerDet(Resource):
                 item[key] = ''
 
         self.log.info(Logs.fileline() + ' : AnalyzerDet id_analyzer=' + str(id_analyzer))
+        try:
+            details = {"result": "SUCCESS", "id_analyzer": id_analyzer}
+            Audit.insertAudit(audit_user, "AnalyzerDet", "DEVICE", id_analyzer, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalyzerDet ERROR audit success err=' + str(err))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self, id_analyzer):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'id_user' not in args or 'rank' not in args or 'name' not in args or 'key' not in args or \
            'batch' not in args or 'filename' not in args:
             self.log.error(Logs.fileline() + ' : AnalyzerDet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "id_analyzer": id_analyzer}
+                Audit.insertAudit(audit_user, "AnalyzerDet", "DEVICE", id_analyzer, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalyzerDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Update item
@@ -108,6 +159,11 @@ class AnalyzerDet(Resource):
 
             if ret is False:
                 self.log.error(Logs.alert() + ' : AnalyzerDet ERROR update')
+                try:
+                    details = {"result": "ERROR", "reason": "UPDATE_FAILED", "id_analyzer": id_analyzer, "id_user": args.get('id_user')}
+                    Audit.insertAudit(audit_user, "AnalyzerDet", "DEVICE", id_analyzer, "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : AnalyzerDet ERROR audit update err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         # Insert new item
@@ -122,15 +178,26 @@ class AnalyzerDet(Resource):
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : AnalyzerDet ERROR  insert')
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_FAILED", "id_analyzer": id_analyzer, "id_user": args.get('id_user')}
+                    Audit.insertAudit(audit_user, "AnalyzerDet", "DEVICE", id_analyzer, "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : AnalyzerDet ERROR audit insert err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             id_analyzer = ret
 
         self.log.info(Logs.fileline() + ' : TRACE AnalyzerDet id_analyzer=' + str(id_analyzer))
+        try:
+            details = {"result": "SUCCESS", "id_analyzer": id_analyzer, "id_user": args.get('id_user')}
+            Audit.insertAudit(audit_user, "AnalyzerDet", "DEVICE", id_analyzer, "SUCCESS", details, "C")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalyzerDet ERROR audit success err=' + str(err))
         return compose_ret(id_analyzer, Constants.cst_content_type_json)
 
     @require_oauth()
     def delete(self, id_analyzer):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if args and 'id_user' in args:
@@ -140,9 +207,19 @@ class AnalyzerDet(Resource):
 
         if not ret:
             self.log.error(Logs.fileline() + ' : TRACE AnalyzerDet delete ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "DELETE_FAILED", "id_analyzer": id_analyzer, "id_user": args.get('id_user') if args else None}
+                Audit.insertAudit(audit_user, "AnalyzerDet", "DEVICE", id_analyzer, "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalyzerDet ERROR audit delete err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE AnalyzerDet delete id_analyzer=' + str(id_analyzer))
+        try:
+            details = {"result": "SUCCESS", "id_analyzer": id_analyzer, "id_user": args.get('id_user') if args else None}
+            Audit.insertAudit(audit_user, "AnalyzerDet", "DEVICE", id_analyzer, "SUCCESS", details, "D")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalyzerDet ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -151,12 +228,18 @@ class AnalyzerFile(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_analyzers = Analyzer.getAnalyzerFiles()
 
         if not l_analyzers:
             self.log.error(Logs.fileline() + ' : TRACE AnalyzerFile not found')
 
         self.log.info(Logs.fileline() + ' : TRACE AnalyzerFile')
+        try:
+            details = {"result": "SUCCESS", "count": len(l_analyzers) if l_analyzers else 0}
+            Audit.insertAudit(audit_user, "AnalyzerFile", "DEVICE", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalyzerFile ERROR audit err=' + str(err))
         return compose_ret(l_analyzers, Constants.cst_content_type_json)
 
 
@@ -410,12 +493,18 @@ class AnalyzerMsgList(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         l_msg = Analyzer.getAnalyzerMsgList(args)
 
         if not l_msg:
             self.log.info(Logs.fileline() + ' : TRACE AnalyzerMsgList not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "AnalyzerMsgList", "DEVICE", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalyzerMsgList ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         for msg in l_msg:
@@ -428,6 +517,11 @@ class AnalyzerMsgList(Resource):
                         msg[key] = datetime.strftime(msg[key], Constants.cst_dt_HM)
 
         self.log.info(Logs.fileline() + ' : TRACE AnalyzerMsgList')
+        try:
+            details = {"result": "SUCCESS", "count": len(l_msg)}
+            Audit.insertAudit(audit_user, "AnalyzerMsgList", "DEVICE", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalyzerMsgList ERROR audit success err=' + str(err))
         return compose_ret({"data": l_msg}, Constants.cst_content_type_json)
 
 
@@ -436,11 +530,22 @@ class AnalyzerMsgDet(Resource):
 
     @require_oauth()
     def delete(self, id_msg):
+        audit_user = request.oauth_user
         ret = Analyzer.deleteMsgAnalyzer(id_msg)
 
         if not ret:
             self.log.error(Logs.fileline() + ' : TRACE AnalyzerMsgDet delete ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "DELETE_FAILED", "id_msg": id_msg}
+                Audit.insertAudit(audit_user, "AnalyzerMsgDet", "DEVICE", id_msg, "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalyzerMsgDet ERROR audit delete err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE AnalyzerMsgDet delete id_msg=' + str(id_msg))
+        try:
+            details = {"result": "SUCCESS", "id_msg": id_msg}
+            Audit.insertAudit(audit_user, "AnalyzerMsgDet", "DEVICE", id_msg, "SUCCESS", details, "D")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalyzerMsgDet ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)

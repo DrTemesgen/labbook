@@ -11,6 +11,7 @@ from csv import reader
 
 from app.models.General import compose_ret
 from app.models.Constants import Constants
+from app.models.Audit import Audit
 from app.models.Analysis import Analysis
 from app.models.Record import Record
 from app.models.DB import DB
@@ -24,7 +25,8 @@ class AnalysisSearch(Resource):
 
     @require_oauth()
     def post(self, type):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'status' in args and args['status']:
             status = args['status']
@@ -39,7 +41,7 @@ class AnalysisSearch(Resource):
         l_analysis = Analysis.getAnalysisSearch(args['term'], type, status, link_fam)
 
         if not l_analysis:
-            self.log.error(Logs.fileline() + ' : TRACE AnalysisSearch not found')
+            self.log.info(Logs.fileline() + ' : TRACE AnalysisSearch not found')
 
         # TRANSLATION
         Various.useLangDB()
@@ -58,6 +60,11 @@ class AnalysisSearch(Resource):
                 analysis['label'] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisSearch')
+        try:
+            details = {"result": "SUCCESS", "type": str(type), "status": status, "count": len(l_analysis) if l_analysis else 0}
+            Audit.insertAudit(audit_user, "AnalysisSearch", "ANALYSIS", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisSearch ERROR audit success err=' + str(err))
         return compose_ret(l_analysis, Constants.cst_content_type_json)
 
 
@@ -66,12 +73,13 @@ class AnalysisVarSearch(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         l_vars = Analysis.getAnalysisVarSearch(args['term'])
 
         if not l_vars:
-            self.log.error(Logs.fileline() + ' : TRACE AnalysisVarSearch not found')
+            self.log.info(Logs.fileline() + ' : TRACE AnalysisVarSearch not found')
 
         # TRANSLATION
         Various.useLangDB()
@@ -84,6 +92,11 @@ class AnalysisVarSearch(Resource):
                 var['field_value'] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisVarSearch')
+        try:
+            details = {"result": "SUCCESS", "count": len(l_vars) if l_vars else 0}
+            Audit.insertAudit(audit_user, "AnalysisVarSearch", "ANALYSIS", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisVarSearch ERROR audit success err=' + str(err))
         return compose_ret(l_vars, Constants.cst_content_type_json)
 
 
@@ -92,21 +105,19 @@ class AnalysisList(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
-        if not args:
-            args = {}
-        else:
-            if 'status' in args and args['status']:
-                if args['status'] == 'A':
-                    args['status'] = 4
-                elif args['status'] == 'I':
-                    args['status'] = 5
+        if 'status' in args and args['status']:
+            if args['status'] == 'A':
+                args['status'] = 4
+            elif args['status'] == 'I':
+                args['status'] = 5
 
         l_analyzes = Analysis.getAnalyzesList(args)
 
         if not l_analyzes:
-            self.log.error(Logs.fileline() + ' : TRACE AnalysisList not found')
+            self.log.info(Logs.fileline() + ' : TRACE AnalysisList not found')
 
         Various.useLangDB()
 
@@ -123,6 +134,11 @@ class AnalysisList(Resource):
                     analysis[key] = _(analysis[key].strip())
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisList')
+        try:
+            details = {"result": "SUCCESS", "count": len(l_analyzes) if l_analyzes else 0}
+            Audit.insertAudit(audit_user, "AnalysisList", "ANALYSIS", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisList ERROR audit success err=' + str(err))
         return compose_ret(l_analyzes, Constants.cst_content_type_json)
 
 
@@ -132,7 +148,8 @@ class AnalysisListFromExt(Resource):
     @require_oauth('external/analysis')
     def post(self):
         self.log.info(Logs.fileline() + ' : AnalysisListFromExt API access authorized')
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if not args:
             args = {}
@@ -146,7 +163,7 @@ class AnalysisListFromExt(Resource):
         l_analyzes = Analysis.getAnalyzesList(args)
 
         if not l_analyzes:
-            self.log.error(Logs.fileline() + ' : TRACE AnalysisListFromExt not found')
+            self.log.info(Logs.fileline() + ' : TRACE AnalysisListFromExt not found')
 
         Various.useLangDB()
 
@@ -163,6 +180,11 @@ class AnalysisListFromExt(Resource):
                     analysis[key] = _(analysis[key].strip())
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisListFromExt')
+        try:
+            details = {"result": "SUCCESS", "count": len(l_analyzes) if l_analyzes else 0}
+            Audit.insertAudit(audit_user, "AnalysisListFromExt", "ANALYSIS", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisListFromExt ERROR audit success err=' + str(err))
         return compose_ret(l_analyzes, Constants.cst_content_type_json, 200)
 
 
@@ -171,12 +193,18 @@ class AnalysisHistoExport(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         l_data = [['id_data', 'code', 'fam_name', 'name', 'nb_ana']]
 
         if 'date_beg' not in args or 'date_end' not in args:
             self.log.error(Logs.fileline() + ' : AnalysisHistoExport ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["date_beg", "date_end"]}
+                Audit.insertAudit(audit_user, "AnalysisHistoExport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisHistoExport ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         args['limit'] = 50000  # for overpassed default limit
@@ -216,6 +244,12 @@ class AnalysisHistoExport(Resource):
         # if no result to export
         if len(l_data) < 2:
             self.log.info(Logs.fileline() + ' : TRACE AnalysisHistoExport NOT FOUND')
+            try:
+                details = {"result": "ERROR", "reason": "NO_DATA", "date_beg": args.get("date_beg"),
+                           "date_end": args.get("date_end")}
+                Audit.insertAudit(audit_user, "AnalysisHistoExport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisHistoExport ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # write csv file
@@ -233,9 +267,21 @@ class AnalysisHistoExport(Resource):
 
         except Exception as err:
             self.log.error(Logs.fileline() + ' : post AnalysisHistoExport failed, err=%s', err)
-            return False
+            try:
+                details = {"result": "ERROR", "reason": "WRITE_CSV_FAILED", "error": str(err),
+                           "date_beg": args.get("date_beg"), "date_end": args.get("date_end")}
+                Audit.insertAudit(audit_user, "AnalysisHistoExport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : AnalysisHistoExport ERROR audit exception err=' + str(err2))
+            return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisHistoExport')
+        try:
+            details = {"result": "SUCCESS", "date_beg": args.get("date_beg"), "date_end": args.get("date_end"),
+                       "count": len(l_data) - 1}
+            Audit.insertAudit(audit_user, "AnalysisHistoExport", "ANALYSIS", None, "SUCCESS", details, "E")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisHistoExport ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -244,10 +290,16 @@ class AnalysisHistoList(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'date_beg' not in args or 'date_end' not in args:
             self.log.error(Logs.fileline() + ' : AnalysisHistoList ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["date_beg", "date_end"]}
+                Audit.insertAudit(audit_user, "AnalysisHistoList", "ANALYSIS", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisHistoList ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         args['limit'] = 7000
@@ -255,7 +307,7 @@ class AnalysisHistoList(Resource):
         l_analyzes = Analysis.getAnalyzesHistoList(args)
 
         if not l_analyzes:
-            self.log.error(Logs.fileline() + ' : TRACE AnalysisHistoList not found')
+            self.log.info(Logs.fileline() + ' : TRACE AnalysisHistoList not found')
 
         Various.useLangDB()
 
@@ -275,6 +327,12 @@ class AnalysisHistoList(Resource):
                 analysis['nb_ana'] = nb_ana['total']
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisHistoList')
+        try:
+            details = {"result": "SUCCESS", "date_beg": args.get("date_beg"), "date_end": args.get("date_end"),
+                       "count": len(l_analyzes) if l_analyzes else 0}
+            Audit.insertAudit(audit_user, "AnalysisHistoList", "ANALYSIS", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisHistoList ERROR audit success err=' + str(err))
         return compose_ret(l_analyzes, Constants.cst_content_type_json)
 
 
@@ -283,10 +341,16 @@ class AnalysisHistoDet(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'date_beg' not in args or 'date_end' not in args or 'id_ana' not in args:
             self.log.error(Logs.fileline() + ' : AnalysisHistoDet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["date_beg", "date_end", "id_ana"]}
+                Audit.insertAudit(audit_user, "AnalysisHistoDet", "ANALYSIS", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisHistoDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         args['limit'] = 7000
@@ -294,7 +358,7 @@ class AnalysisHistoDet(Resource):
         l_datas = Analysis.getAnalyzesHistoDet(args)
 
         if not l_datas:
-            self.log.error(Logs.fileline() + ' : TRACE AnalysisHistoDet not found')
+            self.log.info(Logs.fileline() + ' : TRACE AnalysisHistoDet not found')
 
         Various.useLangDB()
 
@@ -317,6 +381,12 @@ class AnalysisHistoDet(Resource):
                 data['type_rec'] = 'I'
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisHistoDet')
+        try:
+            details = {"result": "SUCCESS", "date_beg": args.get("date_beg"), "date_end": args.get("date_end"),
+                       "id_ana": args.get("id_ana"), "count": len(l_datas) if l_datas else 0}
+            Audit.insertAudit(audit_user, "AnalysisHistoDet", "ANALYSIS", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisHistoDet ERROR audit success err=' + str(err))
         return compose_ret(l_datas, Constants.cst_content_type_json)
 
 
@@ -325,17 +395,33 @@ class AnalysisCode(Resource):
 
     @require_oauth()
     def get(self, code):
+        audit_user = request.oauth_user
         ret = Analysis.exist(code)
 
         if ret and ret == -1:
             self.log.error(Logs.fileline() + ' : ' + 'AnalysisCode ERROR sql')
+            try:
+                details = {"result": "ERROR", "reason": "SQL_ERROR", "code": str(code)}
+                Audit.insertAudit(audit_user, "AnalysisCode", "ANALYSIS", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisCode ERROR audit sql err=' + str(err))
             return compose_ret(-1, Constants.cst_content_type_json, 500)
 
         if ret:
-            self.log.error(Logs.fileline() + ' : ' + 'AnalysisCode WARNING code already exist')
+            self.log.info(Logs.fileline() + ' : ' + 'AnalysisCode WARNING code already exist')
+            try:
+                details = {"result": "SUCCESS", "code": str(code)}
+                Audit.insertAudit(audit_user, "AnalysisCode", "ANALYSIS", None, "SUCCESS", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisCode ERROR audit success err=' + str(err))
             return compose_ret(1, Constants.cst_content_type_json, 200)
         else:
             self.log.info(Logs.fileline() + ' : AnalysisCode code ok :' + str(code))
+            try:
+                details = {"result": "SUCCESS", "code": str(code)}
+                Audit.insertAudit(audit_user, "AnalysisCode", "ANALYSIS", None, "SUCCESS", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisCode ERROR audit success err=' + str(err))
             return compose_ret(0, Constants.cst_content_type_json, 200)
 
 
@@ -345,17 +431,33 @@ class AnalysisCodeFromExt(Resource):
     @require_oauth('external/analysis')
     def get(self, code):
         self.log.info(Logs.fileline() + ' : AnalysisCodeFromExt API access authorized')
+        audit_user = request.oauth_user
         ret = Analysis.exist(code)
 
         if ret and ret == -1:
             self.log.error(Logs.fileline() + ' : ' + 'AnalysisCodeFromExt ERROR sql')
+            try:
+                details = {"result": "ERROR", "reason": "SQL_ERROR", "code": str(code)}
+                Audit.insertAudit(audit_user, "AnalysisCodeFromExt", "ANALYSIS", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisCodeFromExt ERROR audit sql err=' + str(err))
             return compose_ret(-1, Constants.cst_content_type_json, 500)
 
         if ret:
-            self.log.error(Logs.fileline() + ' : ' + 'AnalysisCodeFromExt WARNING code already exist')
+            self.log.info(Logs.fileline() + ' : ' + 'AnalysisCodeFromExt WARNING code already exist')
+            try:
+                details = {"result": "SUCCESS", "code": str(code)}
+                Audit.insertAudit(audit_user, "AnalysisCodeFromExt", "ANALYSIS", None, "SUCCESS", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisCode ERROR audit success err=' + str(err))
             return compose_ret(1, Constants.cst_content_type_json, 200)
         else:
             self.log.info(Logs.fileline() + ' : AnalysisCodeFromExt code ok :' + str(code))
+            try:
+                details = {"result": "SUCCESS", "code": str(code)}
+                Audit.insertAudit(audit_user, "AnalysisCodeFromExt", "ANALYSIS", None, "SUCCESS", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisCodeFromExt ERROR audit success err=' + str(err))
             return compose_ret(0, Constants.cst_content_type_json, 200)
 
 
@@ -364,10 +466,16 @@ class AnalysisDet(Resource):
 
     @require_oauth()
     def get(self, id_ana):
+        audit_user = request.oauth_user
         analysis = Analysis.getAnalysis(id_ana)
 
         if not analysis:
             self.log.error(Logs.fileline() + ' : ' + 'AnalysisDet ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_ana": id_ana}
+                Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -385,17 +493,28 @@ class AnalysisDet(Resource):
             analysis['cote_valeur'] = 0
 
         self.log.info(Logs.fileline() + ' : AnalysisDet id_data=' + str(id_ana))
+        try:
+            details = {"result": "SUCCESS", "id_ana": id_ana}
+            Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit success err=' + str(err))
         return compose_ret(analysis, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self, id_ana):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'id_ana' not in args or 'code' not in args or 'name' not in args or 'abbr' not in args or \
            'type_ana' not in args or 'type_prod' not in args or 'unit' not in args or 'value' not in args or \
            'stat' not in args or 'comment' not in args or 'product' not in args or 'list_var' not in args or \
            'whonet' not in args or 'ana_ast' not in args or 'ana_lite' not in args:
             self.log.error(Logs.fileline() + ' : AnalysisDet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         id_ana = args['id_ana']
@@ -405,7 +524,7 @@ class AnalysisDet(Resource):
 
         # UPDATE ANALYSIS...
         if analysis and analysis['id_data'] == id_ana:
-            self.log.error(Logs.fileline() + ' : AnalysisDet UPDATE analysis')
+            self.log.info(Logs.fileline() + ' : AnalysisDet UPDATE analysis')
 
             if args['value'] == '':
                 args['value'] = 0
@@ -430,6 +549,11 @@ class AnalysisDet(Resource):
 
             if ret is False:
                 self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR update analysis')
+                try:
+                    details = {"result": "ERROR", "reason": "UPDATE_ANALYSIS", "id_ana": id_ana}
+                    Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             # delete missing link to variable compared to analysis (get list before add new var)
@@ -459,6 +583,11 @@ class AnalysisDet(Resource):
 
                     if ret is False:
                         self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR update var analysis')
+                        try:
+                            details = {"result": "ERROR", "reason": "UPDATE_VAR_ANALYSIS", "id_ana": id_ana}
+                            Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "U")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit update var analysis err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
                     # new link with analysis
@@ -474,6 +603,11 @@ class AnalysisDet(Resource):
 
                         if ret <= 0:
                             self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR insert link var to analysis')
+                            try:
+                                details = {"result": "ERROR", "reason": "INSERT_LINK_VAR", "id_ana": id_ana}
+                                Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "C")
+                            except Exception as err:
+                                self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit insert link var err=' + str(err))
                             return compose_ret('', Constants.cst_content_type_json, 500)
                     else:
                         ret = Analysis.updateRefVariable(id_data=var['id_link'],
@@ -486,6 +620,12 @@ class AnalysisDet(Resource):
 
                         if ret is False:
                             self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR update link var to analysis')
+                            try:
+                                details = {"result": "ERROR", "reason": "UPDATE_LINK_VAR", "id_ana": id_ana,
+                                           "id_link": var.get('id_link')}
+                                Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "U")
+                            except Exception as err:
+                                self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit update link var err=' + str(err))
                             return compose_ret('', Constants.cst_content_type_json, 500)
 
                 else:
@@ -510,6 +650,11 @@ class AnalysisDet(Resource):
 
                     if ret is False:
                         self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR insert var analysis')
+                        try:
+                            details = {"result": "ERROR", "reason": "INSERT_VAR_ANALYSIS", "id_ana": id_ana}
+                            Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "C")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit insert var analysis err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
                     id_var = ret
@@ -526,6 +671,11 @@ class AnalysisDet(Resource):
 
                     if ret <= 0:
                         self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR insert link var to analysis')
+                        try:
+                            details = {"result": "ERROR", "reason": "INSERT_LINK_VAR", "id_ana": id_ana, "id_var": id_var}
+                            Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "C")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit insert link var err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
             for db_var in db_l_var:
@@ -539,11 +689,16 @@ class AnalysisDet(Resource):
 
                     if ret is False:
                         self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR delete link var analysis')
+                        try:
+                            details = {"result": "ERROR", "reason": "DELETE_LINK_VAR", "id_ana": id_ana, "id_var": db_var.get('id_data')}
+                            Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "D")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit delete link var err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
         # INSERT NEW ANALYSIS...
         else:
-            self.log.error(Logs.fileline() + ' : AnalysisDet INSERT analysis')
+            self.log.info(Logs.fileline() + ' : AnalysisDet INSERT analysis')
 
             # insert analysis
             ret = Analysis.insertAnalysis(id_owner=args['id_owner'],
@@ -564,6 +719,11 @@ class AnalysisDet(Resource):
 
             if ret <= 0:
                 self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR insert analysis')
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_ANALYSIS"}
+                    Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", None, "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit insert analysis err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             id_ana = ret
@@ -592,6 +752,12 @@ class AnalysisDet(Resource):
 
                     if ret is False:
                         self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR update var analysis')
+                        try:
+                            details = {"result": "ERROR", "reason": "UPDATE_VAR_ANALYSIS", "id_ana": id_ana,
+                                       "id_var": var.get('id_var')}
+                            Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "U")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit update var analysis err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
                     # link variable
@@ -606,6 +772,12 @@ class AnalysisDet(Resource):
 
                     if ret <= 0:
                         self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR insert link var to analysis')
+                        try:
+                            details = {"result": "ERROR", "reason": "INSERT_LINK_VAR", "id_ana": id_ana,
+                                       "id_var": var.get('id_var')}
+                            Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "C")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit insert link var err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
                 else:
@@ -630,6 +802,11 @@ class AnalysisDet(Resource):
 
                     if ret is False:
                         self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR insert var analysis')
+                        try:
+                            details = {"result": "ERROR", "reason": "INSERT_VAR_ANALYSIS", "id_ana": id_ana}
+                            Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "C")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit insert var analysis err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
                     id_var = ret
@@ -646,20 +823,41 @@ class AnalysisDet(Resource):
 
                     if ret <= 0:
                         self.log.info(Logs.fileline() + ' : TRACE AnalysisDet ERROR insert link var to analysis')
+                        try:
+                            details = {"result": "ERROR", "reason": "INSERT_LINK_VAR", "id_ana": id_ana, "id_var": id_var}
+                            Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "C")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit insert link var err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisDet id_ana=' + str(id_ana))
+        try:
+            details = {"result": "SUCCESS", "id_ana": id_ana}
+            Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
     @require_oauth()
     def delete(self, id_ana):
+        audit_user = request.oauth_user
         ret = Analysis.deleteAnalysis(id_ana)
 
         if not ret:
             self.log.error(Logs.fileline() + ' : TRACE AnalysisDet delete ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "DELETE_FAILED", "id_ana": id_ana}
+                Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit delete err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisDet delete id_item=' + str(id_ana))
+        try:
+            details = {"result": "SUCCESS", "id_ana": id_ana}
+            Audit.insertAudit(audit_user, "AnalysisDet", "ANALYSIS", id_ana, "SUCCESS", details, "D")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisDet ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -669,10 +867,16 @@ class AnalysisDetFromExt(Resource):
     @require_oauth('external/analysis')
     def get(self, id_ana):
         self.log.info(Logs.fileline() + ' : AnalysisDetFromExt API access authorized')
+        audit_user = request.oauth_user
         analysis = Analysis.getAnalysis(id_ana)
 
         if not analysis:
             self.log.error(Logs.fileline() + ' : ' + 'AnalysisDetExt ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_ana": id_ana}
+                Audit.insertAudit(audit_user, "AnalysisDetFromExt", "ANALYSIS", id_ana, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisDetFromExt ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -690,6 +894,11 @@ class AnalysisDetFromExt(Resource):
             analysis['cote_valeur'] = 0
 
         self.log.info(Logs.fileline() + ' : AnalysisDetExt id_data=' + str(id_ana))
+        try:
+            details = {"result": "SUCCESS", "id_ana": id_ana}
+            Audit.insertAudit(audit_user, "AnalysisDetFromExt", "ANALYSIS", id_ana, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisDetFromExt ERROR audit success err=' + str(err))
         return compose_ret(analysis, Constants.cst_content_type_json, 200)
 
 
@@ -698,10 +907,16 @@ class AnalysisVarAll(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_vars = Analysis.getAllVariable()
 
         if not l_vars:
             self.log.error(Logs.fileline() + ' : ' + 'AnalysisVarAll ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "AnalysisVarAll", "ANALYSIS", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisVarAll ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -723,7 +938,12 @@ class AnalysisVarAll(Resource):
                 else:
                     var['nb_link'] = 0
 
-        self.log.info(Logs.fileline() + ' : AnalysisVarAlll')
+        self.log.info(Logs.fileline() + ' : AnalysisVarAll')
+        try:
+            details = {"result": "SUCCESS", "count": len(l_vars) if l_vars else 0}
+            Audit.insertAudit(audit_user, "AnalysisVarAll", "ANALYSIS", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisVarAll ERROR audit success err=' + str(err))
         return compose_ret(l_vars, Constants.cst_content_type_json, 200)
 
 
@@ -732,10 +952,16 @@ class AnalysisVarList(Resource):
 
     @require_oauth()
     def get(self, id_ana):
+        audit_user = request.oauth_user
         l_vars = Analysis.getListVariable(id_ana)
 
         if not l_vars:
             self.log.error(Logs.fileline() + ' : ' + 'AnalysisVarList ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_ana": id_ana}
+                Audit.insertAudit(audit_user, "AnalysisVarList", "ANALYSIS", id_ana, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisVarList ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -751,6 +977,11 @@ class AnalysisVarList(Resource):
                     var[key] = _(var[key].strip())
 
         self.log.info(Logs.fileline() + ' : AnalysisVarList id_data=' + str(id_ana))
+        try:
+            details = {"result": "SUCCESS", "id_ana": id_ana, "count": len(l_vars) if l_vars else 0}
+            Audit.insertAudit(audit_user, "AnalysisVarList", "ANALYSIS", id_ana, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisVarList ERROR audit success err=' + str(err))
         return compose_ret(l_vars, Constants.cst_content_type_json, 200)
 
 
@@ -759,10 +990,16 @@ class AnalysisVarDet(Resource):
 
     @require_oauth()
     def get(self, id_var):
+        audit_user = request.oauth_user
         ana_var = Analysis.getAnalysisVar(id_var)
 
         if not ana_var:
             self.log.error(Logs.fileline() + ' : ' + 'AnalysisVarDet ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_var": id_var}
+                Audit.insertAudit(audit_user, "AnalysisVarDet", "ANALYSIS", id_var, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisVarDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -777,6 +1014,11 @@ class AnalysisVarDet(Resource):
                 ana_var[key] = _(ana_var[key].strip())
 
         self.log.info(Logs.fileline() + ' : AnalysisVarDet id_data=' + str(id_var))
+        try:
+            details = {"result": "SUCCESS", "id_var": id_var}
+            Audit.insertAudit(audit_user, "AnalysisVarDet", "ANALYSIS", id_var, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisVarDet ERROR audit success err=' + str(err))
         return compose_ret(ana_var, Constants.cst_content_type_json, 200)
 
 
@@ -785,10 +1027,16 @@ class AnalysisTypeProd(Resource):
 
     @require_oauth()
     def get(self, id_type_prod):
+        audit_user = request.oauth_user
         type_prod = Analysis.getProductType(id_type_prod)
 
         if not type_prod:
             self.log.error(Logs.fileline() + ' : ' + 'AnalysisTypeProd ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_type_prod": id_type_prod}
+                Audit.insertAudit(audit_user, "AnalysisTypeProd", "ANALYSIS", id_type_prod, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisTypeProd ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -801,6 +1049,11 @@ class AnalysisTypeProd(Resource):
                 type_prod[key] = _(type_prod[key].strip())
 
         self.log.info(Logs.fileline() + ' : AnalysistypeProd id_type_prod' + str(id_type_prod))
+        try:
+            details = {"result": "SUCCESS", "id_type_prod": id_type_prod}
+            Audit.insertAudit(audit_user, "AnalysisTypeProd", "ANALYSIS", id_type_prod, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisTypeProd ERROR audit success err=' + str(err))
         return compose_ret(type_prod, Constants.cst_content_type_json, 200)
 
 
@@ -809,10 +1062,16 @@ class AnalysisReq(Resource):
 
     @require_oauth()
     def get(self, id_rec, type_ana='A'):
+        audit_user = request.oauth_user
         l_ana = Analysis.getAnalysisReq(id_rec, type_ana)
 
         if not l_ana:
             self.log.error(Logs.fileline() + ' : ' + 'AnalysisReq ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_rec": id_rec, "type_ana": str(type_ana)}
+                Audit.insertAudit(audit_user, "AnalysisReq", "RECORD", id_rec, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisReq ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -836,14 +1095,25 @@ class AnalysisReq(Resource):
                 analysis['cote_valeur'] = 0
 
         self.log.info(Logs.fileline() + ' : AnalysisReq id_rec=' + str(id_rec))
+        try:
+            details = {"result": "SUCCESS", "id_rec": id_rec, "type_ana": str(type_ana), "count": len(l_ana) if l_ana else 0}
+            Audit.insertAudit(audit_user, "AnalysisReq", "RECORD", id_rec, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisReq ERROR audit success err=' + str(err))
         return compose_ret(l_ana, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'list_ana' not in args:
             self.log.error(Logs.fileline() + ' : AnalysisReq ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["list_ana"]}
+                Audit.insertAudit(audit_user, "AnalysisReq", "RECORD", None, "ERROR", details, "C")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisReq ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Loop on list_ana
@@ -852,6 +1122,11 @@ class AnalysisReq(Resource):
             if 'id_owner' not in ana or 'id_rec' not in ana or 'id_ana' not in ana or 'price' not in ana or \
                'paid' not in ana or 'emer' not in ana or 'req' not in ana or 'outsourced' not in ana:
                 self.log.error(Logs.fileline() + ' : AnalysisReq ERROR ana missing')
+                try:
+                    details = {"result": "ERROR", "reason": "ANA_MISSING"}
+                    Audit.insertAudit(audit_user, "AnalysisReq", "RECORD", ana.get('id_rec'), "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : AnalysisReq ERROR audit ana missing err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 400)
 
             ret = Analysis.insertAnalysisReq(id_owner=ana['id_owner'],
@@ -865,20 +1140,36 @@ class AnalysisReq(Resource):
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : AnalysisReq ERROR  insert')
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_FAILED", "id_rec": ana.get('id_rec'), "id_ana": ana.get('id_ana')}
+                    Audit.insertAudit(audit_user, "AnalysisReq", "RECORD", ana.get('id_rec'), "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : AnalysisReq ERROR audit insert err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             res = {}
             res['id_req'] = ret
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisReq')
+        try:
+            details = {"result": "SUCCESS"}
+            Audit.insertAudit(audit_user, "AnalysisReq", "RECORD", None, "SUCCESS", details, "C")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisReq ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
     @require_oauth()
     def delete(self, id_req):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'id_rec' not in args or 'id_ana' not in args or 'type_samp' not in args or 'price' not in args:
             self.log.error(Logs.fileline() + ' : AnalysisReq ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "id_req": id_req}
+                Audit.insertAudit(audit_user, "AnalysisReq", "RECORD", id_req, "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisReq ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         if args['price'] > 0:
@@ -886,15 +1177,31 @@ class AnalysisReq(Resource):
 
             if not ret:
                 self.log.error(Logs.fileline() + ' : TRACE AnalysisReq removeRecordBill ERROR')
+                try:
+                    details = {"result": "ERROR", "reason": "REMOVE_BILL_FAILED", "id_req": id_req, "id_rec": args.get('id_rec')}
+                    Audit.insertAudit(audit_user, "AnalysisReq", "RECORD", id_req, "ERROR", details, "D")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : AnalysisReq ERROR audit remove bill err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         ret = Analysis.deleteAnalysisReq(id_req, args['id_rec'], args['id_ana'], args['type_samp'])
 
         if not ret:
             self.log.error(Logs.fileline() + ' : TRACE AnalysisReq delete ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "DELETE_FAILED", "id_req": id_req, "id_rec": args.get('id_rec'),
+                           "id_ana": args.get('id_ana'), "type_samp": args.get('type_samp')}
+                Audit.insertAudit(audit_user, "AnalysisReq", "RECORD", id_req, "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisReq ERROR audit delete err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisReq delete id_item=' + str(id_req))
+        try:
+            details = {"result": "SUCCESS", "id_req": id_req, "id_rec": args.get('id_rec'), "id_ana": args.get('id_ana')}
+            Audit.insertAudit(audit_user, "AnalysisReq", "RECORD", id_req, "SUCCESS", details, "D")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisReq ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -903,7 +1210,8 @@ class AnalysisExport(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         l_data = [['version', 'id_ana', 'id_owner', 'ana_code', 'ana_name', 'ana_abbr', 'ana_family', 'ana_unit_rating',
                    'ana_value_rating', 'ana_comment', 'ana_bio_product', 'ana_sample_type', 'ana_type', 'ana_active',
@@ -919,6 +1227,11 @@ class AnalysisExport(Resource):
 
         if 'id_user' not in args:
             self.log.error(Logs.fileline() + ' : AnalysisExport ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["id_user"]}
+                Audit.insertAudit(audit_user, "AnalysisExport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisExport ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         Various.useLangDB()
@@ -1173,6 +1486,11 @@ class AnalysisExport(Resource):
 
         # if no result to export
         if len(l_data) < 2:
+            try:
+                details = {"result": "ERROR", "reason": "NO_DATA"}
+                Audit.insertAudit(audit_user, "AnalysisExport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisExport ERROR audit no data err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # write csv file
@@ -1190,9 +1508,19 @@ class AnalysisExport(Resource):
 
         except Exception as err:
             self.log.error(Logs.fileline() + ' : post AnalysisExport failed, err=%s', err)
-            return False
+            try:
+                details = {"result": "ERROR", "reason": "WRITE_CSV_FAILED", "error": str(err)}
+                Audit.insertAudit(audit_user, "AnalysisExport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : AnalysisExport ERROR audit write csv err=' + str(err2))
+            return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisExport')
+        try:
+            details = {"result": "SUCCESS"}
+            Audit.insertAudit(audit_user, "AnalysisExport", "ANALYSIS", None, "SUCCESS", details, "E")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisExport ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -1201,10 +1529,16 @@ class AnalysisImport(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'filename' not in args or 'type' not in args or 'id_user' not in args or 'test' not in args:
             self.log.error(Logs.fileline() + ' : AnalysisImport ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         filename = args['filename']
@@ -1219,6 +1553,11 @@ class AnalysisImport(Resource):
             if not ret:
                 self.log.error(Logs.fileline() + ' : TEST AnalysisImport ERROR dropTableTest')
                 DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR dropTableTest', type='ANA')
+                try:
+                    details = {"result": "ERROR", "reason": "DROP_TABLE_TEST"}
+                    Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit dropTableTest err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             # copy the production tables in the test tables
@@ -1227,6 +1566,11 @@ class AnalysisImport(Resource):
             if not ret:
                 self.log.error(Logs.fileline() + ' : TEST AnalysisImport ERROR initTableTest')
                 DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR initTableTest', type='ANA')
+                try:
+                    details = {"result": "ERROR", "reason": "INIT_TABLE_TEST"}
+                    Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit initTableTest err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         # --- Read CSV user ---
@@ -1236,6 +1580,11 @@ class AnalysisImport(Resource):
         if not isinstance(raw_filename, str) or not raw_filename:
             self.log.error(Logs.fileline() + ' : TRACE AnalysisImport ERROR invalid filename (empty or not a string)')
             DB.insertDbStatus(stat='ERR;AnalysisImport ERROR invalid filename', type='ANA')
+            try:
+                details = {"result": "ERROR", "reason": "INVALID_FILENAME"}
+                Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit invalid filename err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Keep only the final component; if it changes, separators were present -> reject
@@ -1243,12 +1592,22 @@ class AnalysisImport(Resource):
         if safe_name != raw_filename:
             self.log.error(Logs.fileline() + f' : TRACE AnalysisImport ERROR invalid filename "{raw_filename}" (path separators)')
             DB.insertDbStatus(stat='ERR;AnalysisImport ERROR invalid filename (separators)', type='ANA')
+            try:
+                details = {"result": "ERROR", "reason": "INVALID_FILENAME_SEPARATORS"}
+                Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit filename separators err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Enforce .csv extension
         if not safe_name.lower().endswith('.csv'):
             self.log.error(Logs.fileline() + f' : TRACE AnalysisImport ERROR invalid extension for "{safe_name}" (must be .csv)')
             DB.insertDbStatus(stat='ERR;AnalysisImport ERROR invalid extension', type='ANA')
+            try:
+                details = {"result": "ERROR", "reason": "INVALID_EXTENSION"}
+                Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit invalid extension err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Build and validate the final path, then ensure it stays under base_dir
@@ -1259,12 +1618,22 @@ class AnalysisImport(Resource):
         except Exception:
             self.log.error(Logs.fileline() + f' : TRACE AnalysisImport ERROR path traversal detected for "{safe_name}"')
             DB.insertDbStatus(stat='ERR;AnalysisImport ERROR path traversal', type='ANA')
+            try:
+                details = {"result": "ERROR", "reason": "PATH_TRAVERSAL"}
+                Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit path traversal err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Ensure file exists
         if not candidate_path.is_file():
             self.log.error(Logs.fileline() + f' : TRACE AnalysisImport ERROR file not found "{candidate_path}"')
             DB.insertDbStatus(stat='ERR;AnalysisImport ERROR file not found', type='ANA')
+            try:
+                details = {"result": "ERROR", "reason": "FILE_NOT_FOUND"}
+                Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit file not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Safe open
@@ -1279,6 +1648,11 @@ class AnalysisImport(Resource):
         if not l_rows or len(l_rows) < 2:
             self.log.error(Logs.fileline() + ' : TRACE AnalysisImport ERROR file empty')
             DB.insertDbStatus(stat='ERR;AnalysisImport ERROR file empty', type='ANA')
+            try:
+                details = {"result": "ERROR", "reason": "FILE_EMPTY"}
+                Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit file empty err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         head_line = l_rows[0]
@@ -1292,6 +1666,11 @@ class AnalysisImport(Resource):
         if version not in ('v3', 'v4', 'v5', 'v6'):
             self.log.error(Logs.fileline() + ' : TRACE AnalysisImport ERROR wrong version : ' + str(version))
             DB.insertDbStatus(stat='ERR;AnalysisImport ERROR wrong version', type='ANA')
+            try:
+                details = {"result": "ERROR", "reason": "WRONG_VERSION", "version": str(version)}
+                Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit wrong version err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 409)
 
         # check name of column
@@ -1315,6 +1694,11 @@ class AnalysisImport(Resource):
             if head != head_list[i]:
                 self.log.error(Logs.fileline() + ' : TRACE AnalysisImport ERROR wrong column or order : ' + str(head))
                 DB.insertDbStatus(stat='ERR;AnalysisImport ERROR wrong column or order : ' + str(head), type='ANA')
+                try:
+                    details = {"result": "ERROR", "reason": "WRONG_COLUMN_OR_ORDER", "head": str(head)}
+                    Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit wrong column err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 409)
             i = i + 1
 
@@ -1421,6 +1805,11 @@ class AnalysisImport(Resource):
                             DB.insertDbStatus(stat='ERR;AnalysisImport ERROR SQL verify code analysis code=' + str(code), type='ANA')
                         else:
                             DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR SQL verify code analysis code=' + str(code), type='ANA')
+                        try:
+                            details = {"result": "ERROR", "reason": "SQL_ERROR_VERIFY_CODE", "code": str(code), "csv_line": i}
+                            Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit sql verify code err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
                     # same analysis
@@ -1457,6 +1846,11 @@ class AnalysisImport(Resource):
                                     DB.insertDbStatus(stat='ERR;AnalysisImport ERROR update analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
                                 else:
                                     DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR update analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
+                                try:
+                                    details = {"result": "ERROR", "reason": "UPDATE_ANALYSIS", "code": str(code), "csv_line": i}
+                                    Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                                except Exception as err:
+                                    self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit update analysis err=' + str(err))
                                 return compose_ret('', Constants.cst_content_type_json, 500)
 
                             code_prev = code
@@ -1493,6 +1887,11 @@ class AnalysisImport(Resource):
                                         DB.insertDbStatus(stat='ERR;AnalysisImport ERROR update var analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
                                     else:
                                         DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR update var analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
+                                    try:
+                                        details = {"result": "ERROR", "reason": "UPDATE_VAR_ANALYSIS", "code": str(code), "csv_line": i}
+                                        Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                                    except Exception as err:
+                                        self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit update var err=' + str(err))
                                     return compose_ret('', Constants.cst_content_type_json, 500)
 
                                 # UPDATE LINK
@@ -1514,7 +1913,11 @@ class AnalysisImport(Resource):
                                         DB.insertDbStatus(stat='ERR;AnalysisImport ERROR update link var to analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
                                     else:
                                         DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR update link var to analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
-
+                                    try:
+                                        details = {"result": "ERROR", "reason": "UPDATE_LINK_VAR", "code": str(code), "csv_line": i}
+                                        Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                                    except Exception as err:
+                                        self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit update link var err=' + str(err))
                                     return compose_ret('', Constants.cst_content_type_json, 500)
 
         # ADD MODE
@@ -1623,6 +2026,11 @@ class AnalysisImport(Resource):
                             DB.insertDbStatus(stat='ERR;AnalysisImport ERROR SQL verify code analysis code=' + str(code), type='ANA')
                         else:
                             DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR SQL verify code analysis code=' + str(code), type='ANA')
+                        try:
+                            details = {"result": "ERROR", "reason": "SQL_ERROR_GET_ANALYSIS", "code": str(code), "csv_line": i}
+                            Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit sql get analysis err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
                     # New analysis code or same analysis after insert
@@ -1640,6 +2048,11 @@ class AnalysisImport(Resource):
                                     DB.insertDbStatus(stat='ERR;AnalysisImport ERROR SQL verify id analysis=' + str(id_ana), type='ANA')
                                 else:
                                     DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR SQL verify id analysis=' + str(id_ana), type='ANA')
+                                try:
+                                    details = {"result": "ERROR", "reason": "SQL_ERROR_GET_VAR", "code": str(code), "csv_line": i}
+                                    Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                                except Exception as err:
+                                    self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit sql get var err=' + str(err))
                                 return compose_ret('', Constants.cst_content_type_json, 500)
 
                             if ret:
@@ -1673,6 +2086,11 @@ class AnalysisImport(Resource):
                                     DB.insertDbStatus(stat='ERR;AnalysisImport ERROR insert analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
                                 else:
                                     DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR insert analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
+                                try:
+                                    details = {"result": "ERROR", "reason": "INSERT_ANALYSIS", "code": str(code), "csv_line": i}
+                                    Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                                except Exception as err:
+                                    self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit insert analysis err=' + str(err))
                                 return compose_ret('', Constants.cst_content_type_json, 500)
 
                             id_ana = ret
@@ -1717,6 +2135,11 @@ class AnalysisImport(Resource):
                                         DB.insertDbStatus(stat='ERR;AnalysisImport ERROR insert var analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
                                     else:
                                         DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR insert var analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
+                                    try:
+                                        details = {"result": "ERROR", "reason": "INSERT_VAR_ANALYSIS", "code": str(code), "csv_line": i}
+                                        Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                                    except Exception as err:
+                                        self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit insert var err=' + str(err))
                                     return compose_ret('', Constants.cst_content_type_json, 500)
 
                                 id_var = ret
@@ -1744,11 +2167,21 @@ class AnalysisImport(Resource):
                                     DB.insertDbStatus(stat='ERR;AnalysisImport ERROR insert link var analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
                                 else:
                                     DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR insert link var analysis code: ' + str(code) + ' | csv_line=' + str(i), type='ANA')
+                                try:
+                                    details = {"result": "ERROR", "reason": "INSERT_LINK_VAR", "code": str(code), "csv_line": i}
+                                    Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+                                except Exception as err:
+                                    self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit insert link var err=' + str(err))
                                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         else:
             self.log.error(Logs.fileline() + ' : TRACE AnalysisImport ERROR wrong type')
             DB.insertDbStatus(stat='ERR;AnalysisImport ERROR wrong type', type='ANA')
+            try:
+                details = {"result": "ERROR", "reason": "WRONG_TYPE"}
+                Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit wrong type err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         ret = Analysis.cleanGhostVar(test)
@@ -1759,7 +2192,11 @@ class AnalysisImport(Resource):
                 DB.insertDbStatus(stat='ERR;AnalysisImport ERROR clean ghost var with no link', type='ANA')
             else:
                 DB.insertDbStatus(stat='ERR;TEST AnalysisImport ERROR clean ghost var with no link', type='ANA')
-
+            try:
+                details = {"result": "ERROR", "reason": "CLEAN_GHOST_VAR"}
+                Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit clean ghost var err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisImport')
@@ -1768,6 +2205,11 @@ class AnalysisImport(Resource):
             DB.insertDbStatus(stat='OK;AnalysisImport ended OK', type='ANA')
         else:
             DB.insertDbStatus(stat='OK;TEST AnalysisImport ended OK', type='ANA')
+        try:
+            details = {"result": "SUCCESS"}
+            Audit.insertAudit(audit_user, "AnalysisImport", "ANALYSIS", None, "SUCCESS", details, "E")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisImport ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json, 200)
 
 
@@ -1776,16 +2218,35 @@ class AnalysisStatus(Resource):
 
     @require_oauth()
     def post(self):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'status' not in args or 'id_ana' not in args or 'id_user' not in args:
             self.log.error(Logs.fileline() + ' : AnalysisStatus ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["status", "id_ana", "id_user"]}
+                Audit.insertAudit(audit_user, "AnalysisStatus", "ANALYSIS", args.get('id_ana'), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisStatus ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Analysis.updateAnalysisStatus(args['status'], args['id_ana'])
 
         if not ret:
-            self.log.error(Logs.fileline() + ' : TRACE AnalysisStatus ERROR ')
+            self.log.error(Logs.fileline() + ' : TRACE AnalysisStatus ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_FAILED", "id_ana": args.get('id_ana'),
+                           "status": args.get('status'), "id_user": args.get('id_user')}
+                Audit.insertAudit(audit_user, "AnalysisStatus", "ANALYSIS", args.get('id_ana'), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : AnalysisStatus ERROR audit error err=' + str(err))
+            return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE AnalysisStatus by user:' + str(args['id_user']))
+        try:
+            details = {"result": "SUCCESS", "id_ana": args.get('id_ana'), "status": args.get('status'),
+                       "id_user": args.get('id_user')}
+            Audit.insertAudit(audit_user, "AnalysisStatus", "ANALYSIS", args.get('id_ana'), "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AnalysisStatus ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)

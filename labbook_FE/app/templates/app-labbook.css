@@ -1,14 +1,4 @@
-{% set role_color =
-   '#FFCC00'  if session['user_role'] == 'A'
-   else '#8330E2' if session['user_role'] == 'B'
-   else '#00ADEE' if session['user_role'] in ('T','TA','TQ')
-   else '#EF8839' if session['user_role'] in ('S','SA')
-   else '#66994F' if session['user_role'] == 'SP'
-   else '#E23176' if session['user_role'] == 'Q'
-   else '#452ED1' if session['user_role'] == 'K'
-   else '#BB2688' if session['user_role'] == 'L'
-   else 'DCDCDC'
-%}
+{% set role_color = session.get('color_1', '#DCDCDC') %}
 
 .modal-body
 {
@@ -92,8 +82,8 @@ align-items         : center;
 justify-content     : center;
 height              : 75px;
 margin-top          : 3px;
-margin-left         : 20px;
-margin-right        : 20px;
+margin-left         : 8px;
+margin-right        : 3px;
 padding-top         : 0.6rem;
 }
 

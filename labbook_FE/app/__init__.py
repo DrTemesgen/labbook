@@ -20,6 +20,7 @@ import random
 import uuid
 import secrets
 import base64
+import re
 
 from logging.handlers import WatchedFileHandler
 from datetime import datetime, date, timedelta
@@ -9804,6 +9805,51 @@ def list_audits():
 
     json_ihm  = {}
     json_data = {}
+
+    # Read NTP status from local IO file
+    ntp_status = {
+        'synced': None,
+        'timestamp_utc': None,
+        'timestamp_utc_fmt': None,
+        'raw_content': None
+    }
+
+    try:
+        ntp_file_path = os.path.join(Constants.cst_io, 'ntp_status.out')
+
+        if os.path.isfile(ntp_file_path):
+            with open(ntp_file_path, 'r', encoding='utf-8', errors='replace') as ntp_file:
+                file_content = (ntp_file.read() or '').strip()
+
+            ntp_status['raw_content'] = file_content
+
+            timestamp_match = re.search(r'\bts_utc=([0-9T:\-]+Z)\b', file_content)
+            if timestamp_match:
+                ntp_status['timestamp_utc'] = timestamp_match.group(1)
+
+                try:
+                    parsed_datetime = datetime.strptime(
+                        ntp_status['timestamp_utc'],
+                        '%Y-%m-%dT%H:%M:%SZ'
+                    )
+                    ntp_status['timestamp_utc_fmt'] = parsed_datetime.strftime(
+                        '%Y-%m-%d %H:%M:%S UTC'
+                    )
+                except Exception:
+                    ntp_status['timestamp_utc_fmt'] = ntp_status['timestamp_utc']
+
+            synced_match = re.search(r'\bsynced=(\d)\b', file_content)
+            if synced_match:
+                ntp_status['synced'] = 1 if synced_match.group(1) == '1' else 0
+
+        else:
+            ntp_status['raw_content'] = 'file_not_found'
+
+    except Exception as err:
+        log.error(Logs.fileline() + ' : read ntp_status.out failed err=%s', err)
+        ntp_status['raw_content'] = 'read_error'
+
+    json_ihm['ntp_status'] = ntp_status
 
     # Load list of user role
     try:

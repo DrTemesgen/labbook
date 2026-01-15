@@ -8,6 +8,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.9] - 2025-01-15
+### Added
+- full audit logging to all webservice with oauth authentification
+- new analysis NFS_XN3 for Sysmex device
+- automation: add hourly (H) schedule kind and system-level job for periodic NTP status monitoring
+- system NTP clock monitoring with audit logging and status indicator in the Audit Log page.
+
+### Changed
+- logo of Fondation Mérieux
+
+### Fixed
+- analyzer result attachment to always target the most recent sample when the same specimen code is reused
+- homepage icon colors to match user roles consistently
+- ensure generated patient code (pat_code) is always sent on save
+- audit result filter for failed events
+
 ## [3.6.8] - 2025-12-22
 ### Added
 - support for mapped analyzer result codes to persist the LabBook variable code resolved from analyzer mappings

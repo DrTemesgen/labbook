@@ -6,6 +6,7 @@ import os
 import base64
 import shutil
 import uuid
+import json
 
 from datetime import datetime
 from flask import request
@@ -14,6 +15,7 @@ from flask_restful import Resource
 from app.models.General import compose_ret
 from app.models.Constants import Constants
 from app.models.Logs import Logs
+from app.models.Audit import Audit
 from app.models.Lite import Lite
 from app.models.Analysis import Analysis
 from app.models.File import File
@@ -30,6 +32,7 @@ class LiteSetupList(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         l_setup = Lite.getLiteSetupList()
 
         if not l_setup:
@@ -42,6 +45,11 @@ class LiteSetupList(Resource):
                     setup[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE LiteSetupList')
+        try:
+            details = {"result": "SUCCESS", "count": len(l_setup) if l_setup else 0}
+            Audit.insertAudit(audit_user, "LiteSetupList", "LITE", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : LiteSetupList ERROR audit err=' + str(err))
         return compose_ret({"data": l_setup}, Constants.cst_content_type_json)
 
 
@@ -50,10 +58,16 @@ class LiteSetupDet(Resource):
 
     @require_oauth()
     def get(self, id_item):
+        audit_user = request.oauth_user
         item = Lite.getLiteSetup(id_item)
 
         if not item:
             self.log.error(Logs.fileline() + ' : ' + 'LiteSetupDet ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_item": id_item}
+                Audit.insertAudit(audit_user, "LiteSetupDet", "LITE", id_item, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : LiteSetupDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -65,21 +79,38 @@ class LiteSetupDet(Resource):
         item['lite_users'] = Lite.getLiteUsers(id_item)
 
         self.log.info(Logs.fileline() + ' : LiteSetupDet id_item=' + str(id_item))
+        try:
+            details = {"result": "SUCCESS", "id_item": id_item}
+            Audit.insertAudit(audit_user, "LiteSetupDet", "LITE", id_item, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : LiteSetupDet ERROR audit success err=' + str(err))
         return compose_ret(item, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self, id_item):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json() or {}
 
         if 'name' not in args or 'login' not in args or 'pwd' not in args or 'users' not in args or \
            'report_pwd' not in args:
             self.log.error(Logs.fileline() + ' : LiteSetupDet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "id_item": id_item,
+                           "missing": ["name", "login", "pwd", "users", "report_pwd"]}
+                Audit.insertAudit(audit_user, "LiteSetupDet", "LITE", id_item if id_item else None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : LiteSetupDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         try:
             pwd_hashed = bcrypt.hashpw(args['pwd'].encode(), bcrypt.gensalt()).decode()
         except Exception as e:
             self.log.error(Logs.alert() + f' : LiteSetupDet bcrypt error = {str(e)}')
+            try:
+                details = {"result": "ERROR", "reason": "BCRYPT_FAILED", "id_item": id_item, "error": str(e)}
+                Audit.insertAudit(audit_user, "LiteSetupDet", "LITE", id_item if id_item else None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : LiteSetupDet ERROR audit bcrypt err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # Update item
@@ -92,12 +123,22 @@ class LiteSetupDet(Resource):
 
             if ret is False:
                 self.log.error(Logs.alert() + ' : LiteSetupDet ERROR update setup')
+                try:
+                    details = {"result": "ERROR", "reason": "UPDATE_FAILED", "id_item": id_item}
+                    Audit.insertAudit(audit_user, "LiteSetupDet", "LITE", id_item, "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : LiteSetupDet ERROR audit update err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             ret = Lite.insertLiteUsers(id_lite=id_item, users=args['users'])
 
             if ret is False:
                 self.log.error(Logs.alert() + ' : LiteSetupDet ERROR insert users')
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_USERS_FAILED", "id_item": id_item}
+                    Audit.insertAudit(audit_user, "LiteSetupDet", "LITE", id_item, "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : LiteSetupDet ERROR audit insert users err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         # Insert new item
@@ -109,6 +150,11 @@ class LiteSetupDet(Resource):
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : LiteSetupDet ERROR insert setup')
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_SETUP_FAILED", "id_item": id_item}
+                    Audit.insertAudit(audit_user, "LiteSetupDet", "LITE", None, "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : LiteSetupDet ERROR audit insert setup err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             id_item = ret
@@ -117,9 +163,19 @@ class LiteSetupDet(Resource):
 
             if ret is False:
                 self.log.error(Logs.alert() + ' : LiteSetupDet ERROR insert users')
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_USERS_FAILED", "id_item": id_item}
+                    Audit.insertAudit(audit_user, "LiteSetupDet", "LITE", id_item, "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : LiteSetupDet ERROR audit insert users err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE LiteSetupDet id_item=' + str(id_item))
+        try:
+            details = {"result": "SUCCESS", "id_item": id_item}
+            Audit.insertAudit(audit_user, "LiteSetupDet", "LITE", id_item, "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : LiteSetupDet ERROR audit success err=' + str(err))
         return compose_ret(id_item, Constants.cst_content_type_json)
 
 
@@ -127,7 +183,7 @@ class LiteSetupLoad(Resource):
     log = logging.getLogger('log_services')
 
     def post(self):
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'login' not in args or 'pwd' not in args:
             self.log.error(Logs.fileline() + ' : LiteSetupLoad ERROR args missing')
@@ -461,7 +517,6 @@ class LiteSetupLoad(Resource):
         }
 
         # TODO for DEBUG during test
-        import json
         from decimal import Decimal
         from datetime import date, datetime
         import base64
@@ -496,7 +551,7 @@ class LiteDataRecovery(Resource):
     log = logging.getLogger('log_services')
 
     def post(self):
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'login' not in args or 'pwd' not in args:
             self.log.error(Logs.fileline() + ' : LiteDataRecovery ERROR args missing')
@@ -913,7 +968,7 @@ class LiteReportRecovery(Resource):
     log = logging.getLogger('log_services')
 
     def post(self):
-        args = request.get_json()
+        args = request.get_json() or {}
 
         if 'login' not in args or 'pwd' not in args:
             self.log.error(Logs.fileline() + ' : LiteReportRecovery ERROR args missing')

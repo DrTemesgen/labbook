@@ -8,6 +8,7 @@ from flask_restful import Resource
 
 from app.models.General import compose_ret
 from app.models.Logs import Logs
+from app.models.Audit import Audit
 from app.models.Analysis import Analysis
 from app.models.Analyzer import Analyzer
 from app.models.Constants import Constants
@@ -28,22 +29,40 @@ class ResultValue(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'list_answer' not in args:
             self.log.error(Logs.fileline() + ' : TRACE Result ERROR list_answer missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": "list_answer"}
+                Audit.insertAudit(audit_user, "ResultValue", "RESULT", None, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultValue ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
+        id_res_list = []
         for answer in args['list_answer']:
+            id_res_list.append(answer['id_res'])
             ret = Result.updateResult(id_data=answer['id_res'],
                                       id_owner=answer['id_owner'],
                                       valeur=answer['value'])
 
             if ret is False:
                 self.log.error(Logs.fileline() + ' : TRACE Result updateResult ERROR')
+                try:
+                    details = {"result": "ERROR", "reason": "UPDATE_FAILED", "id_res": answer.get('id_res')}
+                    Audit.insertAudit(audit_user, "ResultValue", "RESULT", answer.get('id_res'), "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ResultValue ERROR audit update err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE Result')
+        try:
+            details = {"result": "SUCCESS", "action": "UPDATE", "count": len(id_res_list)}
+            Audit.insertAudit(audit_user, "ResultValue", "RESULT", None, "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ResultValue ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -52,10 +71,16 @@ class ResultList(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if not args or ('date_beg' not in args and 'date_end' not in args):
             self.log.error(Logs.fileline() + ' : ResultList args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "keys": list((args or {}).keys())}
+                Audit.insertAudit(audit_user, "ResultList", "RESULT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultList ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # convert isodate format to ymd format
@@ -64,7 +89,7 @@ class ResultList(Resource):
 
         l_results = Result.getResultList(args)
 
-        self.log.error(Logs.fileline() + ' : DEBUG ResultList l_results=' + str(l_results))
+        self.log.debug(Logs.fileline() + ' : DEBUG ResultList l_results=' + str(l_results))
 
         if not l_results:
             self.log.error(Logs.fileline() + ' : TRACE ResultList not found')
@@ -179,6 +204,12 @@ class ResultList(Resource):
                     result[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE ResultList')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "count": len(l_results),
+                       "date_beg": args.get('date_beg'), "date_end": args.get('date_end')}
+            Audit.insertAudit(audit_user, "ResultList", "RESULT", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ResultList ERROR audit success err=' + str(err))
         return compose_ret(l_results, Constants.cst_content_type_json)
 
 
@@ -187,17 +218,23 @@ class ResultRecord(Resource):
 
     @require_oauth()
     def post(self, id_rec):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         link_fam = []
 
-        if args:
+        if args and 'link_fam' in args:
             link_fam = args['link_fam']
 
         l_results = Result.getResultRecord(id_rec, True, link_fam)
 
         if not l_results:
             self.log.error(Logs.fileline() + ' : ResultRecord ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_rec": int(id_rec), "link_fam": link_fam}
+                Audit.insertAudit(audit_user, "ResultRecord", "RECORD", int(id_rec), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultRecord ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -280,6 +317,11 @@ class ResultRecord(Resource):
                         res['anr_date'] = res['anr_date'].strftime(Constants.cst_dt_HM)
 
         self.log.info(Logs.fileline() + ' : ResultRecord id_rec=' + str(id_rec))
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "id_rec": int(id_rec), "link_fam": link_fam}
+            Audit.insertAudit(audit_user, "ResultRecord", "RESULT", int(id_rec), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ResultRecord ERROR audit success err=' + str(err))
         return compose_ret(l_results, Constants.cst_content_type_json, 200)
 
 
@@ -288,13 +330,22 @@ class ResultCreate(Resource):
 
     @require_oauth()
     def post(self, id_rec):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'id_owner' not in args or 'user_role' not in args:
             self.log.error(Logs.fileline() + ' : ResultCreate ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "id_rec": id_rec}
+                Audit.insertAudit(audit_user, "ResultCreate", "RESULT", int(id_rec), "ERROR", details, "C")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultCreate ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         type_validation = 250  # Administrative validation
+
+        l_created_res = []
+        l_created_valid = []
 
         # In case of add new analysis
         if 'list_ref' in args:
@@ -309,6 +360,11 @@ class ResultCreate(Resource):
 
         if not l_ana:
             self.log.error(Logs.fileline() + ' : ' + 'ResultCreate ERROR l_ana not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_rec": int(id_rec), "step": "getAnalysisReq"}
+                Audit.insertAudit(audit_user, "ResultCreate", "RESULT", int(id_rec), "ERROR", details, "C")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultCreate ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Loop on list_ana
@@ -324,10 +380,19 @@ class ResultCreate(Resource):
 
                     if ret <= 0:
                         self.log.error(Logs.alert() + ' : ResultCreate ERROR  insert result')
+                        try:
+                            details = {"result": "ERROR", "reason": "INSERT_RESULT_FAILED",
+                                       "id_rec": id_rec, "id_analyse": ana.get('id_data'),
+                                       "id_refvariable": ref.get('id_refvariable')}
+                            Audit.insertAudit(audit_user, "ResultCreate", "RESULT", int(id_rec), "ERROR", details, "C")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : ResultCreate ERROR audit insert result err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
                     res = {}
                     res['id_res'] = ret
+
+                    l_created_res.append(int(res['id_res']))
 
                     # insert corresponding validation
                     ret = Result.insertValidation(id_owner=args['id_owner'],
@@ -341,12 +406,27 @@ class ResultCreate(Resource):
 
                     if ret <= 0:
                         self.log.error(Logs.alert() + ' : ResultCreate ERROR  insert validation')
+                        try:
+                            details = {"result": "ERROR", "reason": "INSERT_VALIDATION_FAILED",
+                                       "id_rec": id_rec, "id_res": res['id_res']}
+                            Audit.insertAudit(audit_user, "ResultCreate", "RESULT", int(id_rec), "ERROR", details, "C")
+                        except Exception as err:
+                            self.log.error(Logs.fileline() + ' : ResultCreate ERROR audit insert validation err=' + str(err))
                         return compose_ret('', Constants.cst_content_type_json, 500)
 
                     res = {}
                     res['id_valid'] = ret
 
+                    l_created_valid.append(int(res['id_valid']))
+
         self.log.info(Logs.fileline() + ' : TRACE ResultCreate')
+        try:
+            details = {"result": "SUCCESS", "action": "CREATE", "id_rec": int(id_rec),
+                       "count_res": len(l_created_res), "count_valid": len(l_created_valid),
+                       "id_res_list": l_created_res, "id_valid_list": l_created_valid}
+            Audit.insertAudit(audit_user, "ResultCreate", "RESULT", int(id_rec), "SUCCESS", details, "C")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ResultCreate ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -355,10 +435,16 @@ class ResultValid(Resource):
 
     @require_oauth()
     def post(self, type_valid, id_rec):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'reedit' not in args and 'list_valid' not in args and 'template' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ResultValid ERROR list_valid missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "type_valid": type_valid, "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "ResultValid", "RESULT", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultValid ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         if type_valid == 'T':
@@ -376,6 +462,12 @@ class ResultValid(Resource):
                 comment = None
         else:
             self.log.error(Logs.fileline() + ' : TRACE ResultValid type_valid ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "TYPE_VALID_INVALID", "type_valid": type_valid,
+                           "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "ResultValid", "RESULT", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultValid ERROR audit type_valid err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         """ 16/03/2023 seems useless
@@ -384,6 +476,9 @@ class ResultValid(Resource):
         if 'link_fam' in args and args['link_fam']:
             link_fam = args['link_fam']
         """
+
+        id_valid_list = []
+        id_file = None
 
         # VALIDATION : insert validation
         for valid in args['list_valid']:
@@ -399,10 +494,18 @@ class ResultValid(Resource):
 
             if ret <= 0:
                 self.log.error(Logs.fileline() + ' : TRACE ResultValid insertValidation ERROR')
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_VALIDATION_FAILED", "type_valid": type_valid,
+                               "id_rec": int(id_rec), "id_res": valid.get('id_res')}
+                    Audit.insertAudit(audit_user, "ResultValid", "RESULT", int(id_rec), "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ResultValid ERROR audit insertValidation err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             res = {}
             res['id_valid'] = ret
+
+            id_valid_list.append(int(ret))
 
         # check if it was the last validation to do
         # 08/03/2023 no filter with link_fam to be sure to keep correct record status
@@ -410,6 +513,12 @@ class ResultValid(Resource):
 
         if not l_res:
             self.log.error(Logs.fileline() + ' : TRACE ResultValid getResultRecord ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "GET_RESULT_RESULT_FAILED", "type_valid": type_valid,
+                           "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "ResultValid", "RESULT", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultValid ERROR audit getResultRecord err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         for res in l_res:
@@ -420,11 +529,17 @@ class ResultValid(Resource):
                 elif type_valid == 'B' and last_type['type_validation'] < 252:
                     stat_rec = 255  # biological intermediate record
 
-        # RECORD : update status record
+        # RESULT : update status record
         ret = Record.updateRecordStat(id_rec, stat_rec)
 
         if not ret:
             self.log.error(Logs.fileline() + ' : ERROR ResultValid record stat update')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_RESULT_STAT_FAILED", "type_valid": type_valid,
+                           "id_rec": int(id_rec), "stat_rec": int(stat_rec)}
+                Audit.insertAudit(audit_user, "ResultValid", "RECORD", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultValid ERROR audit updateRecordStat err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # REPORT PART
@@ -443,10 +558,18 @@ class ResultValid(Resource):
 
             if ret <= 0:
                 self.log.error(Logs.fileline() + ' : TRACE ResultValid insertFileReport ERROR')
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_FILE_REPORT_FAILED", "type_valid": type_valid,
+                               "id_rec": int(id_rec), "id_tpl": int(id_tpl)}
+                    Audit.insertAudit(audit_user, "ResultValid", "FILE", int(id_rec), "ERROR", details, "U")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : ResultValid ERROR audit insertFileReport err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             res = {}
             res['id_file'] = ret
+
+            id_file = int(ret)
 
             # Get uuid filename and create pdf
             fileReport = File.getFileReport(id_rec)
@@ -455,6 +578,13 @@ class ResultValid(Resource):
                 Pdf.getPdfReport(id_rec, args['template'], fileReport['file'], args['reedit'])
 
         self.log.info(Logs.fileline() + ' : TRACE ResultValid')
+        try:
+            details = {"result": "SUCCESS", "action": "VALIDATE", "type_valid": type_valid, "id_rec": int(id_rec),
+                       "stat_rec": int(stat_rec), "count_valid": len(id_valid_list), "id_valid_list": id_valid_list,
+                       "id_file": id_file}
+            Audit.insertAudit(audit_user, "ResultValid", "RESULT", int(id_rec), "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ResultValid ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -463,10 +593,16 @@ class ResultReset(Resource):
 
     @require_oauth()
     def post(self, id_rec):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'id_owner' not in args or 'id_res' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ResultReset ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "ResultReset", "RESULT", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultReset ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Update value of result
@@ -476,6 +612,12 @@ class ResultReset(Resource):
 
         if ret is False:
             self.log.error(Logs.fileline() + ' : TRACE ResultReset updateResult ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_RESULT_FAILED", "id_rec": int(id_rec),
+                           "id_res": args.get('id_res')}
+                Audit.insertAudit(audit_user, "ResultReset", "RESULT", args.get('id_res'), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultReset ERROR audit updateResult err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # Insert new validation
@@ -490,6 +632,12 @@ class ResultReset(Resource):
 
         if ret <= 0:
             self.log.error(Logs.fileline() + ' : TRACE ResultReset insertValidation ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "INSERT_VALIDATION_FAILED", "id_rec": int(id_rec),
+                           "id_res": args.get('id_res')}
+                Audit.insertAudit(audit_user, "ResultReset", "RESULT", args.get('id_res'), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultReset ERROR audit insertValidation err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         res = {}
@@ -503,6 +651,12 @@ class ResultReset(Resource):
 
         if not ret:
             self.log.error(Logs.fileline() + ' : ERROR ResultReset record stat update')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_RESULT_STAT_FAILED", "id_rec": int(id_rec),
+                           "id_res": args.get('id_res')}
+                Audit.insertAudit(audit_user, "ResultReset", "RECORD", args.get('id_res'), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultReset ERROR audit updateRecordStat err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # update modified record
@@ -510,9 +664,21 @@ class ResultReset(Resource):
 
         if not ret:
             self.log.error(Logs.fileline() + ' : ERROR ResultReset record modified update')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_RESULT_MODIFIED_FAILED", "id_rec": int(id_rec),
+                           "id_res": args.get('id_res')}
+                Audit.insertAudit(audit_user, "ResultReset", "RECORD", args.get('id_res'), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultReset ERROR audit updateRecordModified err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE ResultReset')
+        try:
+            details = {"result": "SUCCESS", "action": "RESET", "id_rec": int(id_rec), "id_res": args.get('id_res'),
+                       "id_valid": res.get('id_valid'), "stat_rec": int(stat_rec)}
+            Audit.insertAudit(audit_user, "ResultReset", "RESULT", int(id_rec), "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ResultValid ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -521,10 +687,16 @@ class ResultCancel(Resource):
 
     @require_oauth()
     def post(self, id_rec):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'id_owner' not in args or 'id_res' not in args or 'reason' not in args or 'comment' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ResultCancel ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "ResultCancel", "RESULT", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultCancel ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Update value of result
@@ -534,6 +706,12 @@ class ResultCancel(Resource):
 
         if ret is False:
             self.log.error(Logs.fileline() + ' : TRACE ResultCancel updateResult ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_RESULT_FAILED", "id_rec": int(id_rec),
+                           "id_res": args.get('id_res')}
+                Audit.insertAudit(audit_user, "ResultCancel", "RESULT", args.get('id_res'), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultCancel ERROR audit updateResult err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # Insert new validation
@@ -548,6 +726,12 @@ class ResultCancel(Resource):
 
         if ret <= 0:
             self.log.error(Logs.fileline() + ' : TRACE ResultCancel insertValidation ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "INSERT_VALIDATION_FAILED", "id_rec": int(id_rec),
+                           "id_res": args.get('id_res')}
+                Audit.insertAudit(audit_user, "ResultCancel", "RESULT", args.get('id_res'), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultCancel ERROR audit insertValidation err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         res = {}
@@ -561,16 +745,33 @@ class ResultCancel(Resource):
 
         if not ret:
             self.log.error(Logs.fileline() + ' : ERROR ResultCancel record stat update')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_RESULT_STAT_FAILED", "id_rec": int(id_rec),
+                           "stat_rec": int(stat_rec)}
+                Audit.insertAudit(audit_user, "ResultCancel", "RECORD", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultCancel ERROR audit updateRecordStat err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # update modified record
         ret = Record.updateRecordModified(id_rec, 'Y')
 
         if not ret:
-            self.log.error(Logs.fileline() + ' : ERROR ResultReset record modified update')
+            self.log.error(Logs.fileline() + ' : ERROR ResultCancel record modified update')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_RESULT_MODIFIED_FAILED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "ResultCancel", "RECORD", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultCancel ERROR audit updateRecordModified err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE ResultCancel')
+        try:
+            details = {"result": "SUCCESS", "action": "CANCEL", "id_rec": int(id_rec), "id_res": args.get('id_res'),
+                       "id_valid": res.get('id_valid'), "reason": args.get('reason'), "stat_rec": int(stat_rec)}
+            Audit.insertAudit(audit_user, "ResultCancel", "RESULT", int(id_rec), "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ResultCancel ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -579,10 +780,16 @@ class ResultHisto(Resource):
 
     @require_oauth()
     def get(self, id_res):
+        audit_user = request.oauth_user
         l_valid = Result.getResultListValidation(id_res)
 
         if not l_valid:
             self.log.error(Logs.fileline() + ' : ' + 'ResultHisto ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_res": int(id_res)}
+                Audit.insertAudit(audit_user, "ResultHisto", "RESULT", int(id_res), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultHisto ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         for valid in l_valid:
@@ -609,6 +816,11 @@ class ResultHisto(Resource):
                 valid['date_validation'] = datetime.strftime(valid['date_validation'], '%Y-%m-%d')
 
         self.log.info(Logs.fileline() + ' : ResultHisto id_res=' + str(id_res))
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "id_res": int(id_res), "count": len(l_valid)}
+            Audit.insertAudit(audit_user, "ResultHisto", "RESULT", int(id_res), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ResultHisto ERROR audit success err=' + str(err))
         return compose_ret(l_valid, Constants.cst_content_type_json, 200)
 
 
@@ -617,6 +829,7 @@ class ResultPrevious(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         res_prev = {}
@@ -624,6 +837,11 @@ class ResultPrevious(Resource):
         if 'id_pat' not in args or 'ref_ana' not in args or 'ref_var' not in args or 'id_res' not in args or \
            'res_type' not in args:
             self.log.error(Logs.fileline() + ' : TRACE ResultPrevious ERROR missing args')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "keys": list((args or {}).keys())}
+                Audit.insertAudit(audit_user, "ResultPrevious", "RESULT", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultPrevious ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         date_res = ''
@@ -658,6 +876,13 @@ class ResultPrevious(Resource):
                     res_prev['valeur'] = ''
 
         self.log.info(Logs.fileline() + ' : ResultPrevious')
+        try:
+            details = {"result": "SUCCESS", "action": "QUERY", "found": "Y" if res_prev else "N",
+                       "id_pat": args.get('id_pat'), "ref_ana": args.get('ref_ana'), "ref_var": args.get('ref_var'),
+                       "id_res": args.get('id_res'), "date_res": date_res}
+            Audit.insertAudit(audit_user, "ResultPrevious", "RESULT", args.get('id_res'), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ResultPrevious ERROR audit success err=' + str(err))
         return compose_ret(res_prev, Constants.cst_content_type_json, 200)
 
 
@@ -666,16 +891,22 @@ class ResultFromExt(Resource):
 
     @require_oauth('external/result')
     def get(self, id_rec):
+        audit_user = request.oauth_user
         l_res = {}
 
         self.log.info(Logs.fileline() + ' : ResultFromExt API access authorized')
         l_results = Result.getResultRecord(id_rec, True)
 
-        l_res = {
-            "record_id": id_rec,
-            "analysis": []
-        }
+        if not l_results:
+            self.log.error(Logs.fileline() + ' : ResultFromExt ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "ResultFromExtGet", "RESULT", int(id_rec), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultFromExt ERROR audit not found err=' + str(err))
+            return compose_ret('', Constants.cst_content_type_json, 404)
 
+        l_res = {"record_id": id_rec, "analysis": []}
         ana_map = {}
 
         for res in l_results:
@@ -740,15 +971,28 @@ class ResultFromExt(Resource):
         l_res["analysis"] = list(ana_map.values())
 
         self.log.info(Logs.fileline() + ' : ResultFromExt id_rec=' + str(id_rec))
+        try:
+            details = {"result": "SUCCESS", "action": "VIEW", "id_rec": int(id_rec),
+                       "count_analysis": len(l_res.get("analysis", []))}
+            Audit.insertAudit(audit_user, "ResultFromExtGet", "RESULT", int(id_rec), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ResultFromExt ERROR audit success err=' + str(err))
         return compose_ret(l_res, Constants.cst_content_type_json, 200)
 
     @require_oauth('external/result')
     def post(self, id_rec):
+        audit_user = request.oauth_user
         args = request.get_json()
         self.log.info(Logs.fileline() + ' : DEBUG args= ' + str(args))
 
         if 'list_results' not in args:
             self.log.error(Logs.fileline() + ' : ResultFromExt ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "id_rec": int(id_rec),
+                           "missing": "list_results"}
+                Audit.insertAudit(audit_user, "ResultFromExtPost", "RESULT", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ResultFromExt ERROR audit args missing err=' + str(err))
             err = {"error": "list_results missing"}
             return compose_ret(err, Constants.cst_content_type_json, 400)
 
@@ -792,4 +1036,23 @@ class ResultFromExt(Resource):
             status_code = 500  # unexpected, should not occur
 
         self.log.info(Logs.fileline() + f' : ResultFromExt updated={updated} errors={errors}')
+        try:
+            is_success = status_code in (200, 207)
+            reason = None
+            if not is_success:
+                reason = "UPDATE_FAILED" if status_code == 400 else "UNEXPECTED_ERROR"
+
+            details = {"result": "SUCCESS" if is_success else "ERROR",
+                       "reason": reason,
+                       "action": "UPDATE", "id_rec": int(id_rec), "status_code": int(status_code),
+                       "updated_count": len(updated), "error_count": len(errors),
+                       "updated": updated, "errors": errors}
+
+            if details.get("reason") is None:
+                details.pop("reason", None)
+
+            Audit.insertAudit(audit_user, "ResultFromExtPost", "RESULT", int(id_rec),
+                              "SUCCESS" if is_success else "ERROR", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : ResultFromExt ERROR audit success err=' + str(err))
         return compose_ret(response_data, Constants.cst_content_type_json, status_code)

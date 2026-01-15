@@ -238,13 +238,16 @@ class Product:
 
         # First attempt: check if specimen_id is a numeric id_data
         if str(specimen_id).isdigit():
-            cursor.execute('SELECT id_data FROM sigl_01_data WHERE id_data = %s', (int(specimen_id),))
+            cursor.execute('select id_data from sigl_01_data where id_data = %s', (int(specimen_id),))
             row = cursor.fetchone()
             if row:
                 return row['id_data']
 
         # Second attempt: check if specimen_id matches the 'code' field
-        cursor.execute('SELECT id_data FROM sigl_01_data WHERE code = %s', (specimen_id,))
+        cursor.execute('''
+            select id_data from sigl_01_data where code = %s
+            order by samp_date DESC, id_data desc limit 1
+            ''', (specimen_id,))
         row = cursor.fetchone()
         if row:
             return row['id_data']

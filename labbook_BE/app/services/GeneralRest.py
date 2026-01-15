@@ -7,6 +7,7 @@ from flask_restful import Resource
 
 from app.models.General import *
 from app.models.Logs import Logs
+from app.models.Audit import Audit
 from app.models.Analysis import Analysis
 from app.models.Patient import Patient
 from app.models.Record import Record
@@ -21,14 +22,25 @@ class Test(Resource):
     @require_oauth()
     def get(self):
         self.log.info(Logs.fileline() + ' : TRACE Test GET')
+        audit_user = request.oauth_user
+        try:
+            details = {"result": "SUCCESS", "method": "GET"}
+            Audit.insertAudit(audit_user, "Test", "GENERAL", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : Test ERROR audit err=' + str(err))
         return compose_ret('Test GET OK', Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self):
         self.log.info(Logs.fileline() + ' : TRACE Test POST')
 
+        audit_user = request.oauth_user
         args = request.get_json()
-
+        try:
+            details = {"result": "SUCCESS", "method": "POST"}
+            Audit.insertAudit(audit_user, "Test", "GENERAL", None, "SUCCESS", details, "E")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : Test ERROR audit err=' + str(err))
         return compose_ret('args = ' + str(args), Constants.cst_content_type_json)
 
 
@@ -37,6 +49,7 @@ class DicoById(Resource):
 
     @require_oauth()
     def get(self, id_data):
+        audit_user = request.oauth_user
         dico = Various.getDicoById(id_data)
 
         if not dico:
@@ -55,6 +68,11 @@ class DicoById(Resource):
                 dico[key] = _(dico[key].strip())
 
         self.log.info(Logs.fileline() + ' : TRACE DicoById : ' + str(id_data))
+        try:
+            details = {"result": "SUCCESS", "id_data": id_data}
+            Audit.insertAudit(audit_user, "DicoById", "GENERAL", id_data, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : DicoById ERROR audit success err=' + str(err))
         return compose_ret(dico, Constants.cst_content_type_json)
 
 
@@ -63,12 +81,18 @@ class DefaultValue(Resource):
 
     @require_oauth()
     def get(self, name):
+        audit_user = request.oauth_user
         Various.useLangDB()
 
         val = Various.getDefaultValue(name)
 
         if not val:
             self.log.error(Logs.fileline() + ' : ERROR DefaultValue not found : ' + name)
+            try:
+                details = {"result": "NOT_FOUND", "name": name}
+                Audit.insertAudit(audit_user, "DefaultValue", "GENERAL", name, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : DefaultValue ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -77,17 +101,33 @@ class DefaultValue(Resource):
                 val[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE DefaultValue : ' + name)
+        try:
+            details = {"result": "SUCCESS", "name": name}
+            Audit.insertAudit(audit_user, "DefaultValue", "GENERAL", name, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : DefaultValue ERROR audit success err=' + str(err))
         return compose_ret(val, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self, name, value):
+        audit_user = request.oauth_user
         ret = Various.updateDefaultValue(name, value)
 
         if ret is False:
             self.log.error(Logs.fileline() + ' : ERROR DefaultValue update identifiant : ' + name)
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_FAILED", "name": name, "value": value}
+                Audit.insertAudit(audit_user, "DefaultValue", "GENERAL", name, "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : DefaultValue ERROR audit update failed err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE DefaultValue : ' + name)
+        try:
+            details = {"result": "SUCCESS", "name": name, "value": value}
+            Audit.insertAudit(audit_user, "DefaultValue", "GENERAL", name, "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : DefaultValue ERROR audit success err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
 
 
@@ -113,10 +153,16 @@ class NationalityList(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         l_items = Various.getNationalityList()
 
         if not l_items:
             self.log.error(Logs.fileline() + ' : ERROR NationalityList not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "NationalityList", "GENERAL", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : NationalityList ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -131,6 +177,11 @@ class NationalityList(Resource):
                     item[key] = _(item[key].strip())
 
         self.log.info(Logs.fileline() + ' : TRACE NationalityList')
+        try:
+            details = {"result": "SUCCESS", "count": len(l_items)}
+            Audit.insertAudit(audit_user, "NationalityList", "GENERAL", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : NationalityList ERROR audit success err=' + str(err))
         return compose_ret(l_items, Constants.cst_content_type_json)
 
 
@@ -139,6 +190,7 @@ class DatasetByName(Resource):
 
     @require_oauth()
     def post(self, name):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if name == 'patient':
@@ -162,6 +214,11 @@ class DatasetByName(Resource):
 
             if not args or ('date_beg' not in args and 'date_end' not in args):
                 self.log.error(Logs.fileline() + ' : DatasetByName args missing')
+                try:
+                    details = {"result": "ERROR", "reason": "ARGS_MISSING", "name": name}
+                    Audit.insertAudit(audit_user, "DatasetByName", "GENERAL", name, "ERROR", details, "R")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : DatasetByName ERROR audit args missing err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             # convert isodate format to ymd format
@@ -179,6 +236,11 @@ class DatasetByName(Resource):
 
         if not l_items:
             self.log.error(Logs.fileline() + ' : ERROR dataset not found')
+            try:
+                details = {"result": "NOT_FOUND", "name": name}
+                Audit.insertAudit(audit_user, "DatasetByName", "GENERAL", name, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : DatasetByName ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         import decimal
@@ -229,4 +291,9 @@ class DatasetByName(Resource):
                 item['ana_emergency'] = 'N'
 
         self.log.info(Logs.fileline() + ' : TRACE DatasetByName')
+        try:
+            details = {"result": "SUCCESS", "name": name, "count": len(l_items) if l_items else 0}
+            Audit.insertAudit(audit_user, "DatasetByName", "GENERAL", name, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : DatasetByName ERROR audit success err=' + str(err))
         return compose_ret(l_items, Constants.cst_content_type_json)

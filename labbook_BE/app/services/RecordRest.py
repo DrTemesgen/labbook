@@ -7,6 +7,7 @@ from flask import request
 from flask_restful import Resource
 from decimal import Decimal
 
+from app.models.Audit import Audit
 from app.models.Analysis import Analysis
 from app.models.General import compose_ret
 from app.models.Constants import Constants
@@ -26,6 +27,7 @@ class RecordList(Resource):
 
     @require_oauth()
     def post(self, id_pres):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if not args:
@@ -34,6 +36,7 @@ class RecordList(Resource):
         l_records = Record.getRecordList(args, id_pres)
 
         if not l_records:
+            l_records = []
             self.log.error(Logs.fileline() + ' : TRACE RecordList not found')
 
         for record in l_records:
@@ -48,6 +51,11 @@ class RecordList(Resource):
                 record['type_rec'] = 'I'
 
         self.log.info(Logs.fileline() + ' : TRACE RecordList')
+        try:
+            details = {"result": "SUCCESS", "id_pres": int(id_pres), "count": len(l_records) if l_records else 0}
+            Audit.insertAudit(audit_user, "RecordList", "PRESCRIPTION", int(id_pres), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordList ERROR audit success err=' + str(err))
         return compose_ret(l_records, Constants.cst_content_type_json)
 
 
@@ -57,6 +65,7 @@ class RecordListFromExt(Resource):
     @require_oauth('external/record')
     def post(self, id_pres):
         self.log.info(Logs.fileline() + ' : RecordListFromExt API access authorized')
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if not args:
@@ -89,6 +98,7 @@ class RecordListFromExt(Resource):
         l_records = Record.getRecordList(args, id_pres)
 
         if not l_records:
+            l_records = []
             self.log.error(Logs.fileline() + ' : TRACE RecordListFromExt not found')
 
         for record in l_records:
@@ -103,6 +113,11 @@ class RecordListFromExt(Resource):
                 record['type_rec'] = 'I'
 
         self.log.info(Logs.fileline() + ' : TRACE RecordListFromExt')
+        try:
+            details = {"result": "SUCCESS", "id_pres": int(id_pres), "count": len(l_records) if l_records else 0}
+            Audit.insertAudit(audit_user, "RecordListFromExt", "PRESCRIPTION", int(id_pres), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordListFromExt ERROR audit success err=' + str(err))
         return compose_ret(l_records, Constants.cst_content_type_json, 200)
 
 
@@ -111,10 +126,16 @@ class RecordDet(Resource):
 
     @require_oauth()
     def get(self, id_rec):
+        audit_user = request.oauth_user
         record = Record.getRecord(id_rec)
 
         if not record:
             self.log.error(Logs.fileline() + ' : ' + 'RecordDet ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordDet", "RECORD", int(id_rec), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordDet ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -166,11 +187,26 @@ class RecordDet(Resource):
             record['a_payer'] = 0
 
         self.log.info(Logs.fileline() + ' : RecordDet id_rec=' + str(id_rec))
+        try:
+            details = {"result": "SUCCESS", "id_rec": int(id_rec)}
+            Audit.insertAudit(audit_user, "RecordDet", "RECORD", int(id_rec), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordDet ERROR audit success err=' + str(err))
         return compose_ret(record, Constants.cst_content_type_json, 200)
 
     @require_oauth()
     def post(self, id_rec=0):
-        args = request.get_json()
+        audit_user = request.oauth_user
+        args = request.get_json(silent=True) or {}
+
+        if int(id_rec) != 0:
+            self.log.error(Logs.fileline() + ' : RecordDet ERROR update not supported')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_NOT_SUPPORTED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordDet", "RECORD", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordDet ERROR audit update not supported err=' + str(err))
+            return compose_ret('', Constants.cst_content_type_json, 405)
 
         if 'id_owner' not in args or 'type' not in args or 'date_record' not in args or 'id_med' not in args or \
            'date_prescr' not in args or 'service_int' not in args or 'bed_num' not in args or 'parcel_id' not in args or \
@@ -180,6 +216,11 @@ class RecordDet(Resource):
            'bill_num' not in args or 'stat' not in args or 'id_patient' not in args or 'rec_custody' not in args or \
            'rec_num_int' not in args or 'rec_modified' not in args or 'rec_hosp_num' not in args:
             self.log.error(Logs.fileline() + ' : RecordDet ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordDet", "RECORD", int(id_rec) if int(id_rec) > 0 else None, "ERROR", details, "C")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordDet ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         # Insert Record
@@ -283,6 +324,13 @@ class RecordDet(Resource):
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : RecordDet ERROR  insert')
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_RECORD_FAILED", "id_rec": int(id_rec),
+                               "id_owner": args.get("id_owner"), "id_patient": args.get("id_patient"),
+                               "type": args.get("type"), "stat": args.get("stat")}
+                    Audit.insertAudit(audit_user, "RecordDet", "RECORD", int(id_rec) if int(id_rec) > 0 else None, "ERROR", details, "C")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : RecordDet ERROR audit insertRecord err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             res = {}
@@ -313,15 +361,28 @@ class RecordDet(Resource):
                 self.log.error(Logs.alert() + ' : RecordDet ERROR insertPjSequence numdosmois')
 
         self.log.info(Logs.fileline() + ' : TRACE RecordDet id_rec=' + str(res['id_rec']))
+        try:
+            details = {"result": "SUCCESS", "id_rec": int(res.get("id_rec") or 0),
+                       "id_owner": args.get("id_owner"), "id_patient": args.get("id_patient"),
+                       "type": args.get("type"), "stat": args.get("stat")}
+            Audit.insertAudit(audit_user, "RecordDet", "RECORD", int(res.get("id_rec") or 0), "SUCCESS", details, "C")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordDet ERROR audit success err=' + str(err))
         return compose_ret(res, Constants.cst_content_type_json)
 
     @require_oauth()
     def delete(self, id_rec):
+        audit_user = request.oauth_user
         # delete sigl_11_data with id_dos = id_rec
         ret = File.deleteFileReportByRecord(id_rec)
 
         if not ret:
             self.log.error(Logs.fileline() + ' : TRACE RecordDet delete FileReport ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "DELETE_FILE_REPORT_FAILED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordDetDelete", "RECORD", int(id_rec), "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordDet delete ERROR audit FileReport err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # delete sigl_dos_valisedoc__file_data with id_ext = id_rec
@@ -329,6 +390,11 @@ class RecordDet(Resource):
 
         if not ret:
             self.log.error(Logs.fileline() + ' : TRACE RecordDet delete FileDoc ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "DELETE_FILE_DOC_FAILED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordDetDelete", "RECORD", int(id_rec), "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordDet delete ERROR audit FileDoc err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # load result requested with id_rec to get list of id_data
@@ -340,6 +406,11 @@ class RecordDet(Resource):
 
             if not ret:
                 self.log.error(Logs.fileline() + ' : TRACE RecordDet delete Validation ERROR')
+                try:
+                    details = {"result": "ERROR", "reason": "DELETE_VALIDATION_FAILED", "id_rec": int(id_rec)}
+                    Audit.insertAudit(audit_user, "RecordDetDelete", "RECORD", int(id_rec), "ERROR", details, "D")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : RecordDet delete ERROR audit validation err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
             # delete sigl_09_data with id_resultat = id_res
@@ -347,6 +418,11 @@ class RecordDet(Resource):
 
             if not ret:
                 self.log.error(Logs.fileline() + ' : TRACE RecordDet delete Result ERROR')
+                try:
+                    details = {"result": "ERROR", "reason": "DELETE_RESULT_FAILED", "id_rec": int(id_rec)}
+                    Audit.insertAudit(audit_user, "RecordDetDelete", "RECORD", int(id_rec), "ERROR", details, "D")
+                except Exception as err:
+                    self.log.error(Logs.fileline() + ' : RecordDet delete ERROR audit Result err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
 
         # delete sigl_04_data with id_dos = id_rec
@@ -354,6 +430,11 @@ class RecordDet(Resource):
 
         if not ret:
             self.log.error(Logs.fileline() + ' : TRACE RecordDet delete Analysis ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "DELETE_ANALYSIS_FAILED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordDetDelete", "RECORD", int(id_rec), "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordDet delete ERROR audit Analysis err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # delete sigl_01_data with id_dos = id_rec
@@ -361,6 +442,11 @@ class RecordDet(Resource):
 
         if not ret:
             self.log.error(Logs.fileline() + ' : TRACE RecordDet delete Product ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "DELETE_PRODUCT_FAILED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordDetDelete", "RECORD", int(id_rec), "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordDet delete ERROR audit Product err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         # delete sigl_02_data with id_data = id_rec
@@ -368,9 +454,19 @@ class RecordDet(Resource):
 
         if not ret:
             self.log.error(Logs.fileline() + ' : TRACE RecordDet delete Record ERROR')
+            try:
+                details = {"result": "ERROR", "reason": "DELETE_RECORD_FAILED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordDetDelete", "RECORD", int(id_rec), "ERROR", details, "D")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordDet delete ERROR audit Record err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE RecordDet delete')
+        try:
+            details = {"result": "SUCCESS", "id_rec": int(id_rec)}
+            Audit.insertAudit(audit_user, "RecordDetDelete", "RECORD", int(id_rec), "SUCCESS", details, "D")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordDet delete ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -380,12 +476,18 @@ class RecordDetFromExt(Resource):
     @require_oauth('external/record')
     def post(self, id_rec=0):
         self.log.info(Logs.fileline() + ' : RecordDetFromExt API access authorized')
+        audit_user = request.oauth_user
 
         # Parse JSON body
         args = request.get_json(silent=True)
         if not args:
             self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR JSON body missing')
             err = {"error": "JSON body required"}
+            try:
+                details = {"result": "ERROR", "reason": "JSON_BODY_MISSING"}
+                Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", None, "ERROR", details, "C")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit json missing err=' + str(err2))
             return compose_ret(err, Constants.cst_content_type_json, 400)
 
         # --- DEFAULT VALUE ---
@@ -407,6 +509,11 @@ class RecordDetFromExt(Resource):
                patient['pat_anonymous'] == 'N':
                 self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR no patient indentity')
                 err = {"error": "missing pat_name, pat_firstname, pat_sex, pat_birth or pat_age and pat_age_unit"}
+                try:
+                    details = {"result": "ERROR", "reason": "PATIENT_IDENTITY_MISSING"}
+                    Audit.insertAudit(audit_user, "RecordDetFromExt", "PATIENT", None, "ERROR", details, "C")
+                except Exception as err2:
+                    self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit patient identity err=' + str(err2))
                 return compose_ret(err, Constants.cst_content_type_json, 400)
 
             # check if patient exists by some infos
@@ -485,6 +592,13 @@ class RecordDetFromExt(Resource):
                 if id_pat <= 0:
                     self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR insertPatient')
                     err = {"error": "insertPatient SQL error"}
+                    try:
+                        details = {"result": "ERROR", "reason": "INSERT_PATIENT_FAILED",
+                                   "pat_code": patient.get("pat_code"), "pat_code_lab": patient.get("pat_code_lab"),
+                                   "pat_name": patient.get("pat_name"), "pat_firstname": patient.get("pat_firstname")}
+                        Audit.insertAudit(audit_user, "RecordDetFromExt", "PATIENT", None, "ERROR", details, "C")
+                    except Exception as err2:
+                        self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit insert patient err=' + str(err2))
                     return compose_ret(err, Constants.cst_content_type_json, 500)
         else:
             id_pat = pat['id_data']
@@ -606,6 +720,12 @@ class RecordDetFromExt(Resource):
                     if id_doc <= 0:
                         self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR insertDoctor')
                         err = {"error": "insertDoctor SQL error"}
+                        try:
+                            details = {"result": "ERROR", "reason": "INSERT_DOCTOR_FAILED",
+                                       "prescr_code": doctor.get("prescr_code")}
+                            Audit.insertAudit(audit_user, "RecordDetFromExt", "DOCTOR", None, "ERROR", details, "C")
+                        except Exception as err2:
+                            self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit insert doctor err=' + str(err2))
                         return compose_ret(err, Constants.cst_content_type_json, 500)
         else:
             id_doc = doc['id_data']
@@ -617,6 +737,11 @@ class RecordDetFromExt(Resource):
         if not (record['rec_type'] and record['rec_date'] and record['rec_date_prescr']):
             self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR record missing args')
             err = {"error": "missing rec_type, rec_date or rec_date_prescr"}
+            try:
+                details = {"result": "ERROR", "reason": "RECORD_ARGS_MISSING"}
+                Audit.insertAudit(audit_user, "RecordDetFromExtInsertRecord", "RECORD", None, "ERROR", details, "C")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit insert record err=' + str(err))
             return compose_ret(err, Constants.cst_content_type_json, 400)
 
         rec_parcel = 5  # No
@@ -730,6 +855,11 @@ class RecordDetFromExt(Resource):
         if id_rec <= 0:
             self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR insertRecord')
             err = {"error": "insertRecord SQL error"}
+            try:
+                details = {"result": "ERROR", "reason": "INSERT_RECORD_FAILED"}
+                Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", None, "ERROR", details, "C")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit insert record err=' + str(err2))
             return compose_ret(err, Constants.cst_content_type_json, 500)
 
         # insert in sigl_pj_sequence num_dos_jour
@@ -764,6 +894,10 @@ class RecordDetFromExt(Resource):
         l_type_prel = []
 
         tot_price = 0
+
+        for ana in l_ana:
+            if ana.get('ana_code'):
+                l_ana_code.append(ana['ana_code'])
 
         # make list of (ana_code,type_prel) from l_samp
         for samp in l_samp:
@@ -814,6 +948,11 @@ class RecordDetFromExt(Resource):
                 else:
                     self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR samp_type does not match')
                     err = {"error": "samp_type does not match"}
+                    try:
+                        details = {"result": "ERROR", "reason": "SAMP_TYPE_MISMATCH", "id_rec": int(id_rec)}
+                        Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+                    except Exception as err2:
+                        self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit samp type mismatch err=' + str(err2))
                     return compose_ret(err, Constants.cst_content_type_json, 400)
 
                 l_type_prel.append(elem)
@@ -822,6 +961,11 @@ class RecordDetFromExt(Resource):
             if not ana['ana_code']:
                 self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR ana_list missing args')
                 err = {"error": "missing ana_code"}
+                try:
+                    details = {"result": "ERROR", "reason": "ANA_CODE_MISSING", "id_rec": int(id_rec)}
+                    Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+                except Exception as err2:
+                    self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit ana_code missing err=' + str(err2))
                 return compose_ret(err, Constants.cst_content_type_json, 400)
 
             tmp_ana = Analysis.getAnalysisByCode(ana['ana_code'])
@@ -829,9 +973,12 @@ class RecordDetFromExt(Resource):
             if not tmp_ana:
                 self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR analysis not found with code : ' + str(ana['ana_code']))
                 err = {"error": "analysis not found with code = " + str(ana['ana_code'])}
+                try:
+                    details = {"result": "ERROR", "reason": "ANALYSIS_NOT_FOUND", "ana_code": str(ana.get('ana_code')), "id_rec": int(id_rec)}
+                    Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+                except Exception as err2:
+                    self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit analysis not found err=' + str(err2))
                 return compose_ret(err, Constants.cst_content_type_json, 404)
-
-            l_ana_code.append(ana['ana_code'])
 
             # calc price
             ana_price = price_act * tmp_ana['cote_valeur']
@@ -869,6 +1016,11 @@ class RecordDetFromExt(Resource):
             if id_req <= 0:
                 self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR insertAnalysisReq')
                 err = {"error": "insertAnalysisReq SQL error"}
+                try:
+                    details = {"result": "ERROR", "reason": "INSERT_ANALYSIS_REQ_FAILED", "id_rec": int(id_rec)}
+                    Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+                except Exception as err2:
+                    self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit insert analysis req err=' + str(err2))
                 return compose_ret(err, Constants.cst_content_type_json, 500)
 
             # insert sampling act
@@ -901,6 +1053,11 @@ class RecordDetFromExt(Resource):
                 if id_act_req <= 0:
                     self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR insertAnalysisReq')
                     err = {"error": "insertAnalysisReq for sampling act SQL error"}
+                    try:
+                        details = {"result": "ERROR", "reason": "INSERT_ANALYSIS_REQ_FAILED", "id_rec": int(id_rec)}
+                        Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+                    except Exception as err2:
+                        self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit insert analysis req err=' + str(err2))
                     return compose_ret(err, Constants.cst_content_type_json, 500)
 
                 l_id_act.append(tmp_ana['produit_biologique'])
@@ -926,6 +1083,11 @@ class RecordDetFromExt(Resource):
                 if id_samp <= 0:
                     self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR insertProduct')
                     err = {"error": "insertProduct SQL error"}
+                    try:
+                        details = {"result": "ERROR", "reason": "INSERT_PRODUCT_FAILED", "id_rec": int(id_rec)}
+                        Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+                    except Exception as err2:
+                        self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit insert product err=' + str(err2))
                     return compose_ret(err, Constants.cst_content_type_json, 500)
 
         # --- SAMPLE ---
@@ -979,6 +1141,11 @@ class RecordDetFromExt(Resource):
                 else:
                     self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR samp_type does not match')
                     err = {"error": "samp_type does not match"}
+                    try:
+                        details = {"result": "ERROR", "reason": "SAMP_TYPE_MISMATCH", "ana_code": str(ana.get('samp_ana')), "id_rec": int(id_rec)}
+                        Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+                    except Exception as err2:
+                        self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit sampling act not found err=' + str(err2))
                     return compose_ret(err, Constants.cst_content_type_json, 400)
 
                 if samp['samp_status'] == 'D':
@@ -1005,6 +1172,11 @@ class RecordDetFromExt(Resource):
                 if id_samp <= 0:
                     self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR insertProduct')
                     err = {"error": "insertProduct SQL error"}
+                    try:
+                        details = {"result": "ERROR", "reason": "INSERT_PRODUCT_FAILED", "id_rec": int(id_rec)}
+                        Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+                    except Exception as err2:
+                        self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit insert product err=' + str(err2))
                     return compose_ret(err, Constants.cst_content_type_json, 500)
 
         # update prix, a_payer after insert analysis and calculate tot_remain
@@ -1021,6 +1193,11 @@ class RecordDetFromExt(Resource):
         if not ret:
             self.log.error(Logs.fileline() + ' : RecordDetFromExt updateRecordBill ERROR')
             err = {"error": "updateRecordBill SQL error"}
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_RECORD_BILL_FAILED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit update bill err=' + str(err2))
             return compose_ret(err, Constants.cst_content_type_json, 500)
 
         # --- RESULT AND VALIDATION ---
@@ -1031,6 +1208,11 @@ class RecordDetFromExt(Resource):
         if not l_ana:
             self.log.error(Logs.fileline() + ' : ' + 'RecordDetFromExt ERROR l_ana empty')
             err = {"error": "getAnalysisReq SQL error for create result entry"}
+            try:
+                details = {"result": "ERROR", "reason": "GET_ANALYSIS_REQ_FAILED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit get analysis req err=' + str(err2))
             return compose_ret(err, Constants.cst_content_type_json, 500)
 
         # Loop on list_ana
@@ -1047,6 +1229,11 @@ class RecordDetFromExt(Resource):
                     if ret <= 0:
                         self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR  insert result')
                         err = {"error": "insertResult SQL error"}
+                        try:
+                            details = {"result": "ERROR", "reason": "INSERT_RESULT_FAILED", "id_rec": int(id_rec)}
+                            Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+                        except Exception as err2:
+                            self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit insert result err=' + str(err2))
                         return compose_ret(err, Constants.cst_content_type_json, 500)
 
                     res = {}
@@ -1065,6 +1252,11 @@ class RecordDetFromExt(Resource):
                     if ret <= 0:
                         self.log.error(Logs.alert() + ' : RecordDetFromExt ERROR  insert validation')
                         err = {"error": "insertValidation SQL error"}
+                        try:
+                            details = {"result": "ERROR", "reason": "INSERT_VALIDATION_FAILED", "id_rec": int(id_rec)}
+                            Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "C")
+                        except Exception as err2:
+                            self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit insert validation err=' + str(err2))
                         return compose_ret(err, Constants.cst_content_type_json, 500)
 
         # update status of record an date of validation
@@ -1073,9 +1265,19 @@ class RecordDetFromExt(Resource):
         if not ret:
             self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR RecordStat update')
             err = {"error": "updateRecordStat SQL error"}
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_RECORD_STAT_FAILED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "ERROR", details, "U")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit update stat err=' + str(err2))
             return compose_ret(err, Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE RecordDetFromExt')
+        try:
+            details = {"result": "SUCCESS", "id_rec": int(id_rec)}
+            Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "SUCCESS", details, "C")
+        except Exception as err2:
+            self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit success err=' + str(err2))
         return compose_ret(id_rec, Constants.cst_content_type_json, 200)
 
 
@@ -1084,19 +1286,35 @@ class RecordComm(Resource):
 
     @require_oauth()
     def post(self, id_rec):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'comm' not in args:
             self.log.error(Logs.fileline() + ' : RecordComm ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["comm"], "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordComm", "RECORD", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordComm ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Record.updateRecordComm(id_rec, args['comm'])
 
         if not ret:
             self.log.error(Logs.fileline() + ' : ERROR RecordComm update')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_RECORD_COMM_FAILED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordComm", "RECORD", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordComm ERROR audit update err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE RecordComm')
+        try:
+            details = {"result": "SUCCESS", "id_rec": int(id_rec)}
+            Audit.insertAudit(audit_user, "RecordComm", "RECORD", int(id_rec), "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordComm ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -1105,10 +1323,16 @@ class RecordLast(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         record = Record.getLastRecord()
 
         if not record:
             self.log.error(Logs.fileline() + ' : ' + 'RecordLast ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND"}
+                Audit.insertAudit(audit_user, "RecordLast", "RECORD", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordLast ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         # Replace None by empty string
@@ -1153,6 +1377,12 @@ class RecordLast(Resource):
             record['a_payer'] = 0
 
         self.log.info(Logs.fileline() + ' : RecordLast')
+        try:
+            id_rec = record.get("id_rec")
+            details = {"result": "SUCCESS", "id_rec": int(id_rec) if id_rec else None}
+            Audit.insertAudit(audit_user, "RecordLast", "RECORD", int(id_rec) if id_rec else None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordLast ERROR audit success err=' + str(err))
         return compose_ret(record, Constants.cst_content_type_json, 200)
 
 
@@ -1161,6 +1391,7 @@ class RecordFile(Resource):
 
     @require_oauth()
     def get(self, id_rec):
+        audit_user = request.oauth_user
         l_files = Record.getRecordFile(id_rec)
 
         if not l_files:
@@ -1173,6 +1404,11 @@ class RecordFile(Resource):
                     files[key] = ''
 
         self.log.info(Logs.fileline() + ' : TRACE RecordFile')
+        try:
+            details = {"result": "SUCCESS", "id_rec": int(id_rec), "count": len(l_files) if l_files else 0}
+            Audit.insertAudit(audit_user, "RecordFile", "RECORD", int(id_rec), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordFile ERROR audit success err=' + str(err))
         return compose_ret(l_files, Constants.cst_content_type_json)
 
 
@@ -1181,6 +1417,7 @@ class RecordNext(Resource):
 
     @require_oauth()
     def get(self, id_rec):
+        audit_user = request.oauth_user
         id_rec_next = 0
 
         rec = Record.getRecordNext(id_rec)
@@ -1191,6 +1428,11 @@ class RecordNext(Resource):
             id_rec_next = rec['id_data']
 
         self.log.info(Logs.fileline() + ' : TRACE RecordNext')
+        try:
+            details = {"result": "SUCCESS", "id_rec": int(id_rec)}
+            Audit.insertAudit(audit_user, "RecordNext", "RECORD", int(id_rec), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordNext ERROR audit success err=' + str(err))
         return compose_ret(id_rec_next, Constants.cst_content_type_json)
 
 
@@ -1199,19 +1441,35 @@ class RecordStat(Resource):
 
     @require_oauth()
     def post(self, id_rec):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'stat' not in args:
             self.log.error(Logs.fileline() + ' : RecordStat ERROR args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["stat"], "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordStat", "RECORD", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordStat ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Record.updateRecordStat(id_rec, args['stat'])
 
         if not ret:
             self.log.error(Logs.fileline() + ' : ERROR RecordStat update')
+            try:
+                details = {"result": "ERROR", "reason": "UPDATE_RECORD_STAT_FAILED", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordStat", "RECORD", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordStat ERROR audit update err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE RecordStat')
+        try:
+            details = {"result": "SUCCESS", "id_rec": int(id_rec), "stat": args.get("stat")}
+            Audit.insertAudit(audit_user, "RecordStat", "RECORD", int(id_rec), "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordStat ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -1220,10 +1478,16 @@ class RecordListAna(Resource):
 
     @require_oauth()
     def get(self, id_rec):
+        audit_user = request.oauth_user
         l_datas = Record.getRecordListAnalysis(id_rec)
 
         if not l_datas:
             self.log.error(Logs.fileline() + ' : ' + 'RecordListAna ERROR not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordListAna", "RECORD", int(id_rec), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordListAna ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         Various.useLangDB()
@@ -1237,6 +1501,11 @@ class RecordListAna(Resource):
                     data[key] = _(data[key].strip())
 
         self.log.info(Logs.fileline() + ' : RecordListAna id_rec=' + str(id_rec))
+        try:
+            details = {"result": "SUCCESS", "id_rec": int(id_rec), "count": len(l_datas) if l_datas else 0}
+            Audit.insertAudit(audit_user, "RecordListAna", "RECORD", int(id_rec), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordListAna ERROR audit success err=' + str(err))
         return compose_ret(l_datas, Constants.cst_content_type_json, 200)
 
 
@@ -1245,6 +1514,7 @@ class RecordNbEmer(Resource):
 
     @require_oauth()
     def post(self):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if not args:
@@ -1259,6 +1529,11 @@ class RecordNbEmer(Resource):
             nb_emer = res['nb_emer']
 
         self.log.info(Logs.fileline() + ' : TRACE RecordNbEmer')
+        try:
+            details = {"result": "SUCCESS", "nb_emer": int(nb_emer)}
+            Audit.insertAudit(audit_user, "RecordNbEmer", "RECORD", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordNbEmer ERROR audit success err=' + str(err))
         return compose_ret(nb_emer, Constants.cst_content_type_json)
 
 
@@ -1267,6 +1542,7 @@ class RecordNbRecTech(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         res = Record.getRecordNbRecTech()
 
         if not res:
@@ -1276,6 +1552,11 @@ class RecordNbRecTech(Resource):
             nb_rec_tech = res['nb_rec_tech']
 
         self.log.info(Logs.fileline() + ' : TRACE RecordNbRecTech')
+        try:
+            details = {"result": "SUCCESS", "nb_rec_tech": int(nb_rec_tech)}
+            Audit.insertAudit(audit_user, "RecordNbRecTech", "RECORD", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordNbRecTech ERROR audit success err=' + str(err))
         return compose_ret(nb_rec_tech, Constants.cst_content_type_json)
 
 
@@ -1284,6 +1565,7 @@ class RecordNbRecBio(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         res = Record.getRecordNbRecBio()
 
         if not res:
@@ -1293,6 +1575,11 @@ class RecordNbRecBio(Resource):
             nb_rec_bio = res['nb_rec_bio']
 
         self.log.info(Logs.fileline() + ' : TRACE RecordNbRecBio')
+        try:
+            details = {"result": "SUCCESS", "nb_rec_bio": int(nb_rec_bio)}
+            Audit.insertAudit(audit_user, "RecordNbRecBio", "RECORD", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordNbRecBio ERROR audit success err=' + str(err))
         return compose_ret(nb_rec_bio, Constants.cst_content_type_json)
 
 
@@ -1301,6 +1588,7 @@ class RecordNbRec(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         res = Record.getRecordNbRec()
 
         if not res:
@@ -1310,6 +1598,11 @@ class RecordNbRec(Resource):
             nb_rec = res['nb_rec']
 
         self.log.info(Logs.fileline() + ' : TRACE RecordNbRec')
+        try:
+            details = {"result": "SUCCESS", "nb_rec": int(nb_rec)}
+            Audit.insertAudit(audit_user, "RecordNbRec", "RECORD", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordNbRec ERROR audit success err=' + str(err))
         return compose_ret(nb_rec, Constants.cst_content_type_json)
 
 
@@ -1318,6 +1611,7 @@ class RecordNbRecToday(Resource):
 
     @require_oauth()
     def get(self):
+        audit_user = request.oauth_user
         num_today = datetime.now().strftime("%Y%m%d")
 
         res = Record.getRecordNbRecToday(num_today)
@@ -1329,6 +1623,11 @@ class RecordNbRecToday(Resource):
             nb_rec_today = res['nb_rec_today']
 
         self.log.info(Logs.fileline() + ' : TRACE RecordNbRecToday')
+        try:
+            details = {"result": "SUCCESS", "nb_rec_today": int(nb_rec_today)}
+            Audit.insertAudit(audit_user, "RecordNbRecToday", "RECORD", None, "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordNbRecToday ERROR audit success err=' + str(err))
         return compose_ret(nb_rec_today, Constants.cst_content_type_json)
 
 
@@ -1337,33 +1636,61 @@ class RecordValid(Resource):
 
     @require_oauth()
     def get(self, id_rec):
+        audit_user = request.oauth_user
         rev = Record.getRecordValidation(id_rec)
 
         if not rev:
-            self.log.error(Logs.fileline() + ' : TRACE RecordValida not found')
+            self.log.error(Logs.fileline() + ' : TRACE RecordValid not found')
+            try:
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordValid", "RECORD", int(id_rec), "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordValid ERROR audit not found err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 404)
 
         if rev['rev_date']:
             rev['rev_date'] = datetime.strftime(rev['rev_date'], Constants.cst_dt_HM)
 
         self.log.info(Logs.fileline() + ' : TRACE RecordValid')
+        try:
+            details = {"result": "SUCCESS", "id_rec": int(id_rec)}
+            Audit.insertAudit(audit_user, "RecordValid", "RECORD", int(id_rec), "SUCCESS", details, "R")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordValid ERROR audit success err=' + str(err))
         return compose_ret(rev, Constants.cst_content_type_json)
 
     @require_oauth()
     def post(self, id_rec):
+        audit_user = request.oauth_user
         args = request.get_json()
 
         if 'id_user' not in args or 'comm' not in args:
             self.log.error(Logs.fileline() + ' : ERROR RecordValid args missing')
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "missing": ["id_user", "comm"], "id_rec": int(id_rec)}
+                Audit.insertAudit(audit_user, "RecordValid", "RECORD", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordValid ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
         ret = Record.insertRecordValidation(id_user=args['id_user'], id_rec=id_rec, comm=args['comm'])
 
         if not ret:
             self.log.error(Logs.fileline() + ' : ERROR RecordValid insert')
+            try:
+                details = {"result": "ERROR", "reason": "INSERT_RECORD_VALIDATION_FAILED", "id_rec": int(id_rec),
+                           "id_user": args.get("id_user")}
+                Audit.insertAudit(audit_user, "RecordValid", "RECORD", int(id_rec), "ERROR", details, "U")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordValid ERROR audit insert err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)
 
         self.log.info(Logs.fileline() + ' : TRACE RecordValid')
+        try:
+            details = {"result": "SUCCESS", "id_rec": int(id_rec), "id_user": args.get("id_user")}
+            Audit.insertAudit(audit_user, "RecordValid", "RECORD", int(id_rec), "SUCCESS", details, "U")
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : RecordValid ERROR audit success err=' + str(err))
         return compose_ret('', Constants.cst_content_type_json)
 
 
@@ -1372,15 +1699,31 @@ class RecordNumInt(Resource):
 
     @require_oauth()
     def get(self, rec_num_int):
+        audit_user = request.oauth_user
         ret = Record.rec_num_int_exist(rec_num_int)
 
         if ret and ret == -1:
             self.log.error(Logs.fileline() + ' : ' + 'RecordNumInt ERROR sql')
+            try:
+                details = {"result": "ERROR", "reason": "SQL_ERROR", "rec_num_int": str(rec_num_int)}
+                Audit.insertAudit(audit_user, "RecordNumInt", "RECORD", None, "ERROR", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordNumInt ERROR audit sql err=' + str(err))
             return compose_ret(-1, Constants.cst_content_type_json, 500)
 
         if ret:
-            self.log.error(Logs.fileline() + ' : ' + 'RecordNumInt WARNING code already exist')
+            self.log.info(Logs.fileline() + ' : ' + 'RecordNumInt WARNING code already exist')
+            try:
+                details = {"result": "SUCCESS", "rec_num_int": str(rec_num_int), "exists": "Y"}
+                Audit.insertAudit(audit_user, "RecordNumInt", "RECORD", None, "SUCCESS", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordNumInt ERROR audit exists err=' + str(err))
             return compose_ret(1, Constants.cst_content_type_json, 200)
         else:
             self.log.info(Logs.fileline() + ' : RecordNumInt code ok :' + str(rec_num_int))
+            try:
+                details = {"result": "SUCCESS", "rec_num_int": str(rec_num_int), "exists": "N"}
+                Audit.insertAudit(audit_user, "RecordNumInt", "RECORD", None, "SUCCESS", details, "R")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : RecordNumInt ERROR audit ok err=' + str(err))
             return compose_ret(0, Constants.cst_content_type_json, 200)
