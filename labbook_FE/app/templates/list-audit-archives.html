@@ -2,14 +2,14 @@
 
 {% block head %}
 {{ super() }}
-    <title>{{ _("Paramétrage du rapport épidémiologique") }}</title>
+    <title>{{ _("Liste des archives d'audit") }}</title>
 {% endblock %}
 
 {% block content %}
 <div id="content">
     <div class="inner">
         <div id="main">
-            <h2 class="page-title page-title-color"><span>{{ _("Paramétrage du rapport épidémiologique") }}</span></h2>
+            <h2 class="page-title page-title-color"><span>{{ _("Liste des archives d'audit") }}</span></h2>
 
             <div class="d-lg-flex m-3">
                 <div class="form-group">
@@ -29,9 +29,6 @@
                         </table>
                     </div>
                 </div>
-                <div class="me-3 mt-1">
-                    <input type="button" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Enregistrer la feuille de calcul") }}" onclick="upload_epidemio();">
-                </div>
             </div>
 
             <div class="clearfix mt-3 mb-5">
@@ -46,48 +43,18 @@
 
 {% block add_script %}
 <script type="text/javascript" nonce="{{ session['nonce'] }}">
-var data_epidemio = {% if args['data_epidemio'] %}{{ args['data_epidemio']|safe }}{% else %}[]{% endif %} ;
-
-function upload_epidemio()
-{
-let param_form = new FormData() ;
-
-param_form.append('file', $('input[type=file]')[0].files[0]) ;
-
-    $.ajax(
-    {
-        type : 'POST',
-        url : "{{ session['server_ext'] }}/upload-epidemio",
-        dataType: 'json',
-        contentType: false,
-        processData: false,
-        data: param_form,
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
-        success : function(response)
-        {
-        tempAlert("{{ _("Dépôt réussi") }}", "btn-upload") ;
-        console.log("success upload epidemio") ;
-        setTimeout(function(){location.reload()}, 2400) ;
-        },
-        error: function(response)
-        {
-        console.log("ERROR upload logo") ;
-        alert("{{ _("Une erreur est survenue lors du dépot du fichier") }}") ;
-        }
-    } ) ;
-    
-}
+var data_audit_archives = {% if args['data_audit_archives'] %}{{ args['data_audit_archives']|safe }}{% else %}[]{% endif %} ;
 
 function load_data()
 {
-    for( i in data_epidemio )
+    for( i in data_audit_archives )
     {
-    load_file( data_epidemio[i] ) ;
+    load_file( data_audit_archives[i] ) ;
     }
 
-    if (data_epidemio.length < 1)
+    if (data_audit_archives.length < 1)
     {
-    let tr_file = '<tr><td colspan="2"><div>{{ _("Aucun fichier déposé") }}</div></td></tr>' ;
+    let tr_file = '<tr><td colspan="2"><div>{{ _("Aucun fichier") }}</div></td></tr>' ;
 
     $("#tbody_file").append(tr_file) ;
     }
@@ -97,23 +64,20 @@ function load_file( filename )
 {
 let tr_file = '' ;
 
-    if ( filename == "epidemio.ini" && filename != undefined )
-    {
     let tmp_tr = '<tr style="">' ;
     
     tmp_tr += '<td class="filename"><div>' + filename + '</div></td>' ;
-    tmp_tr += '<td class="action"><div><a href="#" onclick="download_file(\'EP\', \'' + filename + '\', \'EPIDEMIO\', 0);">{{ _("Télécharger") }}</a>';
+    tmp_tr += '<td class="action"><div><a href="#" onclick="download_file(\'AA\', \'' + filename + '\', \'AUDIT\', 0);">{{ _("Télécharger") }}</a>';
     tmp_tr += '</div></td></tr>' ;
 
     tr_file += tmp_tr ;
-    }
 
 $("#tbody_file").append(tr_file) ;
 }
 
 function return_home()
 {
-window.location.href = "{{ url_for('homepage') }}";
+window.location.href = "{{ session['server_ext'] }}/list-audits";
 }
 
 $( document ).ready( function()

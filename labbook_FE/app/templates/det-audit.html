@@ -142,9 +142,23 @@ function load_audit_detail() {
         },
         success: function (data) {
             $("#event_time_utc").text(data.event_time_utc || "");
-            $("#user_display").text(data.user_display || data.aud_user_login || "");
-            $("#aud_user_login").text(data.aud_user_login ? "(" + data.aud_user_login + ")" : "");
-            $("#role_name").text(data.role_name || "");
+
+            var isSystemCall =
+                (!data.user_display && !data.aud_user_login && !data.role_name) &&
+                (data.ip_addr === "127.0.0.1" || data.ip_addr === "::1");
+
+            if (isSystemCall) {
+                $("#user_display").text("Appel système");                
+                $("#aud_user_login").text("");
+                $("#role_name")
+                    .text("SYSTEM")
+                    .removeClass()
+                    .addClass("badge bg-dark");
+            } else {
+                $("#user_display").text(data.user_display || data.aud_user_login || "");
+                $("#aud_user_login").text(data.aud_user_login ? "(" + data.aud_user_login + ")" : "");
+                $("#role_name").text(data.role_name || "");
+            }
 
             $("#action").text(data.action || "");
 

@@ -9875,6 +9875,37 @@ def det_audit(aud_ser):
     return render_template('det-audit.html', aud_ser=aud_ser)
 
 
+# Page : list audit archives
+@app.route('/list-audit-archives')
+def list_audit_archives():
+    log.info(Logs.fileline() + ' : TRACE list audit archives')
+
+    if not test_session():
+        log.info(Logs.fileline() + ' : TRACE Labbook list audit archives => disconnect')
+        session.clear()
+        return index()
+
+    session['current_page'] = 'list-audit-archives'
+    session.modified = True
+
+    json_data = {}
+
+    json_data['data_audit_archives'] = []
+
+    # Load audit archives files in audit directory
+    try:
+        path = Constants.cst_audit
+
+        for filename in os.listdir(path):
+            if not os.path.isdir(os.path.join(path, filename)):
+                json_data['data_audit_archives'].append(filename)
+
+    except Exception as err:
+        log.error(Logs.fileline() + ' : load audit archives files in audit directory failed, err=%s', err)
+
+    return render_template('list-audit-archives.html', args=json_data, rand=random.randint(0, 999))  # nosec B311
+
+
 # --------------------
 # --- Various page ---
 # --------------------
@@ -9911,6 +9942,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
     # FP => Form Patient
     # IN => INDICATOR spreadsheet
     # TP => template odt
+    # AA => audit archive
 
     if type == 'PY':
         filepath = Constants.cst_path_tmp
@@ -10070,6 +10102,9 @@ def download_file(type='', filename='', type_ref='', ref=''):
         generated_name = filename
     elif type == 'TP':
         filepath = Constants.cst_template
+        generated_name = filename
+    elif type == 'AA':
+        filepath = Constants.cst_audit
         generated_name = filename
     else:
         return False

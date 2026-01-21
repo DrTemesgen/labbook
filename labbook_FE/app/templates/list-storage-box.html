@@ -72,6 +72,7 @@ function loadItemsTable()
         "ajax": {
           url: "{{ session['server_ext'] }}/services/quality/storage/box/list",
           type: "GET",
+          "dataSrc": function (json) { return json.data || json || []; },
           beforeSend: function (xhr) {
             xhr.setRequestHeader('Authorization', 'Bearer {{ session.get("be_access_token","") }}');
           }

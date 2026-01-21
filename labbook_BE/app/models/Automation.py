@@ -80,8 +80,8 @@ class Automation:
             if 'ajb_params' in row and isinstance(row['ajb_params'], str):
                 try:
                     row['ajb_params'] = json.loads(row['ajb_params'])
-                except Exception:
-                    pass
+                except Exception as err:
+                    Automation.log.error(Logs.fileline() + " : getAutomationJobs json decode failed ajb_ser=" + str(row.get('ajb_ser')) + " err=" + str(err))
 
         return rows
 
@@ -108,8 +108,8 @@ class Automation:
         if 'ajb_params' in row and isinstance(row['ajb_params'], str):
             try:
                 row['ajb_params'] = json.loads(row['ajb_params'])
-            except Exception:
-                pass
+            except Exception as err:
+                Automation.log.error(Logs.fileline() + " : getAutomationJob json decode failed ajb_ser=" + str(row.get('ajb_ser')) + " err=" + str(err))
 
         params = row.get('ajb_params') or {}
 
@@ -505,7 +505,8 @@ class Automation:
             if isinstance(params_blob, str):
                 try:
                     params_obj = json.loads(params_blob)
-                except Exception:
+                except Exception as err:
+                    Automation.log.error(Logs.fileline() + " : getAutomationRuns json decode failed arn_ser=" + str(row.get('arn_ser')) + " err=" + str(err))
                     params_obj = {}
             else:
                 params_obj = params_blob or {}
@@ -666,10 +667,14 @@ class Automation:
             '  ajb_fire_on, ajb_schedule_start_on, ajb_next_run_at, ajb_last_run_at, '
             '  ajb_last_status, ajb_params '
             'from automation_job '
-            'where ajb_is_active = "Y" and ajb_next_run_at is not null and ajb_next_run_at <= now() '
+            'where ajb_is_active = "Y" '
+            'and ajb_next_run_at is not null '
+            'and ajb_next_run_at <= now() '
+            'and (ajb_last_status is null or ajb_last_status <> "running") '
             'order by ajb_next_run_at asc '
             'limit %s'
         )
+
         cursor.execute(req, (int(max_jobs),))
         jobs = cursor.fetchall() or []
         if not jobs:
@@ -681,6 +686,14 @@ class Automation:
 
             run_id = _start_run(job_id)
             if not run_id:
+                try:
+                    cursor_fail = DB.cursor()
+                    cursor_fail.execute(
+                        'update automation_job set ajb_last_status = %s where ajb_ser = %s',
+                        ('error', job_id)
+                    )
+                except Exception as err:
+                    Automation.log.error(Logs.fileline() + " : scheduler _start_run failed ajb_ser=" + str(job_id) + " err=" + str(err))
                 continue
 
             cursor2 = DB.cursor()
@@ -746,8 +759,8 @@ class Automation:
             if isinstance(param_blob, str):
                 try:
                     row['ajb_params'] = json.loads(param_blob)
-                except Exception:
-                    pass
+                except Exception as err:
+                    Automation.log.error(Logs.fileline() + " : listActiveJobs json decode failed ajb_ser=" + str(row.get('ajb_ser')) + " err=" + str(err))
         return rows
 
     @staticmethod
@@ -772,8 +785,8 @@ class Automation:
             if isinstance(param_blob, str):
                 try:
                     row['ajb_params'] = json.loads(param_blob)
-                except Exception:
-                    pass
+                except Exception as err:
+                    Automation.log.error(Logs.fileline() + " : get_due_jobs json decode failed ajb_ser=" + str(row.get('ajb_ser')) + " err=" + str(err))
         return rows
 
     @staticmethod
@@ -875,7 +888,8 @@ def compute_next_run_at(kind: str,
     if start_on:
         try:
             start_day = datetime.strptime(start_on, '%Y-%m-%d').date()
-        except Exception:
+        except Exception as err:
+            Automation.log.error(Logs.fileline() + " : compute_next_run_at invalid start_on=" + str(start_on) + " err=" + str(err))
             start_day = None
 
     # -----------------
@@ -1012,7 +1026,15 @@ def _finish_run(run_id: int,
         )
         cursor.execute(req, (status, rows_count, output_uri, message, error_trace, run_id))
     except Exception as err:
-        logging.getLogger('log_db').error(Logs.fileline() + ' : _finish_run SQL error=%s', err)
+        Automation.log.error(Logs.fileline() + " : _finish_run failed arn_ser=" + str(run_id) + " err=" + str(err))
+        try:
+            cursor2 = DB.cursor()
+            cursor2.execute(
+                'update automation_run set arn_status = %s where arn_ser = %s',
+                ('error', run_id)
+            )
+        except Exception as err2:
+            Automation.log.error(Logs.fileline() + " : _finish_run fallback update failed arn_ser=" + str(run_id) + " err=" + str(err2))
 
 
 def _recompute_next_from_row(job_row: dict) -> datetime:
@@ -1140,40 +1162,61 @@ def _compute_period_window(job_row: dict, now_dt: datetime | None = None) -> tup
 def _build_periods(period_kind: str, date_beg: datetime, date_end: datetime) -> list[list]:
     """Build l_period as in /services/export/dhis2 (inclusive bounds)."""
     l_period = []
+
     if period_kind == 'W':
-        # ISO weeks
-        cur = date_beg
-        while cur <= date_end:
-            iso_year, iso_week, _ = cur.isocalendar()
+        # ISO weeks: always start on Monday
+        cur_day = date_beg.date()
+        cur_day = cur_day - timedelta(days=cur_day.weekday())  # Monday of that week
+
+        while datetime.combine(cur_day, time(0, 0, 0)) <= date_end:
+            iso_year, iso_week, _ = cur_day.isocalendar()
             tmp_period = f"{iso_year}W{iso_week:02d}"
-            cur_end = min(cur + timedelta(days=6), date_end)
-            l_period.append([tmp_period, cur, cur_end])
-            cur = cur + timedelta(days=7)
+
+            week_start = datetime.combine(cur_day, time(0, 0, 0))
+            week_end = datetime.combine(cur_day + timedelta(days=6), time(23, 59, 59))
+
+            beg = max(week_start, date_beg)
+            end = min(week_end, date_end)
+
+            if beg <= end:
+                l_period.append([tmp_period, beg, end])
+
+            cur_day = cur_day + timedelta(days=7)
+
     elif period_kind == 'M':
-        # Calendar months
+        # Calendar months (clamped to [date_beg, date_end])
         y, m = date_beg.year, date_beg.month
-        while (y, m) <= (date_end.year, date_end.month):
+        while datetime(y, m, 1, 0, 0, 0) <= date_end:
             last_dom = calendar.monthrange(y, m)[1]
-            cur_start = datetime(y, m, 1)
-            cur_end   = datetime(y, m, last_dom)
+            cur_start = datetime(y, m, 1, 0, 0, 0)
+            cur_end = datetime(y, m, last_dom, 23, 59, 59)
             tmp_period = f"{y}M{m:02d}"
-            l_period.append([tmp_period, cur_start, cur_end])
+
+            beg = max(cur_start, date_beg)
+            end = min(cur_end, date_end)
+
+            if beg <= end:
+                l_period.append([tmp_period, beg, end])
+
             if m == 12:
                 y, m = y + 1, 1
             else:
                 m = m + 1
+
     elif period_kind in ('B', 'T', 'Q', 'S', 'A'):
-        # Multi-month groups (B=2, T=3, Q=4, S=6, A=12)
+        # Multi-month groups (B=2, T=3, Q=4, S=6, A=12), clamped to [date_beg, date_end]
         span_map = {'B': 2, 'T': 3, 'Q': 4, 'S': 6, 'A': 12}
         span = span_map[period_kind]
         y, m = date_beg.year, date_beg.month
-        while datetime(y, m, 1) <= date_end:
-            # start
-            cur_start = datetime(y, m, 1)
-            # end of block
+
+        while datetime(y, m, 1, 0, 0, 0) <= date_end:
+            cur_start = datetime(y, m, 1, 0, 0, 0)
+
             ym_next = (m - 1) + (span - 1)
             y_end, m_end = y + (ym_next // 12), (ym_next % 12) + 1
-            cur_end = datetime(y_end, m_end, calendar.monthrange(y_end, m_end)[1])
+            last_dom = calendar.monthrange(y_end, m_end)[1]
+            cur_end = datetime(y_end, m_end, last_dom, 23, 59, 59)
+
             # label formats aligned with REST endpoint
             if period_kind == 'A':
                 tmp_period = f"{y}"
@@ -1189,14 +1232,20 @@ def _build_periods(period_kind: str, date_beg: datetime, date_end: datetime) -> 
             else:  # Quadrimestrial 'Q' (custom …QnC)
                 idx = ((m - 1) // 4) + 1
                 tmp_period = f"{y}Q{idx}C"
-            l_period.append([tmp_period, cur_start, cur_end])
-            # next block
+
+            beg = max(cur_start, date_beg)
+            end = min(cur_end, date_end)
+
+            if beg <= end:
+                l_period.append([tmp_period, beg, end])
+
             next_index = (m - 1) + span
             y, m = y + (next_index // 12), (next_index % 12) + 1
+
     else:
         raise ValueError(f"wrong period kind: {period_kind}")
-    return l_period
 
+    return l_period
 
 def _write_file_safe(src_path: str, dst_folder: str) -> tuple[str, str, int]:
     """
@@ -1249,7 +1298,8 @@ def _execute_job_dhis2_send(job_row: dict) -> dict:
 
     try:
         dhs_ser = int(params.get('dhis2_api_config') or 0)
-    except Exception:
+    except Exception as err:
+        Automation.log.error(Logs.fileline() + " : DHIS2 send invalid dhis2_api_config=" + str(params.get('dhis2_api_config')) + " err=" + str(err))
         dhs_ser = 0
 
     if dhs_ser <= 0:
@@ -1257,7 +1307,8 @@ def _execute_job_dhis2_send(job_row: dict) -> dict:
 
     try:
         id_user = int(params.get('dhis2_user_id') or 0)
-    except Exception:
+    except Exception as err:
+        Automation.log.error(Logs.fileline() + " : DHIS2 send invalid dhis2_user_id=" + str(params.get('dhis2_user_id')) + " err=" + str(err))
         id_user = 1
 
     dry_run_flag = (params.get('dhis2_dry_run') or 'N').upper()
@@ -1265,77 +1316,10 @@ def _execute_job_dhis2_send(job_row: dict) -> dict:
         dry_run_flag = 'N'
 
     # Compute time window from scheduler (same as create)
-    date_beg_dt, date_end_dt = _compute_period_window(job_row)
+    date_beg, date_end = _compute_period_window(job_row)
     period_kind = job_row['ajb_schedule_kind']
 
-    try:
-        date_beg = datetime.strptime(date_beg_dt.strftime('%Y-%m-%d'), '%Y-%m-%d')
-        date_end = datetime.strptime(date_end_dt.strftime('%Y-%m-%d'), '%Y-%m-%d')
-    except Exception as err:
-        Automation.log.error(Logs.fileline() + ' : DHIS2 send ERROR bad dates ' + str(err))
-        return {'status': 'error', 'rows_count': 0, 'output_uri': None, 'message': 'bad dates for DHIS2 send', 'error_trace': str(err)}
-
-    # --- Build list of periods (copied from ExportDHIS2Api) ---
-    l_period = []
-
-    if period_kind == 'W':
-        cur = date_beg
-        while cur <= date_end:
-            iso_year, iso_week, _ = cur.isocalendar()
-            tmp_period = f"{iso_year}W{iso_week:02d}"
-            cur_end = cur + timedelta(days=6)
-            if cur_end > date_end:
-                cur_end = date_end
-            l_period.append([tmp_period, cur, cur_end])
-            cur = cur + timedelta(days=7)
-
-    elif period_kind == 'M':
-        import calendar
-        y, m = date_beg.year, date_beg.month
-        while (y, m) <= (date_end.year, date_end.month):
-            last_dom = calendar.monthrange(y, m)[1]
-            cur_start = datetime(y, m, 1)
-            cur_end = datetime(y, m, last_dom)
-            tmp_period = f"{y}M{m:02d}"
-            l_period.append([tmp_period, cur_start, cur_end])
-            if m == 12:
-                y, m = y + 1, 1
-            else:
-                m = m + 1
-
-    elif period_kind in ('B', 'T', 'Q', 'S', 'A'):
-        import calendar
-        span_map = {'B': 2, 'T': 3, 'Q': 4, 'S': 6, 'A': 12}
-        span = span_map[period_kind]
-        y, m = date_beg.year, date_beg.month
-        while (y, m) <= (date_end.year, date_end.month):
-            end_month_index = (m - 1) + (span - 1)
-            y_end = y + (end_month_index // 12)
-            m_end = (end_month_index % 12) + 1
-            last_dom = calendar.monthrange(y_end, m_end)[1]
-            cur_start = datetime(y, m, 1)
-            cur_end = datetime(y_end, m_end, last_dom)
-
-            if period_kind == 'S':
-                idx = 1 if m <= 6 else 2
-            elif period_kind == 'A':
-                idx = 1
-            elif period_kind == 'B':
-                idx = ((m - 1) // 2) + 1
-            elif period_kind == 'T':
-                idx = ((m - 1) // 3) + 1
-            else:
-                idx = ((m - 1) // 4) + 1
-
-            tmp_period = f"{y}{period_kind}{idx:02d}"
-            l_period.append([tmp_period, cur_start, cur_end])
-
-            next_index = (m - 1) + span
-            y, m = y + (next_index // 12), (next_index % 12) + 1
-
-    else:
-        Automation.log.error(Logs.fileline() + ' : DHIS2 send ERROR wrong period_kind=' + str(period_kind))
-        return {'status': 'error', 'rows_count': 0, 'output_uri': None, 'message': 'wrong period kind', 'error_trace': None}
+    l_period = _build_periods(period_kind, date_beg, date_end)
 
     # --- Build data (same logic as ExportDHIS2Api) ---
     filename_token = sheet[:-4] if sheet.lower().endswith('.csv') else sheet
@@ -1581,7 +1565,8 @@ def _execute_job_dhis2_create(job_row: dict) -> dict:
     if isinstance(params, str):
         try:
             params = json.loads(params)
-        except Exception:
+        except Exception as err:
+            Automation.log.error(Logs.fileline() + " : DHIS2 create ajb_params json decode failed err=" + str(err))
             params = {}
     sheet = str(params.get('dhis2_sheet') or '').strip()
     if not sheet:
@@ -1801,8 +1786,8 @@ def _execute_job_billing(job_row: dict) -> dict:
 
     # Compute scheduler window
     date_beg_dt, date_end_dt = _compute_period_window(job_row)
-    date_beg = date_beg_dt.strftime('%Y-%m-%d 00:00')
-    date_end = date_end_dt.strftime('%Y-%m-%d 23:59')
+    date_beg = date_beg_dt.strftime('%Y-%m-%d %H:%M:%S')
+    date_end = date_end_dt.strftime('%Y-%m-%d %H:%M:%S')
 
     # Load billing data
     try:
@@ -1980,21 +1965,10 @@ def _execute_job_activity(job_row: dict) -> dict:
     except Exception:
         type_ana = 0
 
-    # Compute scheduler window
-    try:
-        date_beg_dt, date_end_dt = _compute_period_window(job_row)
-    except Exception as err:
-        Automation.log.error(Logs.fileline() + " : activity _compute_period_window failed err=" + str(err))
-        return {
-            'status': 'error',
-            'rows_count': 0,
-            'output_uri': None,
-            'message': 'activity period window error',
-            'error_trace': str(err),
-        }
+    date_beg_dt, date_end_dt = _compute_period_window(job_row)
+    date_beg = date_beg_dt.strftime('%Y-%m-%d %H:%M:%S')
+    date_end = date_end_dt.strftime('%Y-%m-%d %H:%M:%S')
 
-    date_beg = date_beg_dt.strftime('%Y-%m-%d 00:00')
-    date_end = date_end_dt.strftime('%Y-%m-%d 23:59')
     send_msg = (params.get('activity_internal_msg') or "N").upper()
     receiver = int(params.get('activity_internal_recipient') or 0)
     sender   = job_row.get("ajb_created_by") or 0
@@ -2072,9 +2046,9 @@ def _execute_job_activity(job_row: dict) -> dict:
                     row['age'] = int(age // 52)
                 elif unit == 1036:
                     row['age'] = int(age // 12)
-            except Exception:
+            except Exception as err:
                 # Silent failure, keep original age
-                pass
+                Automation.log.error(Logs.fileline() + " : activity age normalize failed unit=" + str(unit) + " age=" + str(age) + " err=" + str(err))
 
     # Replace None by empty string (same as PdfActivityReport)
     for row in stat_type:
@@ -2682,6 +2656,178 @@ def _execute_job_ssh(job_row: dict) -> dict:
         }
 
 
+def _first_day_utc(dt: datetime) -> datetime:
+    """Return the first day of the month at 00:00:00 UTC."""
+    return dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+
+def _add_months_dt(dt: datetime, months: int) -> datetime:
+    """
+    Add/subtract months without external dependencies
+    Example: months=-12 means "12 months earlier".
+    """
+    year = dt.year + (dt.month - 1 + months) // 12
+    month = (dt.month - 1 + months) % 12 + 1
+    day = min(dt.day, calendar.monthrange(year, month)[1])
+    return dt.replace(year=year, month=month, day=day)
+
+
+def _execute_job_audit_purge(job_row: dict) -> dict:
+    """
+    Automatic monthly archive + purge for the audit_trail table.
+
+    Retention rule:
+    - Setting: sigl_06_data.identifiant = 'audit_purge_months'
+    - If months=12: keep the last 12 months in DB.
+    - Data strictly older than the cutoff is archived to files then deleted.
+
+    Files are written into: /storage/resource/audit/
+    One file per archived month (JSONL format).
+    """
+
+    # 1) Read retention months from settings table
+    row = Various.getDefaultValue('audit_purge_months')
+    raw = (row.get('value') if row else None)
+
+    try:
+        months = int(raw) if raw is not None and str(raw).strip() != '' else 0
+    except Exception:
+        months = 0
+
+    if months <= 0:
+        # Disabled
+        return {"status": "success", "rows_count": 0, "output_uri": None, "message": "disabled (months<=0)", "error_trace": None}
+
+    Automation.log.info(Logs.fileline() + " : Audit auto archive/purge start months=" + str(months))
+
+    # 2) Compute cutoff date (UTC)
+    # month0 = first day of current month at 00:00:00
+    now_utc = datetime.utcnow()
+    month0 = _first_day_utc(now_utc)
+
+    # cutoff = first day of current month minus N months
+    # Example (month0=2026-01-01, months=12) => cutoff=2025-01-01
+    cutoff = _add_months_dt(month0, -months)
+
+    # 3) Ensure output directory exists
+    base_path = Constants.cst_audit
+    os.makedirs(base_path, exist_ok=True)
+
+    # 4) Find if there is anything older than cutoff
+    cursor = DB.cursor()
+    cursor.execute(
+        "SELECT MIN(aud_date_utc) AS min_dt FROM audit_trail WHERE aud_date_utc < %s",
+        [cutoff.strftime('%Y-%m-%d %H:%M:%S')]
+    )
+    r = cursor.fetchone() or {}
+    cursor.close()
+
+    min_dt = r.get('min_dt')
+    if not min_dt:
+        Automation.log.info(Logs.fileline() + " : Audit auto archive/purge nothing to do cutoff=" + cutoff.strftime('%Y-%m-%d %H:%M:%S'))
+        return {"status": "success", "rows_count": 0, "output_uri": None, "message": "nothing to purge", "error_trace": None}
+
+    # 5) Start archiving month by month, from the month of the oldest record
+    if not isinstance(min_dt, datetime):
+        min_dt = datetime.strptime(str(min_dt), '%Y-%m-%d %H:%M:%S')
+
+    iter_start = _first_day_utc(min_dt)
+
+    total_archived = 0
+    total_purged = 0
+    last_file = None
+    audit_date_beg = None
+    audit_date_end = None
+
+    while iter_start < cutoff:
+        next_month = _add_months_dt(iter_start, 1)
+        period_end = next_month if next_month < cutoff else cutoff
+
+        date_beg_utc = iter_start.strftime('%Y-%m-%d 00:00:00')
+        date_end_utc = (period_end - timedelta(seconds=1)).strftime('%Y-%m-%d %H:%M:%S')
+
+        filename = (
+            "audit-archive_" +
+            iter_start.strftime("%Y%m%d") + "_" +
+            (period_end - timedelta(seconds=1)).strftime("%Y%m%d") +
+            "_purge.jsonl"
+        )
+        fullpath = os.path.join(base_path, filename)
+
+        archived_count = 0
+        c = DB.cursor()
+        c.execute(
+            """
+            SELECT aud_ser, aud_date_utc, aud_user_login, aud_user_display, aud_user_role,
+                   aud_resource_type, aud_resource_id, aud_action, aud_client_ip,
+                   aud_status, aud_details, aud_event_type
+            FROM audit_trail
+            WHERE aud_date_utc BETWEEN %s AND %s
+            ORDER BY aud_date_utc, aud_ser
+            """,
+            [date_beg_utc, date_end_utc]
+        )
+
+        with open(fullpath, "w", encoding="utf-8") as f:
+            while True:
+                batch = c.fetchmany(1000)
+                if not batch:
+                    break
+                for row in batch:
+                    rr = dict(row)
+                    if rr.get("aud_date_utc"):
+                        rr["aud_date_utc"] = rr["aud_date_utc"].strftime("%Y-%m-%d %H:%M:%S")
+                    f.write(json.dumps(rr, ensure_ascii=False, default=str) + "\n")
+                    archived_count += 1
+
+        c.close()
+
+        if archived_count <= 0:
+            try:
+                os.remove(fullpath)
+            except Exception as err:
+                Automation.log.error(Logs.fileline() + " : Audit auto archive/purge remove file failed path=" + str(fullpath) + " err=" + str(err))
+            iter_start = next_month
+            continue
+
+        purged = Audit.purgeAuditByPeriod(date_beg_utc, date_end_utc)
+        purged = int(purged or 0)
+
+        Automation.log.info(Logs.fileline() + " : Audit auto archive/purge month done rows=" + str(archived_count) + " purged=" + str(purged))
+
+        total_archived += archived_count
+        total_purged += purged
+        last_file = fullpath
+
+        if audit_date_beg is None:
+            audit_date_beg = date_beg_utc
+        audit_date_end = date_end_utc
+
+        iter_start = next_month
+
+    if total_archived > 0:
+        details = {
+            "context": "AUDIT_AUTO_ARCHIVE_PURGE",
+            "date_beg": audit_date_beg,
+            "date_end": audit_date_end,
+            "archived_rows": total_archived,
+            "purged_rows": total_purged,
+            "cutoff": cutoff.strftime('%Y-%m-%d %H:%M:%S'),
+        }
+        try:
+            Audit.insertAudit(None, "AuditAutoArchivePurge", "AUDIT", None, "SUCCESS", details, "E")
+        except Exception as err:
+            Automation.log.error(Logs.fileline() + " : Audit auto archive/purge audit insert failed err=" + str(err))
+
+    return {
+        "status": "success",
+        "rows_count": total_archived,
+        "output_uri": last_file,
+        "message": f"archived={total_archived} purged={total_purged}",
+        "error_trace": None
+    }
+
+
 def _execute_job(job_row: dict) -> dict:
     """Dispatch execution by job type."""
     ajb_type = (job_row.get('ajb_type') or '').lower()
@@ -2717,6 +2863,9 @@ def _execute_job(job_row: dict) -> dict:
         job_kind = (params.get('type') or '').lower()
         if job_kind == 'ssh':
             return _execute_job_ssh(job_row)
+
+        if job_kind == 'audit_purge':
+            return _execute_job_audit_purge(job_row)
 
         return {
             'status': 'error',

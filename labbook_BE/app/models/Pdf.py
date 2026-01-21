@@ -1125,6 +1125,9 @@ class Pdf:
         data['label']['comm']       = str(_("Commentaire"))
         data['label']['validate']   = str(_("validé par"))
         data['label']['technician'] = str(_("technicien"))
+        data['label']['sampling_info'] = str(_("Informations de prélèvement"))
+        data['label']['sampled_at']    = str(_("Prélève le"))
+        data['label']['received_at']   = str(_("reçu le"))
 
         # === Laboratory details ===
         data['lab'] = {}
@@ -2185,7 +2188,9 @@ class Pdf:
                         encryption=pikepdf.Encryption(
                             owner=password,
                             user=password,
-                            allow=pikepdf.Permissions(modify=False)
+                            allow=pikepdf.Permissions(accessibility=True, extract=False, print_lowres=True,
+                                                      print_highres=False, modify_annotation=False, modify_form=False,
+                                                      modify_assembly=False, modify_other=False)
                         )
                     )
 

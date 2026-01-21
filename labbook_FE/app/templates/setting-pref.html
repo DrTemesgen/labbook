@@ -106,6 +106,10 @@
                                 </select>
                             </td>
                         </tr>
+                        <tr class="d-lg-flex">
+                            <th class="col-lg-6">{{ _("Ancienneté de conservations des audits avant archivage et purge (en mois)") }}</th>
+                            <td class="col-lg-6"><input type="number" id="pref_audit_purge" name="pref_audit_purge"  min="1" step="1" max="60" value="{% if args['pref_list'] %}{{ args['pref_list'][16]['value'] }}{% endif %}"></td>
+                        </tr>
                     </tbody>
                 </table>
             </form>
@@ -144,6 +148,7 @@ var quality    = 0 ;
 var bill       = 0 ;
 var lang_pdf   = $("#pref_lang_pdf").val() ;
 var lang_db    = $("#pref_lang_db").val() ;
+var audit_purge= $("#pref_audit_purge").val() ;
 
     if ( deed_price === '' )
     {
@@ -175,6 +180,7 @@ var param = '{ "prix_acte":"' + deed_price + '", ' +
               '"qualite":"' + quality + '", ' +
               '"facturation":"' + bill + '", ' +
               '"default_language":"' + lang_pdf + '", ' +
+              '"audit_purge_months":"' + audit_purge + '", ' +
               '"db_language":"' + lang_db + '"}' ;
 
     $.ajax( {

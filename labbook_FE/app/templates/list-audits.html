@@ -60,14 +60,10 @@
                         </div>
 
                         <div class="row mb-2">
-                            <!-- Detail filter -->
+                            <!-- Context filter -->
                             <div class="col-md-3 mb-2">
-                                <label for="filter_action" class="form-label">{{ _("Détails") }}</label>
-                                <input type="text"
-                                       class="form-control"
-                                       id="filter_action"
-                                       name="filter_action"
-                                       placeholder="{{ _('Ex: UserLogin, UserUpdate') }}">
+                                <label for="filter_context" class="form-label">{{ _("Contexte") }}</label>
+                                <input type="text" id="filter_context" class="form-control">                                
                             </div>
 
                             <!-- Result -->
@@ -134,6 +130,17 @@
                             </div>
 
                             <div class="col-md-6 mb-2 d-flex justify-content-end">
+                                <!-- Include system calls (default unchecked) -->
+                                <div class="form-check me-3 mt-2">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="filter_include_system"
+                                           name="filter_include_system"
+                                           value="Y">
+                                    <label class="form-check-label" for="filter_include_system">
+                                        {{ _("Inclure appels système") }}
+                                    </label>
+                                </div>
                                 <button type="button"
                                         id="btn_reset_filters"
                                         class="btn btn-secondary">
@@ -158,8 +165,8 @@
                         <th>{{ _("Date (UTC)") }}</th>
                         <th>{{ _("Utilisateur") }}</th>
                         <th>{{ _("Rôle") }}</th>
+                        <th>{{ _("Contexte") }}</th>
                         <th>{{ _("Ressource") }}</th>
-                        <th>{{ _("Détails") }}</th>
                         <th>{{ _("Adresse IP") }}</th>
                         <th>{{ _("Résultat") }}</th>
                         <th hidden>{{ _("ID") }}</th>
@@ -176,13 +183,35 @@
                            class="btn btn-lbk btn-{{ session['user_role']|safe }}">
                 </div>
 
-                <div class="float-end me-0">
+                <div class="float-end me-0 d-lg-flex align-items-end">
+
+                    <input type="button"
+                       onclick="go_audit_archives();"
+                       id="btn_audit_archives"
+                       value="{{ _('Liste archives') }}"
+                       class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-3">
+
+                    <div class="dropdown">
+                        <button class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-3 dropdown-toggle"
+                                type="button"
+                                id="btn_audit_manage"
+                                data-bs-toggle="dropdown"
+                                aria-expanded="false">
+                            {{ _("Archiver") }}
+                        </button>
+                        <ul class="dropdown-menu btn-{{ session['user_role']|safe }}" aria-labelleby="btn_audit_manage">
+                            <li><a class="dropdown-item dropdown-color-link" href="#" onclick="audit_manage(false); return false;">{{ _("Archiver") }}</a></li>
+                            <li><a class="dropdown-item dropdown-color-link" href="#" onclick="audit_manage(true); return false;">{{ _("Archiver + purger") }}</a></li>
+                        </ul>
+                    </div>
+
                     <input type="button"
                            onclick="export_atna();"
                            id="btn_export_atna"
                            value="{{ _('Exporter') }}"
-                           class="btn btn-lbk btn-{{ session['user_role']|safe }}">
+                           class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-3">
                 </div>
+                
             </div>
 
             {% else %}
@@ -216,10 +245,11 @@ function getAuditFilters()
         filter_date_end: $('#filter_date_end').val() || null,
         filter_user: $('#filter_user').val() || null,
         filter_role: $('#filter_role').val() || null,
-        filter_action: $('#filter_action').val() || null,
+        filter_context: $('#filter_context').val() || null,        
         filter_status: $('#filter_status').val() || null,
         filter_ip: $('#filter_ip').val() || null,
-        filter_resource: $('#filter_resource').val() || null
+        filter_resource: $('#filter_resource').val() || null,
+        filter_include_system: $('#filter_include_system').is(':checked') ? 'Y' : 'N'
     };
 }
 
@@ -327,11 +357,11 @@ function loadAuditTable() {
             // 3) Role
             { data: "role_name", defaultContent: "" },
 
-            // 4) Resource label
-            { data: "resource_label", defaultContent: "" },
+            // 4) Context (NEW)
+            { data: "context_label", defaultContent: "" },
 
-            // 5) Details summary
-            { data: "details_summary", defaultContent: "" },
+            // 5) Resource label (resource + old details appended)
+            { data: "resource_label", defaultContent: "" },
 
             // 6) Client IP
             { data: "ip_addr", defaultContent: "" },
@@ -345,9 +375,8 @@ function loadAuditTable() {
     });
 }
 
-function export_atna()
+function audit_manage(do_purge)
 {
-    // Ask user for period in ISO format YYYY-MM-DD
     var dateBeg = window.prompt("Date de début (YYYY-MM-DD)", "");
     if (!dateBeg) {
         return;
@@ -358,10 +387,117 @@ function export_atna()
         return;
     }
 
+    if (do_purge === true) {
+        if (!window.confirm("{{ _('Confirmer l’archivage avec purge définitive ?') }}")) {
+            return;
+        }
+    }
+
+    var payload = {
+        date_beg: dateBeg,
+        date_end: dateEnd,
+        purge: do_purge ? "Y" : "N"
+    };
+
+    $("#dial-wait").off('shown.bs.modal');
+    $("#dial-wait").modal("show");
+
+    set_audit_context("{{ _('Archivage audit') }}") ;
+
+    if (do_purge) set_audit_context("{{ _('Archivage audit + purge') }}") ;
+
+    $.ajax({
+        url: "{{ session['server_ext'] }}/services/audit/archive",
+        type: "POST",
+        contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        data: JSON.stringify(payload),
+        headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
+        success: function(resp)
+        {
+            $("#dial-wait").modal("hide");
+            $("#dial-wait").modal("hide");
+
+            if (resp && resp.filename) {
+                download_archive_file(resp.filename);
+            } else {
+                alert("{{ _('Archivage terminé mais aucun fichier retourné.') }}");
+            }
+        },
+        error: function(xhr)
+        {
+            $("#dial-wait").modal("hide");
+            alert("Erreur (code " + xhr.status + ").");
+        }
+    });
+}
+
+function download_archive_file(filename)
+{
+    var downloadUrl = "{{ session['server_ext'] }}/services/audit/archive-download/" + encodeURIComponent(filename);
+    var accessToken = "{{ session.get('be_access_token','') }}";
+
+    var httpRequest = new XMLHttpRequest();
+    httpRequest.open("GET", downloadUrl, true);
+    httpRequest.responseType = "blob";
+
+    httpRequest.setRequestHeader("Authorization", "Bearer " + accessToken);
+    httpRequest.setRequestHeader("X-Requested-With", "XMLHttpRequest");
+
+    httpRequest.onload = function ()
+    {
+        if (httpRequest.status !== 200)
+        {
+            alert("Erreur téléchargement (code " + httpRequest.status + ").");
+            return;
+        }
+
+        var responseBlob = httpRequest.response;
+        if (!responseBlob || responseBlob.size === 0)
+        {
+            alert("Téléchargement vide.");
+            return;
+        }
+
+        var downloadLink = document.createElement("a");
+        var objectUrl = window.URL.createObjectURL(responseBlob);
+
+        downloadLink.href = objectUrl;
+        downloadLink.download = filename;
+        document.body.appendChild(downloadLink);
+        downloadLink.click();
+
+        document.body.removeChild(downloadLink);
+        window.URL.revokeObjectURL(objectUrl);
+    };
+
+    httpRequest.onerror = function ()
+    {
+        alert("Erreur réseau lors du téléchargement.");
+    };
+
+    httpRequest.send(null);
+}
+
+function export_atna()
+{
+    // Ask user for period in ISO format YYYY-MM-DD
+    var dateBeg = window.prompt("{{ _('Date de début (YYYY-MM-DD)') }}", "");
+    if (!dateBeg) {
+        return;
+    }
+
+    var dateEnd = window.prompt("{{ _('Date de fin (YYYY-MM-DD)') }}", "");
+    if (!dateEnd) {
+        return;
+    }
+
     var payload = {
         date_beg: dateBeg,
         date_end: dateEnd
     };
+
+    set_audit_context("{{ _('Export audit') }}") ;
 
     $.ajax({
         url: "{{ session['server_ext'] }}/services/audit/export-atna",
@@ -369,11 +505,7 @@ function export_atna()
         contentType: "application/json",
         dataType: "json",
         data: JSON.stringify(payload),
-        beforeSend: function (xhr) {
-            // Set OAuth and X-Requested-With headers
-            xhr.setRequestHeader('Authorization', 'Bearer {{ session.get('be_access_token','') }}');
-            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        },
+        headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
         success: function (resp) {
             if (resp && resp.filename) {
                 var url = "{{ session['server_ext'] }}/services/audit/export-atna-download/" + encodeURIComponent(resp.filename);
@@ -392,6 +524,11 @@ function export_atna()
             }
         }
     });
+}
+
+function go_audit_archives()
+{
+    window.location.href = "{{ session['server_ext'] }}/list-audit-archives";
 }
 
 {% if has_permission("ADMIN_183") %}

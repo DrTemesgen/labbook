@@ -1,0 +1,214 @@
+# ======================================================================
+# Patient history form – Symptômes & Constantes
+# ======================================================================
+
+[description]
+
+# ======================================================================
+# BLOC ANTÉCÉDENTS MÉDICAUX
+# ======================================================================
+
+[[description.form_element]]
+id    = "label_antecedents"
+label = "Antécédents médicaux"
+type  = "h3"
+
+[[description.form_element]]
+id         = "antecedents_desc"
+label      = "Description"
+input_type = "textarea"
+attr_rows  = "4"
+
+[[description.form_element]]
+id         = "antecedents_date"
+label      = "Date"
+input_type = "date"
+attr_required = true
+
+# ======================================================================
+# BLOC SYMPTÔMES
+# ======================================================================
+
+[[description.form_element]]
+id    = "label_sympt"
+label = "Symptômes"
+type  = "h3"
+
+[[description.form_element]]
+id         = "sympt_name"
+label      = "Symptôme"
+input_type = "select"
+attr_required = true
+
+options = [
+    { value = "Difficultés à respirer",      label = "Difficultés à respirer" },
+    { value = "Écoulement nasal",   label = "Écoulement nasal" },
+    { value = "Éternuements", label = "Éternuements" },
+    { value = "Fièvre",       label = "Fièvre" },
+    { value = "Irritation de la gorge",        label = "Irritation de la gorge" },
+    { value = "Douleurs articulaires",  label = "Douleurs articulaires" },
+    { value = "Éruption généralisée",     label = "Éruption généralisée" },
+    { value = "Faiblesse corporelle",     label = "Faiblesse corporelle" },
+    { value = "Gonflement des ganglions",  label = "Gonflement des ganglions" },
+    { value = "Yeux rouges",  label = "Yeux rouges" }
+]
+
+[[description.form_element]]
+id         = "sympt_date"
+label      = "Date d'apparition"
+input_type = "date"
+attr_required = true
+
+# ======================================================================
+# BLOC CONSTANTES
+# ======================================================================
+
+[[description.form_element]]
+id    = "label_const"
+label = "Constantes"
+type  = "h3"
+
+[[description.form_element]]
+id         = "const_temp"
+label      = "Température (°C)"
+input_type = "number"
+attr_step  = "0.1"
+
+[[description.form_element]]
+id         = "const_weight"
+label      = "Poids (kg)"
+input_type = "number"
+attr_step  = "0.1"
+
+[[description.form_element]]
+id         = "const_bp"
+label      = "Tension artérielle"
+input_type = "text"
+attr_value = "120/80"
+
+[[description.form_element]]
+id         = "const_glucose"
+label      = "Taux de sucre (g/L)"
+input_type = "number"
+attr_step  = "0.01"
+
+[[description.form_element]]
+id         = "const_date"
+label      = "Date des constantes"
+input_type = "date"
+attr_required = true
+
+# ======================================================================
+# LAYOUT
+# ======================================================================
+
+[layout]
+
+# ---------- ANTÉCÉDENTS MÉDICAUX : titre ----------
+[[layout.rows]]
+class    = "panel-heading row"
+elements = [
+    { element = "label_antecedents", class = "panel-title" }
+]
+
+# ---------- ANTÉCÉDENTS MÉDICAUX : formulaire ----------
+[[layout.rows]]
+class    = "row mt-2"
+elements = [
+    { class = "col-md-12", elements = [
+        { element = "antecedents_desc" },
+        { element = "antecedents_date" }
+    ] }
+]
+
+# ---------- ANTÉCÉDENTS MÉDICAUX : historique ----------
+[[layout.rows]]
+class    = "row mt-2"
+elements = [
+    { element = "antecedents", class = "col-md-12" }
+]
+
+# ---------- SYMPTÔMES : titre ----------
+[[layout.rows]]
+class    = "panel-heading row mt-4"
+elements = [
+    { element = "label_sympt", class = "panel-title" }
+]
+
+# ---------- SYMPTÔMES : formulaire ----------
+[[layout.rows]]
+class    = "row mt-2"
+elements = [
+    { class = "col-md-12", elements = [
+        { element = "sympt_name" },
+        { element = "sympt_date" }
+    ] }
+]
+
+# ---------- SYMPTÔMES : historique ----------
+[[layout.rows]]
+class    = "row mt-2"
+elements = [
+    { element = "sympt", class = "col-md-12" }
+]
+
+# ---------- CONSTANTES : titre ----------
+[[layout.rows]]
+class    = "panel-heading row mt-4"
+elements = [
+    { element = "label_const", class = "panel-title" }
+]
+
+# ---------- CONSTANTES : formulaire ----------
+#  Les boutons Enregistrer / Retour apparaîtront EN BAS de cette zone
+[[layout.rows]]
+class    = "row mt-2"
+elements = [
+    { class = "col-md-12", elements = [
+        { element = "const_temp" },
+        { element = "const_weight" },
+        { element = "const_bp" },
+        { element = "const_glucose" },
+        { element = "const_date" }
+    ] }
+]
+
+# ---------- CONSTANTES : historique SOUS les boutons ----------
+[[layout.rows]]
+class    = "row mt-2"
+elements = [
+    { element = "const", class = "col-md-12" }
+]
+
+# ======================================================================
+# HISTORY
+# ======================================================================
+
+[history]
+
+[[history.block]]
+id      = "antecedents"
+label   = "Historique des antécédents médicaux"
+columns = [
+    "antecedents_desc",
+    "antecedents_date"
+]
+
+[[history.block]]
+id      = "sympt"
+label   = "Historique des symptômes"
+columns = [
+    "sympt_name",
+    "sympt_date"
+]
+
+[[history.block]]
+id      = "const"
+label   = "Historique des constantes"
+columns = [
+    "const_temp",
+    "const_weight",
+    "const_bp",
+    "const_glucose",
+    "const_date"
+]

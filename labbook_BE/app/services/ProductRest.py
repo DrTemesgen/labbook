@@ -14,6 +14,7 @@ from app.models.Audit import Audit
 from app.models.Analyzer import Analyzer
 from app.models.Constants import Constants
 from app.models.Product import Product
+from app.models.Setting import Setting
 from app.models.Logs import Logs
 from app.models.Various import Various
 from app.security.oauth_routes import require_oauth
@@ -305,14 +306,33 @@ class ProductLastCode(Resource):
     @require_oauth()
     def get(self):
         audit_user = request.oauth_user
-        last_code = Product.getLastSampleCode()
+        last_code = ''
+
+        try:
+            rstg = Setting.getRecNumSetting() or {}
+            samp_regex = rstg.get('rstg_samp_regex') if isinstance(rstg, dict) else ''
+            samp_regex = (samp_regex or '').strip()
+
+            # No regex => no format => no prefill
+            if samp_regex:
+                last_code = Product.getLastSampleCode(samp_regex)
+            else:
+                last_code = ''
+
+        except Exception as err:
+            last_code = ''
+            self.log.error(Logs.fileline() + ' : ProductLastCode ERROR read setting err=' + str(err))
+
         body = {'last_code': last_code}
+
         self.log.info(Logs.fileline() + ' : TRACE ProductLastCode')
+
         try:
             details = {"last_code": last_code}
             Audit.insertAudit(audit_user, "ProductLastCode", "PRODUCT", None, "SUCCESS", details, "R")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ProductLastCode ERROR audit success err=' + str(err))
+
         return compose_ret(body, Constants.cst_content_type_json)
 
 

@@ -43,6 +43,7 @@
                         <tr>
                             <th class="" hidden>{{ _("serial") }}</th>
                             <th class="text-start">{{ _("Action") }}</th>
+                            <th>{{ _("Id") }}</th>
                             <th class="text-start">{{ _("Libellé") }} *</th>
                             <th class="text-start">{{ _("Code") }} *</th>
                             <th class="text-start">{{ _("Libellé court") }}</th>
@@ -104,6 +105,7 @@ let obj = data ;
 
     tmp_tr += create_td(obj.id_ihm, obj.id_ihm, "", "display:none;") ;
     tmp_tr += create_td("", btn, " text-start", "") ; // actions
+    tmp_tr += create_td("id_data_" + obj.id_ihm, obj.id_data, "text-start", "") ;
     tmp_tr += create_td("", create_input("label_"+obj.id_ihm, "text", obj.label, "","", ""), "", "") ;
     tmp_tr += create_td("", create_input("code_"+obj.id_ihm, "text", obj.code, "", 10, ""), "", "") ;
     tmp_tr += create_td("", create_input("short_"+obj.id_ihm, "text", obj.short_label, "", 20, ""), "", "") ;

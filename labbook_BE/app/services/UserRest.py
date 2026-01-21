@@ -61,7 +61,7 @@ class UserAccess(Resource):
             payload = {"id_user": int(user["id_data"]), "role_type": user["role_type"], "login": login}
             self.log.info(Logs.fileline() + ' : UserAccess authorized role=' + str(user['role_type']) + ' | login=' + str(login))
             try:
-                details = {"id_user": int(user["id_data"]), "login": login, "result": "SUCCESS"}
+                details = {"user_id": int(user["id_data"]), "login": login, "result": "SUCCESS"}
                 Audit.insertAudit({"usr_login": user["username"], "usr_display": user["username"], "usr_role": user["role_type"]},
                                   "UserAccess", "USER", int(user["id_data"]), "SUCCESS", details, "E")
             except Exception as err:
@@ -115,7 +115,7 @@ class UserByLogin(Resource):
         self.log.info(Logs.fileline() + ' : TRACE UserByLogin')
         try:
             details = {"result": "SUCCESS", "action": "VIEW", "login": login}
-            Audit.insertAudit(audit_user, "UserByLogin", "USER", None, "SUCCESS", details, "R")
+            Audit.insertAudit(audit_user, "UserByLogin", "USER", int(user["id_data"]), "SUCCESS", details, "R")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserByLogin ERROR audit success err=' + str(err))
         return compose_ret(user, Constants.cst_content_type_json)
@@ -132,7 +132,7 @@ class UserDet(Resource):
         if not user:
             self.log.error(Logs.fileline() + ' : TRACE UserDet no user')
             try:
-                details = {"result": "ERROR", "reason": "NOT_FOUND", "usr_ser": int(id_user)}
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "user_id": int(id_user)}
                 Audit.insertAudit(audit_user, "UserDet", "USER", int(id_user), "ERROR", details, "R")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserDet ERROR audit not found err=' + str(err))
@@ -154,7 +154,7 @@ class UserDet(Resource):
 
         self.log.info(Logs.fileline() + ' : TRACE UserDet')
         try:
-            details = {"result": "SUCCESS", "action": "VIEW", "usr_ser": int(id_user)}
+            details = {"result": "SUCCESS", "action": "VIEW", "user_id": int(id_user)}
             Audit.insertAudit(audit_user, "UserDet", "USER", int(id_user), "SUCCESS", details, "R")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserDet ERROR audit success err=' + str(err))
@@ -173,7 +173,7 @@ class UserDet(Resource):
            'comment' not in args or 'id_pres' not in args or 'role_type' not in args or 'role_pro' not in args:
             self.log.error(Logs.fileline() + ' : UserDet ERROR args missing')
             try:
-                details = {"result": "ERROR", "reason": "ARGS_MISSING", "usr_ser": int(id_user)}
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "user_id": int(id_user)}
                 Audit.insertAudit(audit_user, "UserDet", "USER", int(id_user), "ERROR", details, "U" if id_user > 0 else "C")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserDet ERROR audit args missing err=' + str(err))
@@ -184,7 +184,7 @@ class UserDet(Resource):
             if 'stat' not in args:
                 self.log.error(Logs.fileline() + ' : UserDet ERROR args missing')
                 try:
-                    details = {"result": "ERROR", "reason": "ARGS_MISSING", "usr_ser": int(id_user), "missing": ["stat"]}
+                    details = {"result": "ERROR", "reason": "ARGS_MISSING", "user_id": int(id_user), "missing": ["stat"]}
                     Audit.insertAudit(audit_user, "UserDet", "USER", int(id_user), "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : UserDet ERROR audit args missing err=' + str(err))
@@ -196,7 +196,7 @@ class UserDet(Resource):
             if not user:
                 self.log.error(Logs.fileline() + ' : TRACE UserDet no user')
                 try:
-                    details = {"result": "ERROR", "reason": "NOT_FOUND", "usr_ser": int(id_user)}
+                    details = {"result": "ERROR", "reason": "NOT_FOUND", "user_id": int(id_user)}
                     Audit.insertAudit(audit_user, "UserDet", "USER", int(id_user), "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : UserDet ERROR audit not found err=' + str(err))
@@ -235,7 +235,7 @@ class UserDet(Resource):
             if not success:
                 self.log.info(Logs.fileline() + ' : TRACE UserDet ERROR update user')
                 try:
-                    details = {"id_user": id_user, "login": user['username'], "result": status,
+                    details = {"user_id": id_user, "login": user['username'], "result": status,
                                "reason": "UPDATE_FAILED" if not success else None}
                     if details.get("reason") is None:
                         details.pop("reason", None)
@@ -249,7 +249,7 @@ class UserDet(Resource):
             if 'id_owner' not in args or 'password' not in args:
                 self.log.error(Logs.fileline() + ' : UserDet ERROR args missing')
                 try:
-                    details = {"result": "ERROR", "reason": "ARGS_MISSING", "usr_ser": int(id_user),
+                    details = {"result": "ERROR", "reason": "ARGS_MISSING", "user_id": int(id_user),
                                "missing": ["id_owner", "password"]}
                     Audit.insertAudit(audit_user, "UserDet", "USER", None, "ERROR", details, "C")
                 except Exception as err:
@@ -300,7 +300,7 @@ class UserDet(Resource):
             if not success:
                 self.log.error(Logs.alert() + ' : UserDet ERROR insert user')
                 try:
-                    details = {"id_user": ret, "login": args['login'], "result": status,
+                    details = {"user_id": ret, "login": args['login'], "result": status,
                                "reason": "INSERT_FAILED" if not success else None}
                     if details.get("reason") is None:
                         details.pop("reason", None)
@@ -312,7 +312,7 @@ class UserDet(Resource):
         self.log.info(Logs.fileline() + ' : TRACE UserDet id_user=' + str(id_user))
         try:
             event_type = "U" if id_user > 0 else "C"
-            details = {"result": "SUCCESS", "usr_ser": int(ret) if id_user <= 0 else int(id_user)}
+            details = {"result": "SUCCESS", "user_id": int(ret) if id_user <= 0 else int(id_user)}
             if id_user > 0 and 'login' in args:
                 details["login"] = str(args.get('login'))
             Audit.insertAudit(audit_user, "UserDet", "USER", int(ret) if id_user <= 0 else int(id_user), "SUCCESS",
@@ -337,7 +337,7 @@ class UserStaffDet(Resource):
            'comment' not in args or 'role_type' not in args or 'role_pro' not in args:
             self.log.error(Logs.fileline() + ' : UserStaffDet ERROR args missing')
             try:
-                details = {"result": "ERROR", "reason": "ARGS_MISSING", "usr_ser": int(id_user)}
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "user_id": int(id_user)}
                 Audit.insertAudit(audit_user, "UserStaffDet", "USER", int(id_user), "ERROR", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserStaffDet ERROR audit args missing err=' + str(err))
@@ -351,7 +351,7 @@ class UserStaffDet(Resource):
             if not user:
                 self.log.error(Logs.fileline() + ' : TRACE UserStaffDet no user')
                 try:
-                    details = {"result": "ERROR", "reason": "NOT_FOUND", "usr_ser": int(id_user)}
+                    details = {"result": "ERROR", "reason": "NOT_FOUND", "user_id": int(id_user)}
                     Audit.insertAudit(audit_user, "UserStaffDet", "USER", int(id_user), "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : UserStaffDet ERROR audit not found err=' + str(err))
@@ -387,7 +387,7 @@ class UserStaffDet(Resource):
             if ret is False:
                 self.log.info(Logs.fileline() + ' : TRACE UserStaffDet ERROR update user')
                 try:
-                    details = {"id_user": id_user, "login": user['username'], "result": "ERROR", "source": "UserStaffDet"}
+                    details = {"user_id": id_user, "login": user['username'], "result": "ERROR", "source": "UserStaffDet"}
                     Audit.insertAudit(audit_user, "UserStaffUpdate", "USER", id_user, "ERROR", details, "U")
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : UserStaffDet ERROR audit UserStaffUpdate err=' + str(err))
@@ -395,7 +395,7 @@ class UserStaffDet(Resource):
 
         self.log.info(Logs.fileline() + ' : TRACE UserStaffDet id_user=' + str(id_user))
         try:
-            details = {"id_user": id_user, "login": user['username'], "result": "SUCCESS", "source": "UserStaffDet"}
+            details = {"user_id": id_user, "login": user['username'], "result": "SUCCESS", "source": "UserStaffDet"}
             Audit.insertAudit(audit_user, "UserStaffUpdate", "USER", id_user, "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserStaffDet ERROR audit UserStaffUpdate err=' + str(err))
@@ -747,7 +747,7 @@ class UserRoleByUser(Resource):
         if not role:
             self.log.error(Logs.fileline() + ' : TRACE UserRoleByUser no role')
             try:
-                details = {"result": "ERROR", "reason": "NOT_FOUND", "usr_ser": int(id_user)}
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "user_id": int(id_user)}
                 Audit.insertAudit(audit_user, "UserRoleByUser", "ROLE", int(id_user), "ERROR", details, "R")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserRoleByUser ERROR audit not found err=' + str(err))
@@ -755,7 +755,7 @@ class UserRoleByUser(Resource):
 
         self.log.info(Logs.fileline() + ' : TRACE UserRoleByUser')
         try:
-            details = {"result": "SUCCESS", "action": "QUERY", "usr_ser": int(id_user)}
+            details = {"result": "SUCCESS", "action": "QUERY", "user_id": int(id_user)}
             Audit.insertAudit(audit_user, "UserRoleByUser", "ROLE", int(id_user), "SUCCESS", details, "R")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserRoleByUser ERROR audit success err=' + str(err))
@@ -827,7 +827,7 @@ class UserRightsList(Resource):
         if not l_rights:
             self.log.error(Logs.fileline() + ' : TRACE UserRightsList getUserListOfRights not found')
             try:
-                details = {"result": "ERROR", "reason": "NOT_FOUND", "usr_ser": int(id_user)}
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "user_id": int(id_user)}
                 Audit.insertAudit(audit_user, "UserRightsList", "RIGHT", int(id_user), "ERROR", details, "R")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserRightsList ERROR audit not found err=' + str(err))
@@ -853,7 +853,7 @@ class UserRightsList(Resource):
         if not l_rights:
             self.log.error(Logs.fileline() + ' : TRACE UserRightsList not found')
             try:
-                details = {"result": "ERROR", "reason": "NOT_FOUND", "id_user": args.get('id_user'),
+                details = {"result": "ERROR", "reason": "NOT_FOUND", "user_id": args.get('id_user'),
                            "role_type": args.get('role_type'), "role_id": args.get('role_id')}
                 Audit.insertAudit(audit_user, "UserRightsList", "RIGHT", None, "ERROR", details, "R")
             except Exception as err:
@@ -897,7 +897,7 @@ class UserRights(Resource):
                     missing.append("id_user")
                 if 'l_rights' not in args:
                     missing.append("l_rights")
-                details = {"result": "ERROR", "reason": "ARGS_MISSING", "usr_ser": int(id_user), "missing": missing}
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "user_id": int(id_user), "missing": missing}
                 Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", int(id_user), "ERROR", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserRights ERROR audit args missing err=' + str(err))
@@ -919,7 +919,7 @@ class UserRights(Resource):
                     if ret_perm <= 0:
                         self.log.info(Logs.fileline() + ' : UserRights ERROR insert userPermissions')
                         try:
-                            details = {"user": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
+                            details = {"user_id": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
                                        "result": "ERROR", "action": "INSERT"}
                             Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", args['id_user'], "ERROR", details, "U")
                         except Exception as err:
@@ -939,7 +939,7 @@ class UserRights(Resource):
                         if ret_perm is False:
                             self.log.info(Logs.fileline() + ' : UserRights ERROR update userPermissions')
                             try:
-                                details = {"user": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
+                                details = {"user_id": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
                                            "result": "ERROR", "action": "UPDATE"}
                                 Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", args['id_user'], "ERROR", details, "U")
                             except Exception as err:
@@ -955,7 +955,7 @@ class UserRights(Resource):
                         if ret_perm is False:
                             self.log.info(Logs.fileline() + ' : UserRights ERROR update userPermissions')
                             try:
-                                details = {"user": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
+                                details = {"user_id": args['id_user'], "by_user": args['by_user'], "prp": right['prp_ser'],
                                            "result": "ERROR", "action": "DELETE"}
                                 Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", args['id_user'], "ERROR", details, "D")
                             except Exception as err:
@@ -964,7 +964,7 @@ class UserRights(Resource):
                     else:
                         self.log.info(Logs.fileline() + ' : UserRights ERROR sameRight userPermissions')
                         try:
-                            details = {"user": args.get('id_user'), "by_user": args.get('by_user'), "result": "ERROR",
+                            details = {"user_id": args.get('id_user'), "by_user": args.get('by_user'), "result": "ERROR",
                                        "reason": "SAME_RIGHT"}
                             Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", args.get('id_user'), "ERROR",
                                               details, "D")
@@ -974,7 +974,7 @@ class UserRights(Resource):
 
         self.log.info(Logs.fileline() + ' : TRACE UserRights')
         try:
-            details = {"user": args.get('id_user'), "by_user": args.get('by_user'), "result": "SUCCESS"}
+            details = {"user_id": args.get('id_user'), "by_user": args.get('by_user'), "result": "SUCCESS"}
             Audit.insertAudit(audit_user, "UserRightsUpdate", "USER", args.get('id_user'), "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserRights ERROR audit UserRightsUpdate SUCCESS err=' + str(err))
@@ -1021,12 +1021,15 @@ class UserStatus(Resource):
                 self.log.error(Logs.fileline() + ' : UserStatus ERROR audit args missing err=' + str(err))
             return compose_ret('', Constants.cst_content_type_json, 400)
 
-        ret = User.updateStatus(args['id_user'], args['status'])
+        status = args['status']
+        status_label = "Active" if status == "A" else "Disabled" if status == "D" else status
+
+        ret = User.updateStatus(args['id_user'], status)
 
         if ret is False:
             self.log.info(Logs.fileline() + ' : TRACE UserStatus ERROR update password')
             try:
-                details = {"id_user": args['id_user'], "status": args['status'], "result": "ERROR"}
+                details = {"user_id": args['id_user'], "status": args['status'], "status_label": status_label, "result": "ERROR"}
                 Audit.insertAudit(audit_user, "UserStatusUpdate", "USER", args['id_user'], "ERROR", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserStatus ERROR audit UserStatusUpdate err=' + str(err))
@@ -1034,7 +1037,7 @@ class UserStatus(Resource):
 
         self.log.info(Logs.fileline() + ' : TRACE UserStatus')
         try:
-            details = {"id_user": args['id_user'], "status": args['status'], "result": "SUCCESS"}
+            details = {"user_id": args['id_user'], "status": args['status'], "status_label": status_label, "result": "SUCCESS"}
             Audit.insertAudit(audit_user, "UserStatusUpdate", "USER", args['id_user'], "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserStatus ERROR audit UserStatusUpdate err=' + str(err))
@@ -1356,7 +1359,7 @@ class UserExport(Resource):
 
         self.log.info(Logs.fileline() + ' : TRACE UserExport')
         try:
-            details = {"id_user": args['id_user'], "result": "SUCCESS"}
+            details = {"user_id": args['id_user'], "result": "SUCCESS"}
             Audit.insertAudit(audit_user, "UserExport", "USER", None, "SUCCESS", details, "R")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserExport ERROR audit UserExport err=' + str(err))
@@ -1373,7 +1376,7 @@ class UserImport(Resource):
         if not filename or id_user <= 0:
             self.log.error(Logs.fileline() + ' : UserImport ERROR args missing')
             try:
-                details = {"result": "ERROR", "reason": "ARGS_MISSING", "filename": str(filename), "usr_ser": int(id_user)}
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "filename": str(filename), "user_id": int(id_user)}
                 Audit.insertAudit(audit_user, "UserImport", "USER", int(id_user), "ERROR", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserImport ERROR audit args missing err=' + str(err))
@@ -1392,7 +1395,7 @@ class UserImport(Resource):
         if not l_rows or len(l_rows) < 2:
             self.log.error(Logs.fileline() + ' : TRACE UserImport ERROR file empty')
             try:
-                details = {"result": "ERROR", "reason": "FILE_EMPTY", "filename": str(filename), "usr_ser": int(id_user)}
+                details = {"result": "ERROR", "reason": "FILE_EMPTY", "filename": str(filename), "user_id": int(id_user)}
                 Audit.insertAudit(audit_user, "UserImport", "USER", int(id_user), "ERROR", details, "U")
             except Exception as err:
                 self.log.error(Logs.fileline() + ' : UserImport ERROR audit file empty err=' + str(err))
@@ -1558,7 +1561,7 @@ class UserImport(Resource):
 
         self.log.info(Logs.fileline() + ' : TRACE UserImport')
         try:
-            details = {"filename": filename, "id_user": id_user, "result": "SUCCESS"}
+            details = {"filename": filename, "user_id": id_user, "result": "SUCCESS"}
             Audit.insertAudit(audit_user, "UserImport", "USER", int(id_user), "SUCCESS", details, "U")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : UserImport ERROR audit UserImport err=' + str(err))

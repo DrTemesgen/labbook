@@ -488,6 +488,8 @@ function del_ana(id_req, id_ana, type_samp, price)
         $("#dial-wait").off('shown.bs.modal') ;
         $("#dial-wait").modal("show") ;
 
+        set_audit_context("{{ _('Suppression analyse') }}");
+
         $.ajax(
             {
                 type: "DELETE",
@@ -495,7 +497,7 @@ function del_ana(id_req, id_ana, type_samp, price)
                 dataType: 'json',
                 contentType: "application/json; charset=utf-8",
                 data: param,
-                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
                 success: function(ret)
                 {
                     $("#dial-wait").modal("hide") ;
@@ -868,6 +870,8 @@ function send_last_report(reportFile) {
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
+    set_audit_context("{{ _('Rapport envoyé') }}") ;
+
     // Send request
     $.ajax({
         type: "POST",
@@ -875,7 +879,7 @@ function send_last_report(reportFile) {
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         data: payload,
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
         success: function () 
         {
             $("#dial-wait").modal("hide") ;
@@ -995,11 +999,13 @@ function reedit_report( id_rec, filename )
         $("#dial-wait").off('shown.bs.modal') ;
         $("#dial-wait").modal("show") ;
 
+        set_audit_context("{{ _('Réédition de rapport') }}")
+
         $.ajax(
             {
                 type : 'GET',
                 url : "{{ session['server_ext'] }}/services/pdf/report/" + id_rec + "/" + filename + "/" + template + "/Y/{{ session['user_id'] }}",
-                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
                 success : function(response)
                 {
                     $("#dial-wait").modal("hide") ;

@@ -224,6 +224,7 @@
                             <th class="text-center cursor-act">{{ _("Cote") }}</th>
                             <th class="text-start cursor-act">{{ _("Prix") }}</th>
                             <th class="text-start cursor-act">{{ _("Sous-traitée") }}</th>
+                        </tr>
                     </thead>
                     <tbody id="tbody_analysis"></tbody>
                 </table>
@@ -245,6 +246,7 @@
                             <th class="text-center cursor-act">{{ _("Demandée") }}</th>
                             <th class="text-center cursor-act">{{ _("Cote") }}</th>
                             <th class="text-start cursor-act">{{ _("Prix") }}</th>
+                        </tr>
                     </thead>
                     <tbody id="tbody_sample"></tbody>
                 </table>
@@ -429,7 +431,7 @@ $("#search_doctor").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_doctor").text(),
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        headers: { 'Authorization': 'Bearer ' + BE_TOKEN },
         data: function (params) {
 
             return JSON.stringify({
@@ -462,7 +464,7 @@ $("#search_analysis").select2(
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         term: $("#search_analysis").text(),
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        headers: { 'Authorization': 'Bearer ' + BE_TOKEN },
         data: function (params) {
             return JSON.stringify(
             {
@@ -529,7 +531,7 @@ let data_exist = false ;
         $.ajax( {
             type: "GET",
             url: "{{ session['server_ext'] }}/services/analysis/det/" + id_item,
-            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+            headers: { 'Authorization': 'Bearer ' + BE_TOKEN },
             success: function(data_ana)
                 {
                 let tmp_struct_ana = JSON.parse(JSON.stringify(struct_ana)) ; // copy structure
@@ -562,7 +564,7 @@ let data_exist = false ;
                             $.ajax( {
                                 type: "GET",
                                 url: "{{ session['server_ext'] }}/services/analysis/det/" +  data_ana.produit_biologique,
-                                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                                headers: { 'Authorization': 'Bearer ' + BE_TOKEN },
                                 success: function(data_samp)
                                     {
                                     let tmp_struct_samp = JSON.parse(JSON.stringify(struct_samp)) ;
@@ -599,7 +601,7 @@ let data_exist = false ;
                         $.ajax( {
                             type: "GET",
                             url: "{{ session['server_ext'] }}/services/analysis/type/product/" +  id_type_prod,
-                            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                            headers: { 'Authorization': 'Bearer ' + BE_TOKEN },
                             success: function(data_prod)
                                 {
                                 let tmp_struct_prod = JSON.parse(JSON.stringify(struct_prod)) ;
@@ -1227,12 +1229,13 @@ var rec_num_int = $("#rec_num_int").val() ;
     save_requests_next() ;
     else
     {
+        set_audit_context("{{ _('Enregistrement de dossier externe') }}");
         {# First check if rec_num_int already exist or not #}
         $.ajax( 
         {
             type: "GET",
             url: "{{ session['server_ext'] }}/services/record/search/num/int/" + rec_num_int,
-            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+            headers: with_audit_headers({ 'Authorization': 'Bearer ' + BE_TOKEN }),
             success: function(ret)
             {
                 if ( ret > 0 )
@@ -1380,7 +1383,7 @@ var codesToCheck    = [] ;
             dataType: "json",
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify({ codes: codesToCheck }),
-            headers: { 'Authorization': 'Bearer {{ session.get('be_access_token', '') }}' },
+            headers: { 'Authorization': 'Bearer ' + BE_TOKEN },
             async: false,
             success: function(data) {
                 if (data && data.existing_codes)
@@ -1448,6 +1451,8 @@ var codesToCheck    = [] ;
         $("#dial-wait").off('shown.bs.modal') ;
         $("#dial-wait").modal("show") ;
 
+        set_audit_context("{{ _('Enregistrement de dossier externe') }}");
+
         // Send record information
         $.ajax( 
         {
@@ -1457,7 +1462,7 @@ var codesToCheck    = [] ;
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param,
-            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+            headers: with_audit_headers({ 'Authorization': 'Bearer ' + BE_TOKEN }),
             success: function(ret_rec)
             {
             var id_rec = ret_rec.id_rec ;
@@ -1507,6 +1512,8 @@ var codesToCheck    = [] ;
 
             param_list_ana += ' ] }';
 
+                set_audit_context("{{ _('Enregistrement de dossier externe') }}");
+
                 // Send analysis information
                 $.ajax( 
                 {
@@ -1516,7 +1523,7 @@ var codesToCheck    = [] ;
                     dataType: 'json',
                     contentType: "application/json; charset=utf-8",
                     data: param_list_ana,
-                    headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                    headers: with_audit_headers({ 'Authorization': 'Bearer ' + BE_TOKEN }),
                     success: function(ret_ana)
                     {
                     var param_list_prod = '{ "list_prod":[ ';
@@ -1549,6 +1556,8 @@ var codesToCheck    = [] ;
 
                     param_list_prod += ' ] }';
 
+                        set_audit_context("{{ _('Enregistrement de dossier externe') }}");
+
                         // Send product information
                         $.ajax( 
                         {
@@ -1558,10 +1567,12 @@ var codesToCheck    = [] ;
                             dataType: 'json',
                             contentType: "application/json; charset=utf-8",
                             data: param_list_prod,
-                            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                            headers: with_audit_headers({ 'Authorization': 'Bearer ' + BE_TOKEN }),
                             success: function(ret_prod)
                             {
                             let param_res = '{ "id_owner":' + id_user + ', "user_role":"' + user_role + '"}' ;
+
+                                set_audit_context("{{ _('Enregistrement de dossier externe') }}");
 
                                 // create in DB list of results to enter and corresponding validation
                                 $.ajax(
@@ -1571,10 +1582,12 @@ var codesToCheck    = [] ;
                                     dataType: 'json',
                                     contentType: "application/json; charset=utf-8",
                                     data: param_res,
-                                    headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                                    headers: with_audit_headers({ 'Authorization': 'Bearer ' + BE_TOKEN }),
                                     success : function(response)
                                     {
-                                    let param_stat = '{ "stat":182 }' ; 
+                                    let param_stat = '{ "stat":182 }' ;
+
+                                        set_audit_context("{{ _('Enregistrement de dossier externe') }}");
 
                                         // update record stat 181 to 182
                                         $.ajax(
@@ -1584,7 +1597,7 @@ var codesToCheck    = [] ;
                                             dataType: 'json',
                                             contentType: "application/json; charset=utf-8",
                                             data: param_stat,
-                                            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                                            headers: with_audit_headers({ 'Authorization': 'Bearer ' + BE_TOKEN }),
                                             success : function(response)
                                             {
                                                 $("#dial-wait").modal("hide") ;
@@ -1661,7 +1674,7 @@ let param_res = '{ "id_owner":' + id_user + ', "user_role":"' + user_role + '"}'
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_res,
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        headers: { 'Authorization': 'Bearer ' + BE_TOKEN },
         success : function(response)
         {
         let param_stat = '{ "stat":182 }' ; 
@@ -1674,7 +1687,7 @@ let param_res = '{ "id_owner":' + id_user + ', "user_role":"' + user_role + '"}'
                 dataType: 'json',
                 contentType: "application/json; charset=utf-8",
                 data: param_stat,
-                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                headers: { 'Authorization': 'Bearer ' + BE_TOKEN },
                 success : function(response)
                 {
                     $("#dial-wait").modal("hide") ;
@@ -1743,20 +1756,68 @@ function new_doctor()
 window.open("{{ session['server_ext'] }}/det-doctor/0", "_blank") ;
 }
 
-function computeNextCode(code) 
+function computeNextCode(code)
 {
-    const v = (code || '').trim();
-    if (!v) {
-        return '1';
+    const previousCode = (code || '').trim();
+
+    // If no previous code: build the first one from current mask.
+    // If no mask => no prefill.
+    if (!previousCode)
+    {
+        const sampleMask = (SAMP_MASK || '').trim();
+        if (!sampleMask)
+        {
+            return null;
+        }
+
+        let generatedCode = sampleMask;
+
+        // [N]{6} => 000001 (start at 1)
+        generatedCode = generatedCode.replace(/\[N\]\{(\d+)\}/g, function(match, digitsCountStr)
+        {
+            const digitsCount = parseInt(digitsCountStr, 10);
+            if (!digitsCount || digitsCount < 1)
+            {
+                return '1';
+            }
+            return '0'.repeat(digitsCount - 1) + '1';
+        });
+
+        // [X]{6} => AAAAAA
+        generatedCode = generatedCode.replace(/\[X\]\{(\d+)\}/g, function(match, lettersCountStr)
+        {
+            const lettersCount = parseInt(lettersCountStr, 10);
+            if (!lettersCount || lettersCount < 1)
+            {
+                return 'A';
+            }
+            return 'A'.repeat(lettersCount);
+        });
+
+        // [N]+ => 1
+        generatedCode = generatedCode.replace(/\[N\]\+/g, '1');
+
+        // [X]+ => A
+        generatedCode = generatedCode.replace(/\[X\]\+/g, 'A');
+
+        return generatedCode;
     }
-    const m = v.match(/(\d+)(?!.*\d)/);
-    if (!m) {
-        return v;
+
+    // Normal increment: increment last numeric sequence and keep zero padding.
+    const lastNumberMatch = previousCode.match(/(\d+)(?!.*\d)/);
+    if (!lastNumberMatch)
+    {
+        return previousCode;
     }
-    const num = m[1];
-    const idx = m.index;
-    const n = String(parseInt(num, 10) + 1).padStart(num.length, '0');
-    return v.slice(0, idx) + n + v.slice(idx + num.length);
+
+    const lastNumberStr = lastNumberMatch[1];
+    const lastNumberIndex = lastNumberMatch.index;
+
+    const incrementedNumberStr = String(parseInt(lastNumberStr, 10) + 1).padStart(lastNumberStr.length, '0');
+
+    return previousCode.slice(0, lastNumberIndex) +
+           incrementedNumberStr +
+           previousCode.slice(lastNumberIndex + lastNumberStr.length);
 }
 
 function return_home()
@@ -1791,18 +1852,20 @@ $( document ).ready( function()
     $.ajax({
         type: "GET",
         url: "{{ session['server_ext'] }}/services/product/last/code",
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        headers: { 'Authorization': 'Bearer ' + BE_TOKEN },
         success: function(data) {
-            var last = (data && data.last_code) ? String(data.last_code).trim() : '';
-            if (last) {
-                NEXT_SAMP_CODE = computeNextCode(last);
+            const lastCodeFromApi = (data && data.last_code) ? String(data.last_code).trim() : '';
+
+            if (lastCodeFromApi) {
+                NEXT_SAMP_CODE = computeNextCode(lastCodeFromApi);
             } else {
-                NEXT_SAMP_CODE = null;
+                // No matching code => start from mask (or null if mask is empty)
+                NEXT_SAMP_CODE = computeNextCode('');
             }
         },
         error: function() {
             console.log("ERROR GET ProductLastCode");
-            NEXT_SAMP_CODE = null;
+            NEXT_SAMP_CODE = computeNextCode('');
         }
     });
 } ) ;

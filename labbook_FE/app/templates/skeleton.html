@@ -143,6 +143,27 @@ function nb_msg_unread()
     } ) ;
 }
 
+function set_audit_context(ctx_label)
+{
+    // ctx_label must be already translated when passed
+    window.LBK_AUDIT_CONTEXT = ctx_label || "";
+}
+
+function with_audit_headers(headers)
+{
+    headers = headers || {};
+
+    if (window.LBK_AUDIT_CONTEXT)
+    {
+        headers["X-LabBook-Audit-Context"] = window.LBK_AUDIT_CONTEXT;
+
+        // One-shot: prevents leaking into unrelated AJAX calls
+        window.LBK_AUDIT_CONTEXT = "";
+    }
+
+    return headers;
+}
+
 $( document ).ready( function()
 {
 load_username() ;

@@ -303,6 +303,8 @@ param_list_answer += ' ] }' ;
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
+    set_audit_context("{{ _('Enregistrement de résultat') }}");
+
     // UPDATE value
     $.ajax( 
     {
@@ -311,7 +313,7 @@ param_list_answer += ' ] }' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_list_answer,
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
         success: function(data)
         {
         filter_result() ; // refresh page with filter parameters
@@ -481,6 +483,8 @@ param_list_valid += ' ] }' ;
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
+    set_audit_context("{{ _('Validation technique') }}");
+
     // result to validate
     $.ajax( 
     {
@@ -489,7 +493,7 @@ param_list_valid += ' ] }' ;
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param_list_valid,
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
         success: function(data)
         {
             $("#dial-wait").modal("hide") ;
@@ -1030,6 +1034,8 @@ var param = JSON.stringify({ html: html_report, filename: "benchsheet" });
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
+    set_audit_context("{{ _('Téléchargement feuille de paillasse') }}");
+
     // STEP 4: Send request
     $.ajax( 
     {
@@ -1038,7 +1044,7 @@ var param = JSON.stringify({ html: html_report, filename: "benchsheet" });
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: param,
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
         success: function(ret)
         {
             // STEP 5: Hide dialog and trigger download

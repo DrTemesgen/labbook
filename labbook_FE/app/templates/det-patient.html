@@ -95,11 +95,15 @@ function save_pat_and_open_hist(id_pat)
     {
         var code_lab_ori = $('#pat_code_lab_ori').val();
 
+        set_audit_context("{{ _("Création d'une fiche patient") }}");
+
+        if (id_pat > 0) set_audit_context("{{ _("Modification d'une fiche patient") }}");
+
         $.ajax(
         {
             type: "GET",
             url: "{{ session['server_ext'] }}/services/patient/search/code/lab/" + code_lab,
-            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+            headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
             success: function(ret)
             {
                 if (ret > 0 && (id_pat == 0 || (id_pat > 0 && code_lab_ori != code_lab)))
@@ -136,6 +140,10 @@ param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
     $("#dial-wait").off('shown.bs.modal');
     $("#dial-wait").modal("show");
 
+    set_audit_context("{{ _("Création d'une fiche patient") }}");
+
+    if (id_pat > 0) set_audit_context("{{ _("Modification d'une fiche patient") }}");
+
     $.ajax(
     {
         type: "POST",
@@ -143,7 +151,7 @@ param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: JSON.stringify(param),
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
         success: function(data)
         {
             $("#dial-wait").modal("hide");
@@ -183,6 +191,8 @@ param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
+    set_audit_context("{{ _('Enregistrement de fiche patient') }}");
+
     $.ajax( 
     {
         type: "POST",
@@ -190,7 +200,7 @@ param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
         dataType: 'json',
         contentType: "application/json; charset=utf-8",
         data: JSON.stringify(param),
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
         success: function(data)
         {
             $("#dial-wait").modal("hide") ;

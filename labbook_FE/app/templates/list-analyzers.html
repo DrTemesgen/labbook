@@ -81,6 +81,22 @@ function display_item( num_page )
 {
 let res = "" ;
 
+    // Empty dataset: render once and stop
+    if (!data_items || data_items.length === 0)
+    {
+        $("#list_items_total").html(0);
+        $("#tbody_items").empty();
+
+        res = "<tr><td colspan=\"6\"><div>{{ _("Aucune donnée à afficher") }}</div></td></tr>";
+        $("#tbody_items").append(res);
+
+        $("#num_page_t").text(0);
+        $("#num_page_b").text(0);
+        return false;
+    }
+
+p_max = Math.ceil(data_items.length / p_step);
+
     // Previous page
     if ( num_page == -1000 && p_cur > 1 )
     p_cur = p_cur - 1 ;
@@ -95,15 +111,9 @@ let res = "" ;
 
     $("#tbody_items").empty() ;
 
-{% if not args %}
-res = "<tr>" +
-      "<td colspan=\"4\">" +
-      "<div>{{ _("Aucune donnée à afficher") }}</div></td></tr>" ;
-{% else %}
 let data_len = data_items.length ;
 let i_start  = (p_cur -1) * p_step ;
 let i_stop   = Math.min( data_len, p_cur * p_step ) ;
-let tr_class = "" ;
 
 $("#list_items_total").html( data_len ) ;
 
@@ -131,7 +141,6 @@ $("#list_items_total").html( data_len ) ;
            "<td><div class=\"text-start\">" + data_items[i].ans_batch + "</div></td>" +
            "<td><div class=\"text-start\">" + data_items[i].ans_rank + "</div></td></tr>" ;
     }
-{% endif %}
 
     $("#tbody_items").append(res) ;
     $("#num_page_t").text( p_cur ) ;

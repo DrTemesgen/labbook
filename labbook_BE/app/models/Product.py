@@ -256,28 +256,34 @@ class Product:
         return 0
 
     @staticmethod
-    def getLastSampleCode():
+    def getLastSampleCode(samp_regex):
         try:
-            cursor = DB.cursor()
+            samp_regex = (samp_regex or '').strip()
+            if not samp_regex:
+                Product.log.info(Logs.fileline() + ' : getLastSampleCode empty regex')
+                return ''
 
+            cursor = DB.cursor()
             cursor.execute(
                 'select code '
                 'from sigl_01_data '
                 'where code is not null and code != "" '
+                'and code regexp %s '
                 'order by id_data desc '
-                'limit 1'
+                'limit 1',
+                (samp_regex,)
             )
 
             row = cursor.fetchone()
-            Product.log.info(Logs.fileline() + ' : Product.getLastSampleCode')
 
             if not row:
                 return ''
 
             code = row.get('code') if isinstance(row, dict) else row[0]
             return code or ''
-        except mysql.connector.Error as e:
-            Product.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
+
+        except mysql.connector.Error as err:
+            Product.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(err))
             return ''
 
     @staticmethod

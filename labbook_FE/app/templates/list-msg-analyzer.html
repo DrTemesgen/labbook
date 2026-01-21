@@ -63,6 +63,12 @@ function loadItemsTable()
             "data": function(d) {
                 return JSON.stringify({});
             },
+            "dataSrc": function(json) {
+                if (!json) return [];
+                if (Array.isArray(json)) return json;
+                if (Array.isArray(json.data)) return json.data;
+                return [];
+            },
             beforeSend: function (xhr) {
                 xhr.setRequestHeader('Authorization', 'Bearer {{ session.get("be_access_token","") }}');
             }

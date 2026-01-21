@@ -9,6 +9,7 @@ class Constants:
     cst_dt_eu_HM  = '%d/%m/%Y %H:%M'
     cst_dt_us_HM  = '%m/%d/%Y %H:%M'
 
+    cst_audit     = '/storage/resource/audit/'
     cst_dhis2     = '/storage/resource/dhis2/'
     cst_form_pat  = '/storage/resource/form/patient/'
     cst_epidemio  = '/storage/resource/epidemio/'

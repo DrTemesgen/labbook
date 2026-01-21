@@ -70,6 +70,7 @@ function loadItemsTable()
             "url": "{{ session['server_ext'] }}/services/lite/setup/list",
             "type": "POST",
             "contentType": "application/json",
+            "dataSrc": function (json) { return json.data || json || []; },
             beforeSend: function (xhr) {
                 xhr.setRequestHeader('Authorization', 'Bearer {{ session.get("be_access_token","") }}');
             }

@@ -48,7 +48,7 @@
 {% block add_script %}
 <script type="text/javascript" nonce="{{ session['nonce'] }}">
 
-    function loadItemsTable() 
+function loadItemsTable() 
 {
     $('#itemsTable').DataTable().destroy();
     $('#itemsTable').DataTable({
@@ -71,15 +71,15 @@
             "url": "{{ session['server_ext'] }}/services/setting/oauth/list",
             "type": "GET",
             "dataSrc": "",
+            error: function (xhr) {
+                // Basic bounce: if unauthorized/forbidden, reload to trigger your usual flow
+                if (xhr.status === 401 || xhr.status === 403) {
+                    window.location.reload();
+                }
+            },
             beforeSend: function (xhr) {
                 xhr.setRequestHeader('Authorization', 'Bearer {{ session.get("be_access_token","") }}');
             },
-        },
-        error: function (xhr) {
-            // Basic bounce: if unauthorized/forbidden, reload to trigger your usual flow
-            if (xhr.status === 401 || xhr.status === 403) {
-                window.location.reload();
-            }
         },
         "columns": [
             {

@@ -21,6 +21,7 @@ class Constants:
     cst_key         = '/storage/key/'
     cst_log         = '/storage/log/'
     cst_resource    = '/storage/resource/'
+    cst_audit       = '/storage/resource/audit/'
     cst_dhis2       = '/storage/resource/dhis2/'
     cst_epidemio    = '/storage/resource/epidemio/'
     cst_indicator   = '/storage/resource/indicator/'

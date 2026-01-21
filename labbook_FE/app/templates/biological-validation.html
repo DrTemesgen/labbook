@@ -387,6 +387,8 @@ function add_analysis()
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
+    set_audit_context("{{ _('Analyse complémentaire') }}");
+
     // Send analysis information
     $.ajax( 
         {
@@ -395,9 +397,10 @@ function add_analysis()
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param_list_ana,
-            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+            headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
             success: function(ret_ana)
             {
+                set_audit_context("{{ _('Analyse complémentaire') }}");
                 // create in DB list of results to enter and corresponding validation
                 $.ajax(
                     {
@@ -406,10 +409,12 @@ function add_analysis()
                         dataType: 'json',
                         contentType: "application/json; charset=utf-8",
                         data: param_list_res,
-                        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                        headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
                         success : function(response)
                         {
                             let param_stat = '{ "stat":182 }' ; 
+
+                            set_audit_context("{{ _('Analyse complémentaire') }}");
 
                             // update record stat to 182 = Validé administrativement
                             $.ajax(
@@ -419,7 +424,7 @@ function add_analysis()
                                     dataType: 'json',
                                     contentType: "application/json; charset=utf-8",
                                     data: param_stat,
-                                    headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                                    headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
                                     success : function(response)
                                     {
                                         $("#dial-wait").modal("hide") ;
@@ -471,6 +476,8 @@ function reset_res( id_rec, id_res )
     {
         let param_res = '{ "id_owner": {{ session["user_id"]}}, "id_res":' + id_res + '}' ;
 
+        set_audit_context("{{ _('Résultat réinitialisé') }}");
+
         // result to reset
         $.ajax( 
             {
@@ -479,7 +486,7 @@ function reset_res( id_rec, id_res )
                 dataType: 'json',
                 contentType: "application/json; charset=utf-8",
                 data: param_res,
-                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
                 success: function(data)
                 {
                     window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec ;
@@ -521,6 +528,8 @@ function send_cancel()
 
     $('#dial-cancel').modal("hide") ;
 
+    set_audit_context("{{ _('Résultat annulé') }}");
+
     // result to cancel
     $.ajax( 
         {
@@ -529,7 +538,7 @@ function send_cancel()
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param_res,
-            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+            headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
             success: function(data)
             {
                 window.location.href = "{{ session['server_ext'] }}/biological-validation/{{ ihm['mode'] }}/" + id_rec_tmp ;
@@ -582,6 +591,8 @@ function save_valid( id_rec )
 
     let param_rec_valid = '{ "id_user": {{ session['user_id']}}, "comm": ' + comm_valid + '}' ;
 
+    set_audit_context("{{ _('Validation biologique') }}");
+
     // result to validate
     $.ajax( 
         {
@@ -590,9 +601,10 @@ function save_valid( id_rec )
             dataType: 'json',
             contentType: "application/json; charset=utf-8",
             data: param_rec_valid,
-            headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+            headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
             success: function(data)
             {
+                set_audit_context("{{ _('Validation biologique') }}");
                 // result to validate
                 $.ajax( 
                     {
@@ -601,7 +613,7 @@ function save_valid( id_rec )
                         dataType: 'json',
                         contentType: "application/json; charset=utf-8",
                         data: param_list_valid,
-                        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                        headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
                         success: function(data)
                         {
                             $("#dial-wait").modal("hide") ;
@@ -1114,6 +1126,8 @@ function send_last_report(reportFile) {
     $("#dial-wait").off('shown.bs.modal') ;
     $("#dial-wait").modal("show") ;
 
+    set_audit_context("{{ _('Rapport envoyé') }}");
+
     // Send request
     $.ajax({
         type: "POST",
@@ -1121,7 +1135,7 @@ function send_last_report(reportFile) {
         dataType: "json",
         contentType: "application/json; charset=utf-8",
         data: payload,
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        headers: with_audit_headers({ 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' }),
         success: function () 
         {
             $("#dial-wait").modal("hide") ;

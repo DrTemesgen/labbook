@@ -53,25 +53,34 @@ class AuditList(Resource):
             filter_date_end = get_filter_value('filter_date_end')
             filter_user = get_filter_value('filter_user')
             filter_role = get_filter_value('filter_role')
-            filter_action = get_filter_value('filter_action')
             filter_status = get_filter_value('filter_status')
             filter_ip = get_filter_value('filter_ip')
             filter_resource = get_filter_value('filter_resource')
+            filter_context = get_filter_value('filter_context')
+            filter_include_system = get_filter_value('filter_include_system')
+            if filter_include_system not in ("Y", "N"):
+                filter_include_system = "N"
 
             filters = {
                 "date_start": filter_date_start,
                 "date_end": filter_date_end,
                 "user": filter_user,
                 "role": filter_role,
-                "action": filter_action,
                 "status": filter_status,
                 "ip": filter_ip,
-                "resource": filter_resource
+                "context": filter_context,
+                "resource": filter_resource,
+                "include_system": filter_include_system
             }
 
             data = Audit.listAudit(start, length, order_col_index, order_dir, search_value, filters)
-            total = Audit.countAuditTotal()
             filtered = Audit.countAuditFiltered(search_value, filters)
+
+            # DataTables recordsTotal must match the default dataset (without system if excluded by default)
+            if filters.get("include_system", "N") == "Y":
+                total = Audit.countAuditTotal()
+            else:
+                total = Audit.countAuditFiltered(None, {"include_system": "N"})
 
             payload = {
                 "draw": draw,
@@ -307,4 +316,145 @@ class AuditDownloadATNA(Resource):
                              download_name=filename)
         except Exception as err:
             self.log.error(Logs.fileline() + " : AuditDownloadATNA ERROR send_file err=" + str(err))
+            return compose_ret('', Constants.cst_content_type_json, 500)
+
+
+class AuditArchive(Resource):
+    log = logging.getLogger('log_services')
+
+    @require_oauth()
+    def post(self):
+        audit_user = request.oauth_user
+        data = request.get_json(silent=True) or {}
+
+        date_beg = (data.get('date_beg') or '').strip()
+        date_end = (data.get('date_end') or '').strip()
+        purge = (data.get('purge') or 'N').strip().upper()
+        if purge not in ('Y', 'N'):
+            purge = 'N'
+
+        if not date_beg or not date_end:
+            self.log.error(Logs.fileline() + " : AuditArchive ERROR args missing")
+            try:
+                details = {"result": "ERROR", "reason": "ARGS_MISSING", "date_beg": date_beg, "date_end": date_end, "purge": purge}
+                Audit.insertAudit(audit_user, "AuditArchive", "AUDIT", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + " : AuditArchive ERROR audit err=" + str(err))
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        try:
+            d_beg = datetime.strptime(date_beg, "%Y-%m-%d").date()
+            d_end = datetime.strptime(date_end, "%Y-%m-%d").date()
+        except (ValueError, TypeError) as err:
+            self.log.error(Logs.fileline() + " : AuditArchive ERROR invalid date format err=" + str(err))
+            try:
+                details = {"result": "ERROR", "reason": "INVALID_DATE", "date_beg": date_beg, "date_end": date_end, "purge": purge}
+                Audit.insertAudit(audit_user, "AuditArchive", "AUDIT", None, "ERROR", details, "E")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + " : AuditArchive ERROR audit err=" + str(err2))
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        date_beg_utc = str(d_beg) + " 00:00:00"
+        date_end_utc = str(d_end) + " 23:59:59"
+
+        # 1) Fetch rows
+        try:
+            rows = Audit.listAuditByPeriod(date_beg_utc, date_end_utc)
+        except Exception as err:
+            self.log.error(Logs.fileline() + " : AuditArchive ERROR listAuditByPeriod err=" + str(err))
+            try:
+                details = {"result": "ERROR", "reason": "DB_READ_FAILED", "date_beg": date_beg, "date_end": date_end, "purge": purge}
+                Audit.insertAudit(audit_user, "AuditArchive", "AUDIT", None, "ERROR", details, "E")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + " : AuditArchive ERROR audit err=" + str(err2))
+            return compose_ret('', Constants.cst_content_type_json, 500)
+
+        if not rows:
+            self.log.error(Logs.fileline() + " : AuditArchive no data")
+            return compose_ret('', Constants.cst_content_type_json, 404)
+
+        # 2) Write archive file
+        try:
+            base_path = Constants.cst_path_tmp
+            os.makedirs(base_path, exist_ok=True)
+
+            filename = "audit-archive_" + d_beg.strftime("%Y%m%d") + "_" + d_end.strftime("%Y%m%d")
+            if purge == "Y":
+                filename += "_purge"
+            filename += ".jsonl"
+            fullpath = os.path.join(base_path, filename)
+
+            # JSONL: one JSON object per line
+            with open(fullpath, mode="w", encoding="utf-8") as f:
+                for r in rows:
+                    # Normalize datetime for JSON
+                    rr = dict(r)
+                    if rr.get("aud_date_utc"):
+                        rr["aud_date_utc"] = rr["aud_date_utc"].strftime("%Y-%m-%d %H:%M:%S")
+                    f.write(json.dumps(rr, ensure_ascii=False, default=str) + "\n")
+
+        except Exception as err:
+            self.log.error(Logs.fileline() + " : AuditArchive ERROR write file err=" + str(err))
+            try:
+                details = {"result": "ERROR", "reason": "FILE_WRITE_FAILED", "date_beg": date_beg, "date_end": date_end, "purge": purge}
+                Audit.insertAudit(audit_user, "AuditArchive", "AUDIT", None, "ERROR", details, "E")
+            except Exception as err2:
+                self.log.error(Logs.fileline() + " : AuditArchive ERROR audit err=" + str(err2))
+            return compose_ret('', Constants.cst_content_type_json, 500)
+
+        # 3) Optional purge
+        purged = 0
+        if purge == "Y":
+            try:
+                purged = Audit.purgeAuditByPeriod(date_beg_utc, date_end_utc)
+            except Exception as err:
+                self.log.error(Logs.fileline() + " : AuditArchive ERROR purgeAuditByPeriod err=" + str(err))
+                try:
+                    details = {"result": "ERROR", "reason": "PURGE_FAILED", "date_beg": date_beg, "date_end": date_end, "purge": purge, "filename": filename}
+                    # Purge failure
+                    Audit.insertAudit(audit_user, "AuditPurge", "AUDIT", None, "ERROR", details, "D")
+                except Exception as err2:
+                    self.log.error(Logs.fileline() + " : AuditArchive ERROR audit err=" + str(err2))
+                return compose_ret('', Constants.cst_content_type_json, 500)
+
+        # 4) Audit success
+        try:
+            details = {"result": "SUCCESS", "date_beg": date_beg, "date_end": date_end, "purge": purge, "filename": filename, "archived_rows": len(rows), "purged_rows": purged}
+            if purge == "Y":
+                Audit.insertAudit(audit_user, "AuditArchive", "AUDIT", None, "SUCCESS", details, "E")
+                Audit.insertAudit(audit_user, "AuditPurge", "AUDIT", None, "SUCCESS", details, "D")
+            else:
+                Audit.insertAudit(audit_user, "AuditArchive", "AUDIT", None, "SUCCESS", details, "E")
+        except Exception as err:
+            self.log.error(Logs.fileline() + " : AuditArchive ERROR audit success err=" + str(err))
+
+        self.log.info(Logs.fileline() + " : TRACE AuditArchive OK filename=" + filename + " purge=" + purge)
+        return compose_ret({"filename": filename, "archived_rows": len(rows), "purged_rows": purged}, Constants.cst_content_type_json, 200)
+
+
+class AuditArchiveDownload(Resource):
+    log = logging.getLogger('log_services')
+
+    @require_oauth()
+    def get(self, filename):
+        base_path = Constants.cst_path_tmp
+
+        # Basic filename hardening (no path traversal)
+        if not filename or "/" in filename or "\\" in filename or ".." in filename:
+            self.log.error(Logs.fileline() + " : AuditArchiveDownload ERROR invalid filename=" + str(filename))
+            return compose_ret('', Constants.cst_content_type_json, 400)
+
+        fullpath = os.path.join(base_path, filename)
+
+        if not os.path.isfile(fullpath):
+            self.log.error(Logs.fileline() + " : AuditArchiveDownload ERROR file not found filename=" + str(filename))
+            return compose_ret('', Constants.cst_content_type_json, 404)
+
+        try:
+            return send_file(fullpath,
+                             mimetype="application/json",
+                             as_attachment=True,
+                             download_name=filename)
+        except Exception as err:
+            self.log.error(Logs.fileline() + " : AuditArchiveDownload ERROR send_file err=" + str(err))
             return compose_ret('', Constants.cst_content_type_json, 500)

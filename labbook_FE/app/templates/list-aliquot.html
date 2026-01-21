@@ -178,6 +178,7 @@ let in_stock = showDestocked ? "N" : "Y";
             "data": function(d) {
                     return JSON.stringify({ "in_stock": in_stock });
                 },
+            "dataSrc": function (json) { return json.data || json || []; },
             beforeSend: function (xhr) {
                 xhr.setRequestHeader('Authorization', 'Bearer {{ session.get("be_access_token","") }}');
             }

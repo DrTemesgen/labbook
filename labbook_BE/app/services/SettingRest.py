@@ -557,7 +557,8 @@ class SettingPref(Resource):
            'entete_3' not in args or 'entete_adr' not in args or 'entete_tel' not in args or 'entete_fax' not in args or \
            'entete_email' not in args or 'entete_ville' not in args or 'facturation_pat_hosp' not in args or \
            'unite_age_defaut' not in args or 'auto_logout' not in args or 'qualite' not in args or \
-           'facturation' not in args or 'default_language' not in args or 'db_language' not in args:
+           'facturation' not in args or 'default_language' not in args or 'db_language' not in args or \
+           'audit_purge_months' not in args:
             self.log.error(Logs.fileline() + ' : SettingPref ERROR args missing')
             try:
                 details = {"id_owner": int(id_owner), "result": "ERROR", "reason": "ARGS_MISSING"}

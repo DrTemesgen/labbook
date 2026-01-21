@@ -24,7 +24,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <table class=table-responsive">
+                            <table class="table-responsive">
                                 <thead>
                                     <tr><th><div>{{ _("Fichier") }}</div></th><th><div>{{ _("Action") }}</div></th></tr>
                                 </thead>
@@ -51,7 +51,7 @@
                                     </div>
                                 </div>
                             </div>
-                            <table class=table-responsive">
+                            <table class="table-responsive">
                                 <thead>
                                     <tr><th><div>{{ _("Fichier") }}</div></th><th><div>{{ _("Action") }}</div></th></tr>
                                 </thead>
@@ -143,14 +143,47 @@ var param = '{ "id_owner":' + id_owner + ', ' +
     } ) ;
 }
 
+function validateFormPatientFilenameStrict(filename, kind)
+{
+    if (!filename) {
+        return "Aucun fichier sélectionné.";
+    }
+
+    let regex = null;
+    let expected = null;
+
+    if (kind === 'PAT') {
+        regex = /^form_patient_[a-zA-Z]{2}\.toml$/;
+        expected = "form_patient_LL.toml";
+    } else if (kind === 'PAT-HIST') {
+        regex = /^form_patient_hist_[a-zA-Z]{2}\.toml$/;
+        expected = "form_patient_hist_LL.toml";
+    } else {
+        return "Type d'upload invalide.";
+    }
+
+    if (!regex.test(filename)) {
+        return "Nom de fichier invalide. Format attendu : " + expected + " (LL = 2 lettres).";
+    }
+
+    return null;
+}
+
 function upload_form_pat()
 {
-let param_form = new FormData() ;
+    const input = $('input[name=file-pat]')[0];
+    const file = input.files[0];
 
-param_form.append('file', $('input[name=file-pat]')[0].files[0]) ;
+    const error = validateFormPatientFilenameStrict(file?.name, 'PAT');
+    if (error) {
+        alert(error);
+        return;
+    }
 
-    $.ajax(
-    {
+    let param_form = new FormData();
+    param_form.append('file', file);
+
+    $.ajax({
         type : 'POST',
         url : "{{ session['server_ext'] }}/upload-form/PAT",
         dataType: 'json',
@@ -158,28 +191,33 @@ param_form.append('file', $('input[name=file-pat]')[0].files[0]) ;
         processData: false,
         data: param_form,
         headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
-        success : function(response)
-        {
-        tempAlert("{{ _("Dépôt réussi") }}", "btn-upload-pat") ;
-        console.log("success upload form pat") ;
-        setTimeout(function(){location.reload()}, 2400) ;
+        success : function(response) {
+            tempAlert("{{ _("Dépôt réussi") }}", "btn-upload-pat");
+            console.log("success upload form pat");
+            setTimeout(function(){ location.reload(); }, 2400);
         },
-        error: function(response)
-        {
-        console.log("ERROR upload form pat") ;
-        alert("{{ _("Une erreur est survenue lors du dépot du fichier") }}") ;
+        error: function(response) {
+            console.log("ERROR upload form pat");
+            alert("{{ _("Une erreur est survenue lors du dépot du fichier") }}");
         }
-    } ) ;
+    });
 }
 
 function upload_form_pat_hist()
 {
-let param_form = new FormData() ;
+    const input = $('input[name=file-hist]')[0];
+    const file = input.files[0];
 
-param_form.append('file', $('input[name=file-hist]')[0].files[0]) ;
+    const error = validateFormPatientFilenameStrict(file?.name, 'PAT-HIST');
+    if (error) {
+        alert(error);
+        return;
+    }
 
-    $.ajax(
-    {
+    let param_form = new FormData();
+    param_form.append('file', file);
+
+    $.ajax({
         type : 'POST',
         url : "{{ session['server_ext'] }}/upload-form/PAT-HIST",
         dataType: 'json',
@@ -187,18 +225,16 @@ param_form.append('file', $('input[name=file-hist]')[0].files[0]) ;
         processData: false,
         data: param_form,
         headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
-        success : function(response)
-        {
-        tempAlert("{{ _("Dépôt réussi") }}", "btn-upload-hist") ;
-        console.log("success upload form pat-hist") ;
-        setTimeout(function(){location.reload()}, 2400) ;
+        success : function(response) {
+            tempAlert("{{ _("Dépôt réussi") }}", "btn-upload-hist");
+            console.log("success upload form pat-hist");
+            setTimeout(function(){ location.reload(); }, 2400);
         },
-        error: function(response)
-        {
-        console.log("ERROR upload form pat-hist") ;
-        alert("{{ _("Une erreur est survenue lors du dépot du fichier") }}") ;
+        error: function(response) {
+            console.log("ERROR upload form pat-hist");
+            alert("{{ _("Une erreur est survenue lors du dépot du fichier") }}");
         }
-    } ) ;
+    });
 }
 
 function load_data()
