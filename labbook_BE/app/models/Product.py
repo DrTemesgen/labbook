@@ -114,7 +114,7 @@ class Product:
               DATE_FORMAT(rec.rec_date_receipt, %s) AS rec_date,
               pat.nom AS lastname, pat.nom_jf AS maidenname, pat.prenom AS firstname,
               ana.nom AS analysis_name, prod.type_prel AS type_prel, prod.statut AS statut, prod.id_data AS id_prod,
-              rec.id_data AS id_rec, dico.label AS type_prel_label
+              rec.id_data AS id_rec, dico.label AS type_prel_label, prod.code as samp_code
               FROM sigl_01_data AS prod
               inner join sigl_02_data AS rec ON prod.id_dos = rec.id_data
               inner join sigl_03_data AS pat ON rec.id_patient = pat.id_data

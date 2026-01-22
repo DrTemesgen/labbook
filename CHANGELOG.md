@@ -8,16 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
-## [3.6.10] - 2025-01-21
+## [3.6.10] - 2025-01-22
 ### Added
 - workflow context labels to some audit trail entries
 - excluded system audit entries by default
 - configurable audit retention period (in months) in preferences before automatic archiving.
 - Implemented manual audit archiving with optional purge of archived records
 - page to browse and download automatic audit archive files
+- column to display sample code in list of samples page.
+- activity report : per-analysis totals for type (ext_tot, inp_tot, onc_tot, type_tot) and age (age_tot)
 
 ### Changed
 - displayed dictionary, analysis entry serial ID in the values table
+- refactor patient merge page to allow editing primary record and viewing secondary record before merge
 
 ### Fixed
 - dataTables crash when analyzer message list is empty (fix on others template too).

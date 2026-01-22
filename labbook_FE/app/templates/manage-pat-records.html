@@ -44,253 +44,15 @@
                         <div class="panel-heading row">
                             <h3 class="panel-title">{{ _("Identité patient") }} <b class="text-success ms-2">{{ _("A CONSERVER") }}</b></h3>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mx-3">{{ _("Anonyme") }}</label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="anonyme-4_1" name="anonyme_1" value="4">&nbsp;{{ _("Oui") }}</input>
-                                    </label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="anonyme-5_1" name="anonyme_1" value="5">&nbsp;{{ _("Non") }}</input>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-9">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-4 text-end mt-2 me-1" style="">{{ _("Code laboratoire") }}</label>
-                                    <div>
-                                        <input id="code_patient_1" type="text" value="" maxlength="20" class="form-control form-lbk">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="3">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <div class="pat-num" id="anon-code-ro">
-                                        <span id="code_1"></span>
-                                    </div>
-                                </div>
-                            </div>
+
+                        <div id="pat_form_left">
+                            {{ args['form_html'] | safe }}
                         </div>
 
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group align-items-start mt-3 identity-group_1">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1" style="">{{ _("Nom") }}</label>
-                                    <div>
-                                        <input id="nom_1" type="text" value="" maxlength="40" class="form-control form-lbk" style="">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group align-items-start mt-3 identity-group_1">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1" style="">{{ _("Deuxième nom") }}</label>
-                                    <div>
-                                        <input id="midname_1" type="text" value="" maxlength="40" class="form-control form-lbk" style="">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group align-items-start mt-3 identity-group_1">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1" style="">{{ _("Nom de jeune fille") }}</label>
-                                    <div>
-                                        <input id="nom_jf_1" type="text" value="" maxlength="40" class="form-control form-lbk" style="">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group align-items-start mt-3 identity-group_1">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1" style="">{{ _("Prénom(s)") }}</label>
-                                    <div>
-                                        <input id="prenom_1" type="text" value="" maxlength="80" class="form-control form-lbk" style="">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1">{{ _("Date de naissance") }}</label>
-                                    <div>
-                                        <input id="ddn_1" class="form-control form-lbk" type="date" maxlength="10" size="10" value="" placeholder="" style="color: #888;">
-                                        <input id="date_current" type="hidden" maxlength="10" size="10" value="" name="date_current" >
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-lg-3 text-end me-3">{{ _("Date de naissance approximative") }}</label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="ddn_approx-4_1" name="ddn_approx_1" value="4">&nbsp;{{ _("Oui") }}</input>
-                                    </label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="ddn_approx-5_1" name="ddn_approx_1" value="5">&nbsp;{{ _("Non") }}</input>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-2">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <span class="form-label text-center mt-2 me-1" style="">{{ _("ou") }}</span>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Age") }}</label>
-                                    <div>
-                                        <input name="age" id="age_1" type="text" value="{% if args %}{{ args['age'] }}{% else %}0{% endif %}" maxlength="3" class="form-control form-lbk" style="width:60px;" min="0" max="150">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label text-end mt-2 me-1">{{ _("unité") }}</label>
-                                    <div>					
-                                        <select name="unite" id="unite_1" class="form-select">
-                                            {% for unit_age in ihm['unit_age'] %}
-                                            <option value="{{ unit_age['id_data'] }}" id="unite-{{ unit_age['id_data'] }}_1" {% if args['unite'] == unit_age['id_data'] %} selected {% endif %}>{{ unit_age['label'] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1">{{ _("Nationalité") }}</label>
-                                    <select name="nationality_1" id="nationality_1" class="form-select">
-                                        <option value="0" id="nationality-0_1" {% if not args or args['pat_nat'] == 0 %} selected {% endif %}>{{ _("Inconnu") }}</option>
-                                        {% for nationality in ihm['nationality'] %}
-                                        <option value="{{ nationality['nat_ser'] }}" id="nationality-{{ nationality['nat_ser'] }}_1" {% if args['pat_nat'] == nationality['nat_ser'] %} selected {% endif %}>{{ nationality['nat_name'] }} ({{ nationality['nat_code'] }})</option>
-                                        {% endfor %}
-                                    </select>
-                                    <label class="form-label text-end mx-3">{{ _("Résident") }}</label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" name="resident_1" id="resident-Y_1" value="Y">&nbsp;{{ _("Oui") }}</input>
-                                    </label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" name="resident_1" id="resident-N_1" value="N">&nbsp;{{ _("Non") }}</input>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group align-items-start mt-3 identity-group_1">
-                                    <label class="form-label col-lg-3 text-end mx-3">{{ _("Sexe") }}</label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="sexe-1_1" name="sexe_1" value="1">&nbsp;{{ _("Masculin") }}</input>
-                                    </label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="sexe-2_1" name="sexe_1" value="2">&nbsp;{{ _("Féminin") }}</input>
-                                    </label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="sexe-3_1" name="sexe_1" value="3">&nbsp;{{ _("Inconnu") }}</input>
-                                    </label>
-                                </div>
-                            </div>
-                        </div> 
-
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1">{{ _("Groupe sanguin") }}</label>
-                                    <div>					
-                                        <select name="blood_group_1" id="blood_group_1" class="form-select">
-                                            <option value="0" id="blood_group-0_1" {% if not args or args['blood_group'] == 0 %} selected {% endif %}>{{ _("Inconnu") }}</option>
-                                            {% for blood_group in ihm['blood_group'] %}
-                                            <option value="{{ blood_group['id_data'] }}" id="blood_group-{{ blood_group['id_data'] }}_1" {% if args['blood_group'] == blood_group['id_data'] %} selected {% endif %}>{{ blood_group['label'] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <label class="form-label text-end mt-2 mx-3">{{ _("Rhésus") }}</label>
-                                    <div>					
-                                        <select name="blood_rhesus_1" id="blood_rhesus_1" class="form-select">
-                                            <option value="0" id="blood_rhesus-0_1" {% if not args or args['blood_rhesus'] == 0 %} selected {% endif %}>{{ _("Inconnu") }}</option>
-                                            {% for blood_rhesus in ihm['blood_rhesus'] %}
-                                            <option value="{{ blood_rhesus['id_data'] }}" id="blood_rhesus-{{ blood_rhesus['id_data'] }}_1" {% if args['blood_rhesus'] == blood_rhesus['id_data'] %} selected {% endif %}>{{ blood_rhesus['label'] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="panel-heading row">
-                            <h3 class="panel-title">{{ _("Coordonnées") }}</h3>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1">{{ _("Adresse") }}</label>
-                                    <div>
-                                        <textarea id="adresse_1" rows="4" cols="50" class="form-control form-lbk"></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Boite postale") }}</label>
-                                    <div>
-                                        <input id="bp_1" type="text" value="" maxlength="10" class="form-control form-lbk" style="">
-                                    </div>
-                                </div>
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Quartier / Secteur") }}</label>
-                                    <div>
-                                        <input id="quartier_1" type="text" value="" maxlength="40" class="form-control form-lbk" style="">
-                                    </div>
-                                </div>
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <div class="col-3"></div>
-                                    <select id="search_zipcity" class="form-select" style="width:300px"></select>
-                                </div>
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Code postal") }}</label>
-                                    <div>
-                                        <input id="cp_1" type="text" value="" maxlength="10" class="form-control form-lbk" style="">
-                                    </div>
-                                </div>
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Ville / Village") }}</label>
-                                    <div>
-                                        <input id="ville_1" type="text" value="" maxlength="40" class="form-control form-lbk" style="">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Téléphone") }} 1</label>
-                                    <div>
-                                        <input id="phone1_1" type="text" value="" maxlength="20" class="form-control form-lbk" style="">
-                                    </div>
-                                </div>
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Téléphone") }} 2</label>
-                                    <div>
-                                        <input id="phone2_1" type="text" value="" maxlength="20" class="form-control form-lbk" style="">
-                                    </div>
-                                </div>
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Profession") }}</label>
-                                    <div>
-                                        <input id="profession_1" type="text" value="" maxlength="50" class="form-control form-lbk" style="">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         <div class="float-end me-2 mb-5">
-                            <input type="button" id="btn-save" onclick="save_pat();" class="btn btn-lbk btn-{{ session['user_role']|safe }}" value="{{ _("Modifier la fiche patient") }}"> 
+                            <input type="button" id="btn-save" onclick="save_pat();"
+                                   class="btn btn-lbk btn-{{ session['user_role']|safe }}"
+                                   value="{{ _("Modifier la fiche patient") }}">
                         </div>
                     </div>
 
@@ -299,246 +61,8 @@
                         <div class="panel-heading row">
                             <h3 class="panel-title">{{ _("Identité patient") }} <b class="text-danger ms-2">{{ _("A SUPPRIMER") }}</b></h3>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mx-3">{{ _("Anonyme") }}</label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="anonyme-4_2" name="anonyme" value="4" disabled>&nbsp;{{ _("Oui") }}</input>
-                                    </label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="anonyme-5_2" name="anonyme" value="5" disabled>&nbsp;{{ _("Non") }}</input>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-9">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-4 text-end mt-2 me-1" style="">{{ _("Code laboratoire") }}</label>
-                                    <div>
-                                        <input id="code_patient_2" type="text" value="" maxlength="20" class="form-control form-lbk" disabled>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="3">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <div class="pat-num" id="anon-code-ro">
-                                        <span id="code_2"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1" style="">{{ _("Nom") }}</label>
-                                    <div>
-                                        <input id="nom_2" type="text" value="" maxlength="40" class="form-control form-lbk" style="" disabled>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1" style="">{{ _("Deuxième nom") }}</label>
-                                    <div>
-                                        <input id="midname_2" type="text" value="" maxlength="40" class="form-control form-lbk" style="" disabled>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1" style="">{{ _("Nom de jeune fille") }}</label>
-                                    <div>
-                                        <input id="nom_jf_2" type="text" value="" maxlength="40" class="form-control form-lbk" style="" disabled>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1" style="">{{ _("Prénom(s)") }}</label>
-                                    <div>
-                                        <input id="prenom_2" type="text" value="" maxlength="80" class="form-control form-lbk" style="" disabled>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Date de naissance") }}</label>
-                                    <div>
-                                        <input id="ddn_2" class="form-control form-lbk" type="date" maxlength="10" size="10" value="" placeholder="" style="color: #888;" disabled>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end me-3">{{ _("Date de naissance approximative") }}</label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="ddn_approx-4_2" name="ddn_approx" value="4" disabled>&nbsp;{{ _("Oui") }}</input>
-                                    </label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="ddn_approx-5_2" name="ddn_approx" value="5" disabled>&nbsp;{{ _("Non") }}</input>
-                                    </label>
-                                </div>
-                            </div>
-                            <div class="col-2">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <span class="form-label text-center mt-2 me-1" style="">{{ _("ou") }}</span>
-                                </div>
-                            </div>
-                            <div class="col-3">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Age") }}</label>
-                                    <div>
-                                        <input id="age_2" type="text" value="{% if args %}{{ args['age'] }}{% else %}0{% endif %}" maxlength="3" class="form-control form-lbk" style="width:60px;" min="0" max="150" disabled>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-4">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label text-end mt-2 me-1">{{ _("unité") }}</label>
-                                    <div>					
-                                        <select name="unite" id="unite_2" class="form-select" disabled>
-                                            {% for unit_age in ihm['unit_age'] %}
-                                            <option value="{{ unit_age['id_data'] }}" id="unite-{{ unit_age['id_data'] }}_2" {% if args['unite'] == unit_age['id_data'] %} selected {% endif %}>{{ unit_age['label'] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Nationalité") }}</label>
-                                    <select name="nationality_2" id="nationality_2" class="form-select" disabled>
-                                        <option value="0" id="nationality-0_2" {% if not args or args['pat_nat'] == 0 %} selected {% endif %}>{{ _("Inconnu") }}</option>
-                                        {% for nationality in ihm['nationality'] %}
-                                        <option value="{{ nationality['nat_ser'] }}" id="nationality-{{ nationality['nat_ser'] }}_2" {% if args['pat_nat'] == nationality['nat_ser'] %} selected {% endif %}>{{ nationality['nat_name'] }} ({{ nationality['nat_code'] }})</option>
-                                        {% endfor %}
-                                    </select>
-                                    <label class="form-label text-end mx-3">{{ _("Résident") }}</label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" name="resident_2" id="resident-Y_2" value="Y" disabled>&nbsp;{{ _("Oui") }}</input>
-                                    </label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" name="resident_2" id="resident-N_2" value="N" disabled>&nbsp;{{ _("Non") }}</input>
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-lg-3 text-end mx-3">{{ _("Sexe") }}</label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="sexe-1_2" name="sexe" value="1" disabled>&nbsp;{{ _("Masculin") }}</input>
-                                    </label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="sexe-2_2" name="sexe" value="2" disabled>&nbsp;{{ _("Féminin") }}</input>
-                                    </label>
-                                    <label class="form-label text-end me-3">
-                                        <input type="radio" id="sexe-3_2" name="sexe" value="3" disabled>&nbsp;{{ _("Inconnu") }}</input>
-                                    </label>
-                                </div>
-                            </div>
-                        </div> 
-
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1">{{ _("Groupe sanguin") }}</label>
-                                    <div>					
-                                        <select name="blood_group_2" id="blood_group_2" class="form-select" disabled>
-                                            <option value="0" id="blood_group-0_1" {% if not args or args['blood_group'] == 0 %} selected {% endif %}>{{ _("Inconnu") }}</option>
-                                            {% for blood_group in ihm['blood_group'] %}
-                                            <option value="{{ blood_group['id_data'] }}" id="blood_group-{{ blood_group['id_data'] }}_2" {% if args['blood_group'] == blood_group['id_data'] %} selected {% endif %}>{{ blood_group['label'] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                    <label class="form-label text-end mt-2 mx-3">{{ _("Rhésus") }}</label>
-                                    <div>					
-                                        <select name="blood_rhesus_2" id="blood_rhesus_2" class="form-select" disabled>
-                                            <option value="0" id="blood_rhesus-0_1" {% if not args or args['blood_rhesus'] == 0 %} selected {% endif %}>{{ _("Inconnu") }}</option>
-                                            {% for blood_rhesus in ihm['blood_rhesus'] %}
-                                            <option value="{{ blood_rhesus['id_data'] }}" id="blood_rhesus-{{ blood_rhesus['id_data'] }}_2" {% if args['blood_rhesus'] == blood_rhesus['id_data'] %} selected {% endif %}>{{ blood_rhesus['label'] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="panel-heading row">
-                            <h3 class="panel-title">{{ _("Coordonnées") }}</h3>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1">{{ _("Adresse") }}</label>
-                                    <div>
-                                        <textarea id="adresse_2" rows="4" cols="50" class="form-control form-lbk" disabled></textarea>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1">{{ _("Boite postale") }}</label>
-                                    <div>
-                                        <input id="bp_2" type="text" value="" maxlength="10" class="form-control form-lbk" style="" disabled>
-                                    </div>
-                                </div>
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-lg-3 text-end mt-2 me-1">{{ _("Quartier / Secteur") }}</label>
-                                    <div>
-                                        <input id="quartier_2" type="text" value="" maxlength="40" class="form-control form-lbk" style="" disabled>
-                                    </div>
-                                </div>
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Code postal") }}</label>
-                                    <div>
-                                        <input id="cp_2" type="text" value="" maxlength="10" class="form-control form-lbk" style="" disabled>
-                                    </div>
-                                </div>
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Ville / Village") }}</label>
-                                    <div>
-                                        <input id="ville_2" type="text" value="" maxlength="40" class="form-control form-lbk" style="" disabled>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Téléphone") }} 1</label>
-                                    <div>
-                                        <input id="phone1_2" type="text" value="" maxlength="20" class="form-control form-lbk" style="" disabled>
-                                    </div>
-                                </div>
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Téléphone") }} 2</label>
-                                    <div>
-                                        <input id="phone2_2" type="text" value="" maxlength="20" class="form-control form-lbk" style="" disabled>
-                                    </div>
-                                </div>
-                                <div class="form-group d-lg-flex align-items-start mt-3">
-                                    <label class="form-label col-3 text-end mt-2 me-1">{{ _("Profession") }}</label>
-                                    <div>
-                                        <input id="profession_2" type="text" value="" maxlength="50" class="form-control form-lbk" style="" disabled>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="pat_form_right"></div>
                     </div>
                 </div>
 
@@ -560,6 +84,9 @@
 
 {% block add_script %}
 <script type="text/javascript" nonce="{{ session['nonce'] }}">
+var id_user = {{ session['user_id']|safe }};
+var basePatFormHtml = null;
+var basePatFormHtmlNoScript = null;
 var id_pat1 = 0 ;
 var id_pat2 = 0 ;
 
@@ -658,164 +185,53 @@ var display = $(
 return display ;
 }
 
-function save_pat() 
+function save_pat()
 {
-var id_owner      = {{ session['user_id']|safe}} ;
-var anonyme       = $("input:radio[name=anonyme_1]:checked").val() ;
-var code          = $("#code_1").text() ;
-var code_patient  = $("#code_patient_1").val() ;
-var nom           = $("#nom_1").val() ;
-var prenom        = $("#prenom_1").val() ;
-var ddn           = $("#ddn_1").val() ;
-var sexe          = $("input:radio[name=sexe_1]:checked").val() ;
-var adresse       = JSON.stringify( $.trim( $("#adresse_1").val() ) ) ;
-var cp            = $("#cp_1").val() ;
-var ville         = $("#ville_1").val() ;
-var phone1        = $("#phone1_1").val() ;
-var phone2        = $("#phone2_1").val() ;
-var profession    = $("#profession_1").val() ;
-var nom_jf        = $("#nom_jf_1").val() ;
-var quartier      = $("#quartier_1").val() ;
-var bp            = $("#bp_1").val() ;
-var ddn_approx    = $("input:radio[name=ddn_approx_1]:checked").val() ;
-var age           = $("#age_1").val() ;
-var unite         = $("#unite_1").val() ;
-var midname       = $("#midname_1").val() ;
-var nationality   = $("#nationality_1").val() ;
-var resident      = $("input:radio[name=resident_1]:checked").val() ;
-var blood_group   = $("#blood_group_1").val() ;
-var blood_rhesus  = $("#blood_rhesus_1").val() ;
+var id_owner = id_user;
 
-    // date de naissance obligatoire
-    if (ddn == "" && age == "")
-    {
-    alert( "{{ _("Veuillez sélectionner une date de naissance ou saisir un âge") }}" ) ;
-    return false;
+    if (!id_pat1 || id_pat1 <= 0) {
+        alert("{{ _("Vous devez sélectionner un patient à conserver") }}");
+        return false;
     }
- 
-phone1 = phone1.replaceAll(" ", "") ;
-phone2 = phone2.replaceAll(" ", "") ;
 
-var param = '{ "id_user":' + id_owner + ', ' +
-              '"pat_ano":' + anonyme  + ', ' +
-              '"pat_code":"' + code + '", ' +
-              '"pat_code_lab":"' + code_patient + '", ' +
-              '"pat_name":"' + nom + '", ' +
-              '"pat_firstname":"' + prenom + '", ' +
-              '"pat_birth":"' + ddn + '", ' +
-              '"pat_sex":' + sexe + ', ' +
-              '"pat_address":' + adresse + ', ' + // NO QUOTE DUE TO STRINGIFY PROCESS
-              '"pat_zipcode":"' + cp + '", ' +
-              '"pat_city":"' + ville + '", ' +
-              '"pat_phone1":"' + phone1 + '", ' +
-              '"pat_phone2":"' + phone2 + '", ' +
-              '"pat_profession":"' + profession + '", ' +
-              '"pat_maiden":"' + nom_jf + '", ' +
-              '"pat_district":"' + quartier + '", ' +
-              '"pat_pbox":"' + bp + '", ' +
-              '"pat_birth_approx":' + ddn_approx + ', ' +
-              '"pat_age":' + age + ', ' +
-              '"pat_age_unit":' + unite + ', ' +
-              '"pat_midname":"' + midname + '", ' +
-              '"pat_nationality":' + nationality + ', ' +
-              '"pat_resident":"' + resident + '", ' +
-              '"pat_blood_group":' + blood_group + ', ' +
-              '"pat_blood_rhesus":' + blood_rhesus + ' }' ;
+    {{ args['json_save'] | safe }} ;
+    param.id_user = id_user;    
 
-    $.ajax( {
-       type: "POST",
-       url: "{{ session['server_ext'] }}/services/patient/det/" + id_pat1,
-       dataType: 'json',
-       contentType: "application/json; charset=utf-8",
-       data: param,
-       headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
-       success: function(data)
-           {
-           tempAlert("{{ _("Enregistrement réussi") }}", "btn-save") ; 
-           },
-       error: function(data)
-           {
-           console.log("ERROR POST patient det") ;
-           alert("{{ _("Une erreur est survenue lors de l'enregistrement") }}") ;
-           }
-    } ) ;
+    // Keep generated code if it is displayed as text in the form (same pattern as det-patient)
+    if ($("#pat_code").length) {
+        param.pat_code = $("#pat_code").text().trim();
+    }
+
+    $.ajax({
+        type: "POST",
+        url: "{{ session['server_ext'] }}/services/patient/det/" + id_pat1,
+        dataType: 'json',
+        contentType: "application/json; charset=utf-8",
+        data: JSON.stringify(param),
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        success: function(data) {
+            tempAlert("{{ _("Enregistrement réussi") }}", "btn-save");
+        },
+        error: function(data) {
+            console.log("ERROR POST patient det (manage-pat-records)");
+            alert("{{ _("Une erreur est survenue lors de l'enregistrement") }}");
+        }
+    });
 }
-
-$("input[type=radio][name=anonyme_1]").change(function() 
-{
-    if (this.value == '4') 
-    {
-    // Clean and hide input nom, prenom, nom_jf, sexe
-    $("#nom_1").val("")    ;
-    $("#midname_1").val("")  ;
-    $("#nom_jf_1").val("") ;
-    $("#prenom_1").val("") ;
-    $("#sexe-3_1").prop('checked', true) ;
-    $(".identity-group_1").hide() ;
-    }
-    else if (this.value == '5') 
-    {
-    // Show input nom, prenom, nom_jf, sexe
-    $(".identity-group_1").show() ;
-    $("#sexe-3_1").prop('checked', true) ;
-    }
-} ) ;
-
-$("#ddn_1").change(function() 
-{
-// after date change calculate age and put unit
-var start = $("#ddn_1").val() ;
-var end   = $("#date_current").val() ;
-
-// end - start returns difference in milliseconds 
-var diff = new Date(Date.parse(end) - Date.parse(start));
-
-var age = Math.abs(diff.getUTCFullYear() - 1970);
-
-    if ( age >= 1 )
-    {
-        $("#age_1").val( age ) ;
-        $("#unite_1").val("1037") ;
-    }
-    else
-    {
-    var days = diff/1000/60/60/24;
-
-        if (days >= 28)
-        {
-        $("#age_1").val( (days / 30).toFixed(0) ) ;
-        $("#unite_1").val("1036") ;
-        }
-        else
-        {
-        $("#age_1").val( (days).toFixed(0) ) ;
-        $("#unite_1").val("1034") ;
-        }
-    }
-} ) ;
 
 $("#search_patient1").on("select2:select", function (e) 
 {
 id_pat1 = $(e.currentTarget).val();
 
-    $("#id_pat_1").val(id_pat2) ;
+    $("#id_pat_1").val(id_pat1) ;
 
     // Get data patient in form
-    $.ajax( 
-    {
-        type: "GET",
-        url: "{{ session['server_ext'] }}/services/patient/det/" + id_pat1,
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
-        success: function(data_pat1)
-            {
-            load_data_pat(data_pat1, 1) ;
-            },
-        error: function(ret)
-            {
-            console.log("ERROR GET det patient");
-            alert("{{ _("Une erreur est survenue lors de la récupération des données") }}") ;
-            }
-    } ) ;
+    fetch_patient_full(id_pat1, function(full) {
+        $("#form_pat_1").removeClass("d-none");
+        fill_form("#pat_form_left", full);
+    }, function() {
+        alert("{{ _("Une erreur est survenue lors de la récupération des données") }}");
+    });
 } ) ;
 
 $("#search_patient2").on("select2:select", function (e) 
@@ -825,21 +241,15 @@ id_pat2 = $(e.currentTarget).val();
     $("#id_pat_2").val(id_pat2) ;
 
     // Get data patient in form
-    $.ajax( 
-    {
-        type: "GET",
-        url: "{{ session['server_ext'] }}/services/patient/det/" + id_pat2,
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
-        success: function(data_pat2)
-            {
-            load_data_pat(data_pat2, 2) ;
-            },
-        error: function(ret)
-            {
-            console.log("ERROR GET det patient");
-            alert("{{ _("Une erreur est survenue lors de la récupération des données") }}") ;
-            }
-    } ) ;
+    fetch_patient_full(id_pat2, function(full) {
+        $("#form_pat_2").removeClass("d-none");
+        if ($("#pat_form_right").is(":empty")) {
+            show_right_form_readonly();
+        }
+        fill_form("#pat_form_right", full);
+    }, function() {
+        alert("{{ _("Une erreur est survenue lors de la récupération des données") }}");
+    });
 } ) ;
 
 // fix bug between jquery 3.6.0 and select2
@@ -847,56 +257,6 @@ $(document).on('select2:open', () =>
 {
 document.querySelector('.select2-search__field').focus() ;
 } ) ;
-
-function load_data_pat( data, num )
-{
-    $("#form_pat_" + num ).removeClass('d-none') ;
-
-    $("#anonyme-" + data.pat_ano + "_" + num ).prop("checked", true) ;
-    $("#code_patient_" + num ).val( data.pat_code_lab ) ;
-    $("#code_" + num ).text( data.pat_code ) ;
-    $("#nom_" + num ).val( data.pat_name ) ;
-    $("#nom_jf_" + num ).val( data.pat_maiden ) ;
-    $("#prenom_" + num ).val( data.pat_firstname ) ;
-    $("#ddn_" + num ).val( data.pat_birth ) ;
-    $("#ddn_approx-" + data.pat_birth_approx + "_" + num ).prop("checked", true) ;
-    $("#sexe-" + data.pat_sex + "_" + num ).prop("checked", true) ;
-    $("#age_" + num ).val( data.pat_age ) ;
-    $("#unite-" + data.pat_age_unit + "_" + num ).prop("selected", true) ;
-    $("#adresse_" + num ).val( data.pat_address ) ;
-    $("#bp_" + num ).val( data.pat_pbox ) ;
-    $("#quartier_" + num ).val( data.pat_district ) ;
-    $("#phone1_" + num ).val( data.pat_phone1 ) ;
-    $("#phone2_" + num ).val( data.pat_phone2 ) ;
-    $("#cp_" + num ).val( data.pat_zipcode ) ;
-    $("#ville_" + num ).val( data.pat_city ) ;
-    $("#profession_" + num ).val( data.pat_profession ) ;
-    $("#midname_" + num ).val( data.pat_midname ) ;
-    $("#nationality_" + num ).val( data.pat_nationality ) ;
-    $("#resident-" + data.pat_resident + "_" + num ).prop("checked", true) ; ;
-    $("#blood_group_" + num ).val( data.pat_blood_group ) ;
-    $("#blood_rhesus_" + num ).val( data.pat_blood_rhesus ) ;
-
-    if (num == 1)
-    {
-    let anonyme       = $("input:radio[name=anonyme_1]:checked").val() ;
-    let sexe          = $("input:radio[name=sexe_1]:checked").val() ;
-    let ddn_approx    = $("input:radio[name=ddn_approx_1]:checked").val() ;
-    let resident      = $("input:radio[name=resident_1]:checked").val() ;
-
-        if (anonyme == undefined)
-        $("#anonyme-5_1").prop("checked", true) ;
-
-        if (sexe == undefined)
-        $("#sexe-3_1").prop("checked", true) ;
-
-        if (ddn_approx == undefined)
-        $("#ddn_approx-4_1").prop("checked", true) ;
-
-        if (resident == undefined)
-        $("#resident-Y_1").prop("checked", true) ;
-    }
-}
 
 function save_request()
 {
@@ -948,61 +308,111 @@ function save_request()
     return false;
 }
 
-$("#search_zipcity").select2(
+function show_right_form_readonly()
 {
-    placeholder: "{{ _("Recherche de code postal ou ville") }}",
-    tags: false,
-    multiple: false,
-    tokenSeparators: [','],
-    minimumInputLength: 2,
-    ajax: {
-        url: "{{ session['server_ext'] }}/services/setting/zipcity/search",
-        type: "POST",
-        dataType: "json",
-        contentType: "application/json; charset=utf-8",
-        term: $("#search_zipcity").text(),
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
-        data: function (params) {
+    // Build off-DOM to avoid radio-group collisions
+    const $tmp = $("<div></div>").html(basePatFormHtmlNoScript);
 
-            return JSON.stringify({
-                term: params.term
+    // Suffix ALL ids on the right to avoid DOM collisions
+    $tmp.find("[id]").each(function() {
+        this.id = this.id + "__R";
+    });
+
+    // Fix labels pointing to ids
+    $tmp.find("label[for]").each(function() {
+        const oldFor = $(this).attr("for");
+        $(this).attr("for", oldFor + "__R");
+    });
+
+    // Isolate ALL field names on the right (critical for radio groups)
+    $tmp.find("[name]").each(function() {
+        const n = $(this).attr("name");
+        if (n && !n.endsWith("__R")) $(this).attr("name", n + "__R");
+    });
+
+    // Inject only after renaming (no collisions)
+    $("#pat_form_right").html($tmp.html());
+
+    // Make it read-only
+    $("#pat_form_right").find("input,select,textarea,button").prop("disabled", true);
+
+    // Kill select2 if present in right form
+    $("#pat_form_right .select2-hidden-accessible").each(function() {
+        try { $(this).select2('destroy'); } catch(e) {}
+    });
+
+    // Block any remaining interaction on the right form
+    $("#pat_form_right").off('click focus mousedown keydown')
+        .on('click focus mousedown keydown', 'input,select,textarea,button', function(e) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+        });
+}
+
+function fetch_patient_full(id_pat, okCb, errCb)
+{
+    $.ajax({
+        type: "GET",
+        url: "{{ session['server_ext'] }}/services/patient/det/" + id_pat,
+        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+        success: function(det) {
+            $.ajax({
+                type: "GET",
+                url: "{{ session['server_ext'] }}/services/patient/form/item/" + id_pat,
+                headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
+                success: function(items) {
+                    okCb(Object.assign({}, det || {}, items || {}));
+                },
+                error: errCb
             });
         },
-        processResults: function (data) {
-            return {
-                results: $.map(data, function (item) {
-                    return {
-                        text: item.field_value,
-                        id: item.id_item
-                    }
-                })
-            };
-        }
-    }
-} ) ;
+        error: errCb
+    });
+}
 
-$("#search_zipcity").on("select2:select", function (e) 
+// Fill inputs/select/textarea using matching id or name inside a container
+function fill_form(containerSel, data)
 {
-let id_item = $(e.currentTarget).val();
+    const isRight = (containerSel === "#pat_form_right");
 
-    // GET det zipcity
-    $.ajax( 
-        {
-        type: "GET",
-        url: "{{ session['server_ext'] }}/services/setting/zipcity/det/" + id_item,
-        headers: { 'Authorization': 'Bearer {{ session.get("be_access_token","") }}' },
-        success: function(data_zipcity)
-            {
-            $("#cp_1").val(data_zipcity.zic_zip) ;
-            $("#ville_1").val(data_zipcity.zic_city) ;
-            },
-        error: function(data_zipcity)
-            {
-            console.log("ERROR GET det zipcity");
-            alert("{{ _("Erreur lors de la récupération des données") }}") ;
-            }
-        } ) ;
-} ) ;
+    Object.keys(data || {}).forEach(function(k) {
+        const v = data[k];
+
+        // --- RADIO GROUP (handle first) ---
+        const radioName = isRight ? (k + "__R") : k;
+        const $radioGroup = $(containerSel + " input[type=radio][name='" + radioName + "']");
+        if ($radioGroup.length) {
+            $(containerSel + " input[type=radio][name='" + radioName + "'][value='" + String(v) + "']")
+                .prop("checked", true);
+            return;
+        }
+
+        // 1) by id
+        let $el = $(containerSel + " #" + k + (isRight ? "__R" : ""));
+
+        // 2) by name
+        if (!$el.length) $el = $(containerSel + " [name='" + k + (isRight ? "__R" : "") + "']");
+
+        if (!$el.length) return;
+
+        // Checkbox
+        if ($el.is("input[type=checkbox]")) {
+            $el.prop("checked", v === "Y" || v === true || v === 1 || v === "1");
+            return;
+        }
+
+        // Text node (span/div)
+        if (!$el.is("input,select,textarea")) {
+            $el.text(v ?? "");
+            return;
+        }
+
+        // Default
+        $el.val(v ?? "");
+    });
+
+    $(containerSel + " select").trigger("change");
+}
 
 function return_home()
 {
@@ -1011,6 +421,11 @@ window.location.href = "{{ url_for('homepage') }}";
 
 $( document ).ready( function()
 {
+    basePatFormHtml = $("#pat_form_left").html();
+
+    // Right side must not execute embedded scripts from form_html
+    basePatFormHtmlNoScript = basePatFormHtml.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "");
+
     $("#date_current").val( "{{ now|date_now }}" ) ;
 } ) ;
 </script>

@@ -2244,7 +2244,7 @@ def manage_pat_records():
             return redir
 
         if req.status_code == 200:
-            json_ihm['nationality'] = req.json()
+            json_ihm['pat_nationality'] = req.json()
 
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests nationality list failed, err=%s , url=%s', err, url)
@@ -2255,7 +2255,7 @@ def manage_pat_records():
         req = requests.get(url, timeout=10, headers=headers)
 
         if req.status_code == 200:
-            json_ihm['unit_age'] = req.json()
+            json_ihm['pat_age_unit'] = req.json()
 
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests unit age failed, err=%s , url=%s', err, url)
@@ -2266,7 +2266,7 @@ def manage_pat_records():
         req = requests.get(url, timeout=10, headers=headers)
 
         if req.status_code == 200:
-            json_ihm['blood_group'] = req.json()
+            json_ihm['pat_blood_group'] = req.json()
 
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests blood group failed, err=%s , url=%s', err, url)
@@ -2277,10 +2277,35 @@ def manage_pat_records():
         req = requests.get(url, timeout=10, headers=headers)
 
         if req.status_code == 200:
-            json_ihm['blood_rhesus'] = req.json()
+            json_ihm['pat_blood_rhesus'] = req.json()
 
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests blood rhesus failed, err=%s , url=%s', err, url)
+
+    # --- Form from file (same as det-patient) ---
+    form_filename = 'form_patient_fr.toml'
+
+    if session.get('lang_select') and session['lang_select'] != 'FR':
+        form_filename = 'form_patient_' + session['lang_select'].lower() + '.toml'
+        dirpath = Constants.cst_form_pat
+        path = os.path.join(dirpath, form_filename)
+        if not (os.path.isfile(path) and path.endswith('.toml')):
+            form_filename = 'form_patient_fr.toml'
+
+    ret_build_form = Form.build_form('PAT', form_filename)
+
+    # Raw outputs from builder
+    json_data['form_html'] = ret_build_form['form_html']
+    json_data['json_save'] = ret_build_form['json_save']
+
+    # Render embedded Jinja (includes, translations, etc.)
+    json_data['form_html'] = render_template_string(
+        json_data['form_html'],
+        ihm=json_ihm,
+        args=json_data
+    )
+
+    json_data['json_save'] = render_template_string(json_data['json_save'])
 
     return render_template('manage-pat-records.html', ihm=json_ihm, args=json_data, rand=random.randint(0, 999))  # nosec B311
 

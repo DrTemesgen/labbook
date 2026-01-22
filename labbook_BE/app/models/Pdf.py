@@ -3475,8 +3475,19 @@ class Pdf:
                     'ext_M': 0, 'ext_F': 0, 'ext_U': 0,
                     'inp_M': 0, 'inp_F': 0, 'inp_U': 0,
                     'onc_M': 0, 'onc_F': 0, 'onc_U': 0,
-                    'tot_M': 0, 'tot_F': 0, 'tot_U': 0
+                    'tot_M': 0, 'tot_F': 0, 'tot_U': 0,
+
+                    # totals
+                    'ext_tot': 0,
+                    'inp_tot': 0,
+                    'onc_tot': 0,
+                    'type_tot': 0,
+
+                    'm_tot': 0,
+                    'f_tot': 0,
+                    'u_tot': 0,
                 }
+                
                 order_type.append(code)
 
             k = sex_key(sex)
@@ -3493,11 +3504,26 @@ class Pdf:
 
         data['l_type'] = [type_map[c] for c in order_type]
 
+        # Compute per-line totals for table by type
+        for r in data['l_type']:
+            r['ext_tot'] = r['ext_M'] + r['ext_F'] + r['ext_U']
+            r['inp_tot'] = r['inp_M'] + r['inp_F'] + r['inp_U']
+            r['onc_tot'] = r['onc_M'] + r['onc_F'] + r['onc_U']
+
+            r['m_tot'] = r['tot_M']
+            r['f_tot'] = r['tot_F']
+            r['u_tot'] = r['tot_U']
+
+            r['type_tot'] = r['ext_tot'] + r['inp_tot'] + r['onc_tot']
+
         for row in data['l_type']:
             for k in (
                 'ext_M', 'ext_F', 'ext_U',
                 'inp_M', 'inp_F', 'inp_U',
-                'onc_M', 'onc_F', 'onc_U'
+                'onc_M', 'onc_F', 'onc_U',
+                'ext_tot', 'inp_tot', 'onc_tot',
+                'm_tot', 'f_tot', 'u_tot',
+                'type_tot'
             ):
                 if row.get(k) == 0:
                     row[k] = '-'
@@ -3546,9 +3572,13 @@ class Pdf:
                 base = {
                     'ana_name': ana,
                     'ana_code': code,
+
                     'age_tot_M': 0,
                     'age_tot_F': 0,
                     'age_tot_U': 0,
+
+                    # Total global sexe
+                    'sex_tot': 0,
                 }
                 for i in range(1, bucket_count + 1):
                     base['age_col%d_M' % i] = 0
@@ -3557,7 +3587,7 @@ class Pdf:
                 age_map[code] = base
                 order_age.append(code)
 
-            k = sex_key(sex)          # "_M", "_F", "_U"
+            k = sex_key(sex)  # "_M", "_F", "_U"
 
             # Always increment total per sex
             age_map[code]['age_tot' + k] += nb
@@ -3571,10 +3601,17 @@ class Pdf:
 
         data['l_age'] = [age_map[c] for c in order_age]
 
+        for r in data['l_age']:
+            r['age_tot'] = r['age_tot_M'] + r['age_tot_F'] + r['age_tot_U']        
+
         for row in data['l_age']:
             for k, v in list(row.items()):
                 if k.startswith('age_col') and v == 0:
                     row[k] = '-'
+
+        for row in data['l_age']:
+            if row.get('age_tot') == 0:
+                row['age_tot'] = '-'
 
         ret = Pdf.buildPdf('ACT', tpl_file, filename, data)
         if not ret:
