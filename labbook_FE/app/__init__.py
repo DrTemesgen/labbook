@@ -10030,12 +10030,25 @@ def download_file(type='', filename='', type_ref='', ref=''):
         generated_name = filename
     elif validated_type == 'JF':
         # ref = id_file
+        url = ''
         try:
             validated_type_ref = str(type_ref or '')
             if validated_type_ref not in allowed_types_ref:
                 return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-            url = session.get('server_int') + '/' + session.get('redirect_name') + '/services/file/document/' + str(validated_type_ref) + '/' + str(ref)
+            validated_ref = str(ref or '')
+            if not validated_ref.isdigit():
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            redirect_name = str(session.get('redirect_name') or '')
+            if not re.fullmatch(r'[A-Za-z0-9_-]+', redirect_name):
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            url = (
+                str(session.get('server_int') or '') + '/' + redirect_name +
+                '/services/file/document/' + quote(validated_type_ref, safe='') +
+                '/' + quote(validated_ref, safe='')
+            )
             req = requests.get(url, timeout=10, headers=headers)
 
             redir = be_check_or_bounce(req)
@@ -10055,12 +10068,25 @@ def download_file(type='', filename='', type_ref='', ref=''):
             log.error(Logs.fileline() + ' : requests file document failed, err=%s , url=%s', err, url)
     elif validated_type == 'PH':
         # ref = id_file
+        url = ''
         try:
             validated_type_ref = str(type_ref or '')
             if validated_type_ref not in allowed_types_ref:
                 return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-            url = session['server_int'] + '/' + session['redirect_name'] + '/services/file/document/' + str(validated_type_ref) + '/' + str(ref)
+            validated_ref = str(ref or '')
+            if not validated_ref.isdigit():
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            redirect_name = str(session.get('redirect_name') or '')
+            if not re.fullmatch(r'[A-Za-z0-9_-]+', redirect_name):
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            url = (
+                str(session.get('server_int') or '') + '/' + redirect_name +
+                '/services/file/document/' + quote(validated_type_ref, safe='') +
+                '/' + quote(validated_ref, safe='')
+            )
             req = requests.get(url, timeout=10, headers=headers)
 
             redir = be_check_or_bounce(req)
