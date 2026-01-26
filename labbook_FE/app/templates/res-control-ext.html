@@ -63,16 +63,6 @@
                                 <tr><th><div>{{ _("Fichier") }}</div></th><th><div>{{ _("Action") }}</div></th></tr>
                             </thead>
                             <tbody id="tbody_file">
-                                {% if args['cte_ser'] > 0 %}
-                                <tr>
-                                    <td class="filename"><div>{{ args['result']['tpl_file'] }}</div></td>
-                                    <td class="action">
-                                        <div>
-                                            <a href="#" onclick="download_file('CT', '{{ args["result"]["tpl_file"] }}', 'CTRL', {{ args['cte_ser']|safe }});">{{ _("Télécharger") }}</a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                {% endif %}
                             </tbody>
                         </table>
                     </div>

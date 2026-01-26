@@ -9994,24 +9994,31 @@ def download_file(type='', filename='', type_ref='', ref=''):
     headers = be_auth_headers()
 
     # TYPE
-    # PY => Python : BarCode, Bill, Whonet
-    # JF => Join File
-    # PH => Photo
-    # RP => Report
-    # RLT => Report from LabBook Lite
-    # RPC => Report Copy
-    # DH => DHIS2 spreadsheet
-    # DHU => DHIS2 from job
+    # PY   => Python : BarCode, Bill, Whonet
+    # JF   => Join File
+    # PH   => Photo
+    # RP   => Report
+    # RLT  => Report from LabBook Lite
+    # RPC  => Report Copy
+    # DH   => DHIS2 spreadsheet
+    # DHU  => DHIS2 from job
     # BILU => Billing report from job
     # ACTU => Activity report from job
-    # EP => EPIDEMIO spreadsheet
-    # FP => Form Patient
-    # IN => INDICATOR spreadsheet
-    # TP => template odt
-    # AA => audit archive
+    # EP   => EPIDEMIO spreadsheet
+    # FP   => Form Patient
+    # FPH  => Form Patient History
+    # IN   => INDICATOR spreadsheet
+    # TP   => template odt
+    # AA   => audit archive
 
     allowed_types = {'PY': 'PY', 'JF': 'JF', 'PH': 'PH', 'RP': 'RP', 'RLT': 'RLT', 'RPC': 'RPC', 'DH': 'DH', 'DHU': 'DHU',
-                     'BILU': 'BILU', 'ACTU': 'ACTU', 'EP': 'EP', 'FP': 'FP', 'IN': 'IN', 'TP': 'TP', 'AA': 'AA'}
+                     'BILU': 'BILU', 'ACTU': 'ACTU', 'EP': 'EP', 'FP': 'FP', 'FPH': 'FPH', 'IN': 'IN', 'TP': 'TP', 'AA': 'AA'}
+
+    allowed_types_ref = {
+        'GEN', 'MEET', 'PROC', 'MSG', 'CTRL', 'REC', 'FORM', 'MANU', 'LABO', 'TPL',
+        'EQBD', 'EQCC', 'DHIS2', 'EPIDEMIO', 'INDICATOR', 'AUDIT', 'ACTU', 'BILU',
+        'DHU', 'STAFF'
+    }
 
     validated_type = allowed_types.get(type)
 
@@ -10025,7 +10032,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
         # ref = id_file
         try:
             validated_type_ref = str(type_ref or '')
-            if not re.fullmatch(r'[A-Z0-9_]{1,16}', validated_type_ref):
+            if validated_type_ref not in allowed_types_ref:
                 return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
             url = session.get('server_int') + '/' + session.get('redirect_name') + '/services/file/document/' + str(validated_type_ref) + '/' + str(ref)
@@ -10050,7 +10057,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
         # ref = id_file
         try:
             validated_type_ref = str(type_ref or '')
-            if not re.fullmatch(r'[A-Z0-9_]{1,16}', validated_type_ref):
+            if validated_type_ref not in allowed_types_ref:
                 return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
             url = session['server_int'] + '/' + session['redirect_name'] + '/services/file/document/' + str(validated_type_ref) + '/' + str(ref)
@@ -10158,7 +10165,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
     elif validated_type == 'EP':
         filepath = Constants.cst_epidemio
         generated_name = filename
-    elif validated_type == 'FP':
+    elif validated_type in ('FP', 'FPH'):
         filepath = Constants.cst_form_pat
         generated_name = filename
     elif validated_type == 'IN':
@@ -10205,6 +10212,17 @@ def upload_file(type_ref='', id_ref=0):
     if resp:
         return resp
     headers = be_auth_headers()
+
+    allowed_types_ref = {
+        'GEN', 'MEET', 'PROC', 'MSG', 'CTRL', 'REC', 'FORM', 'MANU', 'LABO', 'TPL',
+        'EQBD', 'EQBI', 'EQPH', 'EQCC', 'EQMC', 'EQPM',
+        'USCV', 'USDI', 'USTR', 'USEV', 'SIGN',
+        'DHIS2', 'EPIDEMIO', 'INDICATOR', 'AUDIT', 'ACTU', 'BILU', 'DHU', 'STAFF'
+    }
+
+    validated_type_ref = str(type_ref or '')
+    if validated_type_ref not in allowed_types_ref:
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
     if request.method == 'POST':
         try:
@@ -10310,6 +10328,12 @@ def upload_photo(type_ref='', id_ref=0):
     if resp:
         return resp
     headers = be_auth_headers()
+
+    allowed_types_ref = {'EQPH'}
+
+    validated_type_ref = str(type_ref or '')
+    if validated_type_ref not in allowed_types_ref:
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
     if request.method == 'POST':
         try:
@@ -10524,7 +10548,7 @@ def upload_form(type_form):
         file_start_with = 'form_patient_hist_'
         filepath = Constants.cst_form_pat
     else:
-        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
     safe_name = secure_filename(filename)
     if not safe_name:
@@ -10726,7 +10750,7 @@ def upload_connect(type=''):
     elif type == 'mapping':
         filepath = Constants.cst_connect_mapping
     else:
-        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
     filepath = os.path.abspath(filepath)
 
