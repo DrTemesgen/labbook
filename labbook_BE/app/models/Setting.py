@@ -1369,6 +1369,7 @@ class Setting:
             # Connexion
             timeout = 15
             context = ssl.create_default_context()
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
             if use_ssl:
                 server = smtplib.SMTP_SSL(host=host, port=port, timeout=timeout, context=context)
             else:
@@ -2125,6 +2126,7 @@ class Setting:
 
             timeout = 20
             context = ssl.create_default_context()
+            context.minimum_version = ssl.TLSVersion.TLSv1_2
             if use_ssl:
                 server = smtplib.SMTP_SSL(host=host, port=port, timeout=timeout, context=context)
             else:

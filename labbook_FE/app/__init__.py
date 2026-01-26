@@ -623,6 +623,28 @@ app.jinja_env.globals.update(has_permission=has_permission)
 app.jinja_env.globals.update(has_permission_by_ser=has_permission_by_ser)
 
 
+def safe_build_download_path(base_dir: str, user_name: str) -> str | None:
+    """
+    Build a safe absolute path for downloads and prevent path traversal.
+    Returns absolute path or None if invalid.
+    """
+    try:
+        base_dir_abs = os.path.abspath(base_dir or '')
+        safe_name = secure_filename(user_name or '')
+        if not base_dir_abs or not safe_name:
+            return None
+
+        target_path = os.path.abspath(os.path.join(base_dir_abs, safe_name))
+
+        # Ensure the target path stays inside the allowed directory
+        if not target_path.startswith(base_dir_abs + os.sep):
+            return None
+
+        return target_path
+    except Exception:
+        return None
+
+
 # ######################################
 # Routes Flask pages
 # ######################################
@@ -10014,16 +10036,18 @@ def download_file(type='', filename='', type_ref='', ref=''):
 
         except requests.exceptions.RequestException as err:
             log.error(Logs.fileline() + ' : requests file photo failed, err=%s , url=%s', err, url)
-    elif type == 'RP':
+    elif type in ('RP', 'RLT'):
         filepath = Constants.cst_report
-        generated_name = filename
+        generated_name = filename  # UUID
+        filename = f"cr_{ref}.pdf"
 
-        filename = 'cr_' + ref + '.pdf'
-
-        path = os.path.join(filepath, generated_name)
+        path = safe_build_download_path(filepath, generated_name)
+        if not path:
+            log.error(Logs.fileline() + ' : ERROR download-file invalid path, filepath=%s, name=%s',
+                      filepath, generated_name)
+            return redirect(session['server_ext'] + '/' + session['current_page'])
 
         if os.path.exists(path) and os.stat(path).st_size > 0:
-            # increase number of download
             try:
                 url = session['server_int'] + '/' + session['redirect_name'] + '/services/file/report/nb_download/' + generated_name
                 req = requests.post(url, timeout=10, json={}, headers=headers)
@@ -10037,37 +10061,17 @@ def download_file(type='', filename='', type_ref='', ref=''):
 
             except requests.exceptions.RequestException as err:
                 log.error(Logs.fileline() + ' : requests file increase nb download failed, err=%s , url=%s', err, url)
-    elif type == 'RLT':
-        filepath = Constants.cst_report
-        generated_name = filename  # UUID
-        filename = f"cr_{ref}.pdf"
-
-        path = os.path.join(filepath, generated_name)
-
-        if os.path.exists(path) and os.stat(path).st_size > 0:
-            try:
-                url = session['server_int'] + '/' + session['redirect_name'] + '/services/file/report/nb_download/' + generated_name
-                req = requests.post(url, timeout=10, json={}, headers=headers)
-
-                redir = be_check_or_bounce(req)
-                if redir:
-                    return redir
-
-                if req.status_code != 200:
-                    return False
-
-            except requests.exceptions.RequestException as err:
-                log.error(Logs.fileline() + f' : requests file increase nb download failed, err={err} , url={url}')
-        else:
-            log.error(Logs.fileline() + f' : ERROR RLT file not found or empty → {path}')
-            return redirect(session['server_ext'] + '/' + session['current_page'])
     elif type == 'RPC':
         filepath = Constants.cst_report
         generated_name = filename
 
         copy_name = 'copy_cr_' + ref + '.pdf'
 
-        path = os.path.join(filepath, generated_name)
+        path = safe_build_download_path(filepath, generated_name)
+        if not path:
+            log.error(Logs.fileline() + ' : ERROR download-file invalid path, filepath=%s, name=%s',
+                      filepath, generated_name)
+            return redirect(session['server_ext'] + '/' + session['current_page'])
 
         if os.path.exists(path) and os.stat(path).st_size > 0:
             # increase number of download
@@ -10134,7 +10138,11 @@ def download_file(type='', filename='', type_ref='', ref=''):
     else:
         return False
 
-    path = os.path.join(filepath, generated_name)
+    path = safe_build_download_path(filepath, generated_name)
+    if not path:
+        log.error(Logs.fileline() + ' : ERROR download-file invalid path, filepath=%s, name=%s',
+                  filepath, generated_name)
+        return redirect(session['server_ext'] + '/' + session['current_page'])
 
     # check if file exist and size > 0
     if not os.path.exists(path) or os.stat(path).st_size == 0:
@@ -10394,322 +10402,364 @@ def upload_logo():
 @app.route('/upload-dhis2', methods=['POST'])
 def upload_dhis2():
     log.info(Logs.fileline())
-    if request.method == 'POST':
-        try:
-            f = request.files['file']
+    if request.method != 'POST':
+        return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
 
-            filename = f.filename
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-dhis2 failed to get file from request, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    try:
+        f = request.files['file']
 
-        filepath = Constants.cst_dhis2
+        filename = f.filename
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-dhis2 failed to get file from request, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        log.info(Logs.fileline())
+    filepath = os.path.abspath(Constants.cst_dhis2)
 
-        # check if this file is a csv
-        if not filename.endswith('.csv'):
-            return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
+    safe_name = secure_filename(filename)
+    if not safe_name:
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-        try:
-            f.save(os.path.join(filepath, filename))
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-dhis2 failed to save file, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    if not safe_name.lower().endswith('.csv'):
+        return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
 
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    path = os.path.abspath(os.path.join(filepath, safe_name))
+    if not path.startswith(filepath + os.sep):
+        log.error(Logs.fileline() + ' : upload-dhis2 invalid path, filepath=%s, name=%s', filepath, safe_name)
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-    return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
+    try:
+        f.save(path)
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-dhis2 failed to save file, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 # Route : upload a spreadsheet for EPIDEMIO
 @app.route('/upload-epidemio', methods=['POST'])
 def upload_epidemio():
     log.info(Logs.fileline())
-    if request.method == 'POST':
-        try:
-            f = request.files['file']
 
-            filename = f.filename
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-epidemio failed to get file from request, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    if request.method != 'POST':
+        return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
 
-        filepath = Constants.cst_epidemio
+    try:
+        f = request.files['file']
+        filename = f.filename or ''
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-epidemio failed to get file from request, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        log.info(Logs.fileline())
+    # Accept only this exact file name
+    if secure_filename(filename) != 'epidemio.ini':
+        return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
 
-        # check if this file is a csv
-        if filename != 'epidemio.ini':
-            return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
+    filepath = os.path.abspath(Constants.cst_epidemio)
+    path = os.path.join(filepath, 'epidemio.ini')  # fixed name, no user input
 
-        try:
-            f.save(os.path.join(filepath, filename))
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-epidemio failed to save file, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    try:
+        f.save(path)
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-epidemio failed to save file, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-
-    return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 # Route : upload a toml form
 @app.route('/upload-form/<string:type_form>', methods=['POST'])
 def upload_form(type_form):
     log.info(Logs.fileline())
-    if request.method == 'POST':
-        try:
-            f = request.files['file']
 
-            filename = f.filename
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-form failed to get file from request, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    if request.method != 'POST':
+        return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
 
-        if type_form == 'PAT':
-            # patient form
-            file_start_with = 'form_patient_'
-            filepath = Constants.cst_form_pat
-        elif type_form == 'PAT-HIST':
-            # patient history form
-            file_start_with = 'form_patient_hist_'
-            filepath = Constants.cst_form_pat
-        else:
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    try:
+        f = request.files['file']
+        filename = f.filename or ''
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-form failed to get file from request, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        # check if this file is a toml and start with
-        if not (filename.startswith(file_start_with) and filename.endswith('.toml')):
-            return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
+    if type_form == 'PAT':
+        file_start_with = 'form_patient_'
+        filepath = Constants.cst_form_pat
+    elif type_form == 'PAT-HIST':
+        file_start_with = 'form_patient_hist_'
+        filepath = Constants.cst_form_pat
+    else:
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        log.info(Logs.fileline() + ' upload-form Before save file')
+    safe_name = secure_filename(filename)
+    if not safe_name:
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-        try:
-            f.save(os.path.join(filepath, filename))
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-form failed to save file, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    if not (safe_name.startswith(file_start_with) and safe_name.lower().endswith('.toml')):
+        return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
 
-        log.info(Logs.fileline() + ' upload-form After save file')
+    filepath = os.path.abspath(filepath)
+    path = os.path.abspath(os.path.join(filepath, safe_name))
+    if not path.startswith(filepath + os.sep):
+        log.error(Logs.fileline() + ' : upload-form invalid path, filepath=%s, name=%s', filepath, safe_name)
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    log.info(Logs.fileline() + ' upload-form Before save file')
 
-    return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
+    try:
+        f.save(path)
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-form failed to save file, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+
+    log.info(Logs.fileline() + ' upload-form After save file')
+
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 # Route : upload a spreadsheet for INDICATOR
 @app.route('/upload-indicator', methods=['POST'])
 def upload_indicator():
     log.info(Logs.fileline())
-    if request.method == 'POST':
-        try:
-            f = request.files['file']
 
-            filename = f.filename
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-indicator failed to get file from request, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    if request.method != 'POST':
+        return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
 
-        filepath = Constants.cst_indicator
+    try:
+        f = request.files['file']
+        filename = f.filename or ''
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-indicator failed to get file from request, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        log.info(Logs.fileline())
+    # accept only the expected filename
+    if secure_filename(filename) != 'indicator.ini':
+        return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
 
-        # check if this file is a csv
-        if filename != 'indicator.ini':
-            return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
+    filepath = os.path.abspath(Constants.cst_indicator)
+    path = os.path.join(filepath, 'indicator.ini')  # fixed name, no user input
 
-        try:
-            f.save(os.path.join(filepath, filename))
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-indicator failed to save file, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    try:
+        f.save(path)
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-indicator failed to save file, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-
-    return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 # Route : upload a template for document
 @app.route('/upload-tpl', methods=['POST'])
 def upload_tpl():
     log.info(Logs.fileline())
-    if request.method == 'POST':
-        try:
-            f = request.files['file']
 
-            filename = f.filename
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-tpl failed to get file from request, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    if request.method != 'POST':
+        return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
 
-        filepath = Constants.cst_template
+    try:
+        f = request.files['file']
+        filename = f.filename or ''
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-tpl failed to get file from request, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        # check if this file is a odt
-        if not filename.endswith('.odt') and not filename.endswith('.toml'):
-            return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
+    filepath = os.path.abspath(Constants.cst_template)
 
-        log.info(Logs.fileline() + ' upload-tpl Before save file')
+    safe_name = secure_filename(filename)
+    if not safe_name:
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-        try:
-            f.save(os.path.join(filepath, filename))
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-tpl failed to save file, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    # check extension after sanitizing
+    if not (safe_name.lower().endswith('.odt') or safe_name.lower().endswith('.toml')):
+        return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
 
-        log.info(Logs.fileline() + ' upload-tpl After save file')
+    path = os.path.abspath(os.path.join(filepath, safe_name))
+    if not path.startswith(filepath + os.sep):
+        log.error(Logs.fileline() + ' : upload-tpl invalid path, filepath=%s, name=%s', filepath, safe_name)
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    log.info(Logs.fileline() + ' upload-tpl Before save file')
 
-    return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
+    try:
+        f.save(path)
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-tpl failed to save file, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+
+    log.info(Logs.fileline() + ' upload-tpl After save file')
+
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 # Route : upload temp file for import
 @app.route('/upload-import', methods=['POST'])
 def upload_import():
     log.info(Logs.fileline())
-    if request.method == 'POST':
-        try:
-            f = request.files['file']
 
-            filename = f.filename
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-import failed to get file from request, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    if request.method != 'POST':
+        return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
 
-        filepath = Constants.cst_path_tmp
+    try:
+        f = request.files['file']
+        filename = f.filename or ''
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-import failed to get file from request, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        log.info(Logs.fileline())
+    filepath = os.path.abspath(Constants.cst_path_tmp)
 
-        # check if this file is a csv
-        if not filename.endswith('.csv'):
-            return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
+    safe_name = secure_filename(filename)
+    if not safe_name:
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-        try:
-            f.save(os.path.join(filepath, filename))
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-import failed to save file, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    if not safe_name.lower().endswith('.csv'):
+        return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
 
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    path = os.path.abspath(os.path.join(filepath, safe_name))
+    if not path.startswith(filepath + os.sep):
+        log.error(Logs.fileline() + ' : upload-import invalid path, filepath=%s, name=%s', filepath, safe_name)
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-    return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
+    try:
+        f.save(path)
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-import failed to save file, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 # Route : upload temp file for zipcity
 @app.route('/upload-zipcity', methods=['POST'])
 def upload_zipcity():
     log.info(Logs.fileline())
-    if request.method == 'POST':
-        try:
-            f = request.files['file']
 
-            filename = f.filename
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-zipcity failed to get file from request, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    if request.method != 'POST':
+        return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
 
-        filepath = Constants.cst_path_tmp
+    try:
+        f = request.files['file']
+        filename = f.filename or ''
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-zipcity failed to get file from request, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        log.info(Logs.fileline())
+    filepath = os.path.abspath(Constants.cst_path_tmp)
 
-        # check if this file is a csv
-        if not filename.endswith('.csv'):
-            return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
+    safe_name = secure_filename(filename)
+    if not safe_name:
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-        try:
-            f.save(os.path.join(filepath, filename))
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-zipcity failed to save file, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    if not safe_name.lower().endswith('.csv'):
+        return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
 
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    path = os.path.abspath(os.path.join(filepath, safe_name))
+    if not path.startswith(filepath + os.sep):
+        log.error(Logs.fileline() + ' : upload-zipcity invalid path, filepath=%s, name=%s', filepath, safe_name)
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-    return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
+    try:
+        f.save(path)
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-zipcity failed to save file, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 # Route : upload a file for Connect
 @app.route('/upload-connect/<string:type>', methods=['POST'])
 def upload_connect(type=''):
     log.info(Logs.fileline() + ' upload-connect type = %s', type)
-    if request.method == 'POST':
-        try:
-            f = request.files['file']
 
-            filename = f.filename
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-connect failed to get file from request, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    if request.method != 'POST':
+        return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
 
-        if type == 'plugin':
-            filepath = Constants.cst_connect_plugin
-            # check if this file is a odt
-            if not filename.endswith('.jar'):
-                return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
-        elif type == 'setting':
-            filepath = Constants.cst_connect_setting
-        elif type == 'mapping':
-            filepath = Constants.cst_connect_mapping
-        else:
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    try:
+        f = request.files['file']
+        filename = f.filename or ''
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-connect failed to get file from request, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        log.info(Logs.fileline() + ' upload-connect Before save file')
+    if type == 'plugin':
+        filepath = Constants.cst_connect_plugin
+        if not filename.lower().endswith('.jar'):
+            return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
+    elif type == 'setting':
+        filepath = Constants.cst_connect_setting
+    elif type == 'mapping':
+        filepath = Constants.cst_connect_mapping
+    else:
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        try:
-            f.save(os.path.join(filepath, filename))
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-connect failed to save file, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    filepath = os.path.abspath(filepath)
 
-        log.info(Logs.fileline() + ' upload-connect After save file')
+    safe_name = secure_filename(filename)
+    if not safe_name:
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
+    path = os.path.abspath(os.path.join(filepath, safe_name))
+    if not path.startswith(filepath + os.sep):
+        log.error(Logs.fileline() + ' : upload-connect invalid path, filepath=%s, name=%s', filepath, safe_name)
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-    return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
+    log.info(Logs.fileline() + ' upload-connect Before save file')
+
+    try:
+        f.save(path)
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-connect failed to save file, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+
+    log.info(Logs.fileline() + ' upload-connect After save file')
+
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 # Route : upload file for printer
 @app.route('/upload-printer', methods=['POST'])
 def upload_printer():
     log.info(Logs.fileline())
-    if request.method == 'POST':
-        try:
-            f = request.files['file']
+    if request.method != 'POST':
+        return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}    
 
-            filename = f.filename or ''
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-printer failed to get file from request, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+    try:
+        f = request.files['file']
 
-        base_dir = Constants.cst_printer
-        log.info(Logs.fileline())
+        filename = f.filename or ''
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-printer failed to get file from request, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        # Sanitize filename
-        safe_name = secure_filename(filename)
-        if not safe_name:
-            log.error(Logs.fileline() + ' : upload-printer invalid filename (empty after sanitize)')
+    base_dir = Constants.cst_printer
+    log.info(Logs.fileline())
+
+    # Sanitize filename
+    safe_name = secure_filename(filename)
+    if not safe_name:
+        log.error(Logs.fileline() + ' : upload-printer invalid filename (empty after sanitize)')
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+    # Only allow .sh scripts
+    if not safe_name.lower().endswith('.sh'):
+        return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
+
+    try:
+        base_dir_abs = os.path.abspath(base_dir)
+        target_path = os.path.abspath(os.path.join(base_dir_abs, safe_name))
+
+        # Prevent path traversal
+        if not target_path.startswith(base_dir_abs + os.sep):
+            log.error(Logs.fileline() + ' : upload-printer path traversal attempt: %s', target_path)
             return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
-        # Only allow .sh scripts
-        if not safe_name.endswith('.sh'):
-            return json.dumps({'success': False}), 415, {'ContentType': 'application/json'}
+        f.save(target_path)
+    except Exception as err:
+        log.error(Logs.fileline() + ' : upload-printer failed to save file, err=%s', err)
+        return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
-        try:
-            base_dir_abs = os.path.abspath(base_dir)
-            target_path = os.path.abspath(os.path.join(base_dir_abs, safe_name))
-
-            # Prevent path traversal
-            if not target_path.startswith(base_dir_abs + os.sep):
-                log.error(Logs.fileline() + ' : upload-printer path traversal attempt: %s', target_path)
-                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
-
-            f.save(target_path)
-        except Exception as err:
-            log.error(Logs.fileline() + ' : upload-printer failed to save file, err=%s', err)
-            return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
-
-        return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
-
-    return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
+    return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
 
 # Route : delete a file

@@ -120,6 +120,16 @@ class Patient:
                            'set id_patient=%s '
                            'where id_patient=%s', (id_pat1, id_pat2,))
 
+            # Move dynamic patient form items
+            cursor.execute('update patient_form_item '
+                           'set pfi_pat=%s '
+                           'where pfi_pat=%s', (id_pat1, id_pat2,))
+
+            # Move patient history form items
+            cursor.execute('update patient_hist_form_item '
+                           'set phfi_pat=%s '
+                           'where phfi_pat=%s', (id_pat1, id_pat2,))
+
             # DELETE PATIENT 2
             cursor.execute('delete from sigl_03_data '
                            'where id_data=%s', (id_pat2,))
