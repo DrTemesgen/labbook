@@ -1192,12 +1192,9 @@ class ScriptRestore(Resource):
 class ScriptStatus(Resource):
     log = logging.getLogger('log_services')
 
-    @require_oauth()
     def get(self, mode):
         audit_user = request.oauth_user
         date_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        self.log.debug(Logs.fileline() + f" DEBUG ScriptStatus mode={mode} oauth_user={audit_user}")
 
         try:
             if mode == 'R':

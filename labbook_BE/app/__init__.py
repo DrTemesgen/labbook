@@ -415,7 +415,7 @@ api.add_resource(ScriptListmedia,       '/services/setting/script/listmedia/<str
 api.add_resource(ScriptProgbackup,      '/services/setting/script/progbackup')
 api.add_resource(ScriptRestart,         '/services/setting/script/restart')
 api.add_resource(ScriptRestore,         '/services/setting/script/restore')
-api.add_resource(ScriptStatus,          '/services/setting/script/status/<string:mode>')
+api.add_resource(ScriptStatus,          '/services/setting/script/status/<string:mode>')  # no oauth required, beacause of restore
 api.add_resource(StaffExport,           '/services/quality/staff/export')
 api.add_resource(StockCancelIO,         '/services/quality/stock/cancel/io')
 api.add_resource(StockLocalList,        '/services/quality/stock/local/list')

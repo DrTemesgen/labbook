@@ -85,8 +85,6 @@ def query_client(client_id):
     # Prefer environment-provided secret (shared with FE) over DB value
     env_secret = (os.environ.get('LABBOOK_OAUTH_FE_SECRET') or '').strip()
 
-    log.info(Logs.fileline() + " DEBUG OAUTH client_id=%s secret=%s", row['oacl_client_id'], env_secret or row.get('oacl_client_secret'))    
-
     class Client:
         # Static attributes read by Authlib
         client_id = row['oacl_client_id']
@@ -398,7 +396,6 @@ class MyBearerTokenValidator(BearerTokenValidator):
         Returns a lightweight wrapper or None when invalid.
         Also populates request.oauth_user from BE session for audit trail.
         """
-        log.info(Logs.fileline() + f" DEBUG OAUTH DBG token='{token_string}'")        
         cur = DB.cursor()
         cur.execute("""
             SELECT * FROM oauth2_token
@@ -406,16 +403,10 @@ class MyBearerTokenValidator(BearerTokenValidator):
             LIMIT 1
         """, (token_string,))
         tok = cur.fetchone()
-        log.info(Logs.fileline() + f" DEBUG OAUTH DBG db_hit={bool(tok)} token='{token_string}'")        
         if not tok:
             return None
 
         now = int(time.time())
-
-        log.info(Logs.fileline() + " DEBUG OAUTH now=%s issued=%s ttl=%s token=%s",
-              now, tok.get('oato_issued_at') if tok else None,
-              tok.get('oato_expires_in') if tok else None,
-              token_string)
         if now > (tok['oato_issued_at'] + tok['oato_expires_in']):
             return None
 
@@ -525,8 +516,6 @@ def oauth_token():
     Token endpoint. Authlib performs the code → token exchange and PKCE checks.
     Logs a few booleans for diagnostics without leaking secrets.
     """
-    log.info(Logs.fileline() + " DEBUG OAUTH token client_id=%s secret=%s", request.form.get('client_id'), request.form.get('client_secret'))    
-
     # DEBUG logs
     auth_hdr = request.headers.get('Authorization', '')
     has_client_secret = 'client_secret' in request.form
