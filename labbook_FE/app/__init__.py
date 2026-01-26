@@ -8120,7 +8120,7 @@ def list_trace_download(type_trace=''):
         allowed_types = {'PROC': 'PROC'}
         validated_type = allowed_types.get(type_trace)
 
-        if not validated_trace_type:
+        if not validated_type:
             return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
 
         url = session['server_int'] + '/' + session['redirect_name'] + '/services/quality/trace/list/' + validated_type
@@ -10012,7 +10012,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
 
     allowed_types = {'PY': 'PY', 'JF': 'JF', 'PH': 'PH', 'RP': 'RP', 'RLT': 'RLT', 'RPC': 'RPC', 'DH': 'DH', 'DHU': 'DHU',
                      'BILU': 'BILU', 'ACTU': 'ACTU', 'EP': 'EP', 'FP': 'FP', 'IN': 'IN', 'TP': 'TP', 'AA': 'AA'}
-    
+
     validated_type = allowed_types.get(type)
 
     if not validated_type:
