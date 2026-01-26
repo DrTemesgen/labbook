@@ -172,6 +172,7 @@ def be_auth_headers():
     """
     token = session.get('be_access_token')
     if token:
+        log.info(Logs.fileline() + ' DEBUG token = ' + str(token))
         return {'Authorization': f'Bearer {token}'}
     return {}
 
