@@ -2965,7 +2965,13 @@ def det_sending_method(type='', id_item=0):
     if id_item > 0:
         # Load sending method details
         try:
-            url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/sending/method/det/' + str(type) + '/' + str(id_item)
+            allowed_types = {'mail': 'mail', 'ftp': 'ftp', 'sftp': 'sftp', 'http': 'http', 'https': 'https'}
+            validated_type = allowed_types.get(type)
+
+            if not validated_type:
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/sending/method/det/' + validated_type + '/' + str(id_item)
             req = requests.get(url, timeout=10, headers=headers)
 
             redir = be_check_or_bounce(req)
@@ -3009,7 +3015,13 @@ def det_sending_model(type='', id_item=0):
     if id_item > 0:
         # Load sending model details
         try:
-            url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/sending/model/det/' + str(type) + '/' + str(id_item)
+            allowed_types = {'mail': 'mail', 'ftp': 'ftp', 'sftp': 'sftp', 'http': 'http', 'https': 'https'}
+            validated_type = allowed_types.get(type)
+
+            if not validated_type:
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/sending/model/det/' + validated_type + '/' + str(id_item)
             req = requests.get(url, timeout=10, headers=headers)
 
             redir = be_check_or_bounce(req)
@@ -10722,7 +10734,7 @@ def upload_connect(type=''):
 def upload_printer():
     log.info(Logs.fileline())
     if request.method != 'POST':
-        return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}    
+        return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
 
     try:
         f = request.files['file']

@@ -1104,6 +1104,7 @@ class ScriptRestore(Resource):
         audit_user = request.oauth_user
         args = request.get_json() or {}
 
+        # Check mandatory arguments
         if 'media' not in args or 'pwd_key' not in args or 'archive' not in args:
             self.log.error(Logs.fileline() + ' : ScriptRestore ERROR args missing')
             try:
@@ -1113,23 +1114,78 @@ class ScriptRestore(Resource):
                 self.log.error(Logs.fileline() + ' : ScriptRestore ERROR audit args missing err=' + str(err))
             return compose_ret('1', Constants.cst_content_type_json, 400)
 
-        media   = str(args['media'])
-        archive = str(args['archive'])
+        # Extract user inputs
+        media = (str(args.get('media') or '')).strip()
+        archive = (str(args.get('archive') or '')).strip()
+        pwd_key = str(args.get('pwd_key') or '')
 
-        os.environ['LABBOOK_KEY_PWD'] = args['pwd_key']
+        # Validate media value (allowlist)
+        if not re.fullmatch(r"[A-Za-z0-9_.\-]{1,32}", media):
+            self.log.error(Logs.fileline() + ' : ScriptRestore ERROR invalid media')
+            try:
+                details = {"media": media, "result": "ERROR", "reason": "INVALID_MEDIA"}
+                Audit.insertAudit(audit_user, "ScriptRestore", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ScriptRestore ERROR audit invalid media err=' + str(err))
+            return compose_ret('1', Constants.cst_content_type_json, 400)
 
-        cmd = ('sh ' + Constants.cst_path_script + '/' + Constants.cst_script_backup + ' -m "' + media +
-               '" -a "' + archive + '" ' + Constants.cst_io_restore + ' > ' + Constants.cst_io + 'restore.out 2>&1 &')
+        # Validate archive value (allowlist)
+        if not re.fullmatch(r"[A-Za-z0-9 _.\-]{1,128}", archive):
+            self.log.error(Logs.fileline() + ' : ScriptRestore ERROR invalid archive')
+            try:
+                details = {"archive": archive, "result": "ERROR", "reason": "INVALID_ARCHIVE"}
+                Audit.insertAudit(audit_user, "ScriptRestore", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ScriptRestore ERROR audit invalid archive err=' + str(err))
+            return compose_ret('1', Constants.cst_content_type_json, 400)
 
-        self.log.error(Logs.fileline() + ' : ScriptRestore cmd=' + cmd)
-        ret = os.system(cmd)
+        # Validate password key
+        if not pwd_key:
+            self.log.error(Logs.fileline() + ' : ScriptRestore ERROR invalid pwd_key')
+            try:
+                details = {"result": "ERROR", "reason": "INVALID_PWD_KEY"}
+                Audit.insertAudit(audit_user, "ScriptRestore", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ScriptRestore ERROR audit invalid pwd_key err=' + str(err))
+            return compose_ret('1', Constants.cst_content_type_json, 400)
 
+        # Build absolute script path
+        script_path = os.path.join(Constants.cst_path_script, Constants.cst_script_backup).strip()
+        if not os.path.isfile(script_path):
+            self.log.error(Logs.fileline() + ' : ScriptRestore ERROR script not found path=' + script_path)
+            try:
+                details = {"script_path": script_path, "result": "ERROR", "reason": "SCRIPT_NOT_FOUND"}
+                Audit.insertAudit(audit_user, "ScriptRestore", "SETTING", None, "ERROR", details, "E")
+            except Exception as err:
+                self.log.error(Logs.fileline() + ' : ScriptRestore ERROR audit script not found err=' + str(err))
+            return compose_ret('1', Constants.cst_content_type_json, 500)
+
+        # Build argv list (no shell, no string command)
+        argv = ["sh", script_path, "-m", media, "-a", archive, Constants.cst_io_restore]
+
+        # Set global environment variable (same behavior as os.system)
+        os.environ['LABBOOK_KEY_PWD'] = pwd_key
+
+        # Redirect stdout + stderr to restore.out (replacement for > file 2>&1)
+        out_path = os.path.join(Constants.cst_io, "restore.out").strip()
+
+        # Ensure output directory exists to avoid open() failure
+        os.makedirs(os.path.dirname(out_path), exist_ok=True)
+
+        # Execute script asynchronously (replacement for trailing &)
+        with open(out_path, "w", encoding="utf-8", errors="ignore") as f:
+            subprocess.Popen(argv, shell=False, stdout=f, stderr=subprocess.STDOUT, start_new_session=True)
+
+        ret = 0
+
+        # Audit success
         self.log.info(Logs.fileline() + ' : TRACE ScriptRestore ret=' + str(ret))
         try:
-            details = {"media": media, "archive": archive, "cmd": cmd, "ret": ret, "result": "CALLED"}
+            details = {"media": media, "archive": archive, "argv": argv, "out": out_path, "ret": ret, "result": "CALLED"}
             Audit.insertAudit(audit_user, "ScriptRestore", "SETTING", None, "SUCCESS", details, "E")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : ScriptRestore ERROR audit err=' + str(err))
+
         return compose_ret(ret, Constants.cst_content_type_json)
 
 
