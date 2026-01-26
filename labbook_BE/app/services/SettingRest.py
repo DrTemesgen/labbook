@@ -1193,7 +1193,6 @@ class ScriptStatus(Resource):
     log = logging.getLogger('log_services')
 
     def get(self, mode):
-        audit_user = request.oauth_user
         date_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
         try:
@@ -1225,11 +1224,6 @@ class ScriptStatus(Resource):
             if not last_line:
                 self.log.info(Logs.fileline() + ' : ERROR ScriptStatus impossible to open or read file, last line is empty')
                 ret = "WAIT;" + str(date_now) + ";Impossible to open or read file, last line is empty"
-                try:
-                    details = {"result": "SUCCESS", "action": "QUERY"}
-                    Audit.insertAudit(audit_user, "ScriptStatus", "SETTING", None, "SUCCESS", details, "R")
-                except Exception as err:
-                    self.log.error(Logs.fileline() + ' : ScriptStatus ERROR audit success err=' + str(err))
                 return compose_ret(ret, Constants.cst_content_type_json, 200)
 
             ret = last_line[:-1]
@@ -1257,11 +1251,6 @@ class ScriptStatus(Resource):
                     return compose_ret(ret, Constants.cst_content_type_json, 200)
 
                 self.log.info(Logs.fileline() + ' : TRACE ScriptStatus l_media=' + str(l_media))
-                try:
-                    details = {"result": "SUCCESS", "action": "QUERY"}
-                    Audit.insertAudit(audit_user, "ScriptStatus", "SETTING", None, "SUCCESS", details, "R")
-                except Exception as err:
-                    self.log.error(Logs.fileline() + ' : ScriptStatus ERROR audit success err=' + str(err))
                 return compose_ret(l_media, Constants.cst_content_type_json)
 
             elif mode == 'A' and ret.startswith('OK'):
@@ -1283,11 +1272,6 @@ class ScriptStatus(Resource):
                 except Exception:
                     self.log.info(Logs.fileline() + ' : ERROR ScriptStatus impossible to open listarchive file')
                     ret = "WAIT;" + str(date_now) + ";Impossible to read listarchive file"
-                    try:
-                        details = {"result": "SUCCESS", "action": "QUERY"}
-                        Audit.insertAudit(audit_user, "ScriptStatus", "SETTING", None, "SUCCESS", details, "R")
-                    except Exception as err:
-                        self.log.error(Logs.fileline() + ' : ScriptStatus ERROR audit success err=' + str(err))
                     return compose_ret(l_archive, Constants.cst_content_type_json, 200)
 
                 self.log.info(Logs.fileline() + ' : TRACE ScriptStatus l_archive=' + str(l_archive))
@@ -1300,11 +1284,6 @@ class ScriptStatus(Resource):
             return compose_ret(ret, Constants.cst_content_type_json, 200)  # 200 : dont want to stop poll in ihm
 
         self.log.info(Logs.fileline() + ' : TRACE ScriptStatus ret=' + str(ret))
-        try:
-            details = {"result": "SUCCESS", "action": "QUERY"}
-            Audit.insertAudit(audit_user, "ScriptStatus", "SETTING", None, "SUCCESS", details, "R")
-        except Exception as err:
-            self.log.error(Logs.fileline() + ' : ScriptStatus ERROR audit success err=' + str(err))
         return compose_ret(ret, Constants.cst_content_type_json)
 
 
