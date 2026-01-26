@@ -2965,7 +2965,7 @@ def det_sending_method(type='', id_item=0):
     if id_item > 0:
         # Load sending method details
         try:
-            allowed_types = {'mail': 'mail', 'ftp': 'ftp', 'sftp': 'sftp', 'http': 'http', 'https': 'https'}
+            allowed_types = {'S': 'S', 'M': 'M', 'W': 'W'}
             validated_type = allowed_types.get(type)
 
             if not validated_type:
@@ -3015,7 +3015,7 @@ def det_sending_model(type='', id_item=0):
     if id_item > 0:
         # Load sending model details
         try:
-            allowed_types = {'mail': 'mail', 'ftp': 'ftp', 'sftp': 'sftp', 'http': 'http', 'https': 'https'}
+            allowed_types = {'S': 'S', 'M': 'M', 'W': 'W'}
             validated_type = allowed_types.get(type)
 
             if not validated_type:
@@ -8117,7 +8117,13 @@ def list_trace_download(type_trace=''):
         log.error(Logs.fileline() + ' : requests user ident list failed, err=%s , url=%s', err, url)
 
     try:
-        url = session['server_int'] + '/' + session['redirect_name'] + '/services/quality/trace/list/' + str(type_trace)
+        allowed_types = {'PROC': 'PROC'}
+        validated_type = allowed_types.get(type_trace)
+
+        if not validated_trace_type:
+            return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/quality/trace/list/' + validated_type
         req = requests.get(url, timeout=10, headers=headers)
 
         redir = be_check_or_bounce(req)
@@ -9993,6 +9999,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
     # PH => Photo
     # RP => Report
     # RLT => Report from LabBook Lite
+    # RPC => Report Copy
     # DH => DHIS2 spreadsheet
     # DHU => DHIS2 from job
     # BILU => Billing report from job
@@ -10003,13 +10010,25 @@ def download_file(type='', filename='', type_ref='', ref=''):
     # TP => template odt
     # AA => audit archive
 
-    if type == 'PY':
+    allowed_types = {'PY': 'PY', 'JF': 'JF', 'PH': 'PH', 'RP': 'RP', 'RLT': 'RLT', 'RPC': 'RPC', 'DH': 'DH', 'DHU': 'DHU',
+                     'BILU': 'BILU', 'ACTU': 'ACTU', 'EP': 'EP', 'FP': 'FP', 'IN': 'IN', 'TP': 'TP', 'AA': 'AA'}
+    
+    validated_type = allowed_types.get(type)
+
+    if not validated_type:
+        return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+    if validated_type == 'PY':
         filepath = Constants.cst_path_tmp
         generated_name = filename
-    elif type == 'JF':
+    elif validated_type == 'JF':
         # ref = id_file
         try:
-            url = session.get('server_int') + '/' + session.get('redirect_name') + '/services/file/document/' + str(type_ref) + '/' + str(ref)
+            validated_type_ref = str(type_ref or '')
+            if not re.fullmatch(r'[A-Z0-9_]{1,16}', validated_type_ref):
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            url = session.get('server_int') + '/' + session.get('redirect_name') + '/services/file/document/' + str(validated_type_ref) + '/' + str(ref)
             req = requests.get(url, timeout=10, headers=headers)
 
             redir = be_check_or_bounce(req)
@@ -10027,10 +10046,14 @@ def download_file(type='', filename='', type_ref='', ref=''):
 
         except requests.exceptions.RequestException as err:
             log.error(Logs.fileline() + ' : requests file document failed, err=%s , url=%s', err, url)
-    elif type == 'PH':
+    elif validated_type == 'PH':
         # ref = id_file
         try:
-            url = session['server_int'] + '/' + session['redirect_name'] + '/services/file/document/' + str(type_ref) + '/' + str(ref)
+            validated_type_ref = str(type_ref or '')
+            if not re.fullmatch(r'[A-Z0-9_]{1,16}', validated_type_ref):
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            url = session['server_int'] + '/' + session['redirect_name'] + '/services/file/document/' + str(validated_type_ref) + '/' + str(ref)
             req = requests.get(url, timeout=10, headers=headers)
 
             redir = be_check_or_bounce(req)
@@ -10048,7 +10071,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
 
         except requests.exceptions.RequestException as err:
             log.error(Logs.fileline() + ' : requests file photo failed, err=%s , url=%s', err, url)
-    elif type in ('RP', 'RLT'):
+    elif validated_type in ('RP', 'RLT'):
         filepath = Constants.cst_report
         generated_name = filename  # UUID
         filename = f"cr_{ref}.pdf"
@@ -10073,7 +10096,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
 
             except requests.exceptions.RequestException as err:
                 log.error(Logs.fileline() + ' : requests file increase nb download failed, err=%s , url=%s', err, url)
-    elif type == 'RPC':
+    elif validated_type == 'RPC':
         filepath = Constants.cst_report
         generated_name = filename
 
@@ -10120,31 +10143,31 @@ def download_file(type='', filename='', type_ref='', ref=''):
             except requests.exceptions.RequestException as err:
                 log.error(Logs.fileline() + ' : requests copy file failed, err=%s , url=%s', err, url)
 
-    elif type == 'DH':
+    elif validated_type == 'DH':
         filepath = Constants.cst_dhis2
         generated_name = filename
-    elif type == 'DHU':
+    elif validated_type == 'DHU':
         filepath = Constants.cst_dhis2_upload
         generated_name = ref or filename  # ref = hash name
-    elif type == 'BILU':
+    elif validated_type == 'BILU':
         filepath = Constants.cst_billing_upload
         generated_name = ref or filename
-    elif type == 'ACTU':
+    elif validated_type == 'ACTU':
         filepath = Constants.cst_activity_upload
         generated_name = ref or filename
-    elif type == 'EP':
+    elif validated_type == 'EP':
         filepath = Constants.cst_epidemio
         generated_name = filename
-    elif type == 'FP':
+    elif validated_type == 'FP':
         filepath = Constants.cst_form_pat
         generated_name = filename
-    elif type == 'IN':
+    elif validated_type == 'IN':
         filepath = Constants.cst_indicator
         generated_name = filename
-    elif type == 'TP':
+    elif validated_type == 'TP':
         filepath = Constants.cst_template
         generated_name = filename
-    elif type == 'AA':
+    elif validated_type == 'AA':
         filepath = Constants.cst_audit
         generated_name = filename
     else:
