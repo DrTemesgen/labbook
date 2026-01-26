@@ -10360,7 +10360,19 @@ def upload_file(type_ref='', id_ref=0):
                        'id_storage': storage['id_data'],
                        'end_path': end_path}
 
-            url = session['server_int'] + '/' + session['redirect_name'] + '/services/file/document/' + str(type_ref) + '/' + str(id_ref)
+            redirect_name = str(session.get('redirect_name') or '')
+            if not re.fullmatch(r'[A-Za-z0-9_-]+', redirect_name):
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            validated_type_ref = str(type_ref or '')
+            if validated_type_ref not in allowed_types_ref:
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            url = (
+                str(session.get('server_int') or '') + '/' + redirect_name +
+                '/services/file/document/' + quote(validated_type_ref, safe='') +
+                '/' + str(int(id_ref))
+            )
             req = requests.post(url, timeout=10, json=payload, headers=headers)
 
             redir = be_check_or_bounce(req)
@@ -10452,7 +10464,7 @@ def upload_photo(type_ref='', id_ref=0):
 
         try:
             # Get info on file
-            file_ext  = pathlib.Path(original_name).suffix
+            file_ext = pathlib.Path(original_name).suffix
             file_size = pathlib.Path(os.path.join(filepath + end_path, generated_name)).stat().st_size
             mime_type = f.mimetype
 
@@ -10471,7 +10483,19 @@ def upload_photo(type_ref='', id_ref=0):
                        'id_storage': storage['id_data'],
                        'end_path': end_path}
 
-            url = session['server_int'] + '/' + session['redirect_name'] + '/services/file/document/' + str(type_ref) + '/' + str(id_ref)
+            redirect_name = str(session.get('redirect_name') or '')
+            if not re.fullmatch(r'[A-Za-z0-9_-]+', redirect_name):
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            validated_type_ref = str(type_ref or '')
+            if validated_type_ref not in allowed_types_ref:
+                return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+            url = (
+                str(session.get('server_int') or '') + '/' + redirect_name +
+                '/services/file/document/' + quote(validated_type_ref, safe='') +
+                '/' + str(int(id_ref))
+            )
             req = requests.post(url, timeout=10, json=payload, headers=headers)
 
             redir = be_check_or_bounce(req)
@@ -10485,6 +10509,7 @@ def upload_photo(type_ref='', id_ref=0):
         except Exception as err:
             log.error(Logs.fileline() + ' : upload-photo failed information file, err=%s', err)
             return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
+        
 
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
