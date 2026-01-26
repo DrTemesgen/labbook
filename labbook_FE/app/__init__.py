@@ -10117,8 +10117,20 @@ def download_file(type='', filename='', type_ref='', ref=''):
             return redirect(session['server_ext'] + '/' + session['current_page'])
 
         if os.path.exists(path) and os.stat(path).st_size > 0:
+            url = ''
             try:
-                url = session['server_int'] + '/' + session['redirect_name'] + '/services/file/report/nb_download/' + generated_name
+                redirect_name = str(session.get('redirect_name') or '')
+                if not re.fullmatch(r'[A-Za-z0-9_-]+', redirect_name):
+                    return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+                validated_generated_name = str(generated_name or '')
+                if not re.fullmatch(r'[A-Fa-f0-9-]{36}', validated_generated_name):
+                    return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+                url = (
+                    str(session.get('server_int') or '') + '/' + redirect_name +
+                    '/services/file/report/nb_download/' + quote(validated_generated_name, safe='')
+                )
                 req = requests.post(url, timeout=10, json={}, headers=headers)
 
                 redir = be_check_or_bounce(req)
@@ -10133,7 +10145,6 @@ def download_file(type='', filename='', type_ref='', ref=''):
     elif validated_type == 'RPC':
         filepath = Constants.cst_report
         generated_name = filename
-
         copy_name = 'copy_cr_' + ref + '.pdf'
 
         path = safe_build_download_path(filepath, generated_name)
@@ -10143,9 +10154,26 @@ def download_file(type='', filename='', type_ref='', ref=''):
             return redirect(session['server_ext'] + '/' + session['current_page'])
 
         if os.path.exists(path) and os.stat(path).st_size > 0:
-            # increase number of download
+            url = ''
             try:
-                url = session['server_int'] + '/' + session['redirect_name'] + '/services/file/report/nb_download/' + generated_name
+                redirect_name = str(session.get('redirect_name') or '')
+                if not re.fullmatch(r'[A-Za-z0-9_-]+', redirect_name):
+                    return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+                validated_generated_name = str(generated_name or '')
+                if not re.fullmatch(r'[A-Fa-f0-9-]{36}', validated_generated_name):
+                    return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+                validated_copy_name = str(copy_name or '')
+                if not re.fullmatch(r'copy_cr_[A-Za-z0-9_-]+\.pdf', validated_copy_name):
+                    return json.dumps({'success': False}), 400, {'ContentType': 'application/json'}
+
+                # increase number of download
+                url = (
+                    str(session.get('server_int') or '') + '/' + redirect_name +
+                    '/services/file/report/nb_download/' +
+                    quote(validated_generated_name, safe='')
+                )
                 req = requests.post(url, timeout=10, json={}, headers=headers)
 
                 redir = be_check_or_bounce(req)
@@ -10156,11 +10184,17 @@ def download_file(type='', filename='', type_ref='', ref=''):
                     return False
 
             except requests.exceptions.RequestException as err:
-                log.error(Logs.fileline() + ' : requests file increase nb download failed, err=%s , url=%s', err, url)
+                log.error(Logs.fileline() + ' : requests file increase nb download failed, err=%s , url=%s',
+                          err, url)
 
             # Generate copy with watermark
+            url = ''
             try:
-                url = session['server_int'] + '/' + session['redirect_name'] + '/services/file/report/' + generated_name + '/copy/' + copy_name
+                url = (
+                    str(session.get('server_int') or '') + '/' + redirect_name +
+                    '/services/file/report/' + quote(validated_generated_name, safe='') +
+                    '/copy/' + quote(validated_copy_name, safe='')
+                )
                 req = requests.post(url, json={}, headers=headers)
 
                 redir = be_check_or_bounce(req)
@@ -10171,12 +10205,12 @@ def download_file(type='', filename='', type_ref='', ref=''):
                     return False
                 else:
                     filepath = Constants.cst_path_tmp
-                    generated_name = copy_name
-                    filename = copy_name
+                    generated_name = validated_copy_name
+                    filename = validated_copy_name
 
             except requests.exceptions.RequestException as err:
-                log.error(Logs.fileline() + ' : requests copy file failed, err=%s , url=%s', err, url)
-
+                log.error(Logs.fileline() + ' : requests copy file failed, err=%s , url=%s',
+                          err, url)
     elif validated_type == 'DH':
         filepath = Constants.cst_dhis2
         generated_name = filename
