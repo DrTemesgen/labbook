@@ -118,14 +118,14 @@
                     {% endif %}
 
                     {% if has_permission("STOCK_139") %}
-                    <input type="button" onclick="stock_item();" id="btn_add" value="{{ _("Approvisionner un produit") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-3">
-                    <input type="button" onclick="move_items();" id="btn_add" value="{{ _("Déplacer des produits") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
+                    <input type="button" onclick="stock_item();" id="btn_supply" value="{{ _("Approvisionner un produit") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-3">
+                    <input type="button" onclick="move_items();" id="btn_move" value="{{ _("Déplacer des produits") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
                     {% endif %}
                     {% if has_permission("STOCK_142") %}
-                    <input type="button" onclick="list_products();" id="btn_add" value="{{ _("Catalogue des produits") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
+                    <input type="button" onclick="list_products();" id="btn_cat" value="{{ _("Catalogue des produits") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
                     {% endif %}
                     {% if has_permission("STOCK_134") %}
-                    <input type="button" onclick="new_item();" id="btn_add" value="{{ _("Nouveau produit") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
+                    <input type="button" onclick="new_item();" id="btn_new_prod" value="{{ _("Nouveau produit") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
                     {% endif %}
                 </div>
             </div>

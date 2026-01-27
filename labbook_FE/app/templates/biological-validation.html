@@ -569,7 +569,9 @@ function save_valid( id_rec )
     // GET id_res and value
     $(".cbx-" + id_rec + ":checked" ).each( function(i, elem)
         {
-            let id_res  = $(this).attr("id").substr(4) ;
+            let raw_id = String($(this).attr("id") || "");
+            let parts = raw_id.split("_"); // cbx_<id_rec>_<id_res>
+            let id_res = (parts.length >= 3) ? parts[2] : raw_id.substr(4);
             let val_res = $("#res_"+id_res).val() ;
 
             if (i > 0)
@@ -722,7 +724,7 @@ function gen_ihm_res( data )
             let value      = data[i].res_label ;
             let res_limit  = '' ;
             let res_outsrc = "" ;
-            let res_check  = '<td class="text-center"><span><input type="checkbox" id="cbx_' + id_res + '" value="N" class="invisible result-checkbox cbx-' + id_rec + '"></span></td>' ;
+            let res_check = '<td class="text-center"><span><input type="checkbox" id="cbx_' + id_rec + '_' + id_res + '" value="N" class="invisible result-checkbox cbx-' + id_rec + '"></span></td>' ;
             let res_reset  = '' ;
             let res_cancel = '' ;
             let res_type   = data[i].type_resultat ;
@@ -773,7 +775,7 @@ function gen_ihm_res( data )
 
             if ( value != "" && res_valid != 252 )
             {
-                res_check = '<td class="text-center"><span><input type="checkbox" id="cbx_' + id_res + '" value="O" checked="checked" class="show result-checkbox cbx-' + id_rec + '"></span></td>' ;
+                res_check = '<td class="text-center"><span><input type="checkbox" id="cbx_' + id_rec + '_' + id_res + '" value="O" checked="checked" class="show result-checkbox cbx-' + id_rec + '"></span></td>' ;
 
                 disp_valid = "show d-lg-flex" ;
             }

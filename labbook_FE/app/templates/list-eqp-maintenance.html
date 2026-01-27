@@ -53,7 +53,7 @@
             <div class="mb-5 mt-3">
                 <div class="float-end">
                     {% if has_permission("EQP_110") %}
-                    <input type="button" onclick="export_prevent();" id="btn_export" value="{{ _("Export des données") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-3">
+                    <input type="button" onclick="export_prevent();" id="btn_export_prevent" value="{{ _("Export des données") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-3">
                     {% endif %}
                     {% if has_permission("EQP_108") %}
                     <input type="button" onclick="add_prevent();" id="btn_add_prevent" value="{{ _("Ajouter") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
@@ -108,7 +108,7 @@
                 </div>
                 <div class="float-end">
                     {% if has_permission("EQP_106") %}
-                    <input type="button" onclick="export_contract();" id="btn_export" value="{{ _("Export des données") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-3">
+                    <input type="button" onclick="export_contract();" id="btn_export_contract" value="{{ _("Export des données") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-3">
                     {% endif %}
                     {% if has_permission("EQP_104") %}
                     <input type="button" onclick="add_contract();" id="btn_add_contract" value="{{ _("Ajouter") }}" class="btn btn-lbk btn-{{ session['user_role']|safe }} ms-2">
