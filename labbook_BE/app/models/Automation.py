@@ -9,7 +9,7 @@ import shutil
 import hashlib
 
 from pathlib import Path
-from datetime import datetime, date, time, timedelta
+from datetime import datetime, date, time, timedelta, timezone
 from io import StringIO
 
 from app.models.Constants import Constants
@@ -1246,6 +1246,7 @@ def _build_periods(period_kind: str, date_beg: datetime, date_end: datetime) -> 
         raise ValueError(f"wrong period kind: {period_kind}")
 
     return l_period
+
 
 def _write_file_safe(src_path: str, dst_folder: str) -> tuple[str, str, int]:
     """
@@ -2658,6 +2659,10 @@ def _execute_job_ssh(job_row: dict) -> dict:
 
 def _first_day_utc(dt: datetime) -> datetime:
     """Return the first day of the month at 00:00:00 UTC."""
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    else:
+        dt = dt.astimezone(timezone.utc)
     return dt.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
 
@@ -2702,7 +2707,7 @@ def _execute_job_audit_purge(job_row: dict) -> dict:
 
     # 2) Compute cutoff date (UTC)
     # month0 = first day of current month at 00:00:00
-    now_utc = datetime.utcnow()
+    now_utc = datetime.now(timezone.utc)
     month0 = _first_day_utc(now_utc)
 
     # cutoff = first day of current month minus N months

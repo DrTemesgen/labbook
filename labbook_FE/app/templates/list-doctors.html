@@ -65,11 +65,11 @@
                 <span id="list_doctors_total">{% if not args %}0{% endif %}</span>
             </div>
             <div>
-                <span><a class="link" id="first_doctor" onclick="display_doctor(1);">{{ _("Premier") }}</a></span>
-                <span><a class="link" id="prev_doctor" onclick="display_doctor(-1000);">{{ _("Précédent") }}</a></span>
+                <span><a class="link" id="first_doctor_l" onclick="display_doctor(1);">{{ _("Premier") }}</a></span>
+                <span><a class="link" id="prev_doctor_l" onclick="display_doctor(-1000);">{{ _("Précédent") }}</a></span>
                 <span id="num_page_t" class="font-info">{% if not args %}0{% else %}1{% endif %}</span>
-                <span><a class="link" id="next_doctor" onclick="display_doctor(1000);">{{ _("Suivant") }}</a></span>
-                <span><a class="link" id="last_doctor" onclick="display_doctor(p_max);">{{ _("Dernier") }}</a></span>
+                <span><a class="link" id="next_doctor_l" onclick="display_doctor(1000);">{{ _("Suivant") }}</a></span>
+                <span><a class="link" id="last_doctor_l" onclick="display_doctor(p_max);">{{ _("Dernier") }}</a></span>
             </div>
 
             <form class="row justify-content-center mt-3" id="doctors-list">
@@ -99,11 +99,11 @@
             </form>
 
             <div>
-                <span><a class="link" id="first_doctor" onclick="display_doctor(1);">{{ _("Premier") }}</a></span>
-                <span><a class="link" id="prev_doctor" onclick="display_doctor(-1000);">{{ _("Précédent") }}</a></span>
+                <span><a class="link" id="first_doctor_r" onclick="display_doctor(1);">{{ _("Premier") }}</a></span>
+                <span><a class="link" id="prev_doctor_r" onclick="display_doctor(-1000);">{{ _("Précédent") }}</a></span>
                 <span id="num_page_b" class="font-info">{% if not args %}0{% else %}1{% endif %}</span>
-                <span><a class="link" id="next_doctor" onclick="display_doctor(1000);">{{ _("Suivant") }}</a></span>
-                <span><a class="link" id="last_doctor" onclick="display_doctor(p_max);">{{ _("Dernier") }}</a></span>
+                <span><a class="link" id="next_doctor_r" onclick="display_doctor(1000);">{{ _("Suivant") }}</a></span>
+                <span><a class="link" id="last_doctor_r" onclick="display_doctor(p_max);">{{ _("Dernier") }}</a></span>
             </div>
 
             <div class="clearfix mb-5">

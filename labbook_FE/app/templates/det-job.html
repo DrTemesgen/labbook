@@ -40,7 +40,7 @@
                                        {% else %}{{ _('Inconnu') }}{% endif %}"
                                 disabled>
 
-                            <input type="hidden" id="ajb_type" value="{{ args['type_item'] }}">
+                            <input type="hidden" name="ajb_type" value="{{ args['type_item'] }}">
                         {% else %}
                             <select id="ajb_type" class="form-select form-lbk" onchange="onTypeChange();" required>
                                 <option value="">-- {{ _('Sélectionner') }} --</option>

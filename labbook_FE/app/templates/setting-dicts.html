@@ -48,11 +48,11 @@
                 <span class="list_dicts_total" id="list_dicts_total">{% if not args %}0{% endif %}</span>
             </div>
             <div>
-                <span><a class="link" id="first_dict" onclick="display_dict(1);">{{ _("Premier") }}</a></span>
-                <span><a class="link" id="prev_dict" onclick="display_dict(-1000);">{{ _("Précédent") }}</a></span>
+                <span><a class="link" id="first_dict_l" onclick="display_dict(1);">{{ _("Premier") }}</a></span>
+                <span><a class="link" id="prev_dict_l" onclick="display_dict(-1000);">{{ _("Précédent") }}</a></span>
                 <span id="num_page_t" class="font-info">{% if not args %}0{% else %}1{% endif %}</span>
-                <span><a class="link" id="next_dict" onclick="display_dict(1000);">{{ _("Suivant") }}</a></span>
-                <span><a class="link" id="last_dict" onclick="display_dict(p_max);">{{ _("Dernier") }}</a></span>
+                <span><a class="link" id="next_dict_l" onclick="display_dict(1000);">{{ _("Suivant") }}</a></span>
+                <span><a class="link" id="last_dict_l" onclick="display_dict(p_max);">{{ _("Dernier") }}</a></span>
             </div>
 
             <form class="row justify-content-center mt-3" id="dicts-list">
@@ -70,11 +70,11 @@
             </form>
 
             <div>
-                <span><a class="link" id="first_dict" onclick="display_dict(1);">{{ _("Premier") }}</a></span>
-                <span><a class="link" id="prev_dict" onclick="display_dict(-1000);">{{ _("Précédent") }}</a></span>
+                <span><a class="link" id="first_dict_r" onclick="display_dict(1);">{{ _("Premier") }}</a></span>
+                <span><a class="link" id="prev_dict_r" onclick="display_dict(-1000);">{{ _("Précédent") }}</a></span>
                 <span id="num_page_b" class="font-info">{% if not args %}0{% else %}1{% endif %}</span>
-                <span><a class="link" id="next_dict" onclick="display_dict(1000);">{{ _("Suivant") }}</a></span>
-                <span><a class="link" id="last_dict" onclick="display_dict(p_max);">{{ _("Dernier") }}</a></span>
+                <span><a class="link" id="next_dict_r" onclick="display_dict(1000);">{{ _("Suivant") }}</a></span>
+                <span><a class="link" id="last_dict_r" onclick="display_dict(p_max);">{{ _("Dernier") }}</a></span>
             </div>
 
             <div class="clearfix mb-5">

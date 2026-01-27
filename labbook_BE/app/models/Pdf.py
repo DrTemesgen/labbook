@@ -3487,7 +3487,7 @@ class Pdf:
                     'f_tot': 0,
                     'u_tot': 0,
                 }
-                
+
                 order_type.append(code)
 
             k = sex_key(sex)
@@ -3577,7 +3577,7 @@ class Pdf:
                     'age_tot_F': 0,
                     'age_tot_U': 0,
 
-                    # Total global sexe
+                    # Total global sex
                     'sex_tot': 0,
                 }
                 for i in range(1, bucket_count + 1):
@@ -3602,7 +3602,7 @@ class Pdf:
         data['l_age'] = [age_map[c] for c in order_age]
 
         for r in data['l_age']:
-            r['age_tot'] = r['age_tot_M'] + r['age_tot_F'] + r['age_tot_U']        
+            r['age_tot'] = r['age_tot_M'] + r['age_tot_F'] + r['age_tot_U']
 
         for row in data['l_age']:
             for k, v in list(row.items()):

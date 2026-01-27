@@ -8,13 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
-## [3.6.11] - 2025-01-26
+## [3.6.11] - 2025-01-27
 ### Changed
 - enforce TLS 1.2+ for SMTP connections
 - patient merge now also updates dynamic form data and patient history to the kept record
 - download: added path validation to prevent invalid or unsafe file access
 - upload: added filename sanitization and path validation before saving files
 - security: enforce strict whitelist validation on download-file and all upload endpoints
+
 ### Fixed
 - UI: adapt the top header for screens < 1024 px because too menu items
 - form history download: added missing FPH type handling in download-file route

@@ -21,11 +21,11 @@
                             </div>
                             <div class="table-responsive" id="listing_prod">
                                 <div style="">
-                                    <span><a class="link" id="first_prod" onclick="display_sample(1);">{{ _("Premier") }}</a></span>
-                                    <span><a class="link" id="prev_prod" onclick="display_sample(-1000);">{{ _("Précédent") }}</a></span>
+                                    <span><a class="link" id="first_prod_l" onclick="display_sample(1);">{{ _("Premier") }}</a></span>
+                                    <span><a class="link" id="prev_prod_l" onclick="display_sample(-1000);">{{ _("Précédent") }}</a></span>
                                     <span id="num_page_t" class="font-info">{% if not args %}0{% else %}1{% endif %}</span>
-                                    <span><a class="link" id="next_prod" onclick="display_sample(1000);">{{ _("Suivant") }}</a></span>
-                                    <span><a class="link" id="last_prod" onclick="display_sample(p_max);">{{ _("Dernier") }}</a></span>
+                                    <span><a class="link" id="next_prod_l" onclick="display_sample(1000);">{{ _("Suivant") }}</a></span>
+                                    <span><a class="link" id="last_prod_l" onclick="display_sample(p_max);">{{ _("Dernier") }}</a></span>
                                 </div>
                                 <table class="table table-striped table-hover col-lg-12 table-lbk">
                                     <thead>
@@ -56,11 +56,11 @@
                                     <tbody id="tbody_samples" style=""></tbody>
                                 </table>
                                 <div style="">
-                                    <span><a class="link" id="first_prod" onclick="display_sample(1);">{{ _("Premier") }}</a></span>
-                                    <span><a class="link" id="prev_prod" onclick="display_sample(-1000);">{{ _("Précédent") }}</a></span>
+                                    <span><a class="link" id="first_prod_r" onclick="display_sample(1);">{{ _("Premier") }}</a></span>
+                                    <span><a class="link" id="prev_prod_r" onclick="display_sample(-1000);">{{ _("Précédent") }}</a></span>
                                     <span id="num_page_b" class="font-info">{% if not args %}0{% else %}1{% endif %}</span>
-                                    <span><a class="link" id="next_prod" onclick="display_sample(1000);">{{ _("Suivant") }}</a></span>
-                                    <span><a class="link" id="last_prod" onclick="display_sample(p_max);">{{ _("Dernier") }}</a></span>
+                                    <span><a class="link" id="next_prod_r" onclick="display_sample(1000);">{{ _("Suivant") }}</a></span>
+                                    <span><a class="link" id="last_prod_r" onclick="display_sample(p_max);">{{ _("Dernier") }}</a></span>
                                 </div>
                             </div>
                         </div>

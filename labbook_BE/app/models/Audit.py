@@ -90,7 +90,7 @@ class Audit:
             # System calls filter (default: exclude system)
             include_system = str(filters.get("include_system") or "N").upper()
             if include_system != "Y":
-                sql += " AND COALESCE(aud_client_ip, '') <> '127.0.0.1'"                
+                sql += " AND COALESCE(aud_client_ip, '') <> '127.0.0.1'"
 
             # Global search (DataTables search box)
             if search_value:
@@ -153,7 +153,7 @@ class Audit:
 
                 # Keep action for the "Action" column (menu stays separate)
                 item["details_summary"] = r["aud_action"]
-                
+
                 item["ip_addr"] = r["aud_client_ip"]
                 item["status_label"] = r["aud_status"]
 

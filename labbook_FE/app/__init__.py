@@ -10508,7 +10508,6 @@ def upload_photo(type_ref='', id_ref=0):
         except Exception as err:
             log.error(Logs.fileline() + ' : upload-photo failed information file, err=%s', err)
             return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
-        
 
         return json.dumps({'success': True}), 200, {'ContentType': 'application/json'}
 
