@@ -84,9 +84,7 @@ def upgrade():
                 KEY idx_audit_resource (aud_resource_type, aud_resource_id),
                 KEY idx_audit_status (aud_status),
                 KEY idx_aud_event_type (aud_event_type)
-            ) ENGINE=InnoDB
-              DEFAULT CHARSET=utf8mb4
-              COLLATE=utf8mb4_unicode_ci
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         '''))
     except Exception as err:
         print("ERROR creating audit_trail table, err=" + str(err))

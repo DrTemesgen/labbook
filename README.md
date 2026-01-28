@@ -15,7 +15,7 @@ It contains two separate python applications that constitute the LabBook applica
 
 - linux
 - podman
-- MySQL or MariaDB
+- MySQL 8.4+ or MariaDB 10.3+
 - make
 - git
 

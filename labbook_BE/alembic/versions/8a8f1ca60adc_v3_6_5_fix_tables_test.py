@@ -97,7 +97,7 @@ def upgrade():
                 KEY idx_phfi_type (phfi_type),
                 KEY idx_phfi_evt  (phfi_evt),
                 KEY idx_phfi_date (phfi_date)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         """))
     except Exception as err:
         print("ERROR create table patient_hist_form_item,\n\terr=" + str(err))
