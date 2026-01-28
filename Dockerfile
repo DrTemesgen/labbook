@@ -17,7 +17,7 @@ RUN yum install -y epel-release dnf-plugins-core
 RUN yum update -y && yum install -y python3.11 python3.11-pip python3.11-devel
 
 # MySQL 8.4 community client (mysql/mysqldump)
-RUN yum install -y https://dev.mysql.com/get/mysql84-community-release-el9-1.noarch.rpm && dnf -y makecache
+RUN yum install -y https://dev.mysql.com/get/mysql84-community-release-el9-1.noarch.rpm && dnf -y --refresh makecache
 
 # system packages (EL9: no compat-openssl10, no 'mysql' client package)
 RUN yum update -y && yum install -y \
