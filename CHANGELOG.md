@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.12] - 2025-01-28
+### Fixed
+- mobile header: fix right alignment of user info
+- corrupted SQL demo dump with other databases than SIGL
+
 ## [3.6.11] - 2025-01-27
 ### Changed
 - enforce TLS 1.2+ for SMTP connections

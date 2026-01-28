@@ -1468,7 +1468,6 @@ font-size: 15px;
         box-sizing : border-box;
     }
 
-    /* vertical list like <767, but let content drive the width */
     #navbarMenu .navbar-nav
     {
         display        : flex !important;
@@ -1508,7 +1507,7 @@ font-size: 15px;
         white-space : nowrap;
     }
 
-    /* Same as <767: disable special backgrounds (desktop icon tiles) */
+    /* disable special backgrounds (desktop icon tiles) */
     nav .non-conformite { background: none !important; }
     nav .non-conformite:hover { background: none !important; }
     nav .setting:hover { background: none !important; }
@@ -1553,7 +1552,7 @@ font-size: 15px;
     flex-direction : row;
     align-items    : center;
     margin-top     : 10px;
-    margin-left    : 1rem;
+    margin-left    : auto;
     margin-right   : 1rem;
     min-width      : 5rem;
     min-height     : 2rem;
