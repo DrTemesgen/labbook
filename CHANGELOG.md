@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.13] - 2025-02-02
+- display id_rec on list-records and list-works pages
+- Audit trail: include record numbers (num_dos_jour, num_dos_mois, num_dos_an) in audit entries on record creation
+
+### Fixed
+- audit datetime filter
+- concatenate value and unit only for text results when prefilled from analyzer
+
 ## [3.6.12] - 2025-01-28
 ### Fixed
 - mobile header: fix right alignment of user info

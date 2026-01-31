@@ -42,11 +42,11 @@ class Audit:
             # Date filters
             if filters.get("date_start"):
                 sql += " AND aud_date_utc >= %s"
-                params.append(filters["date_start"] + " 00:00:00")
+                params.append((filters["date_start"] or "").replace("T", " "))
 
             if filters.get("date_end"):
                 sql += " AND aud_date_utc <= %s"
-                params.append(filters["date_end"] + " 23:59:59")
+                params.append((filters["date_end"] or "").replace("T", " "))
 
             # User filter (login or display)
             if filters.get("user"):
@@ -205,11 +205,11 @@ class Audit:
             # Date filters
             if filters.get("date_start"):
                 sql += " AND aud_date_utc >= %s"
-                params.append(filters["date_start"] + " 00:00:00")
+                params.append((filters["date_start"] or "").replace("T", " "))
 
             if filters.get("date_end"):
                 sql += " AND aud_date_utc <= %s"
-                params.append(filters["date_end"] + " 23:59:59")
+                params.append((filters["date_end"] or "").replace("T", " "))
 
             # User filter (login or display)
             if filters.get("user"):

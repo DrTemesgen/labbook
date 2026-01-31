@@ -128,11 +128,11 @@
                                     <table id="table_records" class="table table-striped table-hover col-lg-12 table-lbk tablesorter">
                                         <thead>
                                             <tr>
-                                                <th class="text-start" hidden>
-                                                    <span>id_data</span>
-                                                </th>
                                                 <th class="text-start">
                                                     <span>{{ _("Action") }}</span>
+                                                </th>
+                                                <th class="text-start">
+                                                    <span>id_rec</span>
                                                 </th>
                                                 <th class="text-start cursor-act">
                                                     <span>{{ _("Statut") }}</span>
@@ -331,8 +331,8 @@ let res = ''
             if ( data_records[i].rec_num_lite )
             num_dos_long = data_records[i].rec_num_lite ;
 
-        res += '<tr ' + tr_style + '><td hidden><div>' + data_records[i].id_data + '</div></td>' +
-               '<td><div class="text-start">' + menu_act + '</div></td>' +
+        res += '<tr ' + tr_style + '><td><div class="text-start">' + menu_act + '</div></td>' +
+               '<td><div>' + data_records[i].id_data + '</div></td>' +
                '<td><div class="text-start">' + status_rec_with_det( data_records[i].stat, data_records[i].id_data, data_records[i].num_dos_long ) + '</div></td>' +
                '<td><div class="text-start">' + emer( data_records[i].urgent ) + '</div></td>' +
                '<td><div class="text-start"><span class="rec-num" title="' + num_dos_long + ' / ' + data_records[i].rec_num_int + '">' + data_records[i].num_dos + num_int + '</span></div></td>' +

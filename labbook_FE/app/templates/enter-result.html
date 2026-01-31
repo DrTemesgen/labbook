@@ -1525,11 +1525,11 @@ function prefill_from_analyzer()
 
     data_res.forEach(function(res)
     {
-        // Conditions STRICTES
+        // Strict conditions
         if (!res.code_var) return;
         if (!res.validation || Number(res.validation.type_validation) !== 250) return;
 
-        // champ déjà rempli → on ne touche pas
+        // Do not override an already entered value
         if (res.valeur !== null && res.valeur !== undefined && String(res.valeur).trim() !== '') return;
 
         if (!Array.isArray(res.l_res_analyzer)) return;
@@ -1539,15 +1539,15 @@ function prefill_from_analyzer()
             if (!ar.anr_lb_code) return;
             if (ar.anr_lb_code !== res.code_var) return;
 
-            // champ HTML
+            // Target HTML field
             const input = document.getElementById("res_" + res.id_res);
             if (!input) return;
 
             let analyzerValue = (ar.anr_value === null || ar.anr_value === undefined) ? "" : String(ar.anr_value).trim();
             const analyzerUnit = (ar.anr_unit === null || ar.anr_unit === undefined) ? "" : String(ar.anr_unit).trim();
 
-            // If text field (string) and unit exists -> "value unit"
-            if (analyzerValue !== "" && analyzerUnit !== "" && input && input.type === "text")
+            // Concat only for VARCHAR result type (226)
+            if (Number(res.type_resultat) === 226 && analyzerValue !== "" && analyzerUnit !== "")
             {
                 // Avoid duplicating unit if already present
                 if (analyzerValue.indexOf(analyzerUnit) === -1)

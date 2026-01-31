@@ -364,7 +364,8 @@ class RecordDet(Resource):
         try:
             details = {"result": "SUCCESS", "id_rec": int(res.get("id_rec") or 0),
                        "id_owner": args.get("id_owner"), "id_patient": args.get("id_patient"),
-                       "type": args.get("type"), "stat": args.get("stat")}
+                       "type": args.get("type"), "stat": args.get("stat"),
+                       "num_dos_jour": num_dos_jour, "num_dos_mois": num_dos_mois, "num_dos_an": num_dos_an}
             Audit.insertAudit(audit_user, "RecordDet", "RECORD", int(res.get("id_rec") or 0), "SUCCESS", details, "C")
         except Exception as err:
             self.log.error(Logs.fileline() + ' : RecordDet ERROR audit success err=' + str(err))
@@ -1274,7 +1275,8 @@ class RecordDetFromExt(Resource):
 
         self.log.info(Logs.fileline() + ' : TRACE RecordDetFromExt')
         try:
-            details = {"result": "SUCCESS", "id_rec": int(id_rec)}
+            details = {"result": "SUCCESS", "id_rec": int(id_rec),
+                       "num_dos_jour": num_dos_jour, "num_dos_mois": num_dos_mois, "num_dos_an": num_dos_an}
             Audit.insertAudit(audit_user, "RecordDetFromExt", "RECORD", int(id_rec), "SUCCESS", details, "C")
         except Exception as err2:
             self.log.error(Logs.fileline() + ' : RecordDetFromExt ERROR audit success err=' + str(err2))
