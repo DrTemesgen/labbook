@@ -108,7 +108,8 @@
                         </tr>
                         <tr class="d-lg-flex">
                             <th class="col-lg-6">{{ _("Ancienneté de conservations des audits avant archivage et purge (en mois)") }}</th>
-                            <td class="col-lg-6"><input type="number" id="pref_audit_purge" name="pref_audit_purge"  min="1" step="1" max="60" value="{% if args['pref_list'] %}{{ args['pref_list'][16]['value'] }}{% endif %}"></td>
+                            <td class="col-lg-6"><input type="number" id="pref_audit_purge" name="pref_audit_purge" min="1" step="1" max="60" value="{% if args.get('pref_list') and (args.get('pref_list')|length > 16) %}{{ args.get('pref_list')[16]['value'] }}{% endif %}"></td>
+                            
                         </tr>
                     </tbody>
                 </table>

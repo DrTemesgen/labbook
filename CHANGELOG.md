@@ -15,6 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - audit datetime filter
 - concatenate value and unit only for text results when prefilled from analyzer
+- preferences page crash by guarding missing audit_purge_months when pref list is incomplete
 
 ## [3.6.12] - 2025-01-28
 ### Fixed
