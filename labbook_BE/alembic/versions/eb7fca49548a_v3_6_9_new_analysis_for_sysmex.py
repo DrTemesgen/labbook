@@ -86,7 +86,7 @@ def upgrade():
     # Keep existing dictionary inserts
     try:
         conn.execute(text(
-            'insert into sigl_dico_data (id_owner, dico_name, label, short_label, position, code) '
+            'insert IGNORE into sigl_dico_data (id_owner, dico_name, label, short_label, position, code) '
             'values (1, "absent", "Absence", "absence", 30, "absence")'
         ))
     except Exception as err:
@@ -94,7 +94,7 @@ def upgrade():
 
     try:
         conn.execute(text(
-            'insert into sigl_dico_data (id_owner, dico_name, label, short_label, position, code) '
+            'insert IGNORE into sigl_dico_data (id_owner, dico_name, label, short_label, position, code) '
             'values (1, "absent", "Présence", "presence", 40, "presence")'
         ))
     except Exception as err:
@@ -163,6 +163,7 @@ def upgrade():
                 VALUES (:id_owner, :libelle, '', :unite, :normal_min, :normal_max,
                         '', :type_resultat, 0, '', '',
                         :accuracy, 0, :code_var, 'N', 'N', 'Y')
+                ON DUPLICATE KEY UPDATE id_data = LAST_INSERT_ID(id_data)
                 """
             ),
             {

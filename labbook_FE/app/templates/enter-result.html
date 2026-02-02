@@ -1554,8 +1554,12 @@ function prefill_from_analyzer()
                     analyzerValue = analyzerValue + " " + analyzerUnit;
             }
 
+            if (analyzerValue === "") return;
+
             input.value = analyzerValue;
             res.valeur = analyzerValue;
+            enabled_save(res.id_dos, res.ref_ana);
+            check_change(res.id_dos, res.ref_ana, res.id_res);
         });
     });
 }

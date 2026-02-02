@@ -179,16 +179,15 @@ def upgrade():
                 """
                 SELECT id_data
                 FROM sigl_dico_data
-                WHERE id_owner = 1
-                  AND dico_name = 'type_prel'
-                  AND code = :code
+                WHERE dico_name = 'type_prel' AND code = :code
                 LIMIT 1
                 """
             ),
             {"code": dico_code},
         ).fetchone()
         if not row:
-            raise Exception("Missing type_prel with code '%s'" % dico_code)
+            print("ERROR missing type_prel code=" + dico_code)
+            return None
         return row.id_data
 
     # Create analyses (type_prel resolved by dico code, produit_biologique = 0)

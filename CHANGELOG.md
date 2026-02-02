@@ -8,6 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.14] - 2025-02-02
+### Fixed
+- CSS: remove max-height:100% on #page to restore full page scroll
+- analyzer prefill: enable Save and trigger limit checks
+- Modified some Alembic migrations to prevent blocking execution on missing or inconsistent reference data
+
 ## [3.6.13] - 2025-02-02
 - display id_rec on list-records and list-works pages
 - Audit trail: include record numbers (num_dos_jour, num_dos_mois, num_dos_an) in audit entries on record creation

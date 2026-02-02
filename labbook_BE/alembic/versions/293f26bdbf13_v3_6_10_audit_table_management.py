@@ -80,7 +80,8 @@ def upgrade():
         conn.execute(
             text(
                 "INSERT INTO sigl_06_data (id_owner, identifiant, label, value) "
-                "VALUES (1, :identifiant, :label, :value)"
+                "VALUES (1, :identifiant, :label, :value) "
+                "ON DUPLICATE KEY UPDATE label = VALUES(label)"
             ),
             {
                 "identifiant": "audit_purge_months",
