@@ -16,23 +16,23 @@
 | Babel                   | 2.17.0    | BSD          |           | x       | x       |
 | Flask                   | 3.0.3     | BSD          |           | x       | x       |
 | Flask-Babel             | 4.0.0     | BSD          |           | x       | x       |
-| gunicorn                | 23.0.0    | MIT          |           | x       | x       |
+| gunicorn                | 25.0.1    | MIT          |           | x       | x       |
 | pip                     | 25.2.0    | MIT          |           | x       | x       |
 | pipenv                  | 2025.0.1  | MIT          |           | x       | x       |
-| requests                | 2.32.3    | Apache 2.0   |           | x       | x       |
+| requests                | 2.32.5    | Apache 2.0   |           | x       | x       |
 | pip-audit               | 2.9.0     | Apache 2.0   |           | x       | x       |
-| tomli                   | 2.2.1     | MIT          |           | x       | x       |
+| tomli                   | 2.4.0     | MIT          |           | x       | x       |
 | alembic                 | 1.16.5    | MIT          |           |         | x       |
 | Flask-RESTful           | 0.3.10    | BSD          |           |         | x       |
 | hl7apy                  | 1.3.5     | MIT          |           |         | x       |
 | mysql-connector-python  | 8.0.32    | GPL 2        |           |         | x       |
 | pdfkit                  | 1.0.0     | MIT          |           |         | x       |
-| pikepdf                 | 7.2.0     | MPL 2.0      |           |         | x       |
-| Pillow                  | 9.5.0     | HPND         |           |         | x       |
-| python-barcode          | 0.15.1    | MIT          |           |         | x       |
+| pikepdf                 | 9.11.0    | MPL 2.0      |           |         | x       |
+| Pillow                  | 12.1.0    | HPND         |           |         | x       |
+| python-barcode          | 0.16.1    | MIT          |           |         | x       |
 | qrcode                  | 7.4.2     | BSD          |           |         | x       |
 | relatorio               | 0.11.1    | GPL          |           |         | x       |
-| reportlab               | 3.6.13    | BSD          |           |         | x       |
+| reportlab               | 4.4.9     | BSD          |           |         | x       |
 | unoserver               | 2.2.1     | MIT          |           |         | x       |
 | bcrypt                  | 5.0.0     | Apache 2.0   |           |         | x       |
 | authlib                 | 1.6.5     | BSD          |           |         | x       |

@@ -3,7 +3,7 @@
 ## Introduction
 
 labbook_BE uses a script `backup.sh` to execute the various actions needed to perform backups and restores.
-This documents describes the API between labbook_BE and `backup.sh`.
+This document describes the API between labbook_BE and `backup.sh`.
 
 Shared definitions between labbook_BE and `backup.sh` are in environment variables.
 
@@ -146,7 +146,7 @@ Script steps:
 
 - dump DB into LABBOOK_STATUS_DIR
 - create archive of DB dump and other files
-- encrypts archive to keys present in LABBOOK_KEY_DIR
+- encrypt archive to keys present in LABBOOK_KEY_DIR
 - result in status file
 - touch last_backup_ok if successful
 

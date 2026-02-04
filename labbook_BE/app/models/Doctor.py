@@ -43,7 +43,7 @@ class Doctor:
         req = ('select pres.id_data, pres.id_owner, pres.code, pres.nom as lastname, pres.prenom as firstname, '
                'pres.doc_zipcity, pres.ville as city, pres.etablissement as facility, pres.specialite as spe_id, '
                'pres.tel as phone, pres.email, pres.titre as title, pres.initiale as initial, pres.service, '
-               'pres.adresse as address, pres.mobile, pres.fax, d1.label as spe '
+               'pres.adresse as address, pres.mobile, pres.fax, d1.label as spe, pres.doc_agreement '
                'from sigl_08_data as pres '
                'left join sigl_dico_data as d1 on d1.id_data = pres.specialite '
                'where ' + filter_cond +

@@ -561,23 +561,32 @@ function load_report( data )
         {
             let menu_act = '' ;
 
-            {% if args['record']['rec_num_lite'].startswith("LT-") %}
+        {% if args['record']['rec_num_lite'].startswith("LT-") %}
+            {# LT-* : RLT download only, no duplicata #}
             menu_act = '<a class="menu-act-item" onclick="download_file(\'RLT\', \'' + obj[i].file + '\', \'REC\', \'' + {{ args["record"]["rec_num_lite"]|tojson|safe }} + '\');">{{ _("Télécharger") }} (' + obj[i].nb_download + ')</a>' ;
 
-            {% else %}
+        {% else %}
+            {# non LT-* #}
             if ( obj[i].nb_download == 0 )
+                {# first download : RP only #}
                 menu_act = '<a class="menu-act-item" onclick="download_file(\'RP\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Télécharger") }} (' + obj[i].nb_download + ')</a>' ;
             else
             {
                 {% if has_permission("RECORD_23") %}
-                menu_act = '<a class="menu-act-item" onclick="download_file(\'RP\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Télécharger") }} (' + obj[i].nb_download + ')</a>' ;
-                menu_act += ' - <a class="menu-act-item" onclick="download_file(\'RPC\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Duplicata") }} (' + obj[i].nb_download + ')</a>' ;
+                    {# RECORD_23 : RP always, RPC only if report_pwd != Y #}
+                    menu_act = '<a class="menu-act-item" onclick="download_file(\'RP\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Télécharger") }} (' + obj[i].nb_download + ')</a>' ;
+                    {% if session.get('report_pwd') != 'Y' %}
+                    menu_act += ' - <a class="menu-act-item" onclick="download_file(\'RPC\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Duplicata") }} (' + obj[i].nb_download + ')</a>' ;
+                    {% endif %}
                 {% else %}
-                menu_act = '<a class="menu-act-item" onclick="download_file(\'RPC\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Duplicata") }} (' + obj[i].nb_download + ')</a>' ;
+                    {# no RECORD_23 : RPC only if report_pwd == N #}
+                    {% if session.get('report_pwd') != 'Y' %}
+                    menu_act = '<a class="menu-act-item" onclick="download_file(\'RPC\', \'' + obj[i].file + '\', \'REC\', ' + num_rec + ');">{{ _("Duplicata") }} (' + obj[i].nb_download + ')</a>' ;
+                    {% endif %}
                 {% endif %}
             }
 
-            {% endif %}
+        {% endif %}
 
             let tpl = '' ;
 

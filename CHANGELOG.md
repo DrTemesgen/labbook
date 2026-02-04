@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.15] - 2025-02-04
+### Changed
+- update some documentations in doc directory
+
+### Fixed
+- export prescribers
+- hide report duplicata action when report password protection is enabled
+
 ## [3.6.14] - 2025-02-02
 ### Fixed
 - CSS: remove max-height:100% on #page to restore full page scroll

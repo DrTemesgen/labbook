@@ -1,9 +1,15 @@
 # List of possible imports into LabBook
 
 ## Analysis repository
-List of columns and theirs types of datas
+List of columns and their data types
 
-version          : v4 (v3 still possible)
+version : v3, v4, v5, v6
+
+- v4 adds: var_formula_conv, var_unit_conv, var_accu_conv, ana_ast
+- v5 adds: ana_lite, ana_loinc
+- v6 adds: var_in_report
+
+version          : string, one of v3/v4/v5/v6 (first column)
 id_ana           : integer, 0 for a new analysis (only in add mode) else if > 0 update analysis (in update mode) or insert analysis (in add mode if this id is not already taken by another analysis)
 id_owner         : integer, 0 or id of user
 ana_code         : string, unique code per analysis, (max 7 characters)
@@ -38,14 +44,24 @@ var_code         : string, unique code per variable, (max 10 characters)
 var_whonet       : Y or N
 var_qrcode       : Y or N
 var_highlight    : Y or N, allows us to highlight this result in the report
+var_show_minmax  : Y or N, show normal min/max in report
 
-add in v4
-var_formula_con  : string
+Added in v4 (additional columns after var_show_minmax)
+var_formula_conv : string
 var_unit_conv    : integer, 0 or id_unit
-var_accu_conv    : integer, accuracy is used on integer or real results
+var_accu_conv    : integer
+ana_ast          : Y or N
 
+Added in v5 (additional columns)
+ana_lite         : Y or N
+ana_loinc        : string
+
+Added in v6 (additional columns)
+var_in_report    : Y or N
 
 ### In the "Update analyses (with identical code)" mode
+
+In update mode, links are matched using link_var_ref (id_refvariable). New links are not created.
 
 Look if the code of the analysis already exists in the database:
 - an error in the search => an error that will be displayed the GUI in the "status of the last import"
@@ -60,6 +76,8 @@ But it doesn't remove a link with a variable nor add a new one.
 This mode is only to update information, not to modify the structure of your repository. So no deletion or creation.
 
 ### In the "Add new analyses (code not existing in the database)" mode
+
+In add mode, variables are linked only if id_link > 0. If id_link is 0, the analysis is created without variables.
 
 Look if the code of the analysis already exists in the database:
 - an error in the search => an error that will be displayed the GUI in the "status of the last import"
@@ -76,7 +94,7 @@ last step we link the analysis with the variable (table sigl_05_07_data)
 At the end of the process a verification of the ghost variables (not present in the table sigl_05_07_data) in order to delete them.
 
 ## Dictionnary
-List of columns and theirs types of datas
+List of columns and their data types
 
 version         : v1
 id_data         : integer, 0 (serial) or serial (update)
@@ -89,10 +107,18 @@ code            : string (max 10 characters)
 dico_descr      : text
 dict_formatting : Y or N, allows us to highlight this value of result in the report
 
-## Users
-List of columns and theirs types of datas
+Notes:
+- CSV separator is ';'
+- First row must be the header with exact column names and order
+- version must be v1
+- If id_data = 0: insert
+- If id_data > 0: update
+- dico_descr is updated using dico_name (not id_data)
 
-version         : v3, (since 21/04/2023 v3.3.8, version move to first column)
+## Users
+List of columns and their data types
+
+version         : v3, (since 21/04/2023 v3.3.8, version moved to first column)
 firstname       : string (max 50 characters)
 lastname        : string (max 50 characters)
 username        : string (max 50 characters)
@@ -116,10 +142,18 @@ deval           : yyyy-mm-dd
 section         : integer, 0 or id_section
 comment         : text
 side_account    : integer, 0 or id_prescriber
-role            : string (max 10 characters)
+role_type       : string (max 10 characters)
+role_pro        : string (max 10 characters)
+
+Notes:
+- The file must contain exactly 26 columns (including version)
+- version must be v3
+- Existing users are matched on (firstname, lastname, username)
+- On update, the password field is not modified
+- locale codes (FR, UK, US, ...) are converted to internal numeric IDs (default FR)
 
 ## Zip code and city
-List of columns and theirs types of datas
+List of columns and their data types
 
 zip_code  : string (max 10 char.)
 city_name : string (max 40 char.)

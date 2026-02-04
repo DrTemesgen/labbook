@@ -11,6 +11,8 @@ ADDED ANALYZES
 - added from 3.0.7  : B659, B660, B661, B679, B680, B681
 - added from 3.0.8  : B796, B797,  B798, B799, B800, B801, E06
 - added from 3.0.9  : PB25
+- added from 3.6.6  : NFS_XN3
+- added from 3.6.6  : GX01 to GX10
 
 DELETED ANALYZES
 - deleted from 3.0.2 : B603

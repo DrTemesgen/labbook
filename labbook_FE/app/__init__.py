@@ -374,6 +374,24 @@ def get_init_var(be_headers=None):
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests form setting failed, err=%s , url=%s', err, url)
 
+    # Load setting report
+    try:
+        url = session['server_int'] + '/' + session['redirect_name'] + '/services/setting/report'
+        req = requests.get(url, timeout=10, headers=call_headers)
+
+        redir = be_check_or_bounce(req)
+        if redir:
+            return redir
+
+        if req.status_code == 200:
+            json_data = req.json()
+
+            session['report_pwd'] = (json_data.get('report_pwd') or 'N').strip().upper()
+            session.modified = True
+
+    except requests.exceptions.RequestException as err:
+        log.error(Logs.fileline() + ' : requests setting report failed, err=%s , url=%s', err, url)
+
     log.info(Logs.fileline() + ' : LABBOOK_FE get_init_var ends')
 
 

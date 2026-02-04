@@ -227,6 +227,12 @@ for the LabBook application can be found at the [LabBook website](https://www.la
 
 Interactive API documentation for the LabBook backend is available at the following url: YOUR_LABBOOK_URL/sigl/api
 
+### Note about versions and database migrations
+
+Application version numbers and Alembic migration revisions are not strictly aligned.
+Alembic migrations are only executed when database schema changes are required.
+It is therefore normal that Alembic stops at a given revision (e.g. 3.6.10) even if the application version is higher.
+
 ## Changes
 
 You can have a look at [CHANGELOG.md](CHANGELOG.md) for changes to the program.
