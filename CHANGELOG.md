@@ -8,9 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
-## [3.6.15] - 2025-02-04
+## [3.6.15] - 2025-02-09
+### Added
+- result report template for analysis with one variable
+
 ### Changed
 - update some documentations in doc directory
+- new indicator.ini
+- update to the patient history form
 
 ### Fixed
 - export prescribers

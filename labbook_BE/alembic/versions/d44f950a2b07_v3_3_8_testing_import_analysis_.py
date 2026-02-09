@@ -25,7 +25,7 @@ def upgrade():
     # Get the current
     conn = op.get_bind()
 
-    # COPY alembic resource indicator
+    # COPY alembic resource template 
     try:
         from distutils.dir_util import copy_tree
 
