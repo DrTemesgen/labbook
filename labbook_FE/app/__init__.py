@@ -868,7 +868,8 @@ def oauth_callback():
     clean PKCE/state, then send the user back to the original page
     (or a safe homepage fallback).
     """
-    log.info("CALLBACK host=%s cookie_in=%s", request.host, request.cookies.get(app.config['SESSION_COOKIE_NAME'], '')[:16])
+    has_session_cookie = app.config['SESSION_COOKIE_NAME'] in request.cookies
+    log.info("CALLBACK session_cookie_present=%s", has_session_cookie)
 
     ensure_base_urls_in_session()
 
@@ -3068,7 +3069,7 @@ def setting_sending_method():
 # Page : details sending method
 @app.route('/det-sending-method/<string:type>/<int:id_item>')
 def det_sending_method(type='', id_item=0):
-    log.info(Logs.fileline() + ' : TRACE details sending method ' + str(type) + '/' + str(id_item))
+    log.info(Logs.fileline() + ' : TRACE details sending method ' + str(id_item))
 
     if not test_session():
         log.info(Logs.fileline() + ' : TRACE Labbook details sending method => disconnect')
@@ -3118,7 +3119,7 @@ def det_sending_method(type='', id_item=0):
 # Page : details sending model
 @app.route('/det-sending-model/<string:type>/<int:id_item>')
 def det_sending_model(type='', id_item=0):
-    log.info(Logs.fileline() + ' : TRACE details sending model ' + str(type) + '/' + str(id_item))
+    log.info(Logs.fileline() + ' : TRACE details sending model ' + str(id_item))
 
     if not test_session():
         log.info(Logs.fileline() + ' : TRACE Labbook details sending model => disconnect')
@@ -4242,7 +4243,7 @@ def list_records():
 @app.route('/list-works/<string:user_role>')
 @app.route('/list-works/<string:user_role>/<string:emer>')
 def list_works(user_role='', emer=''):
-    log.info(Logs.fileline() + ' : TRACE list-works user_role=' + str(user_role))
+    log.info(Logs.fileline() + " : TRACE list-works role_known=%s", user_role in ('B', 'T'))
 
     if not test_session():
         log.info(Logs.fileline() + ' : TRACE Labbook list works => disconnect')
@@ -10226,7 +10227,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
                     return False
 
         except requests.exceptions.RequestException as err:
-            log.error(Logs.fileline() + ' : requests file photo failed, err=%s , url=%s', err, url)
+            log.error(Logs.fileline() + " : requests file photo failed err=%s", err)
     elif validated_type in ('RP', 'RLT'):
         filepath = Constants.cst_report
         generated_name = filename  # UUID
@@ -10234,8 +10235,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
 
         path = safe_build_download_path(filepath, generated_name)
         if not path:
-            log.error(Logs.fileline() + ' : ERROR download-file invalid path, filepath=%s, name=%s',
-                      filepath, generated_name)
+            log.error(Logs.fileline() + " : ERROR download-file invalid path")
             return redirect(session['server_ext'] + '/' + session['current_page'])
 
         if os.path.exists(path) and os.stat(path).st_size > 0:
@@ -10263,7 +10263,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
                     return False
 
             except requests.exceptions.RequestException as err:
-                log.error(Logs.fileline() + ' : requests file increase nb download failed, err=%s , url=%s', err, url)
+                log.error(Logs.fileline() + " : requests file increase nb download failed err=%s", err)
     elif validated_type == 'RPC':
         filepath = Constants.cst_report
         generated_name = filename
@@ -10271,8 +10271,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
 
         path = safe_build_download_path(filepath, generated_name)
         if not path:
-            log.error(Logs.fileline() + ' : ERROR download-file invalid path, filepath=%s, name=%s',
-                      filepath, generated_name)
+            log.error(Logs.fileline() + " : ERROR download-file invalid path")
             return redirect(session['server_ext'] + '/' + session['current_page'])
 
         if os.path.exists(path) and os.stat(path).st_size > 0:
@@ -10365,13 +10364,12 @@ def download_file(type='', filename='', type_ref='', ref=''):
 
     path = safe_build_download_path(filepath, generated_name)
     if not path:
-        log.error(Logs.fileline() + ' : ERROR download-file invalid path, filepath=%s, name=%s',
-                  filepath, generated_name)
+        log.error(Logs.fileline() + " : ERROR download-file invalid path")
         return redirect(session['server_ext'] + '/' + session['current_page'])
 
     # check if file exist and size > 0
     if not os.path.exists(path) or os.stat(path).st_size == 0:
-        log.error(Logs.fileline() + ' : ERROR download-file, %s doesnt exist or size < 0', path)
+        log.error(Logs.fileline() + " : ERROR download-file file missing or empty")
         return redirect(session['server_ext'] + '/' + session['current_page'])
 
     encoded_filename = quote(filename)
@@ -10389,7 +10387,7 @@ def download_file(type='', filename='', type_ref='', ref=''):
 # Route : upload a file to permanent storage
 @app.route('/upload-file/<string:type_ref>/<int:id_ref>', methods=['POST'])
 def upload_file(type_ref='', id_ref=0):
-    log.info(Logs.fileline() + ' : type_ref = ' + str(type_ref) + ' | id_ref = ' + str(id_ref))
+    log.info(Logs.fileline() + " : upload-file called")
 
     resp = ensure_be_token()
     if resp:
@@ -10517,7 +10515,7 @@ def upload_file(type_ref='', id_ref=0):
 # Route : upload a photo to permanent storage
 @app.route('/upload-photo/<string:type_ref>/<int:id_ref>', methods=['POST'])
 def upload_photo(type_ref='', id_ref=0):
-    log.info(Logs.fileline() + ' : type_ref = ' + str(type_ref) + ' | id_ref = ' + str(id_ref))
+    log.info(Logs.fileline() + " : upload-photo called")
 
     resp = ensure_be_token()
     if resp:
@@ -10936,7 +10934,7 @@ def upload_zipcity():
 # Route : upload a file for Connect
 @app.route('/upload-connect/<string:type>', methods=['POST'])
 def upload_connect(type=''):
-    log.info(Logs.fileline() + ' upload-connect type = %s', type)
+    log.info(Logs.fileline() + " : upload-connect called")
 
     if request.method != 'POST':
         return json.dumps({'success': False}), 405, {'ContentType': 'application/json'}
