@@ -8,6 +8,29 @@
 @creation_date: 20/11/2019
 """
 
+# =============================================================================
+# LabBook Front-End application entry point
+# -----------------------------------------------------------------------------
+# Creates the Flask application instance.
+#
+# Responsibilities of this module:
+# - Load configuration (default_settings + optional LOCAL_SETTINGS)
+# - Configure file-based logging
+# - Initialize session lifetime and cookie parameters
+# - Initialize Flask-Babel for language handling
+# - Provide helpers for authenticated calls to the Back-End (BE)
+# - Store user and system data in session
+#
+# The FE communicates with the BE through HTTP requests.
+# OAuth access tokens are stored in session under 'be_access_token'.
+#
+# This file centralizes:
+# - Application bootstrap
+# - Session management
+# - BE communication helpers
+# - Jinja context injection and filters
+# =============================================================================
+
 # ###########################################
 #   Imports
 # ###########################################
@@ -51,6 +74,14 @@ LANGUAGES = {
 # ######################################
 
 
+# -----------------------------------------------------------------------------
+# Logging setup
+# -----------------------------------------------------------------------------
+# Configures a dedicated logger named "log_front".
+# Logs are written to a file using WatchedFileHandler.
+# The handler supports external log rotation.
+# No console logging is used.
+# -----------------------------------------------------------------------------
 def prep_log(logger_name, log_file, level=logging.INFO):
     logger = logging.getLogger(logger_name)
     formatter = logging.Formatter('%(asctime)s : %(message)s')
@@ -69,6 +100,16 @@ app = Flask(__name__)
 app.config.from_object('default_settings')
 app.permanent_session_lifetime = timedelta(hours=2)
 
+# -----------------------------------------------------------------------------
+# Configuration loading
+# -----------------------------------------------------------------------------
+# 1) Load base configuration from default_settings.
+# 2) If environment variable LOCAL_SETTINGS exists:
+#       - Load additional configuration from that file.
+# 3) Optionally override REDIRECT_NAME using LABBOOK_URL_PREFIX.
+#
+# Configuration values are read at startup and stored in app.config.
+# -----------------------------------------------------------------------------
 config_envvar = 'LOCAL_SETTINGS'
 
 if config_envvar in os.environ:
@@ -107,6 +148,17 @@ app.config['OAUTH_CLIENT_SECRET'] = (
 babel = Babel(app)
 
 
+# -----------------------------------------------------------------------------
+# Per-request session management
+# -----------------------------------------------------------------------------
+# Executed before each request.
+#
+# - Checks inactivity timeout (2 hours).
+# - Redirects to 'disconnect' if expired.
+# - Generates a per-request nonce.
+# - Stores user agent in session.
+# - Updates last activity timestamp.
+# -----------------------------------------------------------------------------
 @app.before_request
 def before_request_func():
     last = session.get('last_activity')
@@ -165,6 +217,18 @@ def inject_app_version():
     return {"app_version": app.config.get("APP_VERSION", "")}
 
 
+# -----------------------------------------------------------------------------
+# Back-End (BE) communication helpers
+# -----------------------------------------------------------------------------
+# These functions handle:
+#
+# - Building the Authorization header from session token
+# - Redirecting to OAuth if token is missing
+# - Handling HTTP 401 responses from the BE
+#
+# All BE calls must use the session key 'be_access_token'.
+# Token validation logic is centralized in these helpers.
+# -----------------------------------------------------------------------------
 def be_auth_headers():
     """
     Build Authorization header from the session access token.
@@ -206,8 +270,14 @@ def be_check_or_bounce(resp):
     return None
 
 
-# Selection de langues avec Babel
 def get_locale():
+    """
+    Selects the active language for the current request.
+
+    - Uses browser Accept-Language as default.
+    - Overrides with session['lang'] if defined.
+    - Stores the selected language in session.
+    """
     log.info(Logs.fileline() + ' : LANG = ' + str(os.environ['LANG']))
     lang = request.accept_languages.best_match(list(LANGUAGES.keys()), default='fr_FR')
     if not session or 'lang' not in session:
@@ -220,11 +290,17 @@ def get_locale():
     return lang
 
 
-# 02/05/2023 update Flask-Babel 2.2.3 => 3.1.0, no more @babel.localeselector before get_locale
+# 2023-05-02: Flask-Babel upgrade, locale is now provided via locale_selector (no decorator).
 babel.init_app(app, locale_selector=get_locale)
 
 
 def check_init_version():
+    """
+    Check Back-End availability by calling the version endpoint.
+
+    Sets session['labbook_BE_OK'] to True if BE responds with 200 or 401,
+    otherwise sets it to False.
+    """
     log.info(Logs.fileline() + ' : LABBOOK_FE check_init_version begins')
 
     ensure_base_urls_in_session()
@@ -249,7 +325,13 @@ def check_init_version():
 
 
 def ensure_base_urls_in_session():
-    """Ensure server_ext, server_int and redirect_name are present in session."""
+    """
+    Ensure base URLs are present in session.
+
+    - server_ext: external URL used for browser redirects.
+    - server_int: internal BE base URL used for FE → BE calls.
+    - redirect_name: optional URL prefix if application is mounted under a subpath.
+    """
     # External base for browser redirects
     root = request.url_root.rstrip('/')
     if request.headers.get('X-Forwarded-Proto') == 'https' and root.startswith('http://'):
@@ -270,6 +352,17 @@ def ensure_base_urls_in_session():
 
 
 def get_init_var(be_headers=None):
+    """
+    Load runtime configuration values from the Back-End into session.
+
+    Retrieves:
+    - application version
+    - auto logout delay
+    - default and database languages
+    - stock settings
+    - form settings
+    - report settings
+    """
     log.info(Logs.fileline() + ' : LABBOOK_FE get_init_var begins')
 
     ensure_base_urls_in_session()
@@ -396,6 +489,15 @@ def get_init_var(be_headers=None):
 
 
 def get_user_data(login, be_headers=None):
+    """
+    Load authenticated user profile and permissions from the Back-End.
+
+    Stores in session:
+    - user identity and role
+    - UI colors
+    - granted rights
+    - linked analyze families (if applicable)
+    """
     if not login:
         log.error(Logs.fileline() + ' : get_user_data ERROR no login')
         return disconnect()  # redirect(session['server_ext'] + '/disconnect')
@@ -643,8 +745,11 @@ app.jinja_env.globals.update(has_permission_by_ser=has_permission_by_ser)
 
 def safe_build_download_path(base_dir: str, user_name: str) -> str | None:
     """
-    Build a safe absolute path for downloads and prevent path traversal.
-    Returns absolute path or None if invalid.
+    Build a safe absolute path inside base_dir.
+
+    - Sanitizes filename.
+    - Prevents directory traversal.
+    - Returns None if validation fails.
     """
     try:
         base_dir_abs = os.path.abspath(base_dir or '')

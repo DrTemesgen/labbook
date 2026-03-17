@@ -8,7 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
-## [3.6.15] - 2025-02-09
+## [3.6.16] - 2026-03-17
+### Fixed
+- OBX-11 result status parsing from ER7 segment
+- LAB-27 fix: properly split QPD-3 (PatientID^SpecimenID) before specimen resolution on the LIS side
+
+## [3.6.15] - 2026-02-09
 ### Added
 - result report template for analysis with one variable
 
@@ -21,13 +26,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - export prescribers
 - hide report duplicata action when report password protection is enabled
 
-## [3.6.14] - 2025-02-02
+## [3.6.14] - 2026-02-02
 ### Fixed
 - CSS: remove max-height:100% on #page to restore full page scroll
 - analyzer prefill: enable Save and trigger limit checks
 - Modified some Alembic migrations to prevent blocking execution on missing or inconsistent reference data
 
-## [3.6.13] - 2025-02-02
+## [3.6.13] - 2026-02-02
 - display id_rec on list-records and list-works pages
 - Audit trail: include record numbers (num_dos_jour, num_dos_mois, num_dos_an) in audit entries on record creation
 
@@ -36,12 +41,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - concatenate value and unit only for text results when prefilled from analyzer
 - preferences page crash by guarding missing audit_purge_months when pref list is incomplete
 
-## [3.6.12] - 2025-01-28
+## [3.6.12] - 2026-01-28
 ### Fixed
 - mobile header: fix right alignment of user info
 - corrupted SQL demo dump with other databases than SIGL
 
-## [3.6.11] - 2025-01-27
+## [3.6.11] - 2026-01-27
 ### Changed
 - enforce TLS 1.2+ for SMTP connections
 - patient merge now also updates dynamic form data and patient history to the kept record
@@ -53,7 +58,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - UI: adapt the top header for screens < 1024 px because too menu items
 - form history download: added missing FPH type handling in download-file route
 
-## [3.6.10] - 2025-01-22
+## [3.6.10] - 2026-01-22
 ### Added
 - workflow context labels to some audit trail entries
 - excluded system audit entries by default
@@ -70,7 +75,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ### Fixed
 - dataTables crash when analyzer message list is empty (fix on others template too).
 
-## [3.6.9] - 2025-01-15
+## [3.6.9] - 2026-01-15
 ### Added
 - full audit logging to all webservice with oauth authentification
 - new analysis NFS_XN3 for Sysmex device

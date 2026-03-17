@@ -46,6 +46,18 @@ from app.services.ResultRest import *
 from app.services.SettingRest import *
 from app.services.LiteRest import *
 
+# -----------------------------------------------------------------------------
+# Back-End initialization
+# -----------------------------------------------------------------------------
+# Initializes:
+#   - Flask application
+#   - Logging (services + database)
+#   - OAuth2 provider (Authlib)
+#   - CORS configuration (external endpoints only)
+#
+# This file acts as the main entry point of the LabBook Back-End.
+# -----------------------------------------------------------------------------
+
 LANGUAGES = {
     'fr_FR': 'French',
     'en_GB': 'English',
@@ -94,6 +106,17 @@ CORS(
     supports_credentials=False  # set True only if you need cookies/Authorization headers
 )
 
+# -----------------------------------------------------------------------------
+# OAuth2 configuration
+# -----------------------------------------------------------------------------
+# The Back-End exposes protected REST endpoints secured with OAuth2.
+#
+# Supported grants:
+#   - client_credentials (machine-to-machine, e.g. Connect)
+#   - authorization_code (Front-End)
+#
+# Token expiration: 2 hours.
+# -----------------------------------------------------------------------------
 app.config['OAUTH2_TOKEN_EXPIRES_IN'] = {
     'client_credentials': 7200,  # 2h M2M
     'authorization_code': 7200,  # 2h labbook-FE
@@ -187,10 +210,17 @@ def index():
     return "Hello World! Labbook BACK END"
 
 
-# ######################################
-# REST pages
-# ######################################
-
+# -----------------------------------------------------------------------------
+# REST resource registration
+# -----------------------------------------------------------------------------
+# All API endpoints are registered below using Flask-RESTful.
+#
+# Conventions:
+#   - /services/...           → internal endpoints (OAuth protected)
+#   - /services/external/...  → external endpoints (limited CORS, some no OAuth)
+#
+# Each resource class is implemented in app.services.*
+# -----------------------------------------------------------------------------
 api.add_resource(Test,                  '/services/test')
 api.add_resource(AnalysisCode,          '/services/analysis/code/check/<string:code>')
 api.add_resource(AnalysisCodeFromExt,   '/services/external/analysis/code/check/<string:code>')

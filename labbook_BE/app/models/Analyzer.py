@@ -548,7 +548,15 @@ class Analyzer:
             now = datetime.now().strftime("%Y%m%d%H%M%S")
             msg_control_id = original_message.msh.msh_10.value or f"RSP{now}"
             query_tag = original_message.qpd.qpd_2.value or "GENEXPERT"
-            specimen_id = original_message.qpd.qpd_3[0].value if original_message.qpd.qpd_3 else ""
+
+            raw_qpd3 = original_message.qpd.qpd_3[0].value if original_message.qpd.qpd_3 else ""
+            patient_id = ""
+            specimen_id = ""
+
+            if raw_qpd3:
+                parts = raw_qpd3.split("^")
+                patient_id = parts[0] if len(parts) > 0 else ""
+                specimen_id = parts[1] if len(parts) > 1 else parts[0]
 
             # Initialize RSP_K11
             rsp = Message("RSP_K11", version="2.5.1")

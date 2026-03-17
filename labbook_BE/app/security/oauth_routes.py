@@ -459,7 +459,7 @@ class MyBearerTokenValidator(BearerTokenValidator):
         if isinstance(required_scopes, str):
             needed = [s for s in required_scopes.split() if s]
         else:
-            needed = list(required_scopes or [])
+            needed = list(required_scopes)
 
         # Token scope string -> list
         token_scopes = [s for s in (token_scope or '').split() if s]

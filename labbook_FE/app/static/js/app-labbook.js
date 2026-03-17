@@ -145,27 +145,31 @@ eval_value( id_rec, ref_ana, id_res ) ;
         //console.log("DEBUG-TRACE calc num_var found in f1") ;
 
         // GET current value for all var in this formula
-        // NOTE if num var greater than 9 ???
-        let l_var   = [] ;
-        let k_var_p = 0  ;
+        // NOTE: if var num greater than 9 ???
+        let l_var   = [];
+        let k_var_p = 0;
 
-            // Get var number for this formula
-            for ( let k = 0; k < f1.length; k++ )
+        // Get var number for this formula
+        let k = 0;
+            while (k < f1.length)
             {
-            let k_var = f1.indexOf("_", k) + 1 ;
+            const pos = f1.indexOf("_", k);
 
-                // stop rotate
-                if ( k_var <= k_var_p )
-                break ;
+              // Stop when no more "_" is found
+                if (pos === -1) { break; }
 
-                if ( k_var >= 0 && k_var < f1.length )
-                {
-                l_var.push( f1.substr(k_var, 1) ) ;
+                const k_var = pos + 1;
 
-                k = k_var + 1 ;
+                // Stop rotate
+                if (k_var <= k_var_p) { break; }
 
-                k_var_p = k_var ;
-                }
+                if (k_var < f1.length) {
+                    l_var.push(f1.substr(k_var, 1));
+                    k_var_p = k_var;
+
+                    // Continue scanning after the extracted variable
+                    k = k_var + 1;
+                } else { break; }
             }
 
          //console.log("DEBUG-TRACE f1 l_var="+l_var) ;
@@ -266,7 +270,7 @@ function check_min_max(id_res, min, max)
 {
 let val = $( "#res_"+id_res ).val() ;
 
-    if ( (min != '' && val <= parseFloat(min)) || (max != '' && val >= parseFloat(max)) )
+    if ( (min != '' && val <= Number.parseFloat(min)) || (max != '' && val >= Number.parseFloat(max)) )
     {
         $("#limit_"+id_res).addClass('show') ;
         $("#limit_"+id_res).removeClass('d-none') ;
@@ -282,7 +286,7 @@ function check_min(id_res, min)
 {
 let val = $( "#res_"+id_res ).val() ;
 
-    if ( min != '' && val <= parseFloat(min) )
+    if ( min != '' && val <= Number.parseFloat(min) )
     {
         $("#limit_"+id_res).addClass('show') ;
         $("#limit_"+id_res).removeClass('d-none') ;
@@ -298,7 +302,7 @@ function check_max(id_res, max)
 {
 let val = $( "#res_"+id_res ).val() ;
 
-    if ( max != '' && val >= parseFloat(max) )
+    if ( max != '' && val >= Number.parseFloat(max) )
     {
         $("#limit_"+id_res).addClass('show') ;
         $("#limit_"+id_res).removeClass('d-none') ;

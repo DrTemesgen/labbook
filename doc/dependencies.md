@@ -33,7 +33,6 @@
 | qrcode                  | 7.4.2     | BSD          |           |         | x       |
 | relatorio               | 0.11.1    | GPL          |           |         | x       |
 | reportlab               | 4.4.9     | BSD          |           |         | x       |
-| unoserver               | 2.2.1     | MIT          |           |         | x       |
 | bcrypt                  | 5.0.0     | Apache 2.0   |           |         | x       |
 | authlib                 | 1.6.5     | BSD          |           |         | x       |
 | Flask-Cors              | 6.0.1     | MIT          |           |         | x       |

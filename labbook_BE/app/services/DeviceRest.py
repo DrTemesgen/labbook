@@ -446,8 +446,11 @@ class AnalyzerLab29(Resource):
                         try:
                             segment_er7 = obx.to_er7()
                             fields = segment_er7.split("|")
-                            if len(fields) >= 11:
-                                obs_status = fields[10]  # OBX-11
+                            # OBX-11 = Result Status (HL7 standard), fields[0] = "OBX"
+                            if len(fields) > 11:
+                                obs_status = fields[11]  # OBX-11
+                            else:
+                                obs_status = ""
                         except Exception as e:
                             self.log.error(Logs.fileline() + f" : ERROR reading OBX-11 from ER7: {str(e)}")
 
