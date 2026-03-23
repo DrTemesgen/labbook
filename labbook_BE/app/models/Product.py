@@ -32,7 +32,7 @@ class Product:
         cursor = DB.cursor()
 
         req = ("""
-               SELECT samp.id_data as id_samp, samp.code as code_samp, samp.samp_date, d1.label as type_samp,
+               SELECT samp.id_data as id_samp, samp.code as code, samp.samp_date, d1.label as type_samp,
                rec.num_dos_an as num_record, ana.code as ana_code, ana.nom as ana_name, ana.ana_loinc,
                pat.code as pat_code, pat.nom as pat_name, pat.prenom as pat_firstname, pat.nom_jf as pat_maiden,
                pat.ddn as pat_birth, pat.sexe as pat_sex, pat.adresse as pat_address, pat.ville as pat_city,

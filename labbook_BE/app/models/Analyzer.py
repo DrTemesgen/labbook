@@ -595,14 +595,15 @@ class Analyzer:
 
             date_now = datetime.now().strftime("%Y%m%d%H%M%S")
 
+            Analyzer.log.error(Logs.fileline() + f" : specimen_id received = '{specimen_id}'")
+
             if specimen_id.upper() == "ALL":
                 # Retrieve all samples for batch transmission
                 raw_orders = Product.getOrdersForLab27()
             else:
                 resolved_id = Product.resolveProductId(specimen_id)
                 if resolved_id:
-                    specimen_id = resolved_id
-                    Analyzer.log.info(Logs.fileline() + f' : INFO specimen_id resolved to id_data = {specimen_id}')
+                    Analyzer.log.info(Logs.fileline() + f' : INFO specimen_id resolved to id_data = {resolved_id}')
                     single_order = Product.getOrderDetForLab27(specimen_id)
                     raw_orders = [single_order] if single_order else []
                 else:

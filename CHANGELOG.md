@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
+## [3.6.17] - 2026-03-23
+### Fixed
+- Fixed LAB-27 specific query response for GeneXpert
+
 ## [3.6.16] - 2026-03-17
 ### Fixed
 - OBX-11 result status parsing from ER7 segment
