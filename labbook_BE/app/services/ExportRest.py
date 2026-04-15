@@ -135,7 +135,7 @@ class ExportDHIS2(Resource):
                 last_dom = calendar.monthrange(y, m)[1]
                 cur_start = datetime(y, m, 1)
                 cur_end   = datetime(y, m, last_dom)
-                tmp_period = f"{y}M{m:02d}"
+                tmp_period = f"{y}{m:02d}"
                 l_period.append([tmp_period, cur_start, cur_end])
                 if m == 12:
                     y, m = y + 1, 1
@@ -626,7 +626,7 @@ class ExportDHIS2Api(Resource):
                 last_dom = calendar.monthrange(y, m)[1]
                 cur_start = datetime(y, m, 1)
                 cur_end   = datetime(y, m, last_dom)
-                tmp_period = f"{y}M{m:02d}"
+                tmp_period = f"{y}{m:02d}"
                 l_period.append([tmp_period, cur_start, cur_end])
                 if m == 12:
                     y, m = y + 1, 1
@@ -649,19 +649,25 @@ class ExportDHIS2Api(Resource):
                 cur_start = datetime(y, m, 1)
                 cur_end   = datetime(y_end, m_end, last_dom)
 
-                # Index within the year for the label
-                if period == 'S':
+                if period == 'A':
+                    tmp_period = f"{y}"
+                
+                elif period == 'S':
                     idx = 1 if m <= 6 else 2
-                elif period == 'A':
-                    idx = 1
-                elif period == 'B':
-                    idx = ((m - 1) // 2) + 1
+                    tmp_period = f"{y}S{idx}"
+                
                 elif period == 'T':
                     idx = ((m - 1) // 3) + 1
-                else:  # 'Q'
+                    tmp_period = f"{y}Q{idx}"
+                
+                elif period == 'B':
+                    idx = ((m - 1) // 2) + 1
+                    tmp_period = f"{y}{idx:02d}B"
+                
+                elif period == 'Q':
                     idx = ((m - 1) // 4) + 1
+                    tmp_period = f"{y}Q{idx}C"
 
-                tmp_period = f"{y}{period}{idx:02d}"
                 l_period.append([tmp_period, cur_start, cur_end])
 
                 # Advance to next group start by 'span' months

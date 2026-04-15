@@ -111,6 +111,15 @@
                             <td class="col-lg-6"><input type="number" id="pref_audit_purge" name="pref_audit_purge" min="1" step="1" max="60" value="{% if args.get('pref_list') and (args.get('pref_list')|length > 16) %}{{ args.get('pref_list')[16]['value'] }}{% endif %}"></td>
                             
                         </tr>
+                        <tr class="d-lg-flex">
+                            <th class="col-lg-6">{{ _("Audit trail activé (un redémarrage de la machine hébergeant LabBook est nécessaire après modification)") }}</th>
+                            <td class="col-lg-6">
+                                <input type="checkbox" id="pref_audit_enabled" name="pref_audit_enabled" value="1"
+                                {% if args.get('pref_list') and (args.get('pref_list')|length > 17) and args.get('pref_list')[17]['value'] == '1' %}
+                                    checked="checked"
+                                {% endif %}>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </form>
@@ -150,6 +159,7 @@ var bill       = 0 ;
 var lang_pdf   = $("#pref_lang_pdf").val() ;
 var lang_db    = $("#pref_lang_db").val() ;
 var audit_purge= $("#pref_audit_purge").val() ;
+var audit_enabled = 0 ;
 
     if ( deed_price === '' )
     {
@@ -165,6 +175,9 @@ var audit_purge= $("#pref_audit_purge").val() ;
 
     if ( $("#pref_bill").is(":checked") )
     bill = $("#pref_bill").val() ;
+
+    if ( $("#pref_audit_enabled").is(":checked") )
+    audit_enabled = $("#pref_audit_enabled").val() ;
 
 var param = '{ "prix_acte":"' + deed_price + '", ' +
               '"entete_1":"' + head_1 + '", ' +
@@ -182,6 +195,7 @@ var param = '{ "prix_acte":"' + deed_price + '", ' +
               '"facturation":"' + bill + '", ' +
               '"default_language":"' + lang_pdf + '", ' +
               '"audit_purge_months":"' + audit_purge + '", ' +
+              '"audit_trail_enabled":"' + audit_enabled + '", ' +
               '"db_language":"' + lang_db + '"}' ;
 
     $.ajax( {

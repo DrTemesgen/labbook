@@ -41,6 +41,17 @@ def upgrade():
     except Exception as err:
         print("ERROR modify column file in sigl_11_data_deleted,\n\terr=" + str(err))
 
+    try:
+        conn.execute(text("""
+            INSERT INTO sigl_06_data (id_owner, identifiant, label, value)
+            SELECT 1, 'audit_trail_enabled', 'Audit trail activé', '1'
+            WHERE NOT EXISTS (
+                SELECT 1 FROM sigl_06_data WHERE identifiant = 'audit_trail_enabled'
+            )
+        """))
+    except Exception as err:
+        print("ERROR insert audit_trail_enabled in sigl_06_data,\n\terr=" + str(err))
+
     print(str(datetime.today()) + " : END of migration v3_6_18_increase_size_of_columns revision=ef1f9f565b91")
 
 

@@ -2659,3 +2659,17 @@ class Setting:
         except mysql.connector.Error as e:
             Setting.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
             return False
+
+    @staticmethod
+    def isAuditTrailEnabled():
+        """
+        Return True if audit trail is enabled (value = "1"), otherwise False.
+        """
+        cursor = DB.cursor()
+        cursor.execute(
+            'SELECT value FROM sigl_06_data WHERE identifiant=%s LIMIT 1',
+            ('audit_trail_enabled',)
+        )
+        row = cursor.fetchone()
+    
+        return bool(row and str(row["value"]).strip() == "1")

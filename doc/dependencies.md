@@ -19,7 +19,7 @@
 | gunicorn                | 25.0.1    | MIT          |           | x       | x       |
 | pip                     | 25.2.0    | MIT          |           | x       | x       |
 | pipenv                  | 2025.0.1  | MIT          |           | x       | x       |
-| requests                | 2.32.5    | Apache 2.0   |           | x       | x       |
+| requests                | 2.33.1    | Apache 2.0   |           | x       | x       |
 | pip-audit               | 2.9.0     | Apache 2.0   |           | x       | x       |
 | tomli                   | 2.4.0     | MIT          |           | x       | x       |
 | alembic                 | 1.16.5    | MIT          |           |         | x       |

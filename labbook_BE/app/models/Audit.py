@@ -11,6 +11,7 @@ from app.models.Logs import Logs
 
 class Audit:
     log = logging.getLogger('log_services')
+    audit_trail_enabled = True
 
     @staticmethod
     def listAudit(offset=0, limit=25, order_col_index=1, order_dir="desc", search_value=None, filters=None):
@@ -345,6 +346,11 @@ class Audit:
     @staticmethod
     def insertAudit(user, action, resource_type=None, resource_id=None, status=None, details_json=None, event_type="E"):
         """Insert a new audit event into audit_trail."""
+
+        # Skip audit if disabled
+        if not Audit.audit_trail_enabled:
+            return None
+
         cursor = DB.cursor()
         try:
             user_login = user.get('usr_login') if user else None

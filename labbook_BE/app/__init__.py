@@ -24,6 +24,8 @@ from flask_cors import CORS
 from app.security.oauth_routes import bp_oauth, authorization
 
 from app.models.Logs import Logs
+from app.models.Setting import Setting
+from app.models.Audit import Audit
 from app.models.Various import *
 from app.services.GeneralRest import *
 from app.services.UserRest import *
@@ -105,6 +107,9 @@ CORS(
     }},
     supports_credentials=False  # set True only if you need cookies/Authorization headers
 )
+
+with app.app_context():
+    Audit.audit_trail_enabled = Setting.isAuditTrailEnabled()
 
 # -----------------------------------------------------------------------------
 # OAuth2 configuration
