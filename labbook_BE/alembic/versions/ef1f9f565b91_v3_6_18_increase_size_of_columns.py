@@ -52,6 +52,13 @@ def upgrade():
     except Exception as err:
         print("ERROR insert audit_trail_enabled in sigl_06_data,\n\terr=" + str(err))
 
+    try:
+        conn.execute(text("ALTER TABLE audit_trail DROP INDEX idx_audit_action_date"))
+        conn.execute(text("ALTER TABLE audit_trail DROP INDEX idx_audit_user_date"))
+        conn.execute(text("ALTER TABLE audit_trail DROP INDEX idx_audit_event_type_date"))
+    except Exception as err:
+        print("ERROR drop indexes audit_trail,\n\terr=" + str(err))
+
     print(str(datetime.today()) + " : END of migration v3_6_18_increase_size_of_columns revision=ef1f9f565b91")
 
 
