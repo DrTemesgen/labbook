@@ -35,11 +35,11 @@ def upgrade():
     except Exception as err:
         print("ERROR modify column file in sigl_11_data,\n\terr=" + str(err))
 
-    # MODIFY column file in sigl_11_data_deleted
+    # MODIFY column file in sigl_11_deleted
     try:
-        conn.execute(text("ALTER TABLE sigl_11_data_deleted MODIFY file VARCHAR(255) NOT NULL"))
+        conn.execute(text("ALTER TABLE sigl_11_deleted MODIFY file VARCHAR(255) NOT NULL"))
     except Exception as err:
-        print("ERROR modify column file in sigl_11_data_deleted,\n\terr=" + str(err))
+        print("ERROR modify column file in sigl_11_deleted,\n\terr=" + str(err))
 
     try:
         conn.execute(text("""
