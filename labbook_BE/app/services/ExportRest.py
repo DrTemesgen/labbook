@@ -651,19 +651,19 @@ class ExportDHIS2Api(Resource):
 
                 if period == 'A':
                     tmp_period = f"{y}"
-                
+
                 elif period == 'S':
                     idx = 1 if m <= 6 else 2
                     tmp_period = f"{y}S{idx}"
-                
+
                 elif period == 'T':
                     idx = ((m - 1) // 3) + 1
                     tmp_period = f"{y}Q{idx}"
-                
+
                 elif period == 'B':
                     idx = ((m - 1) // 2) + 1
                     tmp_period = f"{y}{idx:02d}B"
-                
+
                 elif period == 'Q':
                     idx = ((m - 1) // 4) + 1
                     tmp_period = f"{y}Q{idx}C"

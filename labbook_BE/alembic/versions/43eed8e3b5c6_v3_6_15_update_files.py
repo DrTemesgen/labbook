@@ -84,6 +84,7 @@ def upgrade():
 
     print(str(datetime.today()) + " : END of migration v3_6_15_update_files revision=43eed8e3b5c6")
 
+
 def downgrade():
     """
     No-op by design.

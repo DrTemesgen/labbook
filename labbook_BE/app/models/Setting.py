@@ -2671,5 +2671,5 @@ class Setting:
             ('audit_trail_enabled',)
         )
         row = cursor.fetchone()
-    
+
         return bool(row and str(row["value"]).strip() == "1")

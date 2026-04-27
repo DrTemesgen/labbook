@@ -498,16 +498,21 @@ class Analysis:
             upd_code_var = False
 
             # avoid empty code_var
-            if not params['code_var']:
+            if not params.get('code_var'):
+                # no code provided → will use id_data after insert
                 upd_code_var = True
+                params['code_var'] = None
+            else:
+                # ensure uniqueness if code provided
+                original_code = str(params['code_var'])
+                code = original_code
+                i = 1
 
-                last_var = Analysis.getLastAnalysisVar()
+                while Analysis.codeVarExists(code, params.get('test', 'N')):
+                    code = f"{original_code}_{i}"
+                    i += 1
 
-                if last_var:
-                    last_var = int(last_var['code_var']) + 1
-                    params['code_var'] = str(last_var)
-                else:
-                    params['code_var'] = "NO_CODE_VAR"
+                params['code_var'] = code
 
             cursor = DB.cursor()
 
@@ -1021,3 +1026,17 @@ class Analysis:
         except mysql.connector.Error as e:
             Analysis.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
             return False
+
+    @staticmethod
+    def codeVarExists(code_var, test='N'):
+        if test == 'Y':
+            mode_test = '_test '
+        else:
+            mode_test = ' '
+
+        cursor = DB.cursor()
+
+        cursor.execute('select count(*) as nb from sigl_07_data' + mode_test + ' where code_var=%s', (code_var,))
+
+        ret = cursor.fetchone()
+        return ret and ret['nb'] > 0

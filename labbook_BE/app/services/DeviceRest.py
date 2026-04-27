@@ -435,24 +435,23 @@ class AnalyzerLab29(Resource):
             if has_obx:
                 obx_segments = [segment for segment in hl7_msg.children if segment.name == "OBX"]
 
-                for obx in obx_segments:
+                # Extract raw OBX segments from original HL7 message (DO NOT use hl7apy for this)
+                raw_segments = msg_hl7.split("\r")
+                obx_raw_list = [s for s in raw_segments if s.startswith("OBX|")]
+
+                for i, obx in enumerate(obx_segments):
                     try:
                         obs_id = obx.obx_3.value if hasattr(obx, "obx_3") else "UNKNOWN"
                         obs_value = obx.obx_5.value if hasattr(obx, "obx_5") else ""
                         obs_unit = obx.obx_6.value if hasattr(obx, "obx_6") else ""
 
-                        # Read OBX-11 (result status) from raw ER7 to avoid parsing issues
+                        # Read OBX-11 (result status)
                         obs_status = ""
-                        try:
-                            segment_er7 = obx.to_er7()
-                            fields = segment_er7.split("|")
-                            # OBX-11 = Result Status (HL7 standard), fields[0] = "OBX"
-                            if len(fields) > 11:
-                                obs_status = fields[11]  # OBX-11
-                            else:
-                                obs_status = ""
-                        except Exception as e:
-                            self.log.error(Logs.fileline() + f" : ERROR reading OBX-11 from ER7: {str(e)}")
+                        if i < len(obx_raw_list):
+                            raw_obx = obx_raw_list[i]
+                            self.log.info(Logs.fileline() + f" : DEBUG raw_obx={raw_obx}")
+                            fields = raw_obx.strip().split("|")
+                            obs_status = fields[-1] if fields else ""
 
                         obs_status = (obs_status or "").strip().upper()
 
