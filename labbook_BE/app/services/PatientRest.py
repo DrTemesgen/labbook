@@ -1,6 +1,7 @@
 # -*- coding:utf-8 -*-
 import logging
 import gettext
+import requests
 
 from datetime import datetime
 from flask import request
@@ -355,7 +356,8 @@ class PatientDet(Resource):
         default_keys = ['id_user', 'pat_ano', 'pat_code', 'pat_code_lab', 'pat_name', 'pat_firstname', 'pat_birth',
                         'pat_sex', 'pat_address', 'pat_zipcode', 'pat_city', 'pat_phone1', 'pat_phone2', 'pat_profession',
                         'pat_maiden', 'pat_district', 'pat_pbox', 'pat_birth_approx', 'pat_age', 'pat_age_unit',
-                        'pat_midname', 'pat_nationality', 'pat_resident', 'pat_blood_group', 'pat_blood_rhesus', 'pat_email']
+                        'pat_midname', 'pat_nationality', 'pat_resident', 'pat_blood_group', 'pat_blood_rhesus',
+                        'pat_email', 'pat_agreement', 'pat_amicare']
 
         default_values = {'pat_ano': 5,
                           'pat_code_lab': '',
@@ -380,6 +382,7 @@ class PatientDet(Resource):
                           'pat_blood_group': 0,
                           'pat_blood_rhesus': 0,
                           'pat_agreement': 'N',
+                          'pat_amicare': 0,
                           'pat_email': ''}
 
         # Update patient
@@ -394,6 +397,10 @@ class PatientDet(Resource):
                 except Exception as err:
                     self.log.error(Logs.fileline() + ' : PatientDet ERROR audit err=' + str(err))
                 return compose_ret('', Constants.cst_content_type_json, 500)
+
+            # AmiCare account creation (only if asked)
+            if (not patient.get('pat_amicare') or patient.get('pat_amicare') == 0) and args.get('pat_amicare') == 1:
+                self.create_amicare_account(args, id_pat)
 
             if 'pat_birth' in args and args['pat_birth']:
                 args['pat_birth'] = datetime.strptime(args['pat_birth'], Constants.cst_isodate)
@@ -432,7 +439,8 @@ class PatientDet(Resource):
                                         resident=args['pat_resident'],
                                         blood_group=args['pat_blood_group'],
                                         blood_rhesus=args['pat_blood_rhesus'],
-                                        pat_agreement=args['pat_agreement'])
+                                        pat_agreement=args['pat_agreement'],
+                                        pat_amicare=args['pat_amicare'])
 
             if ret is False:
                 self.log.error(Logs.alert() + ' : PatientDet ERROR update')
@@ -526,7 +534,8 @@ class PatientDet(Resource):
                                         resident=args['pat_resident'],
                                         blood_group=args['pat_blood_group'],
                                         blood_rhesus=args['pat_blood_rhesus'],
-                                        pat_agreement=args['pat_agreement'])
+                                        pat_agreement=args['pat_agreement'],
+                                        pat_amicare=0)
 
             if ret <= 0:
                 self.log.error(Logs.alert() + ' : PatientDet ERROR insert')
@@ -539,6 +548,10 @@ class PatientDet(Resource):
 
             res = {}
             res['id_pat'] = ret
+
+            # AmiCare account creation (only if enabled)
+            if args.get('pat_amicare') == 1:
+                self.create_amicare_account(args, res['id_pat'])
 
             # insert additionnal custom field
             for key, value in args.items():
@@ -561,6 +574,43 @@ class PatientDet(Resource):
         except Exception as err:
             self.log.error(Logs.fileline() + ' : PatientDet ERROR audit success err=' + str(err))
         return compose_ret(res, Constants.cst_content_type_json)
+
+
+    def create_amicare_account(self, args, id_pat):
+        from app import AMICARE_CONFIG
+        if args.get('pat_amicare') != 1:
+            return
+
+        try:
+            url = AMICARE_CONFIG['base_url'] + AMICARE_CONFIG['endpoints']['create_patient']
+
+            payload = {
+                "patient": {
+                    "nom": args.get('pat_name'),
+                    "pnom": args.get('pat_firstname'),
+                    "login": args.get('pat_email'),
+                    "pwd": args.get('pat_email'),
+                    "mail": args.get('pat_email'),
+                    "sexe": "M" if args.get('pat_sex') == 1 else "F",
+                    "tel": args.get('pat_phone1'),
+                    "dn": args.get('pat_birth').strftime('%Y%m%d') if args.get('pat_birth') else None,
+                    "id_ami": id_pat,
+                    "id_amic": 0
+                }
+            }
+
+            response = requests.post(url, json=payload, auth=(AMICARE_CONFIG['auth']['username'], AMICARE_CONFIG['auth']['password']), timeout=10)
+
+            if response.status_code == 200:
+                res = response.json()
+                amicare_id = res.get('id_pat')
+
+                if amicare_id:
+                    Patient.update_amicare_id(id_pat, amicare_id)
+
+            self.log.info(Logs.fileline() + ' : AMICARE status=' + str(response.status_code))
+        except Exception as err:
+            self.log.error(Logs.fileline() + ' : AMICARE err=' + str(err))
 
 
 class PatientFormItem(Resource):

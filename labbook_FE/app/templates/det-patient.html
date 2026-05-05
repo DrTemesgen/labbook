@@ -30,13 +30,28 @@
                             </div>
 
                             <div class="text-center flex-grow-1">
-                                <div class="form-check d-inline-block">
+                                <div class="form-check d-inline-block me-3">
                                     <input class="form-check-input" type="checkbox"
                                            id="pat_agreement" name="pat_agreement" value="Y" {% if args['pat_agreement'] == 'Y' %}checked{% endif %}>
                                     <label class="form-check-label" for="pat_agreement">
                                         {{ _("Accord pour l'envoi des résultats par email ou WhatsApp") }}
                                     </label>
                                 </div>
+
+                                {% if session.get('amicare', {}).get('enabled') %}
+                                <div class="form-check d-inline-block">
+                                    <input class="form-check-input" type="checkbox"
+                                        id="pat_amicare" name="pat_amicare"
+                                        {% if args.get('pat_amicare') %}checked disabled{% endif %}>
+                                    <label class="form-check-label" for="pat_amicare">
+                                        {% if args.get('pat_amicare') %}
+                                            {{ _("Compte AmiCare existant") }}
+                                        {% else %}
+                                            {{ _("Créer un compte AmiCare") }}
+                                        {% endif %}
+                                    </label>
+                                </div>
+                                {% endif %}
                             </div>
 
                             {% if args.get('has_pat_hist_form') %}
@@ -136,6 +151,12 @@ function save_form_and_open_hist(id_pat)
 param.pat_code = $("#pat_code").text().trim();    
 param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
 
+    if ({{ args.get('pat_amicare', 0)|int }} > 0) {
+        param.pat_amicare = {{ args.get('pat_amicare', 0)|int }};
+    } else {
+        param.pat_amicare = $("#pat_amicare").is(":checked") ? 1 : 0;
+    }
+
     // popup wait
     $("#dial-wait").off('shown.bs.modal');
     $("#dial-wait").modal("show");
@@ -186,6 +207,12 @@ function save_form( id_pat )
 
 param.pat_code = $("#pat_code").text().trim();
 param.pat_agreement = $("#pat_agreement").is(":checked") ? "Y" : "N";
+
+    if ({{ args.get('pat_amicare', 0)|int }} > 0) {
+        param.pat_amicare = {{ args.get('pat_amicare', 0)|int }};
+    } else {
+        param.pat_amicare = $("#pat_amicare").is(":checked") ? 1 : 0;
+    }
 
     // popup wait
     $("#dial-wait").off('shown.bs.modal') ;

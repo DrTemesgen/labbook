@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Labbook_BE\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-16 11:05+0200\n"
+"POT-Creation-Date: 2026-05-05 10:20+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: mg\n"
@@ -426,59 +426,59 @@ msgstr ""
 msgid "I"
 msgstr ""
 
-#: models/Setting.py:1921
-msgid "méthode d’envoi introuvable"
-msgstr ""
-
-#: models/Setting.py:1925
-msgid "modèle d’envoi introuvable"
-msgstr ""
-
-#: models/Setting.py:1931
+#: models/Setting.py:1924
 msgid "numéro de compte rendu manquant"
 msgstr ""
 
-#: models/Setting.py:1950
+#: models/Setting.py:1947
 msgid "patient introuvable"
 msgstr ""
 
-#: models/Setting.py:1996
+#: models/Setting.py:1983
+msgid "méthode d’envoi introuvable"
+msgstr ""
+
+#: models/Setting.py:1987
+msgid "modèle d’envoi introuvable"
+msgstr ""
+
+#: models/Setting.py:2032
 msgid "nom de modèle WhatsApp manquant dans le modèle d’envoi"
 msgstr ""
 
-#: models/Setting.py:2014 models/Setting.py:2015
+#: models/Setting.py:2051
 msgid "type de méthode invalide"
 msgstr ""
 
-#: models/Setting.py:2022 models/Setting.py:2024
-msgid "échec d’envoi"
-msgstr ""
-
-#: models/Setting.py:2024
+#: models/Setting.py:2060
 msgid "envoyé"
 msgstr ""
 
-#: models/Setting.py:2044
+#: models/Setting.py:2060
+msgid "échec d’envoi"
+msgstr ""
+
+#: models/Setting.py:2169
 msgid "nom de fichier source manquant"
 msgstr ""
 
-#: models/Setting.py:2047
+#: models/Setting.py:2172
 msgid "code patient manquant pour le mot de passe PDF"
 msgstr ""
 
-#: models/Setting.py:2266
+#: models/Setting.py:2391
 msgid "Nom de modèle WhatsApp manquant"
 msgstr ""
 
-#: models/Setting.py:2534
+#: models/Setting.py:2659
 msgid "Echec envoi"
 msgstr ""
 
-#: models/Setting.py:2536
+#: models/Setting.py:2661
 msgid "Réenvoyer"
 msgstr ""
 
-#: models/Setting.py:2536
+#: models/Setting.py:2661
 msgid "Echec réenvoi"
 msgstr ""
 
@@ -8796,5 +8796,8 @@ msgstr "Fanamarinana teknika"
 #~ msgstr ""
 
 #~ msgid "Plus de 40 ans"
+#~ msgstr ""
+
+#~ msgid "auth AmiCare invalide"
 #~ msgstr ""
 

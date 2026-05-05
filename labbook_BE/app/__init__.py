@@ -14,6 +14,7 @@
 
 import os
 import logging
+import tomllib
 
 from logging.handlers import WatchedFileHandler
 
@@ -190,6 +191,26 @@ if config_envvar in os.environ:
         log.info(Logs.fileline() + ' : LABBOOK_TEST_KO=' + str(os.environ['LABBOOK_TEST_KO']))
 else:
     print(("No local configuration available: {} is undefined in the environment".format(config_envvar)))
+
+# =========================================
+# Amicare config (LOAD ONCE AT STARTUP)
+# =========================================
+AMICARE_CONFIG = {}
+
+try:
+    path = os.path.join(Constants.cst_io, 'amicare.toml')
+
+    if os.path.exists(path):
+        with open(path, 'rb') as f:
+            cfg = tomllib.load(f)
+
+        AMICARE_CONFIG = cfg.get('amicare') or {}
+        log.info(Logs.fileline() + ' : amicare.toml loaded')
+    else:
+        log.warning(Logs.fileline() + ' : amicare.toml not found')
+
+except Exception as err:
+    log.error(Logs.fileline() + ' : load amicare.toml failed err=%s', err)
 
 # ===== Authlib insecure transport toggle =====
 # If not provided by the container, default to 1 so HTTP works in dev/lab.

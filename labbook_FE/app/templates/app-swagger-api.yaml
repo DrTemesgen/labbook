@@ -12,7 +12,7 @@ externalDocs:
   description: Find out more about Swagger
   url: http://swagger.io
 servers:
-- url: {{ session['server_ext'] }}/services
+- url: {{ request.url_root }}/services
 tags:
 - name: analysis
   description: web services about analysis
@@ -934,8 +934,8 @@ components:
       type: oauth2
       flows:
         authorizationCode:
-          authorizationUrl: "{{ session['server_ext'] }}/services/oauth/authorize"
-          tokenUrl: "{{ session['server_ext'] }}/services/oauth/token"
+          authorizationUrl: "{{ request.url_root }}/services/oauth/authorize"
+          tokenUrl: "{{ request.url_root }}/services/oauth/token"
           scopes:
             external: "Endpoints /external/*" 
             external/analysis: "Endpoints /external/analysis/*"

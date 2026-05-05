@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  Labbook_BE\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-04-16 11:05+0200\n"
+"POT-Creation-Date: 2026-05-05 10:20+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -430,59 +430,59 @@ msgstr "F"
 msgid "I"
 msgstr "I"
 
-#: models/Setting.py:1921
-msgid "méthode d’envoi introuvable"
-msgstr "Send method not found"
-
-#: models/Setting.py:1925
-msgid "modèle d’envoi introuvable"
-msgstr "Send template not found"
-
-#: models/Setting.py:1931
+#: models/Setting.py:1924
 msgid "numéro de compte rendu manquant"
 msgstr "missing report number"
 
-#: models/Setting.py:1950
+#: models/Setting.py:1947
 msgid "patient introuvable"
 msgstr "Patient record not found"
 
-#: models/Setting.py:1996
+#: models/Setting.py:1983
+msgid "méthode d’envoi introuvable"
+msgstr "Send method not found"
+
+#: models/Setting.py:1987
+msgid "modèle d’envoi introuvable"
+msgstr "Send template not found"
+
+#: models/Setting.py:2032
 msgid "nom de modèle WhatsApp manquant dans le modèle d’envoi"
 msgstr "Missing WhatsApp template name in send configuration"
 
-#: models/Setting.py:2014 models/Setting.py:2015
+#: models/Setting.py:2051
 msgid "type de méthode invalide"
 msgstr "Invalid method type"
 
-#: models/Setting.py:2022 models/Setting.py:2024
-msgid "échec d’envoi"
-msgstr "Send failure"
-
-#: models/Setting.py:2024
+#: models/Setting.py:2060
 msgid "envoyé"
 msgstr "Sent"
 
-#: models/Setting.py:2044
+#: models/Setting.py:2060
+msgid "échec d’envoi"
+msgstr "Send failure"
+
+#: models/Setting.py:2169
 msgid "nom de fichier source manquant"
 msgstr "Source file name missing"
 
-#: models/Setting.py:2047
+#: models/Setting.py:2172
 msgid "code patient manquant pour le mot de passe PDF"
 msgstr "Missing patient code for PDF password"
 
-#: models/Setting.py:2266
+#: models/Setting.py:2391
 msgid "Nom de modèle WhatsApp manquant"
 msgstr "Missing WhatsApp template name"
 
-#: models/Setting.py:2534
+#: models/Setting.py:2659
 msgid "Echec envoi"
 msgstr "Send failed"
 
-#: models/Setting.py:2536
+#: models/Setting.py:2661
 msgid "Réenvoyer"
 msgstr "Resend"
 
-#: models/Setting.py:2536
+#: models/Setting.py:2661
 msgid "Echec réenvoi"
 msgstr "Resend failed"
 
@@ -8837,4 +8837,7 @@ msgstr "Grouped biological validation"
 #: translations/messages_pybabel.py:2726
 msgid "Validation technique"
 msgstr "Technical validation"
+
+#~ msgid "auth AmiCare invalide"
+#~ msgstr ""
 

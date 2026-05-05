@@ -755,25 +755,17 @@ class Quality:
     def deleteEqpFailure(id_item, with_id_eqp=False):
         try:
             cursor = DB.cursor()
-
-            cond  = id_item
+            cond = '%s'
             cond2 = 'eqf_ser = %s'
-
             if with_id_eqp:
-                cond  = '(select eqf_ser from eqp_failure where eqf_eqp=%s)'
+                cond = '(select eqf_ser from eqp_failure where eqf_eqp = %s)'
                 cond2 = 'eqf_eqp = %s'
 
-            cursor.execute('delete from sigl_file_data '
-                           'where id_data in (select id_file from eqp_failure_file where id_ext in ' + cond + ')', (id_item,))
-
-            cursor.execute('delete from eqp_failure_file '
-                           'where id_ext in ' + cond, (id_item,))
-
-            cursor.execute('delete from eqp_failure '
-                           'where ' + cond2, (id_item,))
+            cursor.execute('delete from sigl_file_data where id_data in (select id_file from eqp_failure_file where id_ext in (' + cond + '))', (id_item,))
+            cursor.execute('delete from eqp_failure_file where id_ext in (' + cond + ')', (id_item,))
+            cursor.execute('delete from eqp_failure where ' + cond2, (id_item,))
 
             Quality.log.info(Logs.fileline())
-
             return True
         except mysql.connector.Error as e:
             Quality.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
@@ -815,25 +807,17 @@ class Quality:
     def deleteEqpMetrology(id_item, with_id_eqp=False):
         try:
             cursor = DB.cursor()
-
-            cond  = id_item
+            cond = '%s'
             cond2 = 'eqm_ser = %s'
-
             if with_id_eqp:
-                cond  = '(select eqm_ser from eqp_metrology where eqm_eqp=%s)'
+                cond = '(select eqm_ser from eqp_metrology where eqm_eqp = %s)'
                 cond2 = 'eqm_eqp = %s'
 
-            cursor.execute('delete from sigl_file_data '
-                           'where id_data in (select id_file from eqp_calibration_file where id_ext in ' + cond + ')', (id_item,))
-
-            cursor.execute('delete from eqp_calibration_file '
-                           'where id_ext in ' + cond, (id_item,))
-
-            cursor.execute('delete from eqp_metrology '
-                           'where ' + cond2, (id_item,))
+            cursor.execute('delete from sigl_file_data where id_data in (select id_file from eqp_calibration_file where id_ext in (' + cond + '))', (id_item,))
+            cursor.execute('delete from eqp_calibration_file where id_ext in (' + cond + ')', (id_item,))
+            cursor.execute('delete from eqp_metrology where ' + cond2, (id_item,))
 
             Quality.log.info(Logs.fileline())
-
             return True
         except mysql.connector.Error as e:
             Quality.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
@@ -875,26 +859,17 @@ class Quality:
     def deleteEqpPreventive(id_item, with_id_eqp=False):
         try:
             cursor = DB.cursor()
-
-            cond  = id_item
+            cond = '%s'
             cond2 = 'eqs_ser = %s'
-
             if with_id_eqp:
-                cond  = '(select eqs_ser from eqp_preventive_maintenance where eqs_eqp=%s)'
+                cond = '(select eqs_ser from eqp_preventive_maintenance where eqs_eqp = %s)'
                 cond2 = 'eqs_eqp = %s'
 
-            cursor.execute('delete from sigl_file_data '
-                           'where id_data in (select id_file from eqp_preventive_maintenance_file '
-                           'where id_ext in ' + cond + ')', (id_item,))
-
-            cursor.execute('delete from eqp_preventive_maintenance_file '
-                           'where id_ext in ' + cond, (id_item,))
-
-            cursor.execute('delete from eqp_preventive_maintenance '
-                           'where ' + cond2, (id_item,))
+            cursor.execute('delete from sigl_file_data where id_data in (select id_file from eqp_preventive_maintenance_file where id_ext in (' + cond + '))', (id_item,))
+            cursor.execute('delete from eqp_preventive_maintenance_file where id_ext in (' + cond + ')', (id_item,))
+            cursor.execute('delete from eqp_preventive_maintenance where ' + cond2, (id_item,))
 
             Quality.log.info(Logs.fileline())
-
             return True
         except mysql.connector.Error as e:
             Quality.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))
@@ -936,25 +911,17 @@ class Quality:
     def deleteEqpContract(id_item, with_id_eqp=False):
         try:
             cursor = DB.cursor()
-
-            cond  = id_item
+            cond = '%s'
             cond2 = 'eqc_ser = %s'
-
             if with_id_eqp:
-                cond  = '(select eqc_ser from eqp_maintenance_contract where eqc_eqp=%s)'
+                cond = '(select eqc_ser from eqp_maintenance_contract where eqc_eqp = %s)'
                 cond2 = 'eqc_eqp = %s'
 
-            cursor.execute('delete from sigl_file_data '
-                           'where id_data in (select id_file from eqp_maintenance_file where id_ext in ' + cond + ')', (id_item,))
-
-            cursor.execute('delete from eqp_maintenance_file '
-                           'where id_ext in ' + cond, (id_item,))
-
-            cursor.execute('delete from eqp_maintenance_contract '
-                           'where ' + cond2, (id_item,))
+            cursor.execute('delete from sigl_file_data where id_data in (select id_file from eqp_maintenance_file where id_ext in (' + cond + '))', (id_item,))
+            cursor.execute('delete from eqp_maintenance_file where id_ext in (' + cond + ')', (id_item,))
+            cursor.execute('delete from eqp_maintenance_contract where ' + cond2, (id_item,))
 
             Quality.log.info(Logs.fileline())
-
             return True
         except mysql.connector.Error as e:
             Quality.log.error(Logs.fileline() + ' : ERROR SQL = ' + str(e))

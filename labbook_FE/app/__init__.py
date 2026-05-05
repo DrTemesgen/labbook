@@ -44,6 +44,7 @@ import uuid
 import secrets
 import base64
 import re
+import tomllib
 
 from logging.handlers import WatchedFileHandler
 from datetime import datetime, date, timedelta
@@ -484,6 +485,23 @@ def get_init_var(be_headers=None):
 
     except requests.exceptions.RequestException as err:
         log.error(Logs.fileline() + ' : requests setting report failed, err=%s , url=%s', err, url)
+
+    try:
+        path = os.path.join(Constants.cst_io, 'amicare.toml')
+
+        if os.path.exists(path):
+            with open(path, 'rb') as f:
+                cfg = tomllib.load(f)
+
+            session['amicare'] = cfg.get('amicare', {})
+        else:
+            session['amicare'] = {}
+
+        session.modified = True
+
+    except Exception as err:
+        log.error(Logs.fileline() + ' : load amicare.toml failed err=%s', err)
+        session['amicare'] = {}
 
     log.info(Logs.fileline() + ' : LABBOOK_FE get_init_var ends')
 
@@ -10570,14 +10588,15 @@ def upload_photo(type_ref='', id_ref=0):
         filepath = Constants.cst_photo
 
         try:
-            pathlib.Path(filepath + end_path[:2]).mkdir(mode=0o777, parents=False, exist_ok=True)
-            pathlib.Path(filepath + end_path).mkdir(mode=0o777, parents=False, exist_ok=True)
+            full_path = os.path.join(filepath, end_path)
+            pathlib.Path(full_path).mkdir(mode=0o777, parents=True, exist_ok=True)
         except Exception as err:
             log.error(Logs.fileline() + ' : upload-photo failed to filepath, err=%s', err)
             return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}
 
         try:
-            f.save(os.path.join(filepath + end_path, generated_name))
+            file_path = os.path.join(filepath, end_path, generated_name)
+            f.save(file_path)
         except Exception as err:
             log.error(Logs.fileline() + ' : upload-photo failed to save file, err=%s', err)
             return json.dumps({'success': False}), 500, {'ContentType': 'application/json'}

@@ -8,10 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - clean async process for import analysis repository
 - edit user able to upload file like CV, diploma ... as for edit staff GUI
 
-## [3.6.19] - 2026-04-27
+## [3.6.19] - 2026-05-04
+### Changed
+- Refactor report sending: centralized and unified send logic into a single mutualized flow.
+
 ### Fixed
 - insertAnalysisVar crash caused by non-numeric code_var values (e.g., "HFR").
 - OBX-11 status parsing (F) to correctly process GeneXpert results
+- OAuth authentication on API page (Swagger): support PKCE public client and remove browser popup
+- mutualized delete_item for equipment deletion
+- photo upload: create full directory path (not just last folder)
 
 ## [3.6.18] - 2026-04-14
 ### Added

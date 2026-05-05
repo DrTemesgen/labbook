@@ -96,7 +96,7 @@ def query_client(client_id):
         redirect_uris = [p.strip() for p in (row['oacl_redirect_uris'] or '').replace('\r', '\n').split('\n') if p.strip()]
         # client_secret = row['oacl_client_secret'] or None
         # Priority: env secret > DB secret; never log this value.
-        client_secret = env_secret or (row.get('oacl_client_secret') or None)
+        client_secret = None if row['oacl_token_endpoint_auth_method'] == 'none' else (env_secret or (row.get('oacl_client_secret') or None))
 
         def check_redirect_uri(self, redirect_uri):
             """Accept if the URI path matches one of the configured paths."""
@@ -526,6 +526,9 @@ def oauth_token():
               f"secret_present={has_client_secret} code_present={has_code} verifier_present={has_verifier}")
 
     resp = authorization.create_token_response()
+
+    # remove browser basic auth popup
+    resp.headers.pop('WWW-Authenticate', None)
 
     # Status-only log to keep noise low
     try:

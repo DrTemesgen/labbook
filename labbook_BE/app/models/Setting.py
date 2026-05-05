@@ -1916,25 +1916,18 @@ class Setting:
     def sendReport(**params):
         cursor = DB.cursor()
 
-        method = Setting.getSendingMethodDet(params['method_type'], params['method_id'])
-        if not method:
-            return (False, _("méthode d’envoi introuvable"))
-
-        model = Setting.getSendingModelDet(params['method_type'], params['template_id'])
-        if not model:
-            return (False, _("modèle d’envoi introuvable"))
-
         rec_num  = params.get('rec_num')
         pat_code = params.get('pat_code') or ''
+        id_user  = int(params.get('id_user') or 0)
 
         if not rec_num:
             return (False, _("numéro de compte rendu manquant"))
 
+        display_name = f"cr_{rec_num}.pdf"
+
         pdf_filename = (params.get('filename') or '').strip()
         if not pdf_filename.lower().endswith('.pdf'):
             pdf_filename += '.pdf'
-
-        display_name = f"cr_{rec_num}.pdf"
 
         ok, tmp_path, info = Setting.make_pdf_copy_protected(
             generated_name=pdf_filename,
@@ -1944,10 +1937,54 @@ class Setting:
         if not ok:
             return (False, info)
 
+        if not tmp_path or not os.path.exists(tmp_path):
+            Setting.log.error(Logs.fileline() + f" : PDF NOT FOUND -> {tmp_path}")
+            return (False, "PDF introuvable après génération")
+
         # get details of patient
         pat = Patient.getPatientByCode(pat_code, '')
         if not pat:
             return (False, _("patient introuvable"))
+
+        # --- AMICARE DIRECT MODE (no DB method/model) ---
+        if params['method_type'] == 'A':
+
+            try:
+                ok, msg = Setting.sendAmicare(
+                    None,
+                    pat_code,
+                    tmp_path,
+                    display_name,
+                    rec_num,
+                    id_user
+                )
+
+                if ok:
+                    Setting.log.info("sendReport AMICARE OK")
+                else:
+                    Setting.log.error(f"sendReport AMICARE FAIL -> {msg}")
+
+                return (ok, msg)
+
+            except Exception as e:
+                Setting.log.error(f"sendReport AMICARE EXCEPTION -> {e}")
+                return (False, str(e))
+
+            finally:
+                try:
+                    if tmp_path and os.path.exists(tmp_path):
+                        os.remove(tmp_path)
+                except Exception:
+                    pass
+        # -------------------------------------------------
+
+        method = Setting.getSendingMethodDet(params['method_type'], params['method_id'])
+        if not method:
+            return (False, _("méthode d’envoi introuvable"))
+
+        model = Setting.getSendingModelDet(params['method_type'], params['template_id'])
+        if not model:
+            return (False, _("modèle d’envoi introuvable"))
 
         info_pat = {'pat_lname': pat['nom'], 'pat_fname': pat['prenom']}
 
@@ -1962,7 +1999,6 @@ class Setting:
         try:
             mtype = params['method_type']
             recipient = params.get('recipient')
-            id_user = int(params.get('id_user') or 0)
 
             # SMTP MESSAGE
             if mtype == 'S':
@@ -2011,7 +2047,7 @@ class Setting:
             else:
                 # Unknown type
                 if sde_ser:
-                    Setting.update_sending_event_fail(cursor, sde_ser, _("type de méthode invalide"), id_user)
+                    Setting.update_sending_event_fail(cursor, sde_ser, ("type de méthode invalide"), id_user)
                 return (False, _("type de méthode invalide"))
 
             # Update sending_event according to result
@@ -2019,7 +2055,7 @@ class Setting:
                 if ok:
                     Setting.update_sending_event_success(cursor, sde_ser, id_user)
                 else:
-                    Setting.update_sending_event_fail(cursor, sde_ser, msg or _("échec d’envoi"), id_user)
+                    Setting.update_sending_event_fail(cursor, sde_ser, msg or ("échec d’envoi"), id_user)
 
             return (ok, msg if msg else (_("envoyé") if ok else _("échec d’envoi")))
 
@@ -2036,6 +2072,95 @@ class Setting:
                     os.remove(tmp_path)
             except Exception:
                 pass
+
+    @staticmethod
+    def sendAmicare(method, pat_code, file_path, filename, rec_num, id_user):
+        try:
+            from app import AMICARE_CONFIG
+            from datetime import datetime
+
+            if not AMICARE_CONFIG or not AMICARE_CONFIG.get('enabled'):
+                return (False, ("AmiCare désactivé"))
+
+            # --- patient ---
+            pat = Patient.getPatientByCode(pat_code, '')
+            if not pat:
+                return (False, ("patient introuvable"))
+
+            id_amicare = pat.get('pat_amicare')
+            if not id_amicare or int(id_amicare) <= 0:
+                return (False, ("patient sans compte AmiCare"))
+
+            # --- config ---
+            base_url = AMICARE_CONFIG.get('base_url')
+            endpoint = (AMICARE_CONFIG.get('endpoints') or {}).get('send_document')
+            auth_cfg = AMICARE_CONFIG.get('auth') or {}
+            timeout  = (AMICARE_CONFIG.get('options') or {}).get('timeout_sec', 10)
+
+            if not base_url or not endpoint:
+                return (False, ("configuration AmiCare invalide"))
+
+            url = base_url.rstrip('/') + endpoint
+
+            username = auth_cfg.get('username')
+            password = auth_cfg.get('password')
+
+            Setting.log.error(f"AMICARE URL -> {url}")
+            Setting.log.error(f"AMICARE AUTH -> user={username}")
+
+            if not username or not password:
+                return (False, ("auth AmiCare invalide"))
+
+            # --- JSON index expected ---
+            payload = {
+                "lot_documents": {
+                    "expediteur": {
+                        "hopital": {
+                            "login": username
+                        }
+                    },
+                    "destinataire": {
+                        "patient": {
+                            "id_amicare": int(id_amicare)
+                        }
+                    },
+                    "documents": [
+                        {
+                            "id": 1,
+                            "nom": "file1",
+                            "titre": "Compte rendu LabBook",
+                            "date": datetime.now().strftime("%Y-%m-%d"),
+                            "patient": {
+                                "id_amicare": int(id_amicare)
+                            }
+                        }
+                    ]
+                }
+            }
+
+            Setting.log.error("AMICARE PAYLOAD JSON -> " + json.dumps(payload))
+            Setting.log.error(f"AMICARE FILE -> path={file_path} name={filename}")
+
+            with open(file_path, "rb") as f:
+                resp = requests.post(
+                    url,
+                    auth=(username, password),
+                    files={
+                        "file1": ("cr_%s.pdf" % rec_num, f, "application/pdf"),
+                        "index": (None, json.dumps(payload), "application/json")
+                    },
+                    timeout=10
+                )
+
+            Setting.log.error(f"AMICARE RESPONSE -> status={resp.status_code} body={resp.text}")
+
+            if resp.status_code not in (200, 201):
+                return (False, f"AmiCare HTTP {resp.status_code} : {resp.text}")
+
+            return (True, "AmiCare envoyé")
+
+        except Exception as e:
+            return (False, f"AmiCare error: {e}")
 
     @staticmethod
     def make_pdf_copy_protected(generated_name: str, rec_num, pat_code: str):
