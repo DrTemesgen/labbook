@@ -195,17 +195,13 @@ def before_request_func():
 _COMPRESSIBLE = ('text/html', 'text/css', 'text/xml', 'text/plain',
                  'application/javascript', 'application/x-javascript',
                  'application/json', 'image/svg+xml', 'application/xml')
-_STATIC_EXTS = {'css', 'js', 'png', 'jpg', 'jpeg', 'gif', 'ico',
-                'woff', 'woff2', 'svg', 'ttf', 'eot'}
-
-
 @app.after_request
 def add_perf_headers(response):
     try:
-        # Long-cache static assets (overrides Werkzeug's send_file no-cache)
-        path = (request.path or '').rsplit('?', 1)[0]
-        ext = path.rsplit('.', 1)[-1].lower() if '.' in path else ''
-        if ext in _STATIC_EXTS:
+        # Long-cache real static assets only (Flask 'static' endpoint), overriding
+        # Werkzeug's default no-cache. Routes that set their own Cache-Control
+        # (sw.js, manifest) are excluded so service-worker updates always propagate.
+        if request.endpoint == 'static':
             response.headers['Cache-Control'] = 'public, max-age=2592000'
 
         # gzip compress text responses when the client supports it
@@ -261,6 +257,108 @@ def locale():
 def inject_app_version():
     # value is global FE version from config, not per-session
     return {"app_version": app.config.get("APP_VERSION", "")}
+
+
+# -----------------------------------------------------------------------------
+# PWA: web manifest, service worker, offline fallback
+# -----------------------------------------------------------------------------
+# Makes LabBook installable to a tablet/phone home screen (standalone), caches
+# static assets for speed/offline-shell, and shows a friendly offline page.
+# Served under the app's own prefix (/sigl) so the service-worker scope covers
+# the whole app. Fully self-contained — no external dependencies.
+# -----------------------------------------------------------------------------
+@app.route('/manifest.webmanifest')
+def web_manifest():
+    base = (request.script_root or '') + '/'
+    data = {
+        "name": "LabBook",
+        "short_name": "LabBook",
+        "description": "LabBook — laboratory information system",
+        "lang": "en-GB",
+        "start_url": base,
+        "scope": base,
+        "display": "standalone",
+        "orientation": "any",
+        "background_color": "#ffffff",
+        "theme_color": "#3a7d34",
+        "icons": [
+            {"src": url_for('static', filename='img/icon-192.png'), "sizes": "192x192", "type": "image/png", "purpose": "any"},
+            {"src": url_for('static', filename='img/icon-512.png'), "sizes": "512x512", "type": "image/png", "purpose": "any"},
+            {"src": url_for('static', filename='img/icon-maskable-512.png'), "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+        ],
+    }
+    return Response(json.dumps(data), mimetype='application/manifest+json')
+
+
+@app.route('/offline')
+def offline_page():
+    html = """<!DOCTYPE html><html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LabBook — offline</title>
+<style>body{font-family:Arial,Helvetica,sans-serif;background:#f4f6f4;color:#333;display:flex;
+min-height:100vh;margin:0;align-items:center;justify-content:center;text-align:center}
+.card{background:#fff;border:1px solid #d8e0d6;border-radius:14px;padding:40px 32px;max-width:380px;
+box-shadow:0 4px 18px rgba(0,0,0,.08)}h1{color:#3a7d34;font-size:22px;margin:0 0 10px}
+p{font-size:15px;line-height:1.5}button{margin-top:18px;background:#3a7d34;color:#fff;border:0;
+border-radius:8px;padding:11px 20px;font-size:15px;cursor:pointer}</style></head>
+<body><div class="card"><h1>You are offline</h1>
+<p>LabBook needs a connection to load this page. Your lab data is safe on the server —
+reconnect and try again.</p>
+<button onclick="location.reload()">Retry</button></div></body></html>"""
+    return Response(html, mimetype='text/html')
+
+
+@app.route('/sw.js')
+def service_worker():
+    base = (request.script_root or '') + '/'
+    precache = [
+        url_for('offline_page'),
+        url_for('static', filename='img/logo.png'),
+        url_for('static', filename='img/icon-192.png'),
+        url_for('static', filename='vendor/bootstrap/css/bootstrap.min.css'),
+        url_for('static', filename='vendor/js/jquery-3.6.1.min.js'),
+        url_for('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js'),
+    ]
+    static_prefix = url_for('static', filename='').rstrip('/')
+    js = """
+const CACHE = 'labbook-v' + '%(ver)s';
+const OFFLINE = '%(offline)s';
+const PRECACHE = %(precache)s;
+const STATIC_PREFIX = '%(static)s';
+self.addEventListener('install', (e) => {
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', (e) => {
+  e.waitUntil(caches.keys().then((keys) =>
+    Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', (e) => {
+  const req = e.request;
+  if (req.method !== 'GET') return;
+  const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+  if (req.mode === 'navigate') {
+    e.respondWith(fetch(req).catch(() => caches.match(OFFLINE)));
+    return;
+  }
+  if (url.pathname.startsWith(STATIC_PREFIX)) {
+    e.respondWith(caches.match(req).then((hit) => {
+      const net = fetch(req).then((res) => {
+        if (res && res.status === 200) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+        return res;
+      }).catch(() => hit);
+      return hit || net;
+    }));
+  }
+});
+""" % {"ver": str(app.config.get('APP_VERSION', '1')),
+       "offline": url_for('offline_page'),
+       "precache": json.dumps(precache),
+       "static": static_prefix}
+    resp = Response(js, mimetype='application/javascript')
+    resp.headers['Service-Worker-Allowed'] = base
+    resp.headers['Cache-Control'] = 'no-cache'
+    return resp
 
 
 # -----------------------------------------------------------------------------

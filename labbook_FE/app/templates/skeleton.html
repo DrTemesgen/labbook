@@ -18,6 +18,21 @@
     <script src="{{ url_for('static', filename='js/app-labbook.js') }}?1" nonce="{{ session['nonce'] }}"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    {# PWA: installable + offline shell #}
+    <link rel="manifest" href="{{ url_for('web_manifest') }}">
+    <meta name="theme-color" content="#3a7d34">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <script nonce="{{ session['nonce'] }}">
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register("{{ url_for('service_worker') }}", { scope: "{{ request.script_root }}/" })
+          .catch(function (e) { console.warn('SW registration failed', e); });
+      });
+    }
+    </script>
+
     {# bring custom style build with some data from DB #}
     {{ custom_style()|safe }}
     {% endblock %}
