@@ -662,7 +662,7 @@ let lastname  = "{{ session['user_lastname']|safe}}"  ;
 
         /* Possible to canceled this value */
         if ( res_type != 265 && (res_valid == 250 || (res_valid == 251 && value != "")) )
-        res_cancel = '<a title="Annuler" class="color-T ms-2" onclick="cancel_res(' + id_rec +','+ id_res + ');"><i class="bi bi-x-circle" /></i></a>' ;
+        res_cancel = '<a title="{{ _("Annuler") }}" class="color-T ms-2" onclick="cancel_res(' + id_rec +','+ id_res + ');"><i class="bi bi-x-circle" /></i></a>' ;
 
         /* Display the value */
         if ( value != "" )

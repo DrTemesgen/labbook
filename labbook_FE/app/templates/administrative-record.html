@@ -650,7 +650,7 @@ function load_file( data )
         tmp_tr += '<td class="filename"><div>' + obj.name + '</div></td>' ;
         tmp_tr += '<td class="action"><div><a href="#" onclick="download_file(\'JF\', \'' + obj.name + '\', \'REC\', ' + obj.id_data + ');">{{ _("Télécharger") }}</a>';
         {% if has_permission("RECORD_25") %}
-        tmp_tr += ' - <a href="#" onclick="delete_file(' + obj.id_data + ');">Supprimer</a>' ;
+        tmp_tr += ' - <a href="#" onclick="delete_file(' + obj.id_data + ');">{{ _("Supprimer") }}</a>' ;
         {% endif %}
         tmp_tr += '</div></td></tr>' ;
 

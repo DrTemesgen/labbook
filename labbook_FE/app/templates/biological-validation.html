@@ -794,7 +794,7 @@ function gen_ihm_res( data )
             res += '<td class="text-center"><span class="value">' ;
 
             if ( res_valid == 251 || (res_valid == 252 && value != "") )
-                res_cancel = '<a title="Annuler" class="color-B" onclick="cancel_res(' + id_rec +','+ id_res + ');"><i class="bi bi-x-circle" /></i></a>' ;
+                res_cancel = '<a title="{{ _("Annuler") }}" class="color-B" onclick="cancel_res(' + id_rec +','+ id_res + ');"><i class="bi bi-x-circle" /></i></a>' ;
 
             if ( value != "" )
             {
