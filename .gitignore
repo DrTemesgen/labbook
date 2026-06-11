@@ -46,3 +46,16 @@ etc/httpd/build/
 labbook_FE/logs/*
 labbook_BE/logs/*
 logs/*
+
+### Deployment safety net (added for private fork) ###
+# never commit secrets or generated local settings
+.env
+*.env
+local_settings.py
+**/local_settings.py
+# never commit saved container images or DB dumps
+*.tar
+*.tar.gz
+*.tar.xz
+*.sql.gz
+backup/
