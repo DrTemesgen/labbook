@@ -59,3 +59,5 @@ local_settings.py
 *.tar.xz
 *.sql.gz
 backup/
+# bundle runtime holds generated DB credentials + default_settings — never commit
+deploy/runtime/
