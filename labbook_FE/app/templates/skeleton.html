@@ -61,7 +61,7 @@
                 <div class="dropdown role role-img-{{ session['user_role']|safe }} role-{{ session['user_role']|safe }} me-1">
                     <button class="btn" type="button" id="dropdownRole" data-bs-toggle="dropdown" aria-expanded="false"></button>
                     <ul class="dropdown-menu" aria-labelledby="dropdownRole">
-                        <li><a class="dropdown-item" href="{{ session['server_ext'] }}/disconnect">Sign Out</a></li>
+                        <li><a class="dropdown-item" href="{{ session['server_ext'] }}/disconnect">Sign out</a></li>
                         <li><a class="dropdown-item" href="{{ session['server_ext'] }}/det-staff/homepage/{{ session['user_id'] }}">{{ _('Editer utilisateur') }}</a></li>
                         <li><a class="dropdown-item" href="{{ session['server_ext'] }}/setting-pwd-user/homepage/{{ session['user_id'] }}">{{ _('Editer mot de passe') }}</a></li>
                     </ul>
