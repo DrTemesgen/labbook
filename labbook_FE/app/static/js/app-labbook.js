@@ -313,3 +313,86 @@ let val = $( "#res_"+id_res ).val() ;
         $("#limit_"+id_res).removeClass('show') ;
     }
 }
+
+/* ------------------------------------------------------------------ */
+/* Click feedback + loading spinner                                    */
+/* When the user clicks an action/submit button that talks to the      */
+/* server, THAT button immediately dims and shows its own little       */
+/* spinner and becomes un-clickable (so it can't be tapped twice), and */
+/* a light overlay covers the page while the server works. It is       */
+/* triggered ONLY by an AJAX call that closely follows a real click,   */
+/* so the background polls (unread messages, backup status) never make */
+/* it flash; quick actions skip the page overlay via a short delay.    */
+/* ------------------------------------------------------------------ */
+(function ()
+{
+var LBK_DELAY    = 350 ;    // ms before the page overlay appears (quick actions skip it)
+var LBK_CLICK_MS = 1500 ;   // an AJAX starting within this window of a click = a user action
+var lbk_timer    = null ;
+var lbk_click_t  = 0 ;
+var lbk_$btn     = null ;
+var lbk_pending  = 0 ;
+var LBK_SEL = "button, input[type=submit], input[type=button], .btn, a.btn, [onclick]" ;
+
+    $(function ()
+    {
+        if ( !document.getElementById("lbk-spin-style") )
+        {
+        var css =
+            "#lbk-spin-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:13000;" +
+            "display:none;align-items:center;justify-content:center;background:rgba(255,255,255,.2);cursor:wait}" +
+            "#lbk-spin-overlay .lbk-spin{width:46px;height:46px;border-radius:50%;" +
+            "border:4px solid rgba(58,125,52,.2);border-top-color:#3a7d34;background:rgba(255,255,255,.65);" +
+            "box-shadow:0 2px 10px rgba(0,0,0,.15);animation:lbk-spin .8s linear infinite}" +
+            "@keyframes lbk-spin{to{transform:rotate(360deg)}}" +
+            ".btn:active{transform:scale(.97)}" +
+            ".lbk-busy{position:relative !important;opacity:.6 !important;pointer-events:none !important}" +
+            ".lbk-busy::after{content:'';position:absolute;top:50%;left:50%;width:16px;height:16px;" +
+            "margin:-8px 0 0 -8px;border-radius:50%;border:2px solid rgba(0,0,0,.15);" +
+            "border-top-color:#3a7d34;animation:lbk-spin .7s linear infinite}" ;
+
+        var st = document.createElement("style") ;
+        st.id  = "lbk-spin-style" ;
+        st.appendChild( document.createTextNode(css) ) ;
+        document.head.appendChild(st) ;
+        }
+
+        if ( !document.getElementById("lbk-spin-overlay") )
+        $("body").append('<div id="lbk-spin-overlay"><div class="lbk-spin"></div></div>') ;
+    } ) ;
+
+    // remember the last action element the user pressed
+    $(document).on("mousedown", LBK_SEL, function () { lbk_click_t = Date.now() ; lbk_$btn = $(this) ; } ) ;
+
+function lbk_show_overlay() { $("#lbk-spin-overlay").css("display", "flex") ; }
+
+function lbk_done()
+{
+lbk_pending = 0 ;
+clearTimeout(lbk_timer) ;
+$("#lbk-spin-overlay").hide() ;
+$(".lbk-busy").removeClass("lbk-busy") ;   // clear any busy button(s)
+lbk_$btn = null ;
+}
+
+    // Count ONLY the AJAX calls that closely follow a real click (ignores the
+    // background polls). ajaxSend/ajaxComplete fire per-request, so this stays
+    // correct even if a poll overlaps a user action.
+    $(document).ajaxSend( function (e, xhr)
+    {
+        if ( Date.now() - lbk_click_t > LBK_CLICK_MS ) return ;   // background poll, not a click
+        xhr._lbk = true ;                                        // tag it as a user action
+        if ( lbk_$btn ) lbk_$btn.addClass("lbk-busy") ;          // per-button: dim + spinner + lock
+        lbk_pending++ ;
+        if ( lbk_pending === 1 ) lbk_timer = setTimeout(lbk_show_overlay, LBK_DELAY) ;
+    } ) ;
+
+    $(document).ajaxComplete( function (e, xhr)
+    {
+        if ( !xhr || !xhr._lbk ) return ;
+        lbk_pending = Math.max(0, lbk_pending - 1) ;
+        if ( lbk_pending === 0 ) lbk_done() ;
+    } ) ;
+
+    $(window).on("beforeunload", lbk_done) ;
+})() ;
