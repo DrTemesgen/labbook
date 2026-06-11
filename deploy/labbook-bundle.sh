@@ -87,6 +87,7 @@ up() {
   # 6) App container: baked image, only default_settings overridden; storage/logs persisted in volumes.
   podman run -d --pod="$POD" --name="${POD}-app" \
     --tz=local -e LANG=C.UTF-8 \
+    -e GUNICORN_CMD_ARGS=--workers=5 \
     -e LABBOOK_DB_USER=labbook -e LABBOOK_DB_PWD="$DB_PASS" -e LABBOOK_DB_NAME=SIGL \
     -e LABBOOK_DB_HOST=127.0.0.1 -e LABBOOK_DEBUG=0 -e LABBOOK_POD_NAME="$POD" \
     -v "$RUNTIME/default_settings.py:/home/apps/labbook_BE/labbook_BE/default_settings.py:ro,Z" \
