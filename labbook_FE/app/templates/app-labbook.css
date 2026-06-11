@@ -1996,3 +1996,30 @@ font-size: 15px;
 
   #user-info .icon-messaging { transform: translateY(-3px); }
 }
+
+/* ------------------------------------------------------------------ */
+/* Mobile / tablet (both orientations): wide data tables scroll        */
+/* horizontally so EVERY column — including the leftmost Action / Edit  */
+/* menu — stays reachable, and the page no longer overflows the screen. */
+/* ------------------------------------------------------------------ */
+@media all and (max-width: 1024px)
+{
+    .table-lbk
+    {
+    display                    : block;
+    width                      : 100%;
+    max-width                  : 100%;
+    overflow-x                 : auto;
+    overflow-y                 : visible;
+    -webkit-overflow-scrolling : touch;
+    }
+
+    /* keep the Action column compact and tappable, not squeezed away */
+    .table-lbk th:first-child,
+    .table-lbk td:first-child,
+    .table-lbk th:nth-child(2),
+    .table-lbk td:nth-child(2)
+    {
+    white-space : nowrap;
+    }
+}
