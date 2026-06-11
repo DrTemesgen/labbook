@@ -243,13 +243,18 @@ EU_FORMAT_LANGS = {'fr_FR', 'en_GB', 'es', 'ar', 'km', 'lo', 'mg', 'pt'}
 
 @app.context_processor
 def locale():
-    # Forced system default language: English (UK)
+    # Default language: English (UK); honour the user's chosen language.
     lang = 'en_GB'
-    session['lang'] = lang
-    session['lang_select'] = LANG_SELECT.get(lang, 'UK')
-    session['date_format'] = Constants.cst_date_eu
-    session['dt_format']   = Constants.cst_dt_eu_HM
-    session.modified = True
+    if session and 'lang' in session:
+        lang = session['lang']
+        session['lang_select'] = LANG_SELECT.get(lang, 'UK')
+        if lang in EU_FORMAT_LANGS:
+            session['date_format'] = Constants.cst_date_eu
+            session['dt_format']   = Constants.cst_dt_eu_HM
+        else:
+            session['date_format'] = Constants.cst_date_us
+            session['dt_format']   = Constants.cst_dt_us_HM
+        session.modified = True
     return dict(locale=lang)
 
 
@@ -423,10 +428,15 @@ def get_locale():
     - Stores the selected language in session.
     """
     log.info(Logs.fileline() + ' : LANG = ' + str(os.environ['LANG']))
-    # Forced system default language: English (UK)
-    lang = 'en_GB'
-    session['lang'] = lang
-    session.modified = True
+    # Default language: English (UK). Users can still switch to any other
+    # supported language; their choice is kept in session['lang'].
+    if session and 'lang' in session:
+        lang = session['lang']
+    else:
+        lang = 'en_GB'
+        if session is not None:
+            session['lang'] = lang
+            session.modified = True
     return lang
 
 
