@@ -53,6 +53,40 @@
                 </div>
             </div>
         </div>
+        <style>
+        .demo-accts{position:fixed;top:150px;width:300px;background:rgba(255,255,255,.93);border:1px solid #cfcfcf;border-radius:10px;padding:14px 16px;box-shadow:0 2px 12px rgba(0,0,0,.18);font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#333;z-index:50}
+        .demo-accts h3{margin:0 0 6px;font-size:15px;color:#3a7d34}
+        .demo-accts .pw{background:#eef6ec;border:1px solid #cde3c8;border-radius:6px;padding:5px 8px;margin:6px 0 10px}
+        .demo-accts table{width:100%;border-collapse:collapse}
+        .demo-accts td{padding:3px 4px;border-bottom:1px solid #eee}
+        .demo-accts td.u{font-family:monospace;font-weight:bold;color:#b5402a}
+        .demo-left{left:24px}
+        .demo-right{right:24px}
+        @media(max-width:1100px){.demo-accts{position:static;width:auto;margin:12px auto;max-width:520px}}
+        </style>
+        <div class="demo-accts demo-left">
+            <h3>Demo logins</h3>
+            <div class="pw">For each, the <b>password = the login</b></div>
+            <table>
+                <tr><td>Administrator</td><td class="u">root</td></tr>
+                <tr><td>Biologist</td><td class="u">biologiste</td></tr>
+                <tr><td>Technician</td><td class="u">technicien</td></tr>
+                <tr><td>Secretary</td><td class="u">secretaire</td></tr>
+                <tr><td>Prescriber</td><td class="u">prescripteur</td></tr>
+                <tr><td>Qualitician</td><td class="u">qualiticien</td></tr>
+            </table>
+        </div>
+        <div class="demo-accts demo-right">
+            <h3>More demo logins</h3>
+            <div class="pw">For each, the <b>password = the login</b></div>
+            <table>
+                <tr><td>Laboratory</td><td class="u">lab</td></tr>
+                <tr><td>Stock management</td><td class="u">stock</td></tr>
+                <tr><td>Adv. technician</td><td class="u">techav</td></tr>
+                <tr><td>Qualitician-Technician</td><td class="u">techq</td></tr>
+                <tr><td>Adv. secretary</td><td class="u">secrav</td></tr>
+            </table>
+        </div>
         <footer>
             <div class="version">{{ _("Version") }} : {{ app_version }} | <a href="{{ session['server_ext'] }}/contributors">{{ _("Contributeurs") }}</a></div>
         </footer>

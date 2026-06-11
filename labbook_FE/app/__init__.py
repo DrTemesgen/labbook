@@ -45,6 +45,8 @@ import secrets
 import base64
 import re
 import tomllib
+import gzip
+from io import BytesIO
 
 from logging.handlers import WatchedFileHandler
 from datetime import datetime, date, timedelta
@@ -184,6 +186,57 @@ def before_request_func():
     session.modified = True
 
 
+# -----------------------------------------------------------------------------
+# Performance: gzip text responses + long-cache static assets
+# -----------------------------------------------------------------------------
+# Done at the app layer (not Apache/nginx) so it stays fully self-contained to
+# LabBook and is passed through unchanged by the reverse proxies in front.
+# -----------------------------------------------------------------------------
+_COMPRESSIBLE = ('text/html', 'text/css', 'text/xml', 'text/plain',
+                 'application/javascript', 'application/x-javascript',
+                 'application/json', 'image/svg+xml', 'application/xml')
+_STATIC_EXTS = {'css', 'js', 'png', 'jpg', 'jpeg', 'gif', 'ico',
+                'woff', 'woff2', 'svg', 'ttf', 'eot'}
+
+
+@app.after_request
+def add_perf_headers(response):
+    try:
+        # Long-cache static assets (overrides Werkzeug's send_file no-cache)
+        path = (request.path or '').rsplit('?', 1)[0]
+        ext = path.rsplit('.', 1)[-1].lower() if '.' in path else ''
+        if ext in _STATIC_EXTS:
+            response.headers['Cache-Control'] = 'public, max-age=2592000'
+
+        # gzip compress text responses when the client supports it
+        accepts_gzip = 'gzip' in request.headers.get('Accept-Encoding', '').lower()
+        can_gzip = (request.method in ('GET', 'POST')
+                    and accepts_gzip
+                    and 200 <= response.status_code < 300
+                    and not response.headers.get('Content-Encoding'))
+        if can_gzip:
+            ctype = (response.content_type or '').split(';')[0].strip().lower()
+            if ctype in _COMPRESSIBLE:
+                response.direct_passthrough = False
+                data = response.get_data()
+                if len(data) >= 500:
+                    buf = BytesIO()
+                    with gzip.GzipFile(mode='wb', fileobj=buf, compresslevel=6) as gz:
+                        gz.write(data)
+                    out = buf.getvalue()
+                    response.set_data(out)
+                    response.headers['Content-Encoding'] = 'gzip'
+                    response.headers['Content-Length'] = str(len(out))
+                    vary = response.headers.get('Vary')
+                    if not vary:
+                        response.headers['Vary'] = 'Accept-Encoding'
+                    elif 'accept-encoding' not in vary.lower():
+                        response.headers['Vary'] = vary + ', Accept-Encoding'
+    except Exception:
+        log.warning(Logs.fileline() + ' : perf after_request skipped; response left unmodified')
+    return response
+
+
 LANG_SELECT = {
     'fr_FR': 'FR', 'en_GB': 'UK', 'en_US': 'US', 'es': 'ES',
     'ar': 'AR', 'km': 'KM', 'lo': 'LO', 'mg': 'MG', 'pt': 'PT'
@@ -194,21 +247,13 @@ EU_FORMAT_LANGS = {'fr_FR', 'en_GB', 'es', 'ar', 'km', 'lo', 'mg', 'pt'}
 
 @app.context_processor
 def locale():
-    lang = app.config.get('BABEL_DEFAULT_LOCALE')
-    if session and 'lang' in session:
-        lang = session['lang']
-        log.info(Logs.fileline() + ' : lang = ' + lang)
-
-        session['lang_select'] = LANG_SELECT.get(lang, 'FR')
-        if lang in EU_FORMAT_LANGS:
-            session['date_format'] = Constants.cst_date_eu
-            session['dt_format']   = Constants.cst_dt_eu_HM
-        else:
-            session['date_format'] = Constants.cst_date_us
-            session['dt_format']   = Constants.cst_dt_us_HM
-
-        session.modified = True
-
+    # Forced system default language: English (UK)
+    lang = 'en_GB'
+    session['lang'] = lang
+    session['lang_select'] = LANG_SELECT.get(lang, 'UK')
+    session['date_format'] = Constants.cst_date_eu
+    session['dt_format']   = Constants.cst_dt_eu_HM
+    session.modified = True
     return dict(locale=lang)
 
 
@@ -280,14 +325,10 @@ def get_locale():
     - Stores the selected language in session.
     """
     log.info(Logs.fileline() + ' : LANG = ' + str(os.environ['LANG']))
-    lang = request.accept_languages.best_match(list(LANGUAGES.keys()), default='fr_FR')
-    if not session or 'lang' not in session:
-        session['lang'] = lang
-        session.modified = True
-        log.info(Logs.fileline() + ' :default lang=' + str(lang))
-    elif session and 'lang' in session:
-        lang = session['lang']
-        log.info(Logs.fileline() + ' :session lang=' + str(lang))
+    # Forced system default language: English (UK)
+    lang = 'en_GB'
+    session['lang'] = lang
+    session.modified = True
     return lang
 
 
