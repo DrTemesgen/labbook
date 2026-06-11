@@ -148,7 +148,7 @@ function load_audit_detail() {
                 (data.ip_addr === "127.0.0.1" || data.ip_addr === "::1");
 
             if (isSystemCall) {
-                $("#user_display").text("Appel système");                
+                $("#user_display").text("{{ _("Appel système") }}");                
                 $("#aud_user_login").text("");
                 $("#role_name")
                     .text("SYSTEM")

@@ -710,39 +710,39 @@ poll_count = poll_count + 1 ;
                 {
                 console.log("START") ;
                     if (mode == "R")
-                    $("#wait-status").text("Démarrage du processus de restauration " + data[1] ) ;
+                    $("#wait-status").text("{{ _("Démarrage du processus de restauration") }} " + data[1] ) ;
                     else if  (mode == "B")
-                    $("#wait-status").text("Démarrage du processus de sauvegarde " + data[1]) ;
+                    $("#wait-status").text("{{ _("Démarrage du processus de sauvegarde") }} " + data[1]) ;
                 }
                 else if ( data[0] == "DECRYPT" )
                 {
                 console.log("DECRYPT") ;
-                $("#wait-status").text("Déchiffrement de la sauvegarde " + data[1]) ;
+                $("#wait-status").text("{{ _("Déchiffrement de la sauvegarde") }} " + data[1]) ;
                 }
                 else if ( data[0] == "DUMPDB" )
                 {
                 console.log("DUMPDB") ;
-                $("#wait-status").text("Copie de la base de données " + data[1]) ;
+                $("#wait-status").text("{{ _("Copie de la base de données") }} " + data[1]) ;
                 }
                 else if ( data[0] == "EXTRACTDB" )
                 {
                 console.log("EXTRACTDB") ;
-                $("#wait-status").text("Extraction de la base de données " + data[1]) ;
+                $("#wait-status").text("{{ _("Extraction de la base de données") }} " + data[1]) ;
                 }
                 else if ( data[0] == "LOADDB" )
                 {
                 console.log("LOADDB") ;
-                $("#wait-status").text("Chargement de la base de données " + data[1]) ;
+                $("#wait-status").text("{{ _("Chargement de la base de données") }} " + data[1]) ;
                 }
                 else if ( data[0] == "MAKEARCHIVE" )
                 {
                 console.log("MAKEARCHIVE") ;
-                $("#wait-status").text("Compression de la sauvegarde " + data[1]) ;
+                $("#wait-status").text("{{ _("Compression de la sauvegarde") }} " + data[1]) ;
                 }
                 else if ( data[0] == "COPYKEYS" )
                 {
                 console.log("COPYKEYS") ;
-                $("#wait-status").text("Copie des clés de chiffrement " + data[1]) ;
+                $("#wait-status").text("{{ _("Copie des clés de chiffrement") }} " + data[1]) ;
                 }
                 else if ( data[0] == "RESTOREFILES" )
                 {

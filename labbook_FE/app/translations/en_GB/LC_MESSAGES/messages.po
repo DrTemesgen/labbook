@@ -7359,3 +7359,46 @@ msgstr "Create an AmiCare account"
 msgid "Sélectionnez une méthode."
 msgstr "Select a method."
 
+
+msgid "Démarrage du processus de restauration"
+msgstr "Starting the restore process"
+
+msgid "Démarrage du processus de sauvegarde"
+msgstr "Starting the backup process"
+
+msgid "Déchiffrement de la sauvegarde"
+msgstr "Decrypting the backup"
+
+msgid "Copie de la base de données"
+msgstr "Copying the database"
+
+msgid "Extraction de la base de données"
+msgstr "Extracting the database"
+
+msgid "Chargement de la base de données"
+msgstr "Loading the database"
+
+msgid "Compression de la sauvegarde"
+msgstr "Compressing the backup"
+
+msgid "Copie des clés de chiffrement"
+msgstr "Copying the encryption keys"
+
+msgid "Téléchargement vide."
+msgstr "Empty download."
+
+msgid "Erreur réseau lors du téléchargement."
+msgstr "Network error during download."
+
+msgid "Aucun événement d'audit sur cette période."
+msgstr "No audit event for this period."
+
+msgid "Aucun fichier sélectionné."
+msgstr "No file selected."
+
+msgid "Appel système"
+msgstr "System call"
+
+msgid "LabBook n'a pas fini son initialisation, veuillez recharger cette page dans quelques secondes ou patientez jusqu'à la redirection automatique dans 10 secondes."
+msgstr "LabBook has not finished initialising; please reload this page in a few seconds, or wait for the automatic redirect in 10 seconds."
+

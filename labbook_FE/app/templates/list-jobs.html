@@ -269,7 +269,7 @@ function loadJobTable() {
 // Map backend type to human label (FR UI)
 function typeLabel(t) {
   if (t === 'dhis2') return 'DHIS2';
-  if (t === 'activity') return "Rapport d'activité";
+  if (t === 'activity') return "{{ _("Rapport d'activité") }}";
   if (t === 'billing') return "État de la facturation";
   return 'Inconnu';
 }

@@ -455,7 +455,7 @@ function download_archive_file(filename)
         var responseBlob = httpRequest.response;
         if (!responseBlob || responseBlob.size === 0)
         {
-            alert("Téléchargement vide.");
+            alert("{{ _("Téléchargement vide.") }}");
             return;
         }
 
@@ -473,7 +473,7 @@ function download_archive_file(filename)
 
     httpRequest.onerror = function ()
     {
-        alert("Erreur réseau lors du téléchargement.");
+        alert("{{ _("Erreur réseau lors du téléchargement.") }}");
     };
 
     httpRequest.send(null);
@@ -516,7 +516,7 @@ function export_atna()
         },
         error: function (xhr) {
             if (xhr.status === 404) {
-                alert("Aucun événement d'audit sur cette période.");
+                alert("{{ _("Aucun événement d'audit sur cette période.") }}");
             } else if (xhr.status === 400) {
                 alert("Dates invalides ou manquantes pour l'export ATNA.");
             } else {

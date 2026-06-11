@@ -146,7 +146,7 @@ var param = '{ "id_owner":' + id_owner + ', ' +
 function validateFormPatientFilenameStrict(filename, kind)
 {
     if (!filename) {
-        return "Aucun fichier sélectionné.";
+        return "{{ _("Aucun fichier sélectionné.") }}";
     }
 
     let regex = null;

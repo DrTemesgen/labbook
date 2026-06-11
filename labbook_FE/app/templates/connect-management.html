@@ -121,7 +121,7 @@ let url = "{{ session['server_ext'] }}/upload-connect/" + type;
     .then(data => {
         if (data.success) 
         {
-            showToast("Fichier uploadé avec succès", "success");
+            showToast("{{ _("Fichier uploadé avec succès") }}", "success");
             console.log("Upload success:", data);
             setTimeout(() => {
                 location.reload();
