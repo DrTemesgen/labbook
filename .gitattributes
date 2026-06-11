@@ -1,0 +1,3 @@
+# Keep shell scripts LF so they run correctly when checked out on the Linux server
+*.sh text eol=lf
+deploy/* text eol=lf
