@@ -3365,7 +3365,7 @@ msgstr "Khmer (KM)"
 
 #: templates/menu-country.html:34 templates/setting-det-user.html:121
 msgid "Laotien (LO)"
-msgstr "Laotian (LO)"
+msgstr "Lao (LO)"
 
 #: templates/menu-country.html:38 templates/setting-det-user.html:122
 msgid "Malagasy (MG)"
